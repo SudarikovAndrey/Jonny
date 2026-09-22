@@ -1,0 +1,25 @@
+/* A single motion owner; no inherited slide, scale or fade fighting the paper. */
+#modal,#modal:not([hidden]):not(.closing) #card,#modal.closing #card,
+#helpDialog,#tip,#toast,#guide,#tilebar,#invList{animation:none;transition:none}
+#modal.closing{opacity:1;pointer-events:none;transition:none;background:transparent;backdrop-filter:none}
+#modal.closing #card{opacity:1;transform:none}
+#card,#helpDialog,.pass-offer-paper{transform-origin:50% 68%;backface-visibility:hidden}
+#tip,#toast{transform-origin:50% 25%;backface-visibility:hidden}
+[data-paper-moving]{will-change:transform,opacity}
+#card .pass-hero{animation:none}
+#card .pass-meter i{animation-duration:.24s}
+/* HUD labels stay interactive; reveal/hide does not make the map wait. */
+@supports (transition-behavior:allow-discrete){
+ #guide,#tilebar,#invList{
+  transition:opacity 130ms ease-out,translate 180ms cubic-bezier(.16,.78,.24,1),
+   rotate 180ms ease-out,display 180ms allow-discrete;
+  opacity:1;translate:0 0;rotate:0deg;
+ }
+ #guide[hidden],#tilebar[hidden],#invList[hidden],#guide[style*="display: none"],#tilebar[style*="display: none"]{
+  opacity:0;translate:0 14px;rotate:1deg;
+ }
+ @starting-style{#guide,#tilebar,#invList{opacity:0;translate:0 18px;rotate:-1.2deg}}
+}
+@media(prefers-reduced-motion:reduce){
+ #guide,#tilebar,#invList{transition:none;translate:none;rotate:none}
+}

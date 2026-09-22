@@ -1,0 +1,168 @@
+/* Supplied paper, enamel and ink: shared windows, with live prices and controls. */
+.atlas-art{display:block;width:100%;height:100%;pointer-events:none}
+.sheet-surface{position:relative;isolation:isolate;background:none!important}
+.sheet-paper{position:absolute;inset:0;z-index:-1;overflow:hidden;border-radius:inherit;pointer-events:none}
+#modal{padding:calc(env(safe-area-inset-top,0px) + 28px) 15px calc(env(safe-area-inset-bottom,0px) + 22px);align-items:center;background:#171a17b8;backdrop-filter:blur(2px)}
+#modal.mid{padding-top:calc(env(safe-area-inset-top,0px) + 28px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 22px);align-items:center}
+#card{width:100%;max-width:420px;max-height:calc(100dvh - 68px)!important;border-radius:19px 17px 21px 16px;border:2px solid #302719;box-shadow:0 0 0 3px #f3dfb4,0 7px 0 4px #211c17,0 17px 38px #0008;padding:17px;color:#27231c;overflow:auto;overscroll-behavior:contain}
+#card p{font-size:14px;line-height:1.4}#card h2{font-size:23px;line-height:1.15;margin:0 0 12px;font-weight:800;text-transform:none;letter-spacing:0}
+#card small{line-height:1.3}
+#card.bare{border:0;background:none!important;box-shadow:none;padding:0;overflow:visible;width:100%;max-width:390px}
+#card.bare .shop{flex:initial;max-height:calc(100dvh - 80px);overflow:auto;overscroll-behavior:contain;border:2px solid #332b1e;border-radius:18px 15px 19px 16px;box-shadow:0 0 0 3px #f3dfb4,0 7px 0 3px #1f1d17;padding:9px;--cs:1}
+#card .property-title{display:flex;align-items:center;gap:10px;padding:2px 38px 10px 0;min-height:43px}
+#card .property-title h2{font-size:21px;margin:0;padding:0;text-transform:none;font-weight:800}
+.property-mark{font-size:26px;line-height:1;min-width:31px}
+.property-picture{width:100%;height:156px;border:1px solid #7e6948;border-radius:11px;overflow:hidden;margin-bottom:7px;background:#ccb082}
+.property-illustration{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+#card .shop .banner{min-height:130px;padding:15px;background:#36566c;color:#f3dfb4;border-radius:10px;margin-bottom:8px}
+#card .shop .banner b{font:800 24px/1.1 'Suisse Intl',Arial,sans-serif;white-space:normal;text-transform:none;color:inherit}
+#card .shop .srow{min-height:55px;margin:0 0 7px;padding:7px;border:1px solid #ac9265;border-radius:12px;background:#fff3d137}
+#card .shop .ico{width:39px;height:39px;font-size:24px;border:3px solid #39734a;background:#272c23;flex:none}
+#card .shop .nm{font-size:16px}#card .shop .lvl{font:700 15px/1.1 'Suisse Intl',Arial,sans-serif;padding:7px 13px;min-width:61px;background:#347347}
+#card .shop .box{margin:0 0 6px;padding:9px 10px;border:1px solid #aa926b;border-radius:10px;background:#fff4d477;font-size:14px;min-height:43px}
+#card .shop .box b{font-size:17px}
+#card .shop .two{padding:0;margin:8px 0;gap:7px;align-items:stretch}
+#card .shop .up{padding:10px 7px 8px;gap:5px;border:1px solid #9c8258;border-radius:12px;background:#fff1cd45}
+#card .shop .up .uic{width:46px;height:43px;flex:none}
+#card .shop .up .lab{font-size:13px;color:#322b21;min-height:19px}
+#card .shop .up .nums{font:750 21px/1.15 'Suisse Intl',Arial,sans-serif;margin:0 0 6px;white-space:normal;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
+#card .shop .up .nums b{color:#347347}#card .shop .up .nums i{font-size:21px;margin:0 2px}
+#card .shop .up .nums small{font:400 11px/1.25 'Suisse Intl',Arial,sans-serif;flex-basis:100%;color:#5d513e;margin-top:3px}
+#card .shop .up button:not(.qm){margin-top:auto;min-height:44px;font-size:16px}
+#card .shop .up .qm,#card .shop .srow .qm{width:30px;min-height:30px;height:30px;font-size:17px;border:1px solid #77603d;background:#f0dab0;color:#27231c;padding:0;line-height:28px;box-shadow:none}
+#card .shop .wide{margin:7px 0;padding:10px;border:1px solid #aa926b;background:#fff0ca60;font-size:14px}
+#card .shop .buy,#card .shop .buyall{margin:7px 0 3px;width:100%;min-height:47px;font-size:16px}
+#card .shop .need,#card .shop .hintline{font-size:12px;padding:7px 2px;color:#564831;line-height:1.3}
+#card button:not(.qm):not(.painted-close):not(.training-good):not(.tab):not(.claim){border:1px solid #2c2c23;border-radius:11px;box-shadow:0 3px #252620;min-height:44px;font-weight:700}
+#card .shop .buy,#card .shop .buyall,#card .shop .up button:not(.qm),#card button.hard,#card .sec{background:#36566c;color:#fff1cc}
+#card .ok{background:#347347;color:#fff1cc}
+#card button:disabled{background:#7c817e!important;color:#ebe2cf!important;filter:saturate(.25);opacity:.8;box-shadow:0 2px #51554f!important;cursor:default}
+#card .painted-close,#helpDialog .painted-close{position:absolute;z-index:6;top:-19px;right:-12px;width:46px;height:46px;min-height:46px;padding:0;margin:0;background:none;border:0;border-radius:50%;overflow:hidden;box-shadow:0 3px 0 #211e17;filter:drop-shadow(0 1px 1px #0008);font-size:0}
+#card:not(.bare) .painted-close{top:7px;right:7px}
+#card .shop .wr{padding:8px 6px;margin:0 0 7px;background:#fff3d16b;border:1px solid #aa926b;border-radius:12px}
+#card .shop .wn{font-size:15px}#card .shop .wn small{font-size:11px}#card .shop .wq{font-size:15px}
+#card .shop .wr button{font-size:13px;padding:7px}
+#card .shop .whead{font-size:17px;padding:5px 0 8px}
+#helpDialog{padding:0;border:2px solid #302719;box-shadow:0 0 0 3px #f3dfb4,0 7px #211c17;border-radius:18px;color:#27231c;max-width:440px}
+#helpDialog .help-head{background:transparent;border-bottom:1px solid #ac9265;padding:14px 60px 12px 16px}
+#helpDialog .painted-close{top:8px;right:8px;width:40px;height:40px;min-height:40px}
+#helpDialog .help-head h2{font:800 21px/1.2 'Suisse Intl',Arial,sans-serif;margin:0}
+#toast{padding:9px 12px;gap:9px;border:2px solid #33291c;border-radius:15px;box-shadow:0 4px #33291c;background:#f3dfb4;color:#29241b;font-size:13px;max-width:366px}
+#toast .tico{display:none}#toast .feedback-sun{width:45px;height:47px;flex:none;display:block;border-radius:50%;overflow:hidden}
+#toast .ttxt{font-weight:600;line-height:1.25}
+#card.training-card{width:100%;padding:15px;max-width:390px;overflow:hidden}
+#card .training-art{height:150px}
+#card .parcel-actions{padding:8px 0;background:none}
+#card .parcel-summary{background:#fff0c675;border:1px solid #b29970}
+button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
+@media(max-height:720px){.property-picture{height:115px}#card .property-title h2{font-size:19px}#card .shop .srow{min-height:48px}#card .shop .up{padding-top:7px}#card .shop .up .uic{width:34px;height:32px}#card .shop .up .lab{font-size:12px}#card .shop .box{padding:7px 9px}#card{max-height:calc(100dvh - 52px)!important}#card.bare .shop{max-height:calc(100dvh - 64px)}}
+.round-art{clip-path:circle(47%)}
+.sheet-paper svg{display:block}
+
+/* Remaining windows: the new supplied sheets, not a flattened screenshot. */
+.window-scene{height:122px;border:1px solid #806c48;border-radius:12px 10px 13px 10px;overflow:hidden;background:#557887;margin:0 0 12px}
+.window-scene .atlas-art{width:100%;height:100%}
+#helpDialog:not(.welcome) .help-body{padding:12px 16px 18px}
+#helpDialog .help-scene{height:auto;aspect-ratio:408 / 150;margin-bottom:10px}
+#helpDialog .help-body p{font-size:14px;line-height:1.4}
+#helpDialog .help-facts{border:1px solid #ad9162;border-radius:10px;background:#fff3d147;padding:11px;font-size:14px}
+#helpDialog .help-steps{margin:13px 0;border:1px solid #ae9160;border-radius:12px;padding:0 12px;background:#fff4d32e}
+#helpDialog .help-steps li{padding:13px 0 13px 37px;border-bottom:1px solid #bca479}
+#helpDialog .help-steps li:last-child{border:0}
+#helpDialog .help-steps li:before{top:13px;width:27px;height:27px;background:#347347;border:1px solid #295638;box-shadow:inset 0 0 0 2px #85a56d60}
+#helpDialog .help-steps b{font-size:16px;margin-bottom:4px}
+#helpDialog .help-steps span{font-size:14px;line-height:1.35;color:#514736}
+#helpDialog details{border:1px solid #ae9160;border-radius:9px;padding:0 10px;margin:7px 0;background:#fff0c33b}
+#helpDialog summary{font-size:15px;min-height:46px;padding:12px 0}
+#helpDialog .help-replay{font-family:inherit;font-size:14px;min-height:44px}
+.enamel-button{position:relative;isolation:isolate;overflow:hidden}
+#card button.enamel-button,#helpDialog button.enamel-button{background:transparent!important;border:0!important;border-radius:11px;box-shadow:0 2px #29271f;color:#fff3d5;font-family:inherit;min-height:46px;padding:10px 13px;line-height:1.2}
+.enamel-skin{position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;overflow:hidden}
+#card button.enamel-button:disabled{filter:grayscale(.9);opacity:.7;background:none!important}
+#card.settings-card{padding:13px;max-width:430px}
+#card .settings-title{display:flex;align-items:center;gap:9px;margin:-13px -13px 6px;padding:15px 50px 15px 14px;color:#fff0c9;background:#a53827 url(assets/paper-grain.svg);border-bottom:2px solid #5f3220;font-size:21px;min-height:65px}
+.settings-gear{width:34px;height:34px;flex:none}
+#card.settings-card .row{display:flex;gap:10px;align-items:center;border:1px solid #b29970;border-radius:10px;padding:10px;margin:7px 0;background:#fff2ce40}
+#card.settings-card .n{font-size:14px;line-height:1.3;flex:1;min-width:0}
+#card.settings-card .n small{display:block;font-size:12px;color:#63563f;line-height:1.35;margin-top:4px}
+#card.settings-card .qty{flex:none}
+#card.settings-card .qty button{font-size:13px;padding:8px 10px}
+.settings-stepper{display:flex;align-items:center;flex:none;gap:2px}
+#card .settings-stepper input{width:47px;min-width:0;height:44px;padding:3px;border:0;border-radius:0;border-bottom:1px solid #9c8258;background:#fff0c955;text-align:center;color:#2c291e;font-family:inherit;font-weight:700;font-size:16px;appearance:textfield;-moz-appearance:textfield}
+#card .settings-stepper input::-webkit-inner-spin-button,#card .settings-stepper input::-webkit-outer-spin-button{appearance:none;margin:0}
+#card .settings-stepper button{width:38px;min-width:38px;min-height:44px;padding:0;font-size:20px}
+#card.settings-card .mbtns{gap:8px;margin-top:10px}
+#card.settings-card .mbtns button{flex:1;font-size:14px}
+#card.settings-card > p{color:#69583c;font-size:12px!important}
+#card.shipping-window{padding:14px;max-width:420px}
+#card.shipping-window > h2{font-size:23px;padding-right:39px;min-height:33px;margin-bottom:11px}
+#card.shipping-window h2 .qm{vertical-align:middle;width:36px;height:36px;min-height:36px;margin-left:5px;padding:0;border:1px solid #796446;border-radius:50%;background:#e7d2a3;color:#302a20;font-size:19px;line-height:34px;box-shadow:none}
+#card.shipping-window .shipping-scene{height:auto;aspect-ratio:404 / 168}
+#card.shipping-window .parcel-note{font-size:12px;line-height:1.35;margin:8px 0;color:#69583e}
+#card.shipping-window .parcel-summary{border-radius:12px;margin:10px 0;padding:12px;background:#fff3d355}
+#card.shipping-window .parcel-summary .total{font-size:14px}
+#card.shipping-window .parcel-summary .total b{font-size:25px;white-space:nowrap;color:#28643f}
+#card.shipping-window .parcel-summary p{font-size:12px}
+#card.shipping-window .bar{height:10px;background:#a89f7e77;border-radius:8px;overflow:hidden;margin-top:9px}
+#card.shipping-window .bar i{background:#41794b}
+#card.shipping-window .parcel-meta{font-size:12px;align-items:center}
+#card.shipping-window .slots{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+#card.shipping-window .slot{position:relative;min-width:0;width:auto;height:53px;border:1.5px dashed #776b4c;border-radius:8px;background:#fff2d04a;font-size:24px;box-shadow:none}
+#card.shipping-window .slot.f{border:1.5px solid #7a724b;background:#dee1b47d}
+#card.shipping-window .slot small{font-size:10px;bottom:3px;right:3px;color:#51472f}
+#card.shipping-window .row{padding:10px 0;gap:8px;border-bottom:1px solid #b6a078}
+#card.shipping-window .n{font-size:15px;line-height:1.25;min-width:0}
+#card.shipping-window .n small{font-size:11px;color:#65573e;margin-top:4px;line-height:1.3}
+#card.shipping-window .qty{gap:4px;flex:none}
+#card.shipping-window .qty button{width:42px;min-width:42px;min-height:44px;font-size:21px;padding:0}
+#card.shipping-window .qty b{font-size:16px;min-width:17px;text-align:center}
+#card.shipping-window .parcel-actions{position:sticky;bottom:-14px;z-index:3;background:#ecd9b2 url(assets/paper-grain.svg);padding:10px 0 13px;margin:9px 0 -5px;border-top:1px solid #ac9365;box-shadow:0 -8px 12px #eddbb29c}
+#card.shipping-window .parcel-actions button{font-size:14px;min-height:46px}
+#card.shipping-window #mSend{min-height:50px;font-size:17px}
+#toast{border:3px double #b88237;outline:2px solid #302a20;border-radius:13px;background:#f1dfb6 url(assets/paper-grain.svg);box-shadow:0 5px #211e17}
+#toast .feedback-sun{width:57px;height:57px;border-radius:10px}
+#toast .ttxt{font-size:13px;font-weight:650}
+@media(max-width:350px){
+  #card.settings-card .row{gap:5px;padding:8px}
+  #card.settings-card .n{font-size:13px}
+  #card.settings-card .n small{font-size:11px}
+  #card .settings-stepper input{width:38px;font-size:14px}
+  #card .settings-stepper button{width:33px;min-width:33px}
+  #card.shipping-window .slot{height:44px;font-size:21px}
+  #card.shipping-window .qty button{width:37px;min-width:37px}
+  #card.shipping-window .parcel-meta{font-size:11px}
+}
+@media(max-height:650px){#card.shipping-window .shipping-scene{max-height:90px}#helpDialog .help-scene{max-height:90px}}
+
+/* v23: the paper belongs to the shell, never to a scrolling child. */
+.sheet-surface{background:#efdbaf url(assets/paper-grain.svg)!important}
+#card{background:#efdbaf url(assets/paper-grain.svg);scrollbar-width:thin;scrollbar-color:#796345 #dec899}
+#card.shipping-window{display:flex;flex-direction:column;overflow:hidden;padding:0;max-height:calc(100dvh - 56px)!important}
+.cargo-head{flex:none;padding:16px 48px 11px 15px;border-bottom:2px solid #ad9162}
+#card.shipping-window .cargo-head h2{padding:0;margin:0;font-size:22px}
+.cargo-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px 14px;scrollbar-width:thin}
+#card.shipping-window .shipping-scene{height:95px;aspect-ratio:auto;margin-bottom:10px}
+#card.shipping-window .shipping-scene-image{display:block;width:100%;height:100%;object-fit:cover;object-position:center;}
+.cargo-foot{flex:none;padding:10px 14px 12px;background:#efdbaf url(assets/paper-grain.svg);border-top:2px solid #a58a5b;box-shadow:0 -5px 12px #30271720}
+#card.shipping-window .parcel-actions{position:static;box-shadow:none;background:none;padding:0;margin:0;border:0;gap:7px}
+#card.shipping-window .cargo-foot .parcel-note{font-size:11px;margin:9px 0 0;line-height:1.3}
+#card.shipping-window .qty button{width:40px;min-width:40px;border-radius:50%;overflow:hidden}
+#card.shipping-window .parcel-meta{position:sticky;top:-12px;padding:9px 0;margin:0;background:#efdbaf;z-index:2}
+#card.shipping-window .row .n{font-size:15px}
+#card.shipping-window .parcel-summary{padding:10px}
+#card .mbtns{gap:8px}
+#card .mbtns button{font-size:15px}
+#card .row{gap:9px}
+#card .painted-close{touch-action:manipulation}
+#tip{background:#30332c url(assets/paper-grain.svg);color:#fff0cd;border:2px solid #e4b85e;outline:2px solid #2a271e;border-radius:13px 10px 15px 10px;box-shadow:0 5px #181b16,0 10px 28px #0008;padding:17px 18px 13px;font-weight:600;font-size:15px;line-height:1.4}
+#tip:after{content:'Тапни здесь или рядом, чтобы закрыть';color:#d8be87;font-size:11px;font-weight:400;padding-top:8px;margin-top:9px;border-top:1px solid #b6975955}
+#tip:before{content:'Совет Джонни';display:block;color:#efc669;font-size:12px;font-weight:700;margin-bottom:7px}
+#modal:not([hidden]):not(.closing) #card{animation:paper-enter .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes paper-enter{from{opacity:0;translate:0 12px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+@media(max-height:650px){#card.shipping-window .shipping-scene{height:70px}.cargo-head{padding-top:10px;padding-bottom:8px}.cargo-foot{padding-top:8px;padding-bottom:8px}}
+@media(prefers-reduced-motion:reduce){#modal:not([hidden]):not(.closing) #card{animation:none}}
+/* Registered paper crop from the supplied atlas, repeated by CSS over the full shell. */
+.sheet-surface,#card{background:#efdbaf url(assets/window-paper.svg)!important}
+.cargo-head,.cargo-foot{background:#efdbaf url(assets/window-paper.svg)}
+#tip{background:#30332c!important;color:#fff0cd!important;opacity:1}
+#tip:after{background:none!important}
