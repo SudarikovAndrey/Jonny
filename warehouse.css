@@ -1,0 +1,41 @@
+#card.warehouse-card{padding:0;overflow:hidden;max-width:450px;max-height:calc(100dvh - 46px)!important;border:2px solid #2e271d;border-radius:17px 12px 19px 13px;background:#efdbaf url(assets/window-paper.svg)!important}
+.warehouse-shell{display:flex;flex-direction:column;max-height:calc(100dvh - 50px);min-height:0}
+.warehouse-head{padding:9px 10px 10px;flex:none;border-bottom:2px solid #97743e}
+.costco-sign{width:100%;aspect-ratio:781/267;overflow:hidden;filter:drop-shadow(0 2px 0 #342719)}
+.warehouse-heading{display:flex;gap:5px;align-items:center;padding:10px 4px 0}
+#card .warehouse-heading h2{font-size:20px;line-height:1.17;margin:0;flex:1;letter-spacing:0}
+#card .warehouse-help .qm{width:33px;height:33px;min-height:33px;padding:0;border-radius:50%;border:2px solid #332b1f;background:#e6cc94;color:#2e271d;box-shadow:none;font-size:20px;line-height:29px}
+#card .warehouse-head p{font-size:12px;line-height:1.35;color:#58482e;margin:6px 4px 0}
+.warehouse-list{overflow:auto;min-height:0;flex:1;padding:9px 10px 11px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#9b8153 #e8d6ae}
+#card .warehouse-list .wr{display:grid;grid-template-columns:45px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:3px 7px;min-height:79px;padding:9px 7px;margin:0 0 8px;border:1.5px solid #3d3020;box-shadow:0 2px #9a8051,inset 0 0 0 2px #fff4d075;border-radius:12px 8px 11px 9px;background:#f3dfb35e}
+#card .warehouse-list .wr:last-child{margin-bottom:0}
+#card .warehouse-list .wr.trend{background:#f4bf4655;outline:2px solid #d4a546;outline-offset:-4px}
+.warehouse-list .ring{position:relative;grid-row:1/3;width:45px;height:45px;align-self:center;border-radius:50%;background:conic-gradient(#377148 0 var(--p),#a99e7c77 var(--p) 100%);padding:5px;box-shadow:0 1px #faf0cf}
+.warehouse-list .ring i{display:flex;align-items:center;justify-content:center;border-radius:50%;width:100%;height:100%;background:#f2dfb7;font-style:normal;font-size:27px}
+.warehouse-list .ring .atlas-art{width:36px;height:36px;flex:none;overflow:visible}
+#card .warehouse-list .wn{grid-column:2;grid-row:1;align-self:end;font-size:16px;line-height:1.15;font-weight:800;min-width:0;overflow-wrap:anywhere}
+#card .warehouse-list .wn small{display:block;font-weight:400;font-size:10px;line-height:1.35;color:#594931;margin-top:4px}
+#card .warehouse-list .wq{grid-column:2;grid-row:2;font-weight:700;font-size:12px;color:#493e2a;align-self:start}
+#card .warehouse-list button.enamel-button{grid-column:3;grid-row:1/3;align-self:center;width:89px;min-width:0;height:47px;min-height:44px;margin:0;padding:6px 4px;font-size:14px;border-radius:10px;white-space:nowrap}
+#card.warehouse-card .painted-close{top:3px;right:2px;width:45px;height:45px;min-height:45px;z-index:6}
+.warehouse-footer{flex:none;padding:0 11px 11px;border-top:1px solid #ac905c;background:#efdbaf url(assets/window-paper.svg);box-shadow:0 -4px 8px #45341e15}
+.warehouse-johnny{height:70px;position:relative;display:flex;align-items:center;gap:8px}
+.warehouse-portrait{align-self:end;width:79px;height:65px;flex:none;filter:drop-shadow(0 1px #332b1b)}
+.warehouse-bubble{position:relative;flex:1;font-size:13px;line-height:1.25;background:#efd5a1;border:1.5px solid #44311e;border-radius:17px 13px 17px 9px;padding:7px 9px;transform:rotate(-2deg)}
+.warehouse-bubble small{display:block;font-size:9px;color:#655032;margin-top:3px}
+.warehouse-wallet{font-size:9px;line-height:1.35;color:#5d4c32;text-align:right;white-space:nowrap}.warehouse-wallet b{display:block;font-size:17px;color:#30291d}
+#card button.warehouse-bulk{display:flex;align-items:center;gap:8px;justify-content:center;width:100%;min-height:56px;padding:8px 10px;font-size:15px;line-height:1.15;text-align:left;border-radius:12px}
+#card button.warehouse-bulk>span:not(.enamel-skin):not(.warehouse-money){flex:1;font-weight:800}
+.warehouse-money{width:34px;height:34px;flex:none;display:block}
+#card button.warehouse-bulk>b{padding-left:10px;border-left:1px solid #f2d39a70;font-size:22px;white-space:nowrap}
+.warehouse-buy-note{display:block;font-size:10px;line-height:1.3;margin-top:7px;color:#665235;text-align:center}
+.warehouse-empty{padding:22px 10px;text-align:center}.warehouse-empty b{font-size:18px}.warehouse-footer>.sec{width:100%}
+.stock-added .ring,.stock-added .wq{animation:warehouse-stock .28s ease-out}
+@keyframes warehouse-stock{40%{transform:scale(1.13);filter:brightness(1.2)}to{transform:none;filter:none}}
+@media(min-width:410px){#card .warehouse-list .wr{grid-template-columns:49px minmax(0,1fr) 49px 94px;grid-template-rows:1fr;gap:6px;padding:10px 8px}#card .warehouse-list .ring{grid-row:1}#card .warehouse-list .wn{grid-row:1;align-self:center}#card .warehouse-list .wq{grid-row:1;grid-column:3;align-self:center;text-align:center;font-size:15px}#card .warehouse-list button.enamel-button{grid-row:1;grid-column:4;width:94px}}
+@media(max-width:350px){.warehouse-head{padding:7px 8px}.warehouse-heading{padding-top:7px}#card .warehouse-heading h2{font-size:18px}#card .warehouse-head p{font-size:11px}.warehouse-list{padding:8px}#card .warehouse-list .wr{grid-template-columns:38px minmax(0,1fr) 77px;gap:3px 5px;padding:8px 6px;min-height:75px}.warehouse-list .ring{width:38px;height:38px;padding:4px}.warehouse-list .ring .atlas-art{width:30px;height:30px}#card .warehouse-list .wn{font-size:14px}#card .warehouse-list button.enamel-button{width:77px;font-size:12px}.warehouse-johnny{height:61px;gap:5px}.warehouse-portrait{width:63px;height:54px}.warehouse-bubble{font-size:11px;padding:6px}.warehouse-wallet b{font-size:15px}#card button.warehouse-bulk{font-size:13px;min-height:50px}#card button.warehouse-bulk>b{font-size:19px}.warehouse-money{width:27px}}
+@media(max-height:670px){.costco-sign{max-height:91px;aspect-ratio:auto}.warehouse-heading{padding-top:6px}.warehouse-johnny{height:57px}.warehouse-portrait{height:53px;width:67px}.warehouse-buy-note{font-size:9px}.warehouse-footer{padding-bottom:8px}}
+@media(prefers-reduced-motion:reduce){.stock-added .ring,.stock-added .wq{animation:none}}
+/* SVG atlas viewports must clip the source sheet, including inside progress rings. */
+.warehouse-list .ring .atlas-art{overflow:hidden}
+.costco-sign .atlas-art{clip-path:polygon(0 0,100% 0,100% 90%,85% 94%,0 100%)}

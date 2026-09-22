@@ -1,0 +1,140 @@
+:root{--disp:'Suisse Intl',Arial,sans-serif;--world-top:155px;--world-bottom:220px;--ui:1;--cream:#f6e5c1;--ink:#29231c}
+html,body{background:#24221e;font-family:'Suisse Intl',Arial,sans-serif}
+button,input,select,textarea{font-family:'Suisse Intl',Arial,sans-serif!important;letter-spacing:normal!important;font-stretch:normal}
+button{touch-action:manipulation}
+#app{max-width:480px;background:#36332e;isolation:isolate}
+#top,#panel,#inv,#tip,#toast{zoom:1!important}
+#top{padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 7px;gap:6px;background:linear-gradient(#b0b4a0,#656b65);border-bottom:2px solid #2d261d}
+.bar0{gap:5px;position:relative}
+#bJohnnyTop{width:49px;height:51px;flex:none;border:0;box-shadow:none;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:1097.14% 731.43%;background-position:2.22% 3.40%;border-radius:0;padding-top:33px}
+#bJohnnyTop span{display:none}#bJohnnyTop small{font:700 10px 'Suisse Intl',Arial,sans-serif;position:relative;top:3px;background:#f4e2bc;border-radius:4px;padding:1px 4px}
+#bHub{height:51px;min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;padding:7px 12px;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:273.80% 794%;background-position:20.06% 3.34%;box-shadow:none;border-radius:0;white-space:normal}
+#bHub b{font:800 17px/1.1 'Suisse Intl',Arial,sans-serif}#bHub small{font:600 11px/1.15 'Suisse Intl',Arial,sans-serif;white-space:nowrap}
+#bHub .chipbar{display:none}
+#bHelp{flex:none;width:48px;height:46px;min-height:44px;padding:0;border:2px solid #2c2820;background:#244963;color:#fff0ce;font:700 11px/1.15 'Suisse Intl',Arial,sans-serif;white-space:normal;box-shadow:0 2px #34281b}
+#bSettings{width:40px;height:46px;flex:none;font-size:0;border:0;box-shadow:none;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:1146.27% 731.43%;background-position:98.80% 2.82%;border-radius:0}
+.bar1,.bar2{gap:5px}
+.cur{height:36px;border:0;border-radius:8px;background-color:#f4e5c4;background-image:url(assets/paper-grain.svg);box-shadow:0 2px #241c15;overflow:hidden;padding:0 6px 0 3px}
+.cur b{font-size:18px;padding:0 4px;min-width:0}
+.cur .ic{font-size:0;background-color:transparent;width:33px;height:32px;flex:none;background-image:url(assets/interface-atlas.png);background-repeat:no-repeat}
+.cur .ic.g{background-size:2133.3% 1462.86%;background-position:3.1% 19.1%}
+.cur .ic.b{background-size:1860.6% 1511%;background-position:26.2% 19.2%}
+.cur .ic.o{background-size:2104.1% 1280%;background-position:49.02% 18.3%}
+.qchip{border:1px solid #b89b65;border-radius:10px;min-height:43px;background:#252420 url(assets/paper-grain.svg);padding:5px;color:#f9e5b6;font:600 11px/1.15 'Suisse Intl',Arial,sans-serif;box-shadow:0 2px #151511}
+.qchip.done{background:#406b43}
+#stage{position:absolute;inset:0;overflow:hidden}
+#godot-frame{position:absolute;left:0;width:100%;top:var(--world-top);bottom:var(--world-bottom);height:calc(100% - var(--world-top) - var(--world-bottom));border:0;pointer-events:none;z-index:0}
+#board{position:absolute;left:0;top:var(--world-top);width:100%;height:calc(100% - var(--world-top) - var(--world-bottom));opacity:0;z-index:1;touch-action:none}
+.map-controls{position:absolute;top:calc(var(--world-top) + 9px);right:9px;display:flex;gap:5px;z-index:3}
+.map-controls button{font-size:11px;min-height:33px;padding:5px 9px;background:#efe0c2ed;color:#29231c;border:1px solid #493923;border-radius:8px;box-shadow:0 2px #2c241a66}
+#inv{bottom:calc(var(--world-bottom) + 10px);left:8px}
+#invBtn{width:56px;padding:4px;border:1px solid #483b27;background:#f4e4c4}#invBtn em{font-size:21px}#invBtn i{width:42px}#invBtn small{font-size:11px}
+#panel{padding:7px 8px calc(env(safe-area-inset-bottom,0px) + 8px);gap:6px;background:#302d27 url(assets/paper-grain.svg);border-top:2px solid #201b14}
+#guide{border:0;border-radius:13px;background:#f4e4c4 url(assets/paper-grain.svg);color:#282219;box-shadow:inset 0 0 0 2px #302820,inset 0 0 0 5px #dbc8a1,0 2px #0006;padding:10px;gap:8px;min-height:74px;align-items:center}
+#guide img{width:48px;height:48px;object-fit:cover;border-radius:6px}
+#guide small{font-size:10px;line-height:1.1}
+#guide b{font:800 15px/1.2 'Suisse Intl',Arial,sans-serif;margin:2px 0}
+#guide p{font-size:12px;line-height:1.25;margin:3px 0 0}
+#tilebar{min-height:43px;border:2px solid #352a1f;border-radius:12px;background:#f5e4bf url(assets/paper-grain.svg);padding:6px 8px;gap:6px;box-shadow:0 2px #15100c;align-items:center}
+#tbText{font:700 13px/1.2 'Suisse Intl',Arial,sans-serif;min-width:0;overflow-wrap:anywhere}
+#tilebar>b{font:700 12px/1 'Suisse Intl',Arial,sans-serif;padding:8px;border-radius:9px;background:#397548;color:#fff2d1;white-space:nowrap}
+#tilebar.off>b{background:#8d8575;color:#eee3d1}
+#dock{display:grid;grid-template-columns:1fr 1fr 1.1fr 1fr 1fr;gap:3px;align-items:end;padding:2px 0 0}
+#dock>.dk{width:100%;height:77px;min-width:0;padding:48px 1px 6px;border:0;border-radius:0;background-color:transparent;background-image:url(assets/interface-atlas.png);box-shadow:none;color:#211b14}
+#dock .dk>span{display:none}
+#dock .dk>small{font:700 10px/1.1 'Suisse Intl',Arial,sans-serif;display:block;white-space:nowrap}
+#dock #bTaxi{background-size:1052% 731%;background-position:65.00% 92.00%}
+#dock #bShip{background-size:1052% 731%;background-position:75.70% 92.00%}
+#dock #bJohnny{background-size:1052% 731%;background-position:86.4% 92.00%}
+#dock #bShop{background-size:1052% 731%;background-position:97.5% 92.00%}
+#dock #bJohnny small,#dock #bShop small{color:#fff1ce}
+#dock .dk:disabled{opacity:.57;filter:saturate(.55)}
+#dock .diebox{margin:0;gap:2px;width:100%;align-self:end;min-width:0}
+#bRoll{width:86px;height:80px;max-width:calc(100vw / 4.7);border-radius:0;border:0;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:734.92% 628.22%;background-position:52.7% 91.3%;box-shadow:none}
+#bRoll .die{visibility:hidden}
+#bRoll:disabled{opacity:.58}
+#sRolls{font:800 15px/1 'Suisse Intl',Arial,sans-serif;border:1px solid #2f241a;border-radius:7px;padding:3px 8px;white-space:nowrap;box-shadow:none}
+#sRollsCap{font:600 10px/1 'Suisse Intl',Arial,sans-serif;padding:3px 2px;white-space:nowrap;box-shadow:none;border:1px solid #ae9769;border-radius:5px}
+#starterInfo{font-size:9px}
+.card,#helpDialog{font-family:'Suisse Intl',Arial,sans-serif;background:#f4e5c8 url(assets/paper-grain.svg);border:2px solid #392c20}
+.card h2,.card h3,#helpTitle{font-family:'Suisse Intl',Arial,sans-serif;font-weight:800;letter-spacing:normal}
+.card h2{font-size:23px;line-height:1.1}
+.card p{font-size:14px}
+.card button{min-height:43px}
+.card{max-height:calc(100dvh - 28px)!important}
+#helpDialog{max-height:90dvh;width:calc(100% - 20px)}
+#tip{font:600 15px/1.3 'Suisse Intl',Arial,sans-serif}
+.coach-tip-open #godot-frame{filter:blur(4px)}
+.coach-tip-open #toast{visibility:hidden}
+.map-float,.mobile-fly{position:fixed;pointer-events:none;z-index:75;font:800 19px 'Suisse Intl',Arial,sans-serif;text-shadow:0 2px 2px #23190e;transform:translate(-50%,-50%)}
+.map-float{animation:mapFloat 1.4s ease-out forwards}
+@keyframes mapFloat{to{translate:0 -45px;opacity:0}}
+#boot{position:absolute;inset:0;z-index:120;background:#282720;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f5e4c3;gap:14px;padding:25px;text-align:center}
+#boot .boot-sun{width:130px;height:130px;background:url(assets/interface-atlas.png);background-size:720% 470%;background-position:86.4% 0%}
+#boot b{font-size:20px}#boot small{font-size:13px;opacity:.8}
+.engine-ready #boot{display:none}
+@media(max-width:360px){#bHub small{font-size:10px}#bHub b{font-size:15px}#bJohnnyTop{width:43px}#bHelp{width:43px;font-size:10px}#guide img{display:none}.qchip{font-size:10px}#dock .dk>small{font-size:9px}#bRoll{height:72px}}
+@media(max-height:720px){#guide p{font-size:11px}#guide{padding:7px;min-height:63px}#guide img{width:38px;height:38px}#dock>.dk{height:68px;padding-top:42px}#bRoll{height:68px}#top{gap:4px}.qchip{min-height:36px}.cur{height:33px}}
+@media(prefers-reduced-motion:reduce){.map-float{animation-duration:.1s}}
+/* Keep the atlas art crisp; original prototype color shorthands must not erase it. */
+.cur .ic.g,.cur .ic.b,.cur .ic.o{background-color:transparent;background-image:url(assets/interface-atlas.png);background-repeat:no-repeat}
+.cur .ic.g{background-size:2133.3% 1462.86%;background-position:3.1% 19.1%}
+.cur .ic.b{background-size:1860.6% 1511%;background-position:26.2% 19.2%}
+.cur .ic.o{background-size:2104.1% 1280%;background-position:49.02% 18.3%}
+.cur,#guide,#tilebar,.card,#helpDialog{background-image:linear-gradient(#f4e4c4e8,#f4e4c4e8),url(assets/paper-grain.svg)}
+.qchip{background-image:linear-gradient(#252420ed,#252420ed),url(assets/paper-grain.svg)}
+#panel{background-image:linear-gradient(#302d27ed,#302d27ed),url(assets/paper-grain.svg)}
+#bRoll.guide-target{animation:mobileRollPulse 1.05s ease-in-out infinite!important}
+@keyframes mobileRollPulse{0%,100%{transform:scale(1);filter:brightness(1) drop-shadow(0 0 2px #f5c652);box-shadow:none}50%{transform:scale(1.07);filter:brightness(1.15) drop-shadow(0 0 9px #ffe07d);box-shadow:none}}
+#bHub,#bHub small{color:#29231c}
+body.mobile-modal #toast{visibility:hidden;pointer-events:none!important}
+#card.training-card{width:calc(100% - 24px);max-width:440px;padding:14px;box-sizing:border-box;border-radius:18px}
+.training-card .training-pack{grid-template-columns:minmax(0,1fr) 22px 78px;gap:5px}
+.training-card .training-good{grid-template-columns:46px minmax(0,1fr);gap:6px;padding:6px;min-width:0}
+.training-card .training-good .good-icon{width:46px;height:46px;font-size:28px}
+.training-card .training-good b{font-size:14px}.training-card .training-good small{font-size:11px}
+.training-card .training-crate{width:78px;height:84px}
+.training-card .training-content{overflow-x:hidden}
+.training-card>.training-actions{background:transparent}
+@media(max-width:360px){.training-card .training-good{grid-template-columns:1fr;text-align:center;justify-items:center}.training-card .training-good small{font-size:10px}}
+.training-card .training-crate.pulse{animation:crateFlash .65s ease-out!important;transform:none!important}
+@keyframes crateFlash{0%,100%{filter:brightness(1)}40%{filter:brightness(1.3)}}
+/* Full-screen field. Only the individual paper controls cover the artwork. */
+#top,#panel{background:none;border:0;box-shadow:none;pointer-events:none}
+#top>*{pointer-events:none}#top button,#top .cur{pointer-events:auto}
+#panel>*{pointer-events:auto}#panel #dock{pointer-events:none}#dock button{pointer-events:auto}
+#godot-frame,#board{inset:0;width:100%;height:100%;bottom:auto}
+#panel{padding:4px 9px calc(env(safe-area-inset-bottom,0px) + 9px);gap:7px}
+#top{padding-top:calc(env(safe-area-inset-top,0px) + 8px);gap:5px}
+#dock{gap:4px;padding:0;grid-template-columns:1fr 1fr 1.14fr 1fr 1fr}
+#dock .diebox{gap:0;pointer-events:none}
+#dock>.dk{height:73px;padding-top:46px;filter:drop-shadow(0 3px 2px #24170b77)}
+#dock .dk:disabled{opacity:.8;filter:saturate(.45) drop-shadow(0 3px 2px #24170b77)}
+#bRoll{height:76px;width:82px}
+#sRolls{margin-top:-5px;z-index:1;font-size:14px;min-width:62px;background:#f3dfb4}
+#sRollsCap{margin-top:3px;background:#27231ced;color:#f3dfb4;font-size:9px}
+#starterInfo{max-width:100px;background:#27231cef;border-radius:4px;padding:2px;font-size:8px;line-height:1.2}
+#guide{min-height:65px;padding:8px 10px;gap:8px;box-shadow:0 3px #271e14,0 6px 10px #21170d44,inset 0 0 0 2px #a88c60}
+#guide img{width:42px;height:44px}
+#guide b{font-size:14px}#guide p{font-size:12px}
+#tilebar{min-height:47px;box-shadow:0 3px #271e14,0 5px 9px #21170d44}
+#inv{bottom:calc(var(--world-bottom) + 13px);left:10px;pointer-events:none}#inv button,#invList{pointer-events:auto}
+.map-controls{top:calc(var(--world-top) + 7px);right:9px;gap:4px}
+.map-controls button{min-height:34px;font-size:10px;padding:6px 8px;box-shadow:0 2px #33271788}
+#diceResult{position:absolute;z-index:10;top:calc(var(--world-top) + 48px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:6px 13px;text-align:center;background:#f3dfb4 url(assets/paper-grain.svg);border:2px solid #30261b;border-radius:13px;box-shadow:0 3px #30261b;color:#27231c;pointer-events:none}
+#diceResult[hidden]{display:none}#diceResult small{display:block;font-size:10px}#diceResult b{display:block;font-size:26px;line-height:1}
+#diceResult .result-faces{font-family:'Apple Symbols','Segoe UI Symbol',sans-serif;font-size:36px;line-height:1;white-space:nowrap}
+#diceResult .result-total{border-left:1px solid #ac9466;padding-left:12px;min-width:40px}
+.map-controls{display:none}
+#diceResult{top:calc(var(--world-top) + 9px);left:8px;transform:none;gap:8px;padding:5px 8px}
+#diceResult .result-faces{font-size:30px}
+#diceResult .result-total{padding-left:8px;min-width:32px}
+#diceResult b{font-size:23px}
+.mobile-modal #diceResult,.coach-tip-open #diceResult{visibility:hidden}
+.dice-rolling .map-controls,.dice-rolling #inv,.dice-rolling #guide{visibility:hidden}
+.dice-rolling #toast{visibility:hidden;pointer-events:none!important}
+@media(max-height:720px){#guide{min-height:57px;padding:6px 9px}#guide img{width:36px;height:38px}#guide p{font-size:11px}#dock>.dk{height:64px;padding-top:39px}#bRoll{height:65px}#panel{gap:5px}.map-controls button{min-height:31px}#tilebar{min-height:44px}}
+@media(prefers-reduced-motion:reduce){#bRoll.guide-target,.guide-target{animation:none!important;filter:brightness(1.1)}#diceResult{transition:none}}
+/* Brief ink-and-paper accents; never cover controls or intercept a tap. */
+.cartoon-fx{position:fixed;z-index:8;pointer-events:none;transform:translate(-50%,-50%)}
+.cartoon-fx svg{display:block;width:100%;overflow:visible}
