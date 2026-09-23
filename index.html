@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=54"><link rel="stylesheet" href="mobile-windows.css?v=31"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=56"><link rel="stylesheet" href="mobile-windows.css?v=31"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -2148,6 +2148,22 @@ settings=function(){
     ()=>GameFeedback.muted, ()=>GameFeedback.toggle()));
   audioRow.append(makeToggle(NOTE,'Музыка включена','Музыка выключена',
     ()=>GameFeedback.musicMuted, ()=>GameFeedback.toggleMusic()));
+  if(FullScreen.supported()){
+    const EXPAND='<path d="M8 19V8h11M42 31v11H31M42 19V8H31M8 31v11h11" fill="none" stroke="#2a2118" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+    const SHRINK='<path d="M19 8v11H8M31 42V31h11M31 8v11h11M19 42V31H8" fill="none" stroke="#2a2118" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+    const fs=document.createElement('button'); fs.className='sec audio-toggle';
+    const paint=()=>{
+      const on=FullScreen.active();
+      fs.innerHTML='<svg viewBox="0 0 50 50" aria-hidden="true">'+(on?SHRINK:EXPAND)+'</svg>';
+      fs.setAttribute('aria-pressed',String(on));
+      fs.setAttribute('aria-label',on?'Выйти из полного экрана':'Во весь экран');
+      fs.title=fs.getAttribute('aria-label');
+    };
+    paint();
+    fs.onclick=async()=>{ await FullScreen.toggle(); setTimeout(paint,150); };
+    document.addEventListener('fullscreenchange',paint);
+    audioRow.append(fs);
+  }
   $('card').append(audioRow);
   const row=document.createElement('div');row.className='mbtns';
   const debug=document.createElement('button');debug.className='sec';debug.textContent=mobileDebug?'Скрыть коллайдеры':'Показать коллайдеры';
@@ -2405,6 +2421,44 @@ function placeDiceResult(el,x,y){
     el.style.transform = 'none';
     el.style.visibility='';
   });
+}
+
+// Полноэкранный режим. На iOS Safari Element.requestFullscreen отсутствует —
+// там кнопка прячется, вместо неё работает «На экран Домой».
+const FullScreen = {
+  supported(){
+    const el = document.documentElement;
+    return !!(el.requestFullscreen || el.webkitRequestFullscreen);
+  },
+  active(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); },
+  async toggle(){
+    const el = document.documentElement;
+    try{
+      if(this.active()){
+        await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
+      }else{
+        await (el.requestFullscreen ? el.requestFullscreen({navigationUI:'hide'}) : el.webkitRequestFullscreen());
+        if(screen.orientation && screen.orientation.lock){
+          screen.orientation.lock('portrait').catch(()=>{});
+        }
+      }
+    }catch(e){ /* отказ браузера не должен ломать игру */ }
+  }
+};
+// Кнопка на загрузочном экране: касание по ней — жест пользователя,
+// без которого браузер полноэкранный режим не включает.
+// Хуки выполняются до того, как разметка загрузочного экрана попадает
+// в документ, поэтому привязка откладывается до готовности DOM.
+function bindBootFullscreen(){
+  const b = document.getElementById('bootFull');
+  if(!b || !FullScreen.supported()) return;
+  b.hidden = false;
+  b.onclick = () => FullScreen.toggle();
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', bindBootFullscreen);
+}else{
+  bindBootFullscreen();
 }
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
@@ -2778,5 +2832,5 @@ if(!load())newGame();else if(S.finished)newGame();else if(!S.player)setTimeout((
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<div id="boot"><div class="boot-sun"></div><b>Джонни собирается в путь</b><span id="loadProgress">Загружаем поле…</span><small>Вертикальная сборка · Бруклин</small></div></body>
+<div id="boot"><div class="boot-city" aria-hidden="true"></div><div class="boot-sun" aria-hidden="true"></div><div class="boot-head"><span class="boot-stamp" aria-hidden="true"></span><div><b>АМЕРИКЭН БОЙ</b><small>Бруклин · товар едет к пацанам</small></div></div><img class="boot-hero" src="assets/bp/bp-johnny.png" width="260" height="323" alt=""><div class="boot-meter" role="progressbar" aria-label="Загрузка"><i id="loadBar"></i></div><span id="loadProgress">Загружаем поле…</span><button id="bootFull" type="button" hidden>Во весь экран</button><small class="boot-tip">Первый запуск дольше: подтягивается движок</small></div></body>
 </html>

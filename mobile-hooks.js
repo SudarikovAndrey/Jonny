@@ -116,6 +116,22 @@ settings=function(){
     ()=>GameFeedback.muted, ()=>GameFeedback.toggle()));
   audioRow.append(makeToggle(NOTE,'Музыка включена','Музыка выключена',
     ()=>GameFeedback.musicMuted, ()=>GameFeedback.toggleMusic()));
+  if(FullScreen.supported()){
+    const EXPAND='<path d="M8 19V8h11M42 31v11H31M42 19V8H31M8 31v11h11" fill="none" stroke="#2a2118" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+    const SHRINK='<path d="M19 8v11H8M31 42V31h11M31 8v11h11M19 42V31H8" fill="none" stroke="#2a2118" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+    const fs=document.createElement('button'); fs.className='sec audio-toggle';
+    const paint=()=>{
+      const on=FullScreen.active();
+      fs.innerHTML='<svg viewBox="0 0 50 50" aria-hidden="true">'+(on?SHRINK:EXPAND)+'</svg>';
+      fs.setAttribute('aria-pressed',String(on));
+      fs.setAttribute('aria-label',on?'Выйти из полного экрана':'Во весь экран');
+      fs.title=fs.getAttribute('aria-label');
+    };
+    paint();
+    fs.onclick=async()=>{ await FullScreen.toggle(); setTimeout(paint,150); };
+    document.addEventListener('fullscreenchange',paint);
+    audioRow.append(fs);
+  }
   $('card').append(audioRow);
   const row=document.createElement('div');row.className='mbtns';
   const debug=document.createElement('button');debug.className='sec';debug.textContent=mobileDebug?'Скрыть коллайдеры':'Показать коллайдеры';
@@ -373,4 +389,42 @@ function placeDiceResult(el,x,y){
     el.style.transform = 'none';
     el.style.visibility='';
   });
+}
+
+// Полноэкранный режим. На iOS Safari Element.requestFullscreen отсутствует —
+// там кнопка прячется, вместо неё работает «На экран Домой».
+const FullScreen = {
+  supported(){
+    const el = document.documentElement;
+    return !!(el.requestFullscreen || el.webkitRequestFullscreen);
+  },
+  active(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); },
+  async toggle(){
+    const el = document.documentElement;
+    try{
+      if(this.active()){
+        await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
+      }else{
+        await (el.requestFullscreen ? el.requestFullscreen({navigationUI:'hide'}) : el.webkitRequestFullscreen());
+        if(screen.orientation && screen.orientation.lock){
+          screen.orientation.lock('portrait').catch(()=>{});
+        }
+      }
+    }catch(e){ /* отказ браузера не должен ломать игру */ }
+  }
+};
+// Кнопка на загрузочном экране: касание по ней — жест пользователя,
+// без которого браузер полноэкранный режим не включает.
+// Хуки выполняются до того, как разметка загрузочного экрана попадает
+// в документ, поэтому привязка откладывается до готовности DOM.
+function bindBootFullscreen(){
+  const b = document.getElementById('bootFull');
+  if(!b || !FullScreen.supported()) return;
+  b.hidden = false;
+  b.onclick = () => FullScreen.toggle();
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', bindBootFullscreen);
+}else{
+  bindBootFullscreen();
 }

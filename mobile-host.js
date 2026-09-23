@@ -8,7 +8,14 @@ window.MobileHost = (() => {
     feedback(kind,x,y){window.GameFeedback?.play(kind,x,y);},
     frameState(json){api.sceneState=JSON.parse(json);},
     sceneReady(fn){callback=fn;api.ready=true;document.body.classList.add('engine-ready');window.MobileGame?.ready();api.send({action:"ambience",on:!reducedMotion.matches});},
-    progress(percent){const el=document.getElementById('loadProgress');if(el)el.textContent=percent?percent+'%':'Загружаем поле…';},
+    progress(percent){
+      const el=document.getElementById('loadProgress');
+      if(el)el.textContent=percent?'Загружаем поле · '+percent+'%':'Загружаем поле…';
+      const bar=document.getElementById('loadBar');
+      if(bar)bar.style.width=(percent||0)+'%';
+      const box=bar&&bar.parentElement;
+      if(box)box.setAttribute('aria-valuenow',String(percent||0));
+    },
     failed(message){api.ready=false;document.body.classList.remove('engine-ready');const el=document.getElementById('loadProgress');if(el)el.textContent='Не удалось открыть 3D. Перезагрузите страницу.';console.error(message);},
     send(data){if(callback)callback(JSON.stringify(data));},
     request(action,data={},timeout=25000){return new Promise((resolve,reject)=>{
