@@ -166,3 +166,15 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 .cargo-head,.cargo-foot{background:#efdbaf url(assets/window-paper.svg)}
 #tip{background:#30332c!important;color:#fff0cd!important;opacity:1}
 #tip:after{background:none!important}
+
+/* Кнопки выбора в модальных окнах: при flex:1 без нижней границы ширины
+   они сжимались и длинная подпись обрезалась («Ближайши…»). Теперь у них
+   есть минимум, текст переносится, а перенос строки уже был разрешён. */
+#card .mbtns{align-items:stretch}
+#card .mbtns button{flex:1 1 128px; min-width:118px; min-height:62px;
+  white-space:normal; overflow-wrap:break-word; line-height:1.2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  background-image:url(assets/paper-grain.svg); background-blend-mode:soft-light}
+#card .mbtns button small{display:block; font-size:11.5px; opacity:.92; font-weight:700}
+/* «Отмена» уходит на свою строку и не спорит с выбором назначения */
+#card .mbtns button.sec:last-child{flex:1 1 100%; min-height:50px}
