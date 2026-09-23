@@ -320,3 +320,76 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 
 /* Нечего купить внутри — кнопка строки точки серая, но остаётся нажимаемой. */
 #tilebar.poor>b{background:#9a938a; color:#f0ece4}
+
+/* ===== Онбординг ===== */
+#onboard{position:fixed;inset:0;z-index:130;display:grid;place-items:center;padding:16px;
+  background:#1d1a15cc;opacity:0;transition:opacity .2s}
+#onboard.in{opacity:1}#onboard.out{opacity:0}
+#onboard .ob-card{position:relative;width:min(100%,400px);max-height:calc(100dvh - 32px);
+  display:flex;flex-direction:column;overflow:hidden;
+  background:#f2e4c2 url(assets/paper-grain.svg);color:#2a2118;
+  border:3px solid #2a2118;border-radius:18px;box-shadow:0 7px 0 #17120d;padding:16px 16px 18px}
+#onboard .ob-skip{position:absolute;top:10px;right:12px;z-index:2;border:0!important;box-shadow:none!important;
+  background:none!important;font:500 14px/1 var(--txt);color:#6a5d45;padding:8px 4px;min-height:0;text-decoration:underline}
+#onboard .ob-track{position:relative;flex:1;min-height:0}
+#onboard .ob-slide{display:none;flex-direction:column;align-items:center;text-align:center;gap:10px;animation:obIn .28s ease-out}
+#onboard .ob-slide.on{display:flex}
+@keyframes obIn{from{opacity:0;translate:18px 0}}
+#onboard .ob-step{font:600 12.5px/1 var(--txt);color:#8a7a5c;letter-spacing:.02em;margin-top:4px}
+#onboard .ob-art{position:relative;width:100%;min-height:196px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:10px;border-radius:14px;
+  background:linear-gradient(#e6d6ae,#dac79b);border:2px solid #b89e6f}
+#onboard .ob-title{margin:4px 0 0;font:700 25px/1.1 var(--disp);letter-spacing:-.01em}
+#onboard .ob-text{margin:0;font:400 16.5px/1.4 var(--txt);color:#3c3326;max-width:320px}
+#onboard .ob-goal{margin:2px 0 0;font:600 14px/1.35 var(--txt);color:#7d2a1f;
+  background:#f7ecd0;border:2px solid #c9a86a;border-radius:10px;padding:8px 10px}
+#onboard .ob-dots{display:flex;justify-content:center;gap:8px;margin:14px 0 12px}
+#onboard .ob-dots i{width:9px;height:9px;border-radius:50%;background:#c2ad84;cursor:pointer;transition:width .2s}
+#onboard .ob-dots i.on{width:26px;border-radius:5px;background:#b12f26}
+#onboard .ob-next{width:100%;min-height:54px;font:700 19px/1 var(--disp)!important;color:#fbf0d4}
+
+/* картинки экранов */
+#onboard .ob-banner{position:relative;width:100%;border:2px solid #2a2118;border-radius:10px;overflow:hidden;
+  box-shadow:0 3px 0 #2a211855}
+#onboard .ob-banner img{display:block;width:100%;height:auto}
+#onboard .ob-chip{display:inline-flex;align-items:center;gap:3px;background:#2f5b3a;color:#fbf0d4;
+  font:700 16px/1 var(--txt);padding:8px 14px;border:2px solid #17120d;border-radius:10px;box-shadow:0 3px 0 #17120d}
+#onboard .ob-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#onboard .ob-row .ob-chip{background:#244963}
+#onboard .ob-up{position:absolute;right:8px;top:8px;width:40px;height:40px;border-radius:50%;
+  display:grid;place-items:center;font:800 24px/1 var(--num);color:#fbf0d4;background:#2f5b3a;
+  border:2px solid #17120d;animation:obBob 1.4s ease-in-out infinite}
+#onboard .ob-shelf{position:relative;display:flex;align-items:flex-end;gap:10px;padding:26px 16px 12px;
+  background:#f7ecd0;border:2px solid #2a2118;border-radius:12px}
+#onboard .ob-sign{position:absolute;top:-12px;left:50%;translate:-50% 0;font:800 14px/1 var(--disp);
+  color:#fbf0d4;background:#b12f26;border:2px solid #17120d;border-radius:6px;padding:4px 10px;letter-spacing:.06em}
+#onboard .ob-good{width:54px;height:54px;object-fit:contain;animation:obBob 1.6s ease-in-out infinite}
+#onboard .ob-good.g2{animation-delay:.2s}#onboard .ob-good.g3{animation-delay:.4s}
+#onboard .ob-arrow{font:800 30px/1 var(--num);color:#b12f26;animation:obNudge 1.1s ease-in-out infinite}
+#onboard .ob-mini{width:62%;border:2px solid #2a2118;border-radius:8px;overflow:hidden}
+#onboard .ob-mini img{display:block;width:100%}
+#onboard .ob-start{width:112px;height:62px;display:grid;place-items:center;background:#c84b36;
+  border:3px solid #17120d;border-radius:10px;box-shadow:0 4px 0 #17120d;rotate:-3deg}
+#onboard .ob-start span{font:800 20px/1 var(--disp);color:#fbf0d4;letter-spacing:.05em}
+#onboard .ob-flow{display:flex;align-items:center;gap:12px}
+#onboard .ob-fly-good,#onboard .ob-fly-cash{width:56px;height:56px;object-fit:contain}
+#onboard .ob-fly-cash{animation:obPop 1.4s ease-in-out infinite}
+#onboard .ob-plus{background:#b12f26}
+#onboard .ob-stack img{width:58px;height:58px;object-fit:contain;animation:obBob 1.5s ease-in-out infinite}
+#onboard .ob-stack img:nth-child(2){animation-delay:.18s}#onboard .ob-stack img:nth-child(3){animation-delay:.36s}
+#onboard .ob-pop{animation:obPop 1.6s ease-in-out infinite}
+@keyframes obBob{50%{translate:0 -6px}}
+@keyframes obNudge{50%{translate:6px 0}}
+@keyframes obPop{50%{scale:1.08}}
+@media (prefers-reduced-motion:reduce){#onboard *{animation:none!important}}
+/* Карточка не должна прыгать по высоте между экранами */
+#onboard .ob-art{height:214px;min-height:0}
+#onboard .ob-text{min-height:3.6em}
+#onboard .ob-slide:last-child .ob-text{min-height:0}
+#onboard .ob-track{flex:0 0 auto;height:452px}
+@media (max-height:700px){#onboard .ob-track{height:auto}#onboard .ob-art{height:170px}}
+#onboard .ob-art{height:254px;gap:9px}
+#onboard .ob-track{height:494px}
+#onboard .ob-mini{width:54%}
+#onboard .ob-row .ob-chip{font-size:14px;padding:7px 11px}
+#onboard .ob-row{flex-wrap:nowrap}

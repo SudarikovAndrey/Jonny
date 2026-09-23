@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=58"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=62"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -2490,6 +2490,106 @@ function tilebarAffordable(){
   new MutationObserver(apply).observe(bar, {childList:true, subtree:true, characterData:true, attributes:true});
   apply();
 })();
+
+// ===== Онбординг: пять экранов с картинками вместо одиночного приветствия =====
+// Порядок повторяет главный цикл игры: точка → товар → касса на старте →
+// прокачка → больше продаж. Картинки собраны из ассетов игры: точка на трёх
+// уровнях сама рассказывает прокачку (Candy Stand → Smoke Shop → Cigar Club).
+const ONBOARD_SLIDES = [
+  { title:'Покупай точку',
+    text:'Встал на свободную клетку — бери её. Своя точка — свой бизнес.',
+    art:`<div class="ob-banner"><img src="img/pt_gum_1.webp" alt=""></div>
+         <div class="ob-chip ob-pop">Купить · <i class="cash-glyph"></i>60</div>` },
+  { title:'Покупай товар',
+    text:'На Costco закупай товар. Он сам разложится по твоим точкам.',
+    art:`<div class="ob-shelf"><span class="ob-sign">COSTCO</span>
+         <img class="ob-good g1" src="assets/goods/gum.png" alt="">
+         <img class="ob-good g2" src="assets/goods/cola.png" alt="">
+         <img class="ob-good g3" src="assets/goods/tape.png" alt=""></div>
+         <div class="ob-arrow">➜</div>
+         <div class="ob-mini"><img src="img/pt_gum_1.webp" alt=""></div>` },
+  { title:'Прошёл старт — касса!',
+    text:'Каждый раз на старте товар продаётся сам. С наценкой.',
+    art:`<div class="ob-start"><span>СТАРТ</span></div>
+         <div class="ob-flow"><img class="ob-fly-good" src="assets/goods/gum.png" alt="">
+         <div class="ob-arrow">➜</div>
+         <img class="ob-fly-cash" src="assets/icons/money.png" alt=""></div>
+         <div class="ob-chip ob-pop ob-plus">+<i class="cash-glyph"></i>48</div>` },
+  { title:'Прокачивай точку',
+    text:'Больше места — больше товара. Больше продаж — быстрее уходит.',
+    art:`<div class="ob-banner"><img src="img/pt_gum_2.webp" alt=""><span class="ob-up">↑</span></div>
+         <div class="ob-row"><span class="ob-chip">Вместимость ↑</span><span class="ob-chip">Продажи ↑</span></div>` },
+  { title:'Продавай ещё больше',
+    text:'Прокачанная точка растёт в магазин. Товар дороже — навар толще.',
+    art:`<div class="ob-banner"><img src="img/pt_gum_3.webp" alt=""></div>
+         <div class="ob-row ob-stack"><img src="assets/icons/money.png" alt=""><img src="assets/icons/money.png" alt=""><img src="assets/icons/money.png" alt=""></div>`,
+    goal:true },
+];
+
+function showOnboarding(){
+  return new Promise(resolve => {
+    document.getElementById('onboard')?.remove();
+    const root = document.createElement('div');
+    root.id = 'onboard'; root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true');
+    root.setAttribute('aria-label','Как играть');
+    const goal = (typeof CFG!=='undefined') ? `Цель — 🎫 ${CFG.TICKET_PTS} очков за ${CFG.DAYS} дней. Набрал — билет в Россию твой.` : '';
+    root.innerHTML = `<div class="ob-card">
+      <button class="ob-skip" type="button">Пропустить</button>
+      <div class="ob-track">${ONBOARD_SLIDES.map((s,i)=>`
+        <section class="ob-slide" data-i="${i}" aria-hidden="${i?'true':'false'}">
+          <div class="ob-step">Шаг ${i+1} из ${ONBOARD_SLIDES.length}</div>
+          <div class="ob-art">${s.art}</div>
+          <h2 class="ob-title">${s.title}</h2>
+          <p class="ob-text">${s.text}</p>
+          ${s.goal?`<p class="ob-goal">${goal}</p>`:''}
+        </section>`).join('')}</div>
+      <div class="ob-dots">${ONBOARD_SLIDES.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
+      <button class="ob-next bad" type="button">Дальше</button>
+    </div>`;
+    document.body.append(root);
+    const slides=[...root.querySelectorAll('.ob-slide')], dots=[...root.querySelectorAll('.ob-dots i')];
+    const next=root.querySelector('.ob-next');
+    let at=0;
+    const show=i=>{
+      at=Math.max(0,Math.min(slides.length-1,i));
+      slides.forEach((s,k)=>{s.classList.toggle('on',k===at);s.setAttribute('aria-hidden',String(k!==at));});
+      dots.forEach((d,k)=>d.classList.toggle('on',k===at));
+      next.textContent = at===slides.length-1 ? 'Поехали!' : 'Дальше';
+    };
+    const finish=()=>{ root.classList.add('out'); setTimeout(()=>{root.remove();resolve();},220); };
+    next.onclick=()=> at===slides.length-1 ? finish() : show(at+1);
+    root.querySelector('.ob-skip').onclick=finish;
+    dots.forEach(d=>d.onclick=()=>show(+d.dataset.i));
+    // свайп влево/вправо
+    let x0=null;
+    root.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
+    root.addEventListener('touchend',e=>{
+      if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; x0=null;
+      if(Math.abs(dx)>40) show(at+(dx<0?1:-1));
+    });
+    if(typeof enamelButton==='function') enamelButton(next);
+    show(0);
+    requestAnimationFrame(()=>root.classList.add('in'));
+  });
+}
+window.showOnboarding = showOnboarding;
+
+// Первый запуск: онбординг вместо одиночного окна приветствия, дальше —
+// прежнее пошаговое обучение первого круга.
+const originalIntro = intro;
+intro = async function(again){
+  if(again) return originalIntro(again);
+  await showOnboarding();
+  S.tips.intro=true; S.tips.guideActive=true; save(); render();
+};
+// «Показать приветствие снова» в справке тоже открывает онбординг.
+const originalOpenHelp = openHelp;
+openHelp = function(topic,welcome,context){
+  const r = originalOpenHelp(topic,welcome,context);
+  const rp = document.getElementById('helpReplay');
+  if(rp) rp.onclick = () => { closeHelp(); showOnboarding(); };
+  return r;
+};
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.png',sw=1536,sh=1024){
