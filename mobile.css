@@ -262,16 +262,7 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 #card .audio-toggle.is-off{filter:grayscale(.5)}
 #card .audio-toggle.is-off svg .wv{opacity:.3}
 
-/* Края нарисованной локации не должны читаться как обрыв: сверху и снизу
-   карта растворяется в цвет окружения сцены (#b8ab91 — clear color Godot),
-   поэтому переход от рисунка к фону не виден. */
-#stage::before,#stage::after{
-  content:''; position:absolute; left:0; right:0; height:64px;
-  pointer-events:none; z-index:2}
-#stage::before{top:var(--world-top);
-  background:linear-gradient(#b8ab91 0%, #b8ab91cc 34%, #b8ab9166 66%, #b8ab9100 100%)}
-#stage::after{bottom:var(--world-bottom);
-  background:linear-gradient(#b8ab9100 0%, #b8ab9166 34%, #b8ab91cc 66%, #b8ab91 100%)}
+
 /* .mbtns растягивает кнопки на всю строку — переключателям это не нужно. */
 #card .mbtns.audio-toggles{justify-content:flex-start}
 #card .mbtns.audio-toggles .audio-toggle{flex:0 0 74px!important; width:74px!important;
