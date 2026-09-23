@@ -195,3 +195,20 @@
   #card.battlepass-card .available .pass-state{width:52px; height:24px}
   #card.battlepass-card .pass-stairs{padding:0 5px 12px}
 }
+
+/* Синяя полоса с баннером и солнцем убрана целиком: она отъедала высоту
+   и разрывала связь шапки со списком ступеней. */
+#card.battlepass-card .pass-scene{display:none!important}
+
+/* Список уходит под шапку и подвал не обрывом, а растворением.
+   Маска съедает верхние и нижние пиксели содержимого, поэтому ступени
+   проявляются постепенно. */
+#card.battlepass-card .pass-scroll{
+  -webkit-mask-image:linear-gradient(to bottom,
+    transparent 0, rgba(0,0,0,.35) 10px, #000 30px,
+    #000 calc(100% - 22px), rgba(0,0,0,.4) calc(100% - 8px), transparent 100%);
+  mask-image:linear-gradient(to bottom,
+    transparent 0, rgba(0,0,0,.35) 10px, #000 30px,
+    #000 calc(100% - 22px), rgba(0,0,0,.4) calc(100% - 8px), transparent 100%)}
+/* Тень под шапкой усиливает ощущение, что список уходит под неё. */
+#card.battlepass-card .pass-header{box-shadow:0 5px 9px #2a211826; position:relative; z-index:2}
