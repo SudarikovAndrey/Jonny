@@ -138,3 +138,108 @@ body.mobile-modal #toast{visibility:hidden;pointer-events:none!important}
 /* Brief ink-and-paper accents; never cover controls or intercept a tap. */
 .cartoon-fx{position:fixed;z-index:8;pointer-events:none;transform:translate(-50%,-50%)}
 .cartoon-fx svg{display:block;width:100%;overflow:visible}
+
+
+/* ===== v30: типографика «крепкий гротеск» =====================
+   Golos Text — весь текст | Bitter 800 — числа
+   ПРАВИЛО ВЕСА: жирное получают только заголовок, число и действие.
+   Всё остальное — обычное начертание, читаемость держат кегль и цвет.
+   Откат: обрезать файл до строки 141. ===== */
+@font-face{font-family:'Bitter';font-weight:500;font-display:swap;src:url(assets/fonts/bitter-500-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Bitter';font-weight:500;font-display:swap;src:url(assets/fonts/bitter-500-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Bitter';font-weight:600;font-display:swap;src:url(assets/fonts/bitter-600-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Bitter';font-weight:600;font-display:swap;src:url(assets/fonts/bitter-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Bitter';font-weight:700;font-display:swap;src:url(assets/fonts/bitter-700-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Bitter';font-weight:700;font-display:swap;src:url(assets/fonts/bitter-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Bitter';font-weight:800;font-display:swap;src:url(assets/fonts/bitter-800-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Bitter';font-weight:800;font-display:swap;src:url(assets/fonts/bitter-800-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Golos Text';font-weight:400;font-display:swap;src:url(assets/fonts/golos-text-400-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Golos Text';font-weight:400;font-display:swap;src:url(assets/fonts/golos-text-400-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Golos Text';font-weight:500;font-display:swap;src:url(assets/fonts/golos-text-500-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Golos Text';font-weight:500;font-display:swap;src:url(assets/fonts/golos-text-500-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Golos Text';font-weight:600;font-display:swap;src:url(assets/fonts/golos-text-600-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Golos Text';font-weight:600;font-display:swap;src:url(assets/fonts/golos-text-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Golos Text';font-weight:700;font-display:swap;src:url(assets/fonts/golos-text-700-cyrillic.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Golos Text';font-weight:700;font-display:swap;src:url(assets/fonts/golos-text-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}:root{
+  --disp:'Golos Text',Georgia,sans-serif;
+  --num:'Bitter',Georgia,serif;
+  --txt:'Golos Text',Arial,sans-serif;
+}
+/* --- текст: обычное начертание, крупнее и темнее --- */
+html,body{font-family:var(--txt)}
+button,input,select,textarea{font-family:var(--txt)!important}
+.card,#helpDialog{font-family:var(--txt)}
+#card p{font-size:16px;font-weight:400}
+.qchip{font-family:var(--txt);font-size:13px;font-weight:500}
+#tbText{font-family:var(--txt);font-size:15.5px;font-weight:400}
+#sRollsCap{font-family:var(--txt);font-size:11.5px;font-weight:400}
+#bJohnnyTop small{font-family:var(--txt);font-size:11px;font-weight:600}
+#guide p{font-family:var(--txt);font-size:14px;font-weight:400}
+#guide small{font-family:var(--txt);font-size:12px;font-weight:400}
+#tip{font-family:var(--txt);font-size:16px;font-weight:400}
+#starterInfo{font-family:var(--txt);font-size:10.5px}
+h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
+/* --- числа: единственное место, где вес максимальный --- */
+.cur b{font-family:var(--num);font-weight:800;font-size:21px}
+#sRolls{font-family:var(--num);font-weight:800;font-size:18px}
+.card .v,#card .v{font-family:var(--num);font-weight:800}
+/* --- заголовки и действия --- */
+.card h2,.card h3,#helpTitle{font-family:var(--disp);font-weight:700;letter-spacing:-.015em}
+#tilebar>b{font-family:var(--disp);font-weight:700;font-size:15px}
+#bRoll{font-family:var(--disp);font-weight:700}
+/* --- голос Джонни --- */
+#guide b{font-family:var(--disp);font-weight:700;font-size:16px}
+/* --- нижние кнопки: читаются иконками, подписи убраны --- */
+#dock .dk>small{display:none}
+#dock>.dk{padding-bottom:0}
+
+/* ===== v31: аккуратные окантовки кнопок и валюта на цене =====
+   Скин кнопки — картинка 181x61, которую растягивали на 334x44
+   с preserveAspectRatio:none: боковые грани толстели, верхняя и нижняя
+   худели, углы плыли. Отдаём тот же рисунок через border-image —
+   углы сохраняют размер, тянутся только грани. ===== */
+#card button.enamel-button .enamel-skin,#helpDialog button.enamel-button .enamel-skin{display:none}
+#card button.enamel-button::before,#helpDialog button.enamel-button::before{
+  content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  border:15px solid transparent;
+  border-image:url(assets/btn-dark.png) 20 fill / 15px stretch}
+#card button.enamel-button.ok::before{border-image-source:url(assets/btn-green.png)}
+#card button.enamel-button.bad::before{border-image-source:url(assets/btn-red.png)}
+#card button.enamel-button.sec::before,#card button.enamel-button.hard::before{border-image-source:url(assets/btn-blue.png)}
+/* иконка игровых денег вместо знака доллара — та же пачка купюр, что в шапке */
+.cash-glyph{display:inline-block;width:1.45em;height:1.3em;vertical-align:-.28em;
+  background-image:url(assets/interface-atlas.png);background-repeat:no-repeat;
+  background-size:2133.3% 1462.86%;background-position:3.1% 19.1%;margin-right:.1em;margin-left:.06em}
+/* Крестик: арт 69x64 вписывался в квадрат 46x46 по 'meet', оставляя зазоры
+   сверху и снизу — круглая маска резала кольцо неровно. Маска нужна (в атласе
+   вокруг кружка тёмный фон), поэтому арт заставляем заполнять квадрат: см.
+   paintedClose в mobile-windows.js — там 'meet' заменён на 'slice'. */
+
+/* Под кубиком: один счётчик и один отсчёт, обе строки крупнее и без «воды». */
+#sRolls{font-size:19px;padding:4px 10px}
+#sRollsCap{font-family:var(--num);font-weight:700;font-size:14px;padding:3px 7px;letter-spacing:.01em}
+#sRollsCap[hidden]{display:none}
+#starterInfo{display:none!important}
+/* Иконка валюты: по высоте прописных, а не по строке, и с воздухом вокруг. */
+.cash-glyph{width:1.18em;height:1.05em;vertical-align:-.16em;margin-right:.14em;margin-left:.1em}
+
+/* ===== v34: единый набор иконок ресурсов =====
+   Иконки нарезаны из ui4.png кита: в исходнике нет альфы (шахматка нарисована),
+   поэтому фон выбит заливкой снаружи — внутренние белые блики сохранены.
+   Раньше деньги и кристалл брались спрайтами из interface-atlas и не совпадали
+   по стилю с иконками в окнах. ===== */
+.cur .ic.g,.cur .ic.b{background-image:none!important;background-repeat:no-repeat;background-position:center;background-size:contain}
+.cur .ic.g{background-image:url(assets/icons/money.png)!important;width:38px;height:34px}
+.cur .ic.b{background-image:url(assets/icons/gem.png)!important;width:34px;height:34px}
+/* Иконка валюты в тексте кнопок — та же пачка купюр, что в шапке. */
+.cash-glyph{background-image:url(assets/icons/money.png);background-size:contain;
+  background-position:center;background-repeat:no-repeat;
+  width:1.3em;height:1.18em;vertical-align:-.22em;margin:0 .14em 0 .08em}
+/* В значениях строк иконка чуть мельче заголовочной, чтобы колонка не рябила. */
+.card .v .cash-glyph,#card .v .cash-glyph{width:1.12em;height:1.02em;vertical-align:-.15em}
+#tbText .cash-glyph{width:1.1em;height:1em;vertical-align:-.14em}
+
+/* Иконка товара внутри круглой ячейки строки. */
+.gi{display:block;width:100%;height:100%;background-repeat:no-repeat;
+  background-position:center;background-size:82% 82%}
+#card .shop .ico:has(.gi){background:#f1e3c1;border-color:#8a7145;padding:0;overflow:hidden}

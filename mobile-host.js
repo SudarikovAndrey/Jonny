@@ -19,7 +19,7 @@ window.MobileHost = (() => {
     complete(id,value){const task=pending.get(id);if(!task)return;clearTimeout(task.timer);pending.delete(id);task.resolve(value);},
     stepDone(id){api.complete(id);},
     reactionDone(id){api.complete(id);},
-    diceResult(a,b,lesson){window.MobileGame?.showDiceResult(a,b,lesson);},
+    diceResult(a,b,lesson,x,y){window.MobileGame?.showDiceResult(a,b,lesson,x,y);},
     diceDone(id,a,b){api.complete(id,{a,b});},
     positions(json){api.points=JSON.parse(json);}
   };

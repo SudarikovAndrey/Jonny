@@ -1,39 +1,180 @@
-#card.battlepass-card{display:flex;flex-direction:column;max-width:460px;height:calc(100dvh - 42px);max-height:calc(100dvh - 42px)!important;padding:0;overflow:hidden;background:#53788b url(assets/paper-grain.svg)!important;border-radius:15px 12px 17px 11px}
-.pass-header{flex:none;position:relative;display:grid;grid-template-columns:42px 1fr;gap:9px;padding:13px 46px 12px 13px;background:#efdbaf url(assets/paper-grain.svg);border-bottom:3px solid #352e24}
-#card .pass-header h2{font-size:25px;margin:1px 0 4px;line-height:1.1}
-.pass-header small{font-size:11px}.pass-stamp{background:#a63225;color:#fff0cc;transform:rotate(-5deg);border:3px double #efdbaf;outline:2px solid #332719;box-shadow:2px 3px #382a1f;text-align:center;font-weight:800;font-size:15px;line-height:1.2;padding:3px}
-.pass-stamp b{font-size:19px}.pass-progress{grid-column:1/-1;display:flex;align-items:center;gap:9px;margin-right:-30px}.pass-progress>b{font-size:17px;white-space:nowrap}.pass-progress>div{flex:1;min-width:0}.pass-progress>div>span{display:block;text-align:right;font-size:11px;font-weight:700;margin-bottom:4px}.pass-progress>small{border-left:1px solid #977947;padding-left:9px;font-size:10px;line-height:1.5;white-space:nowrap}
-.pass-meter{height:16px;border:2px solid #312b22;border-radius:10px;background:#8e88776b;padding:2px;box-shadow:0 1px #fff3d0}.pass-meter i{display:block;background:#ae3626 url(assets/paper-grain.svg);height:100%;border-radius:5px;transform-origin:left;width:100%;transform:scaleX(var(--progress));animation:pass-progress .55s ease-out}
-.pass-scroll{position:relative;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#dbc18a #374e58;background:#547686 url(assets/paper-grain.svg)}
-.pass-scroll:before,.pass-scroll:after{content:'';position:absolute;top:0;bottom:0;width:15%;pointer-events:none;background-image:url(assets/battlepass-reference.png);background-size:auto 1150px;background-repeat:repeat-y;opacity:.9}.pass-scroll:before{left:0;background-position:left -210px}.pass-scroll:after{right:0;background-position:right -210px}
-.pass-scene{height:112px;position:relative;overflow:hidden;border-bottom:2px solid #302d21}.pass-scene>.atlas-art{object-fit:cover;opacity:.9}.pass-scene>span{position:absolute;left:15px;top:28px;max-width:60%;font-size:16px;line-height:1.2;font-weight:800;background:#efdbaf url(assets/paper-grain.svg);border:2px solid #302719;padding:9px;transform:rotate(-4deg);box-shadow:3px 4px #292a20}.pass-hero{position:absolute;right:19px;bottom:-4px;width:93px;height:112px;transform-origin:bottom;animation:pass-hero .5s ease-out}
-.pass-lanes{display:grid;grid-template-columns:1fr 36px 1fr;gap:4px;position:sticky;top:0;z-index:4;margin:0 18px;padding:8px 0 6px;background:#38545f url(assets/paper-grain.svg)}.pass-lanes>b{padding:8px 2px;border:2px solid #382e1e;border-radius:5px;box-shadow:0 3px #2a281e;background:#d6d4c0 url(assets/paper-grain.svg);text-align:center;font-size:13px;display:flex;align-items:center;justify-content:center;gap:4px}.pass-lanes>b:last-child{background-color:#e8af3e}.pass-lanes svg{width:21px;height:22px}
-.pass-stairs{position:relative;z-index:2;padding:8px 18px 28px;display:flex;flex-direction:column;gap:12px}.pass-stairs:before{content:'';position:absolute;top:0;bottom:0;left:43%;right:43%;background:repeating-linear-gradient(to bottom,#a5987c 0px,#c6b794 19px,#39372d 20px,#39372d 25px,#86795e 26px,#86795e 36px);border-left:4px solid #514530;border-right:4px solid #514530;box-shadow:inset 2px 0 #d8bf87,inset -2px 0 #c2a677}
-.pass-rung{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr);gap:4px;align-items:center;min-height:78px}.pass-rung:before{content:'';position:absolute;left:18%;right:18%;top:40%;height:12px;background:#94603d;border:2px solid #33271d;box-shadow:inset 0 3px #d69b5f;z-index:-1}
-#card button.pass-reward{position:relative;min-height:78px;min-width:0;padding:8px 5px 6px;border:2px solid #342d21;border-radius:9px 6px 12px 7px;background:#efdfb9 url(assets/paper-grain.svg);box-shadow:3px 5px #293326;color:#292719;display:flex;flex-direction:column;align-items:center;gap:4px;transition:filter .15s,transform .15s}
-#card button.pass-reward.premium{background-color:#efba50;box-shadow:3px 5px #755024,inset 0 0 0 3px #ffe6a35c}
-#card button.pass-reward:disabled{background:#efdfb9 url(assets/paper-grain.svg)!important;color:#423a2c!important;opacity:1;filter:none;box-shadow:3px 5px #293326!important}
-#card button.pass-reward.premium:disabled{background-color:#dfaf54!important;box-shadow:3px 5px #755024!important}
-#card button.pass-reward.available{outline:2px solid #91ae66;outline-offset:1px}.pass-loot{display:flex;justify-content:center;align-items:center;gap:5px;flex-wrap:wrap}.pass-loot>span{display:flex;align-items:center;gap:3px;white-space:nowrap;font-size:16px}.pass-loot svg{width:32px;height:33px}.pass-state{height:20px;font-size:10px;display:flex;align-items:center;justify-content:center;gap:3px}.pass-state svg{width:20px;height:20px}.available .pass-state{border-radius:10px;background:#347147;color:#fff0cc;padding:3px 10px;min-width:75px;font-weight:700}.pass-level{position:relative;text-align:center;padding:10px 0;background:#edcf94 url(assets/paper-grain.svg);border:2px solid #362b1c;border-radius:11px 8px 12px 7px;box-shadow:0 3px #3b3123;font-weight:800;font-size:19px}.pass-level.next{background-color:#f5cf67;outline:2px solid #fff0c4;outline-offset:1px}
-.pass-footer{z-index:5;flex:none;padding:9px 12px 8px;background:#eed9aa url(assets/paper-grain.svg);border-top:3px solid #382e1e;box-shadow:0 -5px 12px #1f271f55;display:flex;flex-direction:column;gap:7px}.pass-feedback{text-align:center;font-size:12px;min-height:16px;font-weight:600}#card .pass-footer #bpBuy,#card .pass-footer #bpClaim{width:100%;min-height:47px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:15px}#bpBuy>svg{width:27px;height:27px}#bpBuy>b{white-space:nowrap}
-#card .pass-footer .segbar{margin:0;gap:5px;background:none;padding:0}#card .pass-footer .segbar button{min-height:35px;font-size:12px;border:1px solid #9a8052!important;box-shadow:none;background:#e6cda0;color:#30271c;padding:5px;border-radius:7px}#card .pass-footer .segbar button.on{background:#395663;color:#fff1cc}.pass-owned{display:flex;justify-content:center;align-items:center;gap:5px;font-size:12px}.pass-owned svg{height:24px;width:24px}
-.pass-tasks{position:relative;z-index:3;margin:0 18px 16px;padding:12px;background:#efdbaf;border:2px solid #3c3020;border-radius:8px;font-size:13px}.pass-tasks summary{cursor:pointer;font-weight:700}.pass-tasks button{width:100%}.pass-offer{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:17px;background:#192219d9;backdrop-filter:blur(4px)}.pass-offer-paper{max-height:100%;overflow:auto;padding:19px 16px;background:#efdbaf url(assets/paper-grain.svg);border:3px double #67502a;outline:2px solid #efc36d;border-radius:14px;box-shadow:0 7px #171d15;text-align:center}.offer-crown{width:74px;margin:0 auto 10px}#card .pass-offer h2{font-size:23px}.pass-offer-paper button{display:block;width:100%;margin-top:10px}.pass-offer-paper small{display:block;font-size:11px;line-height:1.4;margin:10px 0;color:#615235}.pass-reward.collecting{animation:pass-collect .45s ease-in-out}
-@keyframes pass-collect{35%{transform:translateY(-9px) rotate(-3deg);filter:brightness(1.25)}70%{transform:translateY(2px) rotate(2deg)}100%{transform:none}}
-@keyframes pass-progress{from{transform:scaleX(0)}to{transform:scaleX(var(--progress))}}
-@keyframes pass-hero{from{transform:translateY(35px) rotate(9deg)}to{transform:none}}
-@media(max-width:350px){.pass-header{padding-left:10px;gap:6px}.pass-stairs{padding-left:12px;padding-right:12px}.pass-lanes{margin:0 12px}.pass-rung{grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr)}.pass-loot svg{width:25px;height:28px}.pass-loot>span{font-size:14px}.pass-progress>small{font-size:9px}.pass-footer{padding-left:8px;padding-right:8px}#card .pass-footer #bpBuy{font-size:13px}}
-@media(prefers-reduced-motion:reduce){.pass-meter i,.pass-hero,.pass-reward.collecting{animation:none!important}.pass-reward{transition:none!important}}
-.pass-header,.pass-footer,.pass-offer-paper{background:#efdbaf url(assets/window-paper.svg)}
-#card.battlepass-card{background:#53788b!important}
-.pass-scene{flex:none;height:82px}.pass-scene>.atlas-art{height:130px;position:absolute;top:-28px}.pass-hero{height:99px;width:83px;right:25px}.pass-scene>span{top:13px;font-size:14px;max-width:62%;padding:8px;background:#efdbaf url(assets/window-paper.svg)}
-.pass-scroll{background:#53788b}
-.pass-lanes{background:#3e5c68}.pass-lanes>b{background-image:linear-gradient(#d6d4c0ad,#d6d4c0ad),url(assets/window-paper.svg)}.pass-lanes>b:last-child{background-image:linear-gradient(#e8af3eaa,#e8af3eaa),url(assets/window-paper.svg)}
-#card button.pass-reward,#card button.pass-reward:disabled{background-image:url(assets/window-paper.svg)!important}
-#card button.pass-reward.premium,#card button.pass-reward.premium:disabled{background-image:linear-gradient(#efb83bbb,#efb83bbb),url(assets/window-paper.svg)!important}
-.pass-scroll:before,.pass-scroll:after{display:none}
-.pass-stairs{isolation:isolate;padding-left:23px;padding-right:23px}
-.pass-stairs:after{content:'';position:absolute;inset:0;z-index:-2;background:url(assets/battlepass-reference.png) center/100% auto repeat-y;mask-image:linear-gradient(to right,#000 0 5%,transparent 7% 93%,#000 95%)}
-.pass-level{background:#edcf94 url(assets/window-paper.svg)}
-.pass-meter i{background:#ae3626}
-@media(max-height:660px){.pass-scene{height:64px}.pass-scene>span{font-size:12px;top:8px}.pass-hero{height:85px;width:72px}.pass-header{padding-top:9px;padding-bottom:8px}.pass-footer{gap:5px}.pass-feedback{font-size:11px}}
-.pass-scene>.atlas-art{height:100%;top:0;opacity:.8}.pass-hero{height:87px;width:94px;right:11px;bottom:0;border-left:2px solid #d4b47566}.pass-stairs:after{display:none}.pass-side{position:absolute;top:0;bottom:0;width:21px;overflow:hidden;z-index:-2;pointer-events:none}.pass-side.left{left:0}.pass-side.right{right:0}.pass-side .atlas-art{height:100%;width:100%}
+/* Баттлпасс по референсу ui5: расписной задник, две линии наград, лестница
+   уровней между ними, красный плакат премиума внизу.
+   Детали (клеймо, заголовок, шильды, жетоны, кнопки) вырезаны из
+   battlepass-atlas.png в assets/bp/. Сами плашки собраны вёрсткой в цветах
+   кита: в атласе они идут слитой колонкой с впечатанными иконками, чистой
+   пустой плашки там нет. */
+
+#card.battlepass-card{
+  --paper:#ece0c0; --gold-a:#f0c44e; --gold-b:#d79a26;
+  --stone-a:#e9dcbb; --stone-b:#d8c8a0;
+  --ink:#2a2118; --red:#b12f26;
+  padding:0!important; overflow:hidden; border-radius:18px;
+  background:linear-gradient(#8fb3c9 0%, #a8c3d3 38%, #c3cfcb 62%, #b9ae92 100%);
+}
+
+/* ---------- шапка ---------- */
+#card.battlepass-card .pass-header{
+  position:relative; display:grid; grid-template-columns:auto 1fr auto;
+  align-items:center; gap:9px; padding:11px 12px 9px;
+  background:linear-gradient(#f2e6c6,#e6d7b0); border-bottom:3px solid var(--ink);
+}
+#card.battlepass-card .pass-stamp{
+  width:52px; height:54px; font-size:0; flex:none; align-self:start;
+  background:url(assets/bp/bp-badge.png) center/contain no-repeat}
+#card.battlepass-card .pass-header>div:not(.pass-progress){min-width:0}
+#card.battlepass-card .pass-header h2{
+  height:44px; margin:0; color:transparent; overflow:hidden; text-indent:-999px;
+  white-space:nowrap;
+  background:url(assets/bp/bp-title.png) left center/contain no-repeat}
+#card.battlepass-card .pass-header h2+small{display:none}
+#card.battlepass-card .xhead{align-self:start}
+
+/* строка прогресса на всю ширину под заголовком */
+#card.battlepass-card .pass-progress{
+  grid-column:1/-1; display:grid; grid-template-columns:auto 1fr auto;
+  align-items:center; gap:9px; margin-top:3px}
+#card.battlepass-card .pass-progress>b{
+  font-family:var(--num); font-weight:800; font-size:17px; color:var(--ink);
+  background:#f6ecd0; border:2px solid var(--ink); border-radius:999px; padding:3px 11px}
+#card.battlepass-card .pass-progress>div{min-width:0}
+#card.battlepass-card .pass-progress span{
+  display:block; font-size:12.5px; color:#4b4132; margin-bottom:3px; text-align:right}
+#card.battlepass-card .pass-meter{
+  height:17px; border:2px solid var(--ink); border-radius:999px; overflow:hidden;
+  background:#cfc3a4; box-shadow:inset 0 2px 0 #00000022}
+#card.battlepass-card .pass-meter i{
+  display:block; height:100%; width:calc(var(--progress,0) * 100%);
+  background:linear-gradient(#d0453a,#a62a22); border-right:2px solid #7d1d17}
+#card.battlepass-card .pass-progress>small{
+  font-size:11px; line-height:1.15; text-align:center; color:#4b4132;
+  background:#f6ecd0; border:2px solid var(--ink); border-radius:9px; padding:3px 7px}
+#card.battlepass-card .pass-progress>small b{font-family:var(--num); font-size:13px; color:var(--ink)}
+
+/* ---------- полоса-баннер вместо прежней сцены ---------- */
+#card.battlepass-card .pass-scene{
+  position:relative; min-height:58px; padding:8px 10px;
+  display:flex; align-items:center; gap:10px;
+  background:linear-gradient(#7ba7c2,#93b6c9); border-bottom:3px solid var(--ink)}
+#card.battlepass-card .pass-scene svg{display:none}
+#card.battlepass-card .pass-scene>span{
+  flex:1; min-width:0; font-size:0;
+  height:46px; background:url(assets/bp/bp-banner.png) left center/contain no-repeat}
+#card.battlepass-card .pass-hero{
+  width:64px; height:60px; flex:none;
+  background:url(assets/bp/bp-sun.png) center/contain no-repeat}
+#card.battlepass-card .pass-hero svg{display:none}
+
+/* ---------- заголовки колонок ---------- */
+#card.battlepass-card .pass-lanes{
+  display:grid; grid-template-columns:1fr 46px 1fr; gap:6px; align-items:end;
+  padding:10px 9px 6px}
+#card.battlepass-card .pass-lanes b{font-size:0; height:40px}
+#card.battlepass-card .pass-lanes b:first-child{
+  background:url(assets/bp/bp-head-free.png) center/contain no-repeat}
+#card.battlepass-card .pass-lanes b:last-child{
+  background:url(assets/bp/bp-head-prem.png) center/contain no-repeat}
+#card.battlepass-card .pass-lanes b svg{display:none}
+
+/* ---------- лестница ---------- */
+#card.battlepass-card .pass-scroll{
+  overflow:auto; -webkit-overflow-scrolling:touch;
+  background:linear-gradient(#a9c3d2 0%, #bcc7c2 55%, #b3a88c 100%)}
+#card.battlepass-card .pass-stairs{position:relative; padding:0 9px 12px}
+/* нижняя панорама города из кита */
+#card.battlepass-card .pass-stairs::after{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:92px; z-index:0;
+  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat; opacity:.5}
+#card.battlepass-card .pass-side{display:none}
+
+#card.battlepass-card .pass-rung{
+  position:relative; z-index:1;
+  display:grid; grid-template-columns:1fr 46px 1fr; gap:6px; align-items:center;
+  margin-bottom:7px}
+
+/* вертикальная тетива лестницы позади жетонов */
+#card.battlepass-card .pass-stairs::before{
+  content:''; position:absolute; z-index:0; top:4px; bottom:96px;
+  left:50%; width:30px; translate:-50% 0;
+  background:linear-gradient(90deg,#6b4f31 0 6px,#8a6a45 6px calc(100% - 6px),#6b4f31 calc(100% - 6px) 100%);
+  border:2px solid #402d1b; border-radius:4px}
+
+#card.battlepass-card .pass-level{
+  position:relative; z-index:2; width:46px; height:46px; display:grid; place-items:center;
+  font-family:var(--num); font-weight:800; font-size:18px; color:#2c2318;
+  background:url(assets/bp/bp-token.png) center/contain no-repeat}
+#card.battlepass-card .pass-level.next{
+  filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 6px #ffd76a)}
+
+/* ---------- плашки наград ---------- */
+/* Базовые стили кнопок игры задают свой фон (серый у заблокированной,
+   красный у премиума) с весом выше нашего, поэтому фон задаётся явно.
+   Смешивание слоёв отключено: с multiply золото перемножалось с красным
+   и давало тёмно-бордовый. */
+#card.battlepass-card .pass-reward{
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+  min-height:54px; padding:5px 7px 5px 9px; border-radius:10px;
+  border:2.5px solid var(--ink); box-shadow:0 3px 0 #00000055;
+  background-blend-mode:normal!important}
+#card.battlepass-card .pass-reward.free{
+  background:var(--stone-a) url(assets/paper-grain.svg)!important}
+#card.battlepass-card .pass-reward.premium{
+  background:linear-gradient(var(--gold-a),var(--gold-b))!important}
+#card.battlepass-card .pass-reward.locked{filter:saturate(.85) brightness(.97)}
+#card.battlepass-card .pass-reward.claimed{opacity:.72}
+#card.battlepass-card .pass-reward.available{
+  box-shadow:0 3px 0 #00000055, 0 0 0 3px #ffd76a}
+
+#card.battlepass-card .pass-loot{display:flex; align-items:center; gap:4px; min-width:0}
+#card.battlepass-card .pass-loot span{display:flex; align-items:center; gap:3px}
+#card.battlepass-card .pass-loot svg{width:30px; height:30px; flex:none}
+#card.battlepass-card .pass-loot b{
+  font-family:var(--num); font-weight:800; font-size:17px; color:#2b2318}
+
+#card.battlepass-card .pass-state{
+  flex:none; display:grid; place-items:center; min-width:40px;
+  font-size:11px; font-weight:600; color:#3c3325; text-align:center}
+#card.battlepass-card .pass-state svg{width:0;height:0}
+#card.battlepass-card .claimed .pass-state{
+  width:32px; height:32px; font-size:0;
+  background:url(assets/bp/bp-check.png) center/contain no-repeat}
+#card.battlepass-card .locked .pass-state{
+  width:32px; height:32px; font-size:0;
+  background:url(assets/bp/bp-lock.png) center/contain no-repeat}
+#card.battlepass-card .available .pass-state{
+  font-size:0; width:64px; height:30px;
+  background:url(assets/bp/bp-ribbon-ok.png) center/contain no-repeat}
+
+/* ---------- подвал ---------- */
+#card.battlepass-card .pass-tasks{
+  position:relative; z-index:1; margin:6px 9px 10px;
+  background:#efe2c2; border:2px solid #7b6543; border-radius:10px; padding:0 10px}
+#card.battlepass-card .pass-footer{
+  padding:9px 10px calc(env(safe-area-inset-bottom,0px) + 9px);
+  background:linear-gradient(#efe2c2,#e2d2ab); border-top:3px solid var(--ink)}
+#card.battlepass-card .pass-feedback{font-size:12.5px; color:#4b4132; text-align:center; margin-bottom:7px}
+#card.battlepass-card #bpBuy{
+  width:100%; min-height:58px; font-size:0; border:0!important; box-shadow:none!important;
+  background:url(assets/bp/bp-btn-buy.png) center/contain no-repeat!important}
+#card.battlepass-card #bpBuy svg,#card.battlepass-card #bpBuy b{display:none}
+#card.battlepass-card #bpBuy .enamel-skin,#card.battlepass-card #bpBuy::before{display:none!important}
+#card.battlepass-card .pass-owned{
+  display:flex; align-items:center; justify-content:center; gap:7px;
+  font-size:13px; color:#3c3325}
+#card.battlepass-card .pass-owned svg{width:24px;height:24px}
+
+/* На 6 и 12 уровнях наград три, в одну строку они не помещаются:
+   позволяем переносить и ужимаем значки. */
+#card.battlepass-card .pass-loot{flex:1; min-width:0; flex-wrap:wrap; row-gap:0; column-gap:3px}
+#card.battlepass-card .pass-loot svg{width:26px; height:26px}
+#card.battlepass-card .pass-loot b{font-size:15px}
+#card.battlepass-card .pass-reward{overflow:hidden}
+
+/* Карточка выше экрана: шапка и подвал закреплены, прокручивается только
+   список ступеней. Иначе кнопка премиума и вкладки уезжают за нижний край. */
+#card.battlepass-card{display:flex; flex-direction:column;
+  max-height:calc(100dvh - 24px)!important}
+#card.battlepass-card .pass-header,
+#card.battlepass-card .pass-scene,
+#card.battlepass-card .pass-footer{flex:0 0 auto}
+#card.battlepass-card .pass-scroll{flex:1 1 auto; min-height:0}

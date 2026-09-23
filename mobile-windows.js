@@ -10,7 +10,7 @@ function paperSurface(el){
 function paintedClose(button){
   if(!button||button.dataset.painted)return;
   button.dataset.painted='1';button.classList.add('painted-close');button.setAttribute('aria-label','Закрыть');
-  button.innerHTML=atlasArt(1252,21,69,64);
+  button.innerHTML=atlasArt(1252,21,69,64).replace('xMidYMid meet','xMidYMid slice');
 }
 function upgradeIcons(root){
   root.querySelectorAll('.up').forEach(up=>{
@@ -30,7 +30,13 @@ function shopFrame(t,inner){
   $('xNo').onclick=()=>closeModal();paperSurface($('card').querySelector('.shop'));paintedClose($('xNo'));upgradeIcons($('card'));fitCard();
 }
 // Readable scrolling replaces automatic shrinking between the top and bottom HUD.
+// Деньги показываются одним знаком во всём интерфейсе: в шапке это пачка купюр,
+// значит и в значениях окон тоже она, а не текстовый $. Рубль за реальные
+// покупки остаётся текстом — это действительно другая валюта.
+function cashGlyphCard(){ const c=$('card'); if(c) cashGlyph(c); }
 function fitCard(){
+  cashGlyphCard();
+  if(typeof goodsIcons==='function') goodsIcons($('card'));
   $('card').style.setProperty('--cs','1');
 }
 // Atlas viewports keep the supplied bitmap intact; labels and controls stay accessible.
@@ -50,6 +56,30 @@ function enamelButton(button){
   const regions={green:[29,708,229,58],red:[275,707,229,60],blue:[524,708,190,60],dark:[730,707,181,61]};
   button.classList.add('enamel-button');
   button.insertAdjacentHTML('afterbegin',`<span class="enamel-skin">${atlasArt(...regions[color],'','windows-kit.png').replace('xMidYMid meet','none')}</span>`);
+  button.dataset.enamel=color;
+  cashGlyph(button);
+}
+// Игровые деньги в HUD показаны пачкой купюр, а не знаком доллара.
+// Ставим ту же иконку рядом с ценой. Рубли за реальные покупки не трогаем.
+function cashGlyph(root){
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  const hits=[];
+  while(walker.nextNode()){
+    const node=walker.currentNode;
+    if(node.parentElement.closest('.enamel-skin'))continue;
+    if(node.nodeValue.includes('$'))hits.push(node);
+  }
+  for(const node of hits){
+    const parts=node.nodeValue.split('$');
+    const frag=document.createDocumentFragment();
+    frag.append(parts[0]);
+    for(let i=1;i<parts.length;i++){
+      const ic=document.createElement('i');
+      ic.className='cash-glyph';ic.setAttribute('aria-hidden','true');
+      frag.append(ic,parts[i]);
+    }
+    node.replaceWith(frag);
+  }
 }
 function windowClose(card,action){
   if(card.querySelector('.window-close'))return;

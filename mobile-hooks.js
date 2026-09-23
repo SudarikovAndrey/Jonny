@@ -79,11 +79,12 @@ window.MobileGame={
   snapshot(){return JSON.parse(JSON.stringify(S));},
   async requestRoll(){await roll();},
   debugColliders(on){MobileHost.send({action:'debug',on});},
-  showDiceResult(a,b,lesson){
+  showDiceResult(a,b,lesson,x,y){
     const el=$('diceResult'),faces=['','⚀','⚁','⚂','⚃','⚄','⚅'],total=a+b,word=total<5?'клетки':'клеток';
     el.setAttribute('aria-label',`${lesson?'Учебный бросок. ':''}Выпало ${a} и ${b}. ${total} ${word}.`);
     el.innerHTML=`<span class="result-faces" aria-hidden="true">${faces[a]} ${faces[b]}</span><span class="result-total" aria-hidden="true"><b>${total}</b><small>${word}</small></span>`;
     el.hidden=false;
+    placeDiceResult(el,x,y);
   }
 };
 let mobileDebug=false;
@@ -276,3 +277,81 @@ police=function(...args){
   })();
   return mobilePolicePromise;
 };
+
+// Под кубиком остаётся только счётчик бросков и обратный отсчёт до следующего.
+// Формулировки «+1 через» и правило «+4 при остатке ≤ 3» убраны: правило живёт
+// в справке, а на главном экране оно занимало две строки мелким кеглем.
+renderRolls = function(){
+  const e = $('sRolls');
+  if (e) e.textContent = S.rolls + '/' + CFG.ROLLS_PER_DAY;
+  const c = $('sRollsCap');
+  if (c) {
+    const full = S.rolls >= CFG.ROLLS_PER_DAY;
+    c.textContent = full ? '' : fmtMs(nextRollIn());
+    c.hidden = full;
+  }
+  const info = $('starterInfo');
+  if (info) { info.hidden = true; info.textContent = ''; }
+};
+
+// Строка точки под картой обновляется игровым кодом напрямую, поэтому знак
+// валюты в ней заменяется наблюдателем. Повторного срабатывания нет: после
+// замены символа $ в тексте не остаётся.
+(function(){
+  const bar = document.getElementById('tbText');
+  if (!bar || typeof cashGlyph !== 'function') return;
+  const apply = () => { if (bar.textContent.includes('$')) cashGlyph(bar); };
+  new MutationObserver(apply).observe(bar, {childList:true, subtree:true, characterData:true});
+  apply();
+})();
+
+// Иконки товаров. Сопоставление идёт по названию, а не по эмодзи: у Levi's 501
+// и Косухи в данных один и тот же 🧥, а у сигар вместо предмета стоит флаг 🇨🇺.
+// Подставлять разметку прямо в g.icon нельзя — toast экранирует '<', а showTip
+// пишет в textContent, и HTML вылез бы текстом. Поэтому меняем готовый DOM.
+const GOODS_ICON = {
+  'Жвачка':'gum', 'Marlboro':'marl', 'Кубинские сигары':'cigar',
+  'Кола':'cola', 'Budweiser':'bud', 'Шампанское':'champ',
+  'Кассеты':'tape', 'Walkman':'walk', 'Discman':'disc',
+  'Джинсы':'jeans', 'Levi’s 501':'levis', "Levi's 501":'levis', 'Косуха':'jacket',
+  'Кроссы':'sneak', 'Air Jordan':'jordan', 'BMX':'bmx',
+  'Видик':'vcr', 'Видеокамера':'cam', 'Компьютер':'comp'
+};
+function goodsIcons(root){
+  if(!root) return;
+  root.querySelectorAll('.srow, .row, .warehouse-row').forEach(row => {
+    const name = row.querySelector('.nm, .n');
+    const slot = row.querySelector('.ico');
+    if(!name || !slot || slot.querySelector('.gi')) return;
+    const key = (name.textContent || '').trim().split('\n')[0].trim();
+    const id = GOODS_ICON[key];
+    if(!id) return;
+    slot.innerHTML = '<i class="gi" style="background-image:url(assets/goods/' + id + '.png)"></i>';
+  });
+}
+
+
+// Карточка результата всплывает над тем местом, где легли кубики. Координаты
+// приходят из Godot в долях вьюпорта сцены; сцена занимает полосу между
+// --world-top и --world-bottom, поэтому пересчитываем в пиксели окна.
+// Если координат нет (старый вызов или кубик улетел за кадр) — прежнее место.
+function placeDiceResult(el,x,y){
+  el.style.removeProperty('left'); el.style.removeProperty('top'); el.style.removeProperty('transform');
+  if (typeof x !== 'number' || typeof y !== 'number' || !isFinite(x) || !isFinite(y)) return;
+  const frame = document.getElementById('godot-frame');
+  if (!frame) return;
+  const r = frame.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  el.style.visibility='hidden';
+  requestAnimationFrame(() => {
+    const w = el.offsetWidth || 150, h = el.offsetHeight || 54, M = 8;
+    let left = r.left + x * r.width - w / 2;
+    let top  = r.top  + y * r.height - h - 18;          // на 18 px выше кубиков
+    left = Math.max(M, Math.min(left, window.innerWidth - w - M));
+    top  = Math.max(r.top + M, Math.min(top, r.bottom - h - M));
+    el.style.left = Math.round(left) + 'px';
+    el.style.top = Math.round(top) + 'px';
+    el.style.transform = 'none';
+    el.style.visibility='';
+  });
+}
