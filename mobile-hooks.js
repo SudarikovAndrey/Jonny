@@ -333,7 +333,7 @@ renderRolls = function(){
 // валюты в ней заменяется наблюдателем. Повторного срабатывания нет: после
 // замены символа $ в тексте не остаётся.
 (function(){
-  const bar = document.getElementById('tbText');
+  const bar = document.getElementById('tilebar');
   if (!bar || typeof cashGlyph !== 'function') return;
   const apply = () => { if (bar.textContent.includes('$')) cashGlyph(bar); };
   new MutationObserver(apply).observe(bar, {childList:true, subtree:true, characterData:true});
@@ -428,3 +428,33 @@ if(document.readyState === 'loading'){
 }else{
   bindBootFullscreen();
 }
+
+// Строка точки сереет, когда денег не хватает ни на одно действие внутри.
+// Кнопка остаётся нажимаемой: заглянуть в окно можно всегда, серый цвет
+// лишь говорит, что купить там сейчас нечего.
+function tilebarAffordable(){
+  try{
+    const t = S.tiles[S.pos];
+    if(!t) return true;
+    if(t.type === 'wh'){
+      const min = Math.min(...CFG.GOODS.map(g => buyPrice(g.id)));
+      return S.cash >= min;
+    }
+    if(t.type === 'kiosk' || t.type === 'biz'){
+      if(!t.owner) return S.cash >= t.price;
+      if(t.type === 'biz') return true;            // у бизнеса свои правила прокачки
+      const canGoods  = t.goods < cap(t) && S.cash >= buyPrice(t.good);
+      const canCap    = t.capLvl   < capTab(t).length && S.cash >= capCost(t);
+      const canSales  = t.salesLvl < salTab(t).length && S.cash >= salesCost(t);
+      return canGoods || canCap || canSales;
+    }
+    return true;
+  }catch(e){ return true; }                        // при любой неожиданности не сереем
+}
+(function(){
+  const bar = document.getElementById('tilebar');
+  if(!bar) return;
+  const apply = () => bar.classList.toggle('poor', !bar.disabled && !tilebarAffordable());
+  new MutationObserver(apply).observe(bar, {childList:true, subtree:true, characterData:true, attributes:true});
+  apply();
+})();

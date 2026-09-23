@@ -317,3 +317,6 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 #dock .dk.ok.blink{animation-duration:.7s}
 @media (prefers-reduced-motion:reduce){
   #dock .dk.ok{animation:none; filter:drop-shadow(0 0 6px #ffd76a)}}
+
+/* Нечего купить внутри — кнопка строки точки серая, но остаётся нажимаемой. */
+#tilebar.poor>b{background:#9a938a; color:#f0ece4}

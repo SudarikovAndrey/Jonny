@@ -39,3 +39,6 @@
 /* SVG atlas viewports must clip the source sheet, including inside progress rings. */
 .warehouse-list .ring .atlas-art{overflow:hidden}
 .costco-sign .atlas-art{clip-path:polygon(0 0,100% 0,100% 90%,85% 94%,0 100%)}
+
+/* Две закупки рядом: на все наличные и на половину. */
+.warehouse-half{margin-left:8px}

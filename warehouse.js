@@ -33,6 +33,35 @@ function decorateWarehouse(card){
  if(all){
   const text=all.querySelector('span');if(text?.textContent==='Закупиться на точки')text.textContent='Заполнить все точки';
   all.classList.add('bad','warehouse-bulk');all.insertAdjacentHTML('afterbegin',`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span>`);footer.append(all);enamelButton(all);
+  // Вторая закупка — на половину наличных. Логика та же, что у «на все»:
+  // берём самые выгодные товары по кругу, но не выходим за половину денег.
+  if(!all.disabled){
+    const half=document.createElement('button');
+    half.className='ok warehouse-bulk warehouse-half';
+    const budget=Math.floor(S.cash/2);
+    half.innerHTML=`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span><span>На половину</span><b>$${budget}</b>`;
+    half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
+    half.onclick=()=>{
+      let left=Math.floor(S.cash/2), spent=0;
+      const order=myKiosks().slice().sort((a,b)=>
+        sales(b)*(sellPrice(b.good)-buyPrice(b.good))-sales(a)*(sellPrice(a.good)-buyPrice(a.good)));
+      for(let round=0; round<40 && left>0; round++){
+        let moved=false;
+        for(const t of order){
+          const p=buyPrice(t.good);
+          if(left<p) continue;
+          if(cap(t)-t.goods<=0) continue;
+          if(!addGoods(t.good,1)) continue;
+          S.cash-=p; left-=p; spent+=p; moved=true;
+        }
+        if(!moved) break;
+      }
+      if(spent>0){ toast('Закуплено на $'+spent); save(); render(); draw(); }
+      else toast('Не хватает даже на одну штуку');
+      closeModal();
+    };
+    footer.append(half); enamelButton(half);
+  }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
   const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Тап: +1 товар. Удерживай, чтобы покупать быстрее.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
  }else{

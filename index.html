@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=57"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=58"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -1360,7 +1360,7 @@ async function bizWindow(t){
     } else {
       const max=t.level>=CFG.BIZ.maxLevel, lockDay=bizLevelLocked(t), cost=bizUpCost(t), es=evolveState(t), nt=evolveTarget(t);
       const evoName=CFG.TIER_NAMES.biz[nt-1]||'Сеть', evoCost=evolveCost(t), newFee=Math.max(1,Math.round(evolvedPrice(t)*CFG.BIZ.feePct*perk().fee));
-      const evoBtn=es==='ok'?`<button id="bEvo" ${S.cash<evoCost?'disabled':''}>${S.cash<evoCost?'мало $':'$'+evoCost}</button>`
+      const evoBtn=es==='ok'?`<button id="bEvo" ${S.cash<evoCost?'disabled':''}>${'$'+evoCost}</button>`
         :es==='stats'?`<button disabled>ур. ${CFG.BIZ.maxLevel}/${CFG.BIZ.maxLevel}</button>`
         :`<button disabled>с дня ${String(es).split(':')[1]}</button>`;
       const evoNums=es==='ok'?`<b>$${fee(t)} → $${newFee}</b><small class="pb">сбор от новой базы · окупится за ${paybackLaps()} кругов</small>`
@@ -2022,7 +2022,7 @@ function render(){
     const need=(ct.type==='kiosk'||ct.type==='biz')&&!ct.owner?ct.price:0;   // на своей точке и в Costco кнопка всегда живая
     if(need>0&&S.cash<need&&S.shortTile!==ct.i){S.shortTile=ct.i;trackShort('tile',need-S.cash,0,{tile:ct.i,ttype:ct.type,price:ct.price});}
     tb.disabled=trainingPending()||need>0&&S.cash<need;tb.classList.toggle('off',tb.disabled);
-    tb.querySelector('b').textContent=need>0?(S.cash<need?'мало $':'купить'):'открыть';}
+    tb.querySelector('b').textContent=need>0?(S.cash<need?'$'+need:'купить'):'открыть';}
   draw();if(!$('tip').hidden)positionTip();
 }
 $('tip').onclick=hideTip;$('modal').addEventListener('click',e=>{if(e.target===$('modal')&&!modalSticky)closeModal();});$('toast').onclick=()=>{clearTimeout(toastT);$('toast').style.opacity=0;$('toast').style.pointerEvents='none';};$('bHub').onclick=()=>{if(!moving)eventHub('ticket');};$('sTimer').onclick=()=>{if(!moving)eventInfo();};[0,1].forEach(i=>{$('q'+i).onclick=()=>{if(moving)return;const q=S.q[i];if(q&&q.done&&!q.claimed){const r=q.reward;if(r.rolls){fly('🎲',AT.el('q'+i),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.el('q'+i),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;track('quest_claim',{id:q.id,goal:q.goal,reward:r});toast('🎯 Награда получена');save();render();}else if(q)toast(`🎯 ${q.text} · ${Math.min(q.prog,q.goal)}/${q.goal} · ${rwText(q.reward)}`);};});
@@ -2365,7 +2365,7 @@ renderRolls = function(){
 // валюты в ней заменяется наблюдателем. Повторного срабатывания нет: после
 // замены символа $ в тексте не остаётся.
 (function(){
-  const bar = document.getElementById('tbText');
+  const bar = document.getElementById('tilebar');
   if (!bar || typeof cashGlyph !== 'function') return;
   const apply = () => { if (bar.textContent.includes('$')) cashGlyph(bar); };
   new MutationObserver(apply).observe(bar, {childList:true, subtree:true, characterData:true});
@@ -2460,6 +2460,36 @@ if(document.readyState === 'loading'){
 }else{
   bindBootFullscreen();
 }
+
+// Строка точки сереет, когда денег не хватает ни на одно действие внутри.
+// Кнопка остаётся нажимаемой: заглянуть в окно можно всегда, серый цвет
+// лишь говорит, что купить там сейчас нечего.
+function tilebarAffordable(){
+  try{
+    const t = S.tiles[S.pos];
+    if(!t) return true;
+    if(t.type === 'wh'){
+      const min = Math.min(...CFG.GOODS.map(g => buyPrice(g.id)));
+      return S.cash >= min;
+    }
+    if(t.type === 'kiosk' || t.type === 'biz'){
+      if(!t.owner) return S.cash >= t.price;
+      if(t.type === 'biz') return true;            // у бизнеса свои правила прокачки
+      const canGoods  = t.goods < cap(t) && S.cash >= buyPrice(t.good);
+      const canCap    = t.capLvl   < capTab(t).length && S.cash >= capCost(t);
+      const canSales  = t.salesLvl < salTab(t).length && S.cash >= salesCost(t);
+      return canGoods || canCap || canSales;
+    }
+    return true;
+  }catch(e){ return true; }                        // при любой неожиданности не сереем
+}
+(function(){
+  const bar = document.getElementById('tilebar');
+  if(!bar) return;
+  const apply = () => bar.classList.toggle('poor', !bar.disabled && !tilebarAffordable());
+  new MutationObserver(apply).observe(bar, {childList:true, subtree:true, characterData:true, attributes:true});
+  apply();
+})();
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.png',sw=1536,sh=1024){
@@ -2713,6 +2743,35 @@ function decorateWarehouse(card){
  if(all){
   const text=all.querySelector('span');if(text?.textContent==='Закупиться на точки')text.textContent='Заполнить все точки';
   all.classList.add('bad','warehouse-bulk');all.insertAdjacentHTML('afterbegin',`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span>`);footer.append(all);enamelButton(all);
+  // Вторая закупка — на половину наличных. Логика та же, что у «на все»:
+  // берём самые выгодные товары по кругу, но не выходим за половину денег.
+  if(!all.disabled){
+    const half=document.createElement('button');
+    half.className='ok warehouse-bulk warehouse-half';
+    const budget=Math.floor(S.cash/2);
+    half.innerHTML=`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span><span>На половину</span><b>$${budget}</b>`;
+    half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
+    half.onclick=()=>{
+      let left=Math.floor(S.cash/2), spent=0;
+      const order=myKiosks().slice().sort((a,b)=>
+        sales(b)*(sellPrice(b.good)-buyPrice(b.good))-sales(a)*(sellPrice(a.good)-buyPrice(a.good)));
+      for(let round=0; round<40 && left>0; round++){
+        let moved=false;
+        for(const t of order){
+          const p=buyPrice(t.good);
+          if(left<p) continue;
+          if(cap(t)-t.goods<=0) continue;
+          if(!addGoods(t.good,1)) continue;
+          S.cash-=p; left-=p; spent+=p; moved=true;
+        }
+        if(!moved) break;
+      }
+      if(spent>0){ toast('Закуплено на $'+spent); save(); render(); draw(); }
+      else toast('Не хватает даже на одну штуку');
+      closeModal();
+    };
+    footer.append(half); enamelButton(half);
+  }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
   const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Тап: +1 товар. Удерживай, чтобы покупать быстрее.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
  }else{
