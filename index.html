@@ -1328,7 +1328,7 @@ async function kioskWindow(t){
       $('kBuy').onclick=()=>{track('buy_point',{tile:t.i,good:t.good,price:t.price});fly('💵',AT.cash(),AT.tile(t.i),flyN(t.price));S.cash-=t.price;t.owner='you';t.capLvl=1;t.salesLvl=1;t.goods=0;S.stat.bought++;S.dstat.bought++;qProg('buy',1);earnStarter('point');log(`Купил ${name(t)} за $${t.price}.`);toast('Твоя точка! Закупи товар на Costco.');render();draw();};
     } else {
       const cMax=t.capLvl>=capTab(t).length, sMax=t.salesLvl>=salTab(t).length, pc=Math.round(t.goods/cap(t)*100), es=evolveState(t);
-      if(S.stat.parcels>0)hintHtml('upgrade','Вместимость — запас товара. Продажи — сколько штук продаётся за круг. Улучши оба показателя, чтобы расширить точку.');
+      if(S.stat.parcels>0&&S.day<=2)hintHtml('upgrade','Вместимость — запас товара. Продажи — сколько штук продаётся за круг. Улучши оба показателя, чтобы расширить точку.');
       if(es==='ok')hintHtml('evolve','Точка готова к расширению: станет Магазином и перейдёт на премиум-товар своей категории, дороже и с большими очками.');
       const evoRow=(()=>{if(es==='max')return '';const nt=evolveTarget(t),nm=(CFG.POINT_NAMES[t.base||'gum']||[])[nt-1]||CFG.TIER_NAMES.kiosk[nt-1],ng=good(good(t.good).next||t.good);
         if(es==='ok')return `<div class="wide"><span class="n">Расширить до «${nm}»<small>${ng.icon} ${ng.name} · $${ng.sell}/шт</small></span><button id="kEvo" ${S.cash<evolveCost(t)?'disabled':''}>$${evolveCost(t)}</button></div>`;
@@ -1404,7 +1404,7 @@ async function shop(){ track('window',{w:'costco',cash:S.cash,day:S.day});
     hintHtml('shop','Товар хранится в точках. На старте часть продастся за доллары. Для очков отправь его через «Поставку» до продажи.');
     $('modal').classList.add('mid'); $('card').className='card bare';
     $('card').innerHTML=`<div class="shop"><div class="banner"><b>Costco</b><span class="big">🏬</span></div>
-      <div class="whead">Покупай товары для точек ${helpBtn('Товар лежит в точках и продаётся при проходе старта. Раскладывается сам, сначала в точки с большими продажами. Из него же собирается поставка.')}</div>
+      <div class="whead">Покупай товары для точек ${helpBtn('Тут ты можешь закупить товар, который продается автоматически с наценкой, когда ты проходишь клетку старт. Чем больше у тебя точек, тем больше товара ты можешь купить. Также, товар нужен, чтобы делать отправку партий, а это твоя главная задача!')}</div>
       <p class="parcel-note" style="padding:0 12px">Один запас: продажа на старте или отправка в поставке.</p>${ks.length?rows:'<p class="empty">Своих точек нет — товар негде хранить. Сначала купи точку.</p>'}
       ${perk().disc?`<p class="empty">Скидка Джонни ${perk().disc*100}%.</p>`:''}
       ${ks.length?`<button class="buyall" id="wAll" ${need<=0||S.cash<minP?'disabled':''}><span>${need<=0?'Всё заполнено':S.cash>=need?'Закупиться на точки':'На все — самое выгодное'}</span><b>${need<=0?'':'$'+(S.cash>=need?need:S.cash)}</b></button>`:''}
@@ -2708,7 +2708,7 @@ function decorateWarehouse(card){
  if(!rows.length)list.innerHTML='<div class="warehouse-empty"><b>Сначала нужна своя точка</b><p>Там будет храниться товар. Купи точку на карте и возвращайся за первой партией.</p></div>';
  const footer=document.createElement('footer');footer.className='warehouse-footer';
  const discount=Math.round((perk().disc||0)*100);
- footer.innerHTML=`<div class="warehouse-johnny"><div class="warehouse-portrait">${costcoArt(748,327,178,140)}</div><div class="warehouse-bubble">${discount?`Скидка Джонни <b>${discount}%</b><small>Уже учтена в ценах</small>`:'Больше товаров —<br><b>больше дела!</b>'}</div><span class="warehouse-wallet">В кармане<b>$${S.cash}</b></span></div>`;
+ footer.innerHTML=`<div class="warehouse-johnny"><div class="warehouse-portrait">${costcoArt(748,327,178,140)}</div><div class="warehouse-bubble">${discount?`Скидка Джонни <b>${discount}%</b><small>Уже учтена в ценах</small>`:'Чем больше товара —<br><b>тем больше прибыли!</b>'}</div><span class="warehouse-wallet">В кармане<b>$${S.cash}</b></span></div>`;
  const all=old.querySelector('#wAll');
  if(all){
   const text=all.querySelector('span');if(text?.textContent==='Закупиться на точки')text.textContent='Заполнить все точки';
