@@ -659,3 +659,28 @@ function streetPassTip(){
     new MutationObserver(apply).observe(el,{childList:true,subtree:true,characterData:true});
   }
 })();
+
+// Совет над окном крепится к верху окна, а не к шапке экрана: прототип ставил
+// его под шапку, и над невысоким окном по центру оставалась дыра.
+// Место под совет (--tip-space) резервируется как раньше, потом совет
+// опускается к краю карточки. offsetTop — без transform анимации появления.
+(function(){
+  const base = positionTip;
+  positionTip = function(){
+    base.apply(this, arguments);
+    const tip = document.getElementById('tip'), modal = document.getElementById('modal'), card = document.getElementById('card');
+    if(tip.hidden || modal.hidden || !card){ modal.style.paddingTop = ''; return; }
+    const h = tip.getBoundingClientRect().height;
+    const head = document.getElementById('top').getBoundingClientRect().bottom + 8;
+    // Окно центрируется в месте под советом — и высокая карточка не заезжает под него.
+    modal.style.paddingTop = Math.round(head + h + 8) + 'px';
+    const cardTop = modal.getBoundingClientRect().top + card.offsetTop;
+    tip.style.top = Math.max(head, Math.round(cardTop - h - 4)) + 'px';
+  };
+  const card = document.getElementById('card');
+  if(card && 'ResizeObserver' in window) new ResizeObserver(() => positionTip()).observe(card);
+  // Совет скрыли или окно закрыли — возвращаем обычный отступ окна.
+  const reset = () => { const t = document.getElementById('tip'), m = document.getElementById('modal');
+    if(t.hidden || m.hidden) m.style.paddingTop = ''; };
+  for(const id of ['tip','modal']){ const el = document.getElementById(id); if(el) new MutationObserver(reset).observe(el, {attributes:true, attributeFilter:['hidden']}); }
+})();

@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=68"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=68"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=47"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -651,7 +651,7 @@ function openHelp(topic='start',welcome=false,context=''){
     ${section('money','🏪 Деньги, точки и улучшения',`<p><b>Доллары $</b> нужны на точки, товары и улучшения. Точки продают товар при проходе старта и платят сбор за проход. Бизнесам товар не нужен: они платят сбор за проход и увеличенную сумму за остановку.</p><p><b>Вместимость</b> — сколько товара хранится в точке. <b>Продажи</b> — сколько штук продаётся за круг. Чтобы расширить точку, улучши оба показателя до максимума и дождись нужного дня.</p><p>Расширение открывает новый товар и новые улучшения. Открытые районы и улучшения на сегодня — по кнопке с таймером под ресурсами.</p>`)}
     <p class="parcel-note">Первая тестовая посылка: 1 шт. товара, настоящие очки. Отправку дня не тратит. После неё собери обычную поставку — до ${CFG.PARCEL_SLOTS} мест без улучшений.</p>
     ${section('time','🎲 Ходы и новый день',`<p>Первый круг — проводка по главным механикам. Остановки меняются между партиями, но Джонни обязательно купит точку, попадёт на Costco, увидит доходы и события и вернётся на старт. Участок в этом круге не выпадает. После первой отправки кубики становятся случайными.</p><p>В первый день действия открывают награды: первая точка +4 хода, закупка +4, тестовая посылка +6, поставка дня +6. Они ждут в запасе и выдаются по одной, когда осталось ${CFG.STARTER.threshold} хода или меньше. Всего до 20 дополнительных ходов, один раз за ивент; незабранные сгорают в полночь.</p><p>Один бросок стоит один ход. Восстановление: +1 каждые ${CFG.REGEN_MIN} минут, до ${CFG.ROLLS_PER_DAY} в запасе. Купленные ходы могут превысить этот запас.</p><p>Новый день начинается в полночь. Награды заданий нужно забрать до этого: нажми выполненное задание под ресурсами. Награды — деньги и ходы, а не очки.</p><p>Кони-Айленд бесплатно открывается в день ${CFG.ZONES[1].day}, Манхэттен — в день ${CFG.ZONES[2].day}. Раннее открытие стоит кристаллы.</p><p>У ивента отдельные деньги, ходы и прогресс. Можно вернуться в основную игру; прогресс ивента сохранится.</p>`)}
-    ${section('rewards','🎫 Джонни и награды',`<p>Джонни — герой, которым ты ходишь по карте. Он отправляет товары пацанам и мечтает попасть в Россию. Поставки дают ему опыт и открывают улучшения — они перечислены в карточке 🧢 «Джонни».</p>${CFG.MILESTONES.map(m=>`<p><b>${m.pts} очков — ${m.name}.</b><br>${m.reward}.</p>`).join('')}<p>В конце недели деньги и собственность добавляют до ${CFG.FINAL.cashCap+CFG.FINAL.assetsCap} очков. Остатки товара очков не дают. Награды за рубежи предназначены для основной игры.</p><p>Те же очки определяют место в рейтинге и уровень пропуска: один уровень за ${BP.step} очков. Бесплатные награды доступны без покупки; платная дорожка открывается с пропуском.</p>`)}
+    ${section('rewards','🎫 Джонни и награды',`<p>Джонни — герой, которым ты ходишь по карте. Он отправляет товары пацанам и мечтает попасть в Россию. Поставки дают ему опыт и открывают улучшения — они перечислены в карточке 🧢 «Джонни».</p>${CFG.MILESTONES.map(m=>`<p><b>${m.pts} очков — ${m.name}.</b><br>${m.reward}.</p>`).join('')}<p>В конце недели деньги и собственность добавляют до ${CFG.FINAL.cashCap+CFG.FINAL.assetsCap} очков. Остатки товара очков не дают. Награды за рубежи предназначены для основной игры.</p><p>Те же очки определяют место в рейтинге и уровень пропуска: первые уровни открываются за несколько очков, дальше шаг растёт. Бесплатные награды доступны без покупки; платная дорожка открывается с пропуском.</p>`)}
     ${section('shop','💎 Покупки и цены',`<p><b>Кристаллы 💎</b> нужны на дополнительные ходы, такси, наличные, места в фуре и раннее открытие районов. Купить их можно в 🛒 «Магазине».</p><p>Такси открывается с дня ${CFG.TAXI_FROM_DAY}: оно довозит до Costco или старта без бросков. Каждая следующая поездка за день вдвое дороже; в полночь цена сбрасывается.</p><p>Купленное место в фуре действует до полуночи. Каждое новое место вдвое дороже предыдущего; эта цена не сбрасывается до конца ивента. Пропуск даёт +${BP.paidSlot} место до конца недели.</p><p>Пакет «Догон» открывает отправки за пропущенные дни. Первая такая отправка бесплатна; для каждой нужен свой товар.</p><p>В прототипе покупки имитируются: реальные деньги не списываются.</p>`)}
     ${section('bank','🚔 Полиция и банк',`<p>В участке можно заплатить штраф долларами, откупиться кристаллами или бросать кубики. Дубль освобождает бесплатно. Если за ${CFG.POLICE.attempts} попытки дубль не выпадет, штраф спишется автоматически.</p><p>Банк работает с дня ${CFG.BANK_DAY}. Кредит можно взять и погасить при остановке на клетке банка. Проценты списываются при каждом проходе банка.</p><p>Минус на счёте нужно закрыть до полуночи. Просрочки могут привести к изъятию собственности. Остаток долга и число просрочек показаны в банке.</p>`)}
     <button class="ok help-action" id="helpDone">Вернуться в игру</button><button class="help-replay" id="helpReplay">Знакомство с Джонни</button><button class="help-replay" id="helpGuide">${S.tips.guideDismissed?'Включить подсказки по ходу игры':'Подсказки по ходу игры включены'}</button>`;
@@ -847,7 +847,7 @@ const BP={step:100,max:12,price:299,freeRolls:2,paidHard:2,paidSlot:1,
   paid:L=>L===12?{rolls:10,hard:10,skin:true}:L%6===0?{rolls:10,hard:5}:{rolls:5}}; // платная (v12.2): ходы за каждый уровень — то, что реально даёт очки; кристаллы на 6 и 12; скин на 12. До этого кристаллы, которые некуда тратить: +17 очков на 100 ₽
 function rwIcon(r){return r.skin?'🧢':r.hard?'💎':r.rolls?'🎲':r.cash?'💵':'🎁';}
 function rwShort(r){return (r.rolls?'+'+r.rolls+' 🎲':'')+(r.hard?'+'+r.hard+' 💎':'')+(r.cash?'+$'+r.cash:'')+(r.skin?' скин':'');}
-function bpLevel(){return Math.min(BP.max,Math.floor(S.pts/BP.step));}
+const BP_REQ=[5,20,45,75,110,150,195,245,300,360,430,500];function bpNeed(k){return k<=0?0:BP_REQ[Math.min(k,BP.max)-1];}function bpLevelAt(p){let L=0;while(L<BP.max&&p>=BP_REQ[L])L++;return L;}function bpLevel(){return bpLevelAt(S.pts);}
 function bpClaimable(){const L=bpLevel();return Math.max(0,L-(S.bp.claimedFree||0))+(S.bp.paid?Math.max(0,L-(S.bp.claimedPaid||0)):0);}
 function bpClaim(){const L=bpLevel();let r=0,h=0;for(let k=(S.bp.claimedFree||0)+1;k<=L;k++){r+=BP.free(k).rolls||0;}if(L>(S.bp.claimedFree||0)){S.rolls+=r;S.bp.claimedFree=L;}
   if(S.bp.paid){let pr=0;for(let k=(S.bp.claimedPaid||0)+1;k<=L;k++){const w=BP.paid(k);h+=w.hard||0;pr+=w.rolls||0;if(w.skin)S.bp.skin=true;}if(L>(S.bp.claimedPaid||0)){S.hard+=h;S.rolls+=pr;r+=pr;S.bp.claimedPaid=L;}}
@@ -1658,7 +1658,7 @@ async function parcel(forced,catchUp){
     $('mSend').onclick=()=>{const L0=level(),pBefore=S.pts,units=n*k;CFG.GOODS.forEach(g=>{if(box[g.id])fly(g.icon,AT.card(),AT.hub(),Math.min(box[g.id],4),{pulse:'bHub'});});CFG.GOODS.forEach(g=>takeGoods(g.id,box[g.id]*k));S.pts+=p;S.xp+=p;if(catchUp){S.catchups=(S.catchups||0)+1;}else S.parcelSent=true;S.stat.parcels++;S.dstat.pts+=p;qProg('parcel',p,true);earnStarter('shipment');
       track('parcel',{units,slotsUsed:n,pts:p,max:R,slots:N,k,extra:S.extraSlots,forced:!!forced,catchUp:!!catchUp,box});log(`📦 Поставка ушла: ${units} шт, +${p} очков.`);closeModal(1);if(!catchUp&&p<R*0.6&&S.day<=3)setTimeout(()=>hint('fillTruck',`Поставка дала ${p} очков. В следующий раз закупи товар перед отправкой и нажми «Заполнить».`),1200);if(S.day>=CFG.DAYS)setTimeout(()=>toast('🏁 Последняя поставка недели ушла. Бонус будет за деньги и собственность. Остатки товара очков не дают. Жми «Итоги».',6000),900);
       const L=level();
-      {const b0=Math.min(BP.max,Math.floor(pBefore/BP.step)),b1=bpLevel();if(b1>b0)toast(`🎟 Пропуск Джонни: уровень ${b1} — есть что забрать`,3500);}
+      {const b0=bpLevelAt(pBefore),b1=bpLevel();if(b1>b0)toast(`🎟 Пропуск Джонни: уровень ${b1} — есть что забрать`,3500);}
       (async()=>{const before=CFG.MILESTONES.filter(m=>pBefore>=m.pts).length;for(const m of CFG.MILESTONES.slice(before).filter(m=>S.pts>=m.pts))await milestoneModal(m);
         if(L>L0)await modal(`<h2>🧢 Джонни — уровень ${L}!</h2><p class="t">Новое улучшение: <b>${CFG.PERKS[L]||'—'}</b></p>`,[{t:'Красава',v:1,cls:'ok'}]);})();};
     $('mNo').onclick=()=>closeModal(0);
@@ -2692,6 +2692,31 @@ function streetPassTip(){
   }
 })();
 
+// Совет над окном крепится к верху окна, а не к шапке экрана: прототип ставил
+// его под шапку, и над невысоким окном по центру оставалась дыра.
+// Место под совет (--tip-space) резервируется как раньше, потом совет
+// опускается к краю карточки. offsetTop — без transform анимации появления.
+(function(){
+  const base = positionTip;
+  positionTip = function(){
+    base.apply(this, arguments);
+    const tip = document.getElementById('tip'), modal = document.getElementById('modal'), card = document.getElementById('card');
+    if(tip.hidden || modal.hidden || !card){ modal.style.paddingTop = ''; return; }
+    const h = tip.getBoundingClientRect().height;
+    const head = document.getElementById('top').getBoundingClientRect().bottom + 8;
+    // Окно центрируется в месте под советом — и высокая карточка не заезжает под него.
+    modal.style.paddingTop = Math.round(head + h + 8) + 'px';
+    const cardTop = modal.getBoundingClientRect().top + card.offsetTop;
+    tip.style.top = Math.max(head, Math.round(cardTop - h - 4)) + 'px';
+  };
+  const card = document.getElementById('card');
+  if(card && 'ResizeObserver' in window) new ResizeObserver(() => positionTip()).observe(card);
+  // Совет скрыли или окно закрыли — возвращаем обычный отступ окна.
+  const reset = () => { const t = document.getElementById('tip'), m = document.getElementById('modal');
+    if(t.hidden || m.hidden) m.style.paddingTop = ''; };
+  for(const id of ['tip','modal']){ const el = document.getElementById(id); if(el) new MutationObserver(reset).observe(el, {attributes:true, attributeFilter:['hidden']}); }
+})();
+
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.png',sw=1536,sh=1024){
   return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><image href="assets/${file}" width="${sw}" height="${sh}"/></svg>`;
@@ -2864,17 +2889,17 @@ function passReward(w){return `${w.rolls?`<span>${passIcon('dice')}<b>+${w.rolls
 function passRewardText(w){return [w.rolls?`${w.rolls} ходов`:'',w.hard?`${w.hard} кристаллов`:'',w.skin?'скин Джонни':''].filter(Boolean).join(', ');}
 let passClaimBusy=false;
 function renderBattlePass(redraw,tabs){
- const card=$('card'),L=bpLevel(),available=bpClaimable(),progress=L>=BP.max?1:(S.pts%BP.step)/BP.step;
+ const card=$('card'),L=bpLevel(),available=bpClaimable(),progress=L>=BP.max?1:(S.pts-bpNeed(L))/(bpNeed(L+1)-bpNeed(L));
  card.className='card battlepass-card';
  const row=(k)=>{
   const lane=t=>{const premium=t==='paid',reward=premium?BP.paid(k):BP.free(k),claimed=k<=(premium?S.bp.claimedPaid:S.bp.claimedFree),locked=premium&&!S.bp.paid,ready=k<=L&&!locked&&!claimed;
-   return `<button class="pass-reward ${premium?'premium':'free'} ${claimed?'claimed':ready?'available':'locked'}" data-level="${k}" data-lane="${t}" ${claimed||(!ready&&!locked)?'disabled':''} aria-label="Уровень ${k}, ${premium?'премиум':'бесплатно'}: ${passRewardText(reward)}. ${claimed?'Получено':ready?'Забрать доступные награды':locked?'Открыть премиум':'Нужно '+k*BP.step+' очков'}"><span class="pass-loot">${passReward(reward)}</span><span class="pass-state">${claimed?passIcon('check'):ready?'Забрать':locked?passIcon('lock'):k*BP.step+' очк.'}</span></button>`;};
+   return `<button class="pass-reward ${premium?'premium':'free'} ${claimed?'claimed':ready?'available':'locked'}" data-level="${k}" data-lane="${t}" ${claimed||(!ready&&!locked)?'disabled':''} aria-label="Уровень ${k}, ${premium?'премиум':'бесплатно'}: ${passRewardText(reward)}. ${claimed?'Получено':ready?'Забрать доступные награды':locked?'Открыть премиум':'Нужно '+bpNeed(k)+' очков'}"><span class="pass-loot">${passReward(reward)}</span><span class="pass-state">${claimed?passIcon('check'):ready?'Забрать':locked?passIcon('lock'):bpNeed(k)+' очк.'}</span></button>`;};
   return `<div class="pass-rung ${k<=L?'reached':''}" data-level="${k}">${lane('free')}<span class="pass-level ${k===L+1?'next':''}">${k}</span>${lane('paid')}</div>`;
  };
- card.innerHTML=`<header class="pass-header"><span class="pass-stamp">NY<br><b>01</b></span><div><h2>Баттлпасс</h2><small>Джонни идёт к успеху</small></div><button id="hNo" class="xhead" aria-label="Закрыть"></button><div class="pass-progress"><b>Ур. ${L}</b><div><span>${L>=BP.max?'Все уровни открыты':`${S.pts%BP.step} / ${BP.step} очков`}</span><div class="pass-meter"><i style="--progress:${progress}"></i></div></div><small>До конца<br><b>${lbTimeLeft()}</b></small></div></header>
+ card.innerHTML=`<header class="pass-header"><span class="pass-stamp">NY<br><b>01</b></span><div><h2>Баттлпасс</h2><small>Джонни идёт к успеху</small></div><button id="hNo" class="xhead" aria-label="Закрыть"></button><div class="pass-progress"><b>Ур. ${L}</b><div><span>${L>=BP.max?'Все уровни открыты':`${S.pts-bpNeed(L)} / ${bpNeed(L+1)-bpNeed(L)} очков`}</span><div class="pass-meter"><i style="--progress:${progress}"></i></div></div><small>До конца<br><b>${lbTimeLeft()}</b></small></div></header>
  <div class="pass-scene">${passArt(0,240,420,145)}<span>Каждая поставка —<br>ступень к наградам</span><div class="pass-hero">${passArt(452,234,172,160)}</div></div><div class="pass-scroll">
  <div class="pass-lanes"><b>Бесплатно</b><span></span><b>${passIcon('crown')}Премиум</b></div><div class="pass-stairs"><div class="pass-side left">${passArt(0,280,175,350).replace('xMidYMid meet','xMidYMid slice')}</div><div class="pass-side right">${passArt(900,430,120,280).replace('xMidYMid meet','xMidYMid slice')}</div>${Array.from({length:BP.max},(_,i)=>row(BP.max-i)).join('')}</div>
- <details class="pass-tasks"><summary>Как продвигаться?</summary><p>Отправляй товары пацанам. Каждые ${BP.step} очков ивента открывают новый уровень.</p><button class="sec" id="passShip">К поставке</button></details></div>
+ <details class="pass-tasks"><summary>Как продвигаться?</summary><p>Отправляй товары пацанам. Первые уровни открываются почти сразу, дальше каждый требует чуть больше очков ивента.</p><button class="sec" id="passShip">К поставке</button></details></div>
  <footer class="pass-footer"><div class="pass-feedback" aria-live="polite">${available?`Доступно наград: ${available}`:L>=BP.max?'Все ступени пройдены!':`Следующая награда: ${passRewardText(BP.free(L+1))}`}</div>${available?`<button id="bpClaim" class="ok">Забрать всё · ${available}</button>`:''}${S.bp.paid?`<div class="pass-owned">${passIcon('crown')}Премиум открыт · +1 место в фуре</div>`:`<button id="bpBuy" class="bad">${passIcon('crown')}Открыть премиум <b>${BP.price} ₽</b></button>`}${tabs}</footer>`;
  paintedClose($('hNo'));card.querySelectorAll('.pass-footer button:not([data-tab]),#passShip').forEach(enamelButton);
  const claim=async()=>{
