@@ -16,7 +16,7 @@ function decorateWarehouse(card){
   const icon=row.querySelector('.ring i');if(COSTCO_ICONS[id])icon.innerHTML=costcoArt(...COSTCO_ICONS[id]);
   const quantity=row.querySelector('.wq');quantity.setAttribute('aria-label',`Запас: ${stockNow} из ${capacity}`);
   const ring=row.querySelector('.ring');ring.setAttribute('role','meter');ring.setAttribute('aria-label',`Запас: ${g.name}`);ring.setAttribute('aria-valuemin','0');ring.setAttribute('aria-valuemax',String(capacity));ring.setAttribute('aria-valuenow',String(stockNow));
-  const meta=row.querySelector('.wn small');meta.textContent=`${goodSales(id)}/круг · продажа $${sellPrice(id)}`;
+  const meta=row.querySelector('.wn small');meta.textContent=`${goodSales(id)} за круг · по $${sellPrice(id)}`;meta.style.whiteSpace='nowrap';
   meta.title=[...new Set(goodKiosks(id).map(pointName))].join(', ');
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
@@ -35,7 +35,7 @@ function decorateWarehouse(card){
   // наличные и на половину, цена справа. Пачка денег слева убрана: цена и так
   // идёт со значком, а в той вырезке из атласа была впечатана подпись «Иконка».
   const text=all.querySelector('span');
-  if(text&&text.textContent!=='Всё заполнено')text.textContent='Закупить на всё';
+  if(text&&text.textContent!=='Всё заполнено')text.innerHTML='<em class="wh-verb">Закупить на всё</em><em class="wh-short">На всё</em>';
   all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
   const buys=document.createElement('div');buys.className='warehouse-buys';
   buys.append(all);footer.append(buys);enamelButton(all);
@@ -46,7 +46,7 @@ function decorateWarehouse(card){
     const half=document.createElement('button');
     half.className='ok warehouse-bulk warehouse-half';
     const budget=Math.floor(allPrice/2);
-    half.innerHTML=`<span>Закупить на половину</span><b>$${budget}</b>`;
+    half.innerHTML=`<span><em class="wh-verb">Закупить на половину</em><em class="wh-short">На половину</em></span><b>$${budget}</b>`;
     half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
     half.onclick=()=>{
       let left=budget, spent=0;

@@ -92,3 +92,9 @@
 @keyframes hub-claim{50%{transform:translateY(-2px) scale(1.06)}}
 @media (max-width:360px){#bHub .hub-meta{font-size:9.5px}#bHub .hub-row b{font-size:14px}#bHub .hub-meta{font-size:9.5px}#bHub .hub-ticket{width:28px}}
 @media (prefers-reduced-motion:reduce){#bHub .hub-claim-tag{animation:none}}
+/* плашка билета: одно крупное число и шкала */
+#bHub .hub-goal{gap:5px}
+#bHub .hub-num{font-family:var(--num);font-weight:900;font-size:22px;line-height:1;color:#29231c;white-space:nowrap}
+#bHub .hub-num small{font:inherit;font-size:15px;font-weight:800;color:#5b4c35}
+#bHub .hub-bar{height:9px}
+@media (max-width:360px){#bHub .hub-num{font-size:18px}#bHub .hub-num small{font-size:13px}}

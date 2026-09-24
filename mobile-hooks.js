@@ -452,11 +452,16 @@ function tilebarAffordable(){
     }
     if(t.type === 'kiosk' || t.type === 'biz'){
       if(!t.owner) return S.cash >= t.price;
-      if(t.type === 'biz') return true;            // у бизнеса свои правила прокачки
-      const canGoods  = t.goods < cap(t) && S.cash >= buyPrice(t.good);
+      // Считаем только то, что делается в окне этой клетки: прокачку и улучшение.
+      // Товар на точку покупается на Costco, поэтому здесь он не в счёт.
+      const canEvolve = evolveState(t) === 'ok' && S.cash >= evolveCost(t);
+      if(t.type === 'biz'){
+        const canLevel = t.level < CFG.BIZ.maxLevel && !bizLevelLocked(t) && S.cash >= bizUpCost(t);
+        return canLevel || canEvolve;
+      }
       const canCap    = t.capLvl   < capTab(t).length && S.cash >= capCost(t);
       const canSales  = t.salesLvl < salTab(t).length && S.cash >= salesCost(t);
-      return canGoods || canCap || canSales;
+      return canCap || canSales || canEvolve;
     }
     return true;
   }catch(e){ return true; }                        // при любой неожиданности не сереем

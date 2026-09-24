@@ -76,10 +76,11 @@ function renderHubGoal(){
   const label=nm?nm.name:'Все рубежи';
   const left=nm?`ещё ${goal-S.pts}`:'взяты';
   const place=lbPlace();
+  // Только число и шкала: подписи рубежа, «ещё N» и место в топе убраны —
+  // они есть в самом окне билета (навык game-ui-designer, §1).
   el.innerHTML=`${HUB_TICKET}<span class="hub-goal">
-      <span class="hub-row"><b>${S.pts}<small>/${goal}</small></b><span class="hub-place">${place}-й в топе</span></span>
+      <b class="hub-num">${S.pts}<small>/${goal}</small></b>
       <span class="hub-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${S.pts}"><i style="width:${pc}%"></i></span>
-      <span class="hub-row hub-meta"><em>${label}</em><span>${left}</span></span>
     </span>${ready?'<span class="hub-claim-tag">Забрать</span>':''}`;
   el.setAttribute('aria-label',`${label}: ${S.pts} из ${goal} очков, ${place} место в топе${ready?', есть награда':''}`);
   el.classList.toggle('okc',ready);el.classList.add('hub-goal-chip');

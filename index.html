@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=70"><link rel="stylesheet" href="mobile-windows.css?v=49"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=4"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=71"><link rel="stylesheet" href="mobile-windows.css?v=49"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=51"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=5"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -330,7 +330,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=35";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'889713f5'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=35";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'c7eafce9'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -2497,11 +2497,16 @@ function tilebarAffordable(){
     }
     if(t.type === 'kiosk' || t.type === 'biz'){
       if(!t.owner) return S.cash >= t.price;
-      if(t.type === 'biz') return true;            // у бизнеса свои правила прокачки
-      const canGoods  = t.goods < cap(t) && S.cash >= buyPrice(t.good);
+      // Считаем только то, что делается в окне этой клетки: прокачку и улучшение.
+      // Товар на точку покупается на Costco, поэтому здесь он не в счёт.
+      const canEvolve = evolveState(t) === 'ok' && S.cash >= evolveCost(t);
+      if(t.type === 'biz'){
+        const canLevel = t.level < CFG.BIZ.maxLevel && !bizLevelLocked(t) && S.cash >= bizUpCost(t);
+        return canLevel || canEvolve;
+      }
       const canCap    = t.capLvl   < capTab(t).length && S.cash >= capCost(t);
       const canSales  = t.salesLvl < salTab(t).length && S.cash >= salesCost(t);
-      return canGoods || canCap || canSales;
+      return canCap || canSales || canEvolve;
     }
     return true;
   }catch(e){ return true; }                        // при любой неожиданности не сереем
@@ -3089,7 +3094,7 @@ function decorateWarehouse(card){
   const icon=row.querySelector('.ring i');if(COSTCO_ICONS[id])icon.innerHTML=costcoArt(...COSTCO_ICONS[id]);
   const quantity=row.querySelector('.wq');quantity.setAttribute('aria-label',`Запас: ${stockNow} из ${capacity}`);
   const ring=row.querySelector('.ring');ring.setAttribute('role','meter');ring.setAttribute('aria-label',`Запас: ${g.name}`);ring.setAttribute('aria-valuemin','0');ring.setAttribute('aria-valuemax',String(capacity));ring.setAttribute('aria-valuenow',String(stockNow));
-  const meta=row.querySelector('.wn small');meta.textContent=`${goodSales(id)}/круг · продажа $${sellPrice(id)}`;
+  const meta=row.querySelector('.wn small');meta.textContent=`${goodSales(id)} за круг · по $${sellPrice(id)}`;meta.style.whiteSpace='nowrap';
   meta.title=[...new Set(goodKiosks(id).map(pointName))].join(', ');
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
@@ -3108,7 +3113,7 @@ function decorateWarehouse(card){
   // наличные и на половину, цена справа. Пачка денег слева убрана: цена и так
   // идёт со значком, а в той вырезке из атласа была впечатана подпись «Иконка».
   const text=all.querySelector('span');
-  if(text&&text.textContent!=='Всё заполнено')text.textContent='Закупить на всё';
+  if(text&&text.textContent!=='Всё заполнено')text.innerHTML='<em class="wh-verb">Закупить на всё</em><em class="wh-short">На всё</em>';
   all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
   const buys=document.createElement('div');buys.className='warehouse-buys';
   buys.append(all);footer.append(buys);enamelButton(all);
@@ -3119,7 +3124,7 @@ function decorateWarehouse(card){
     const half=document.createElement('button');
     half.className='ok warehouse-bulk warehouse-half';
     const budget=Math.floor(allPrice/2);
-    half.innerHTML=`<span>Закупить на половину</span><b>$${budget}</b>`;
+    half.innerHTML=`<span><em class="wh-verb">Закупить на половину</em><em class="wh-short">На половину</em></span><b>$${budget}</b>`;
     half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
     half.onclick=()=>{
       let left=budget, spent=0;
@@ -3335,10 +3340,11 @@ function renderHubGoal(){
   const label=nm?nm.name:'Все рубежи';
   const left=nm?`ещё ${goal-S.pts}`:'взяты';
   const place=lbPlace();
+  // Только число и шкала: подписи рубежа, «ещё N» и место в топе убраны —
+  // они есть в самом окне билета (навык game-ui-designer, §1).
   el.innerHTML=`${HUB_TICKET}<span class="hub-goal">
-      <span class="hub-row"><b>${S.pts}<small>/${goal}</small></b><span class="hub-place">${place}-й в топе</span></span>
+      <b class="hub-num">${S.pts}<small>/${goal}</small></b>
       <span class="hub-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${S.pts}"><i style="width:${pc}%"></i></span>
-      <span class="hub-row hub-meta"><em>${label}</em><span>${left}</span></span>
     </span>${ready?'<span class="hub-claim-tag">Забрать</span>':''}`;
   el.setAttribute('aria-label',`${label}: ${S.pts} из ${goal} очков, ${place} место в топе${ready?', есть награда':''}`);
   el.classList.toggle('okc',ready);el.classList.add('hub-goal-chip');

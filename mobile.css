@@ -496,3 +496,16 @@ body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .ma
 #qrow .qchip::before{width:21px;height:21px}
 #qrow #sTimer span b{display:block;font-family:var(--num);font-weight:800;font-size:15px;line-height:1.05;color:#fff3d6}
 #qrow #sTimer span small{display:block;font-size:10.5px;opacity:.8;margin-top:1px}
+/* строка клетки: серая «открыть», если здесь не на что потратиться; зелёная — если есть */
+#tilebar.poor>b{background:#8f887d!important;color:#f3efe6!important;box-shadow:inset 0 -2px 0 #0000002a}
+
+/* ===== v61: отбивки под верхней и нижней панелью =====
+   Карта не обрывается о панели, а уходит под них в тёплую тень. Слой — внутри
+   #stage над полем и под HUD, клики пропускает. Высота — по реальной высоте
+   панелей (--world-top / --world-bottom) плюс 56 px растворения. */
+#stage::before,#stage::after{content:'';position:absolute;left:0;right:0;z-index:1;pointer-events:none}
+#stage::before{top:0;height:calc(var(--world-top,150px) + 56px);
+  background:linear-gradient(rgba(38,29,20,.78) 0%,rgba(38,29,20,.55) calc(100% - 56px),rgba(38,29,20,.22) calc(100% - 28px),rgba(38,29,20,0) 100%)}
+#stage::after{bottom:0;height:calc(var(--world-bottom,150px) + 56px);
+  background:linear-gradient(0deg,rgba(38,29,20,.8) 0%,rgba(38,29,20,.55) calc(100% - 56px),rgba(38,29,20,.22) calc(100% - 28px),rgba(38,29,20,0) 100%)}
+.map-controls{z-index:2}

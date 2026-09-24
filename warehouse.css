@@ -58,3 +58,29 @@
 #card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){flex:none;font-size:13px;line-height:1.1;white-space:nowrap}
 #card .warehouse-buys button.warehouse-bulk>b{padding-left:0;border-left:0;font-size:21px;line-height:1}
 @media(max-width:350px){#card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:12px}}
+
+/* ===== v61: склад по навыку game-ui-designer =====
+   Список уходит под шапку и подвал растворением, а не упирается в рамку;
+   у строк воздух сверху и снизу; подписи не мельче 12 px; сноски убраны. */
+.warehouse-list{padding:14px 11px 16px;
+  -webkit-mask-image:linear-gradient(transparent 0,#000 14px,#000 calc(100% - 16px),transparent 100%);
+  mask-image:linear-gradient(transparent 0,#000 14px,#000 calc(100% - 16px),transparent 100%)}
+#card .warehouse-list .wr{margin:0 0 9px;padding:10px 9px}
+#card .warehouse-list .wn small{font-size:12.5px;margin-top:3px}
+#card .warehouse-list .wq{font-size:13.5px}
+#card .warehouse-head p,.warehouse-buy-note{display:none}
+.warehouse-head{padding-bottom:9px}
+.warehouse-footer{padding-top:2px}
+/* широкий экран: колонка остатка не налезает на кнопку */
+@media(min-width:410px){#card .warehouse-list .wr{grid-template-columns:49px minmax(0,1fr) auto 96px;gap:6px 10px}
+  #card .warehouse-list .wq{grid-column:3;text-align:right;white-space:nowrap;min-width:0}}
+@media(max-width:360px){
+  #card .warehouse-heading h2{font-size:17px}
+  #card .warehouse-buys button.warehouse-bulk{padding:6px 5px}
+  #card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:11.5px}
+  #card .warehouse-list .wn small{font-size:12px}}
+.wh-verb{font-style:normal}
+#card .warehouse-list .wn small{overflow:hidden;text-overflow:ellipsis}
+@media(max-width:360px){.wh-verb{display:none}#card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:13px}}
+.wh-short{display:none;font-style:normal}
+@media(max-width:360px){.wh-short{display:inline}}
