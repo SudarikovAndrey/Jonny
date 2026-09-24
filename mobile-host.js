@@ -16,7 +16,11 @@ window.MobileHost = (() => {
       const box=bar&&bar.parentElement;
       if(box)box.setAttribute('aria-valuenow',String(percent||0));
     },
-    failed(message){api.ready=false;document.body.classList.remove('engine-ready');const el=document.getElementById('loadProgress');if(el)el.textContent='Не удалось открыть 3D. Перезагрузите страницу.';console.error(message);},
+    failed(message){
+      // Веб-поле не запустилось (нет WebGL, ошибка загрузки) — тихо переходим на Godot.
+      const frame=document.getElementById('godot-frame');
+      if(frame&&/board\.html/.test(frame.src)&&window.GODOT_SRC){console.warn('Веб-поле не запустилось, открываем Godot:',message);frame.src=window.GODOT_SRC;return;}
+      api.ready=false;document.body.classList.remove('engine-ready');const el=document.getElementById('loadProgress');if(el)el.textContent='Не удалось открыть 3D. Перезагрузите страницу.';console.error(message);},
     send(data){if(callback)callback(JSON.stringify(data));},
     request(action,data={},timeout=25000){return new Promise((resolve,reject)=>{
       if(!api.ready){reject(new Error('Поле ещё загружается'));return;}
@@ -30,6 +34,8 @@ window.MobileHost = (() => {
     diceDone(id,a,b){api.complete(id,{a,b});},
     positions(json){api.points=JSON.parse(json);}
   };
+  // Страховка: веб-поле не ответило за 15 секунд — открываем Godot.
+  setTimeout(()=>{const frame=document.getElementById('godot-frame');if(!api.ready&&frame&&/board\.html/.test(frame.src))api.failed('нет ответа за 15 с');},15000);
   reducedMotion.addEventListener("change",()=>api.send({action:"ambience",on:!reducedMotion.matches}));
   return api;
 })();
