@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=65"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=66"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -1217,7 +1217,7 @@ async function prototypeRoll(){
       if(biz&&last){float(t.i,'💰 +$'+f+' касса!','#ffd54f',1.6);log(`${bizName(t)}: остановка — снял кассу $${f} (×${CFG.BIZ.landMult}).`);}
       else float(t.i,'+$'+f,biz?'#ffd54f':'#b7ad98',biz?1.15:0.8);
       render();}
-    else if(!unlocked(t)&&!last){const m=CFG.STREET_PASS_PER_LEVEL*level();if(m>0){S.cash+=m;S.stat.earned+=m;S.dstat.earned+=m;float(t.i,'+$'+m,'#9aa3b8');render();}} // стройка: мелочь за проход, растёт с уровнем Джонни
+    else if(!unlocked(t)&&!last){const m=CFG.STREET_PASS_PER_LEVEL*level();if(m>0){S.cash+=m;S.stat.earned+=m;S.dstat.earned+=m;float(t.i,'стройка +$'+m,'#9aa3b8');render();streetPassTip();}} // стройка: мелочь за проход, растёт с уровнем Джонни
   }
   await land(S.tiles[S.pos]);
   moving=false;refillStarter();save();render();
@@ -2021,8 +2021,8 @@ function render(){
   if(tbText){$('tbText').textContent=tbText;
     const need=(ct.type==='kiosk'||ct.type==='biz')&&!ct.owner?ct.price:0;   // на своей точке и в Costco кнопка всегда живая
     if(need>0&&S.cash<need&&S.shortTile!==ct.i){S.shortTile=ct.i;trackShort('tile',need-S.cash,0,{tile:ct.i,ttype:ct.type,price:ct.price});}
-    tb.disabled=trainingPending()||need>0&&S.cash<need;tb.classList.toggle('off',tb.disabled);
-    tb.querySelector('b').textContent=need>0?(S.cash<need?'$'+need:'купить'):'открыть';}
+    tb.disabled=trainingPending();tb.classList.toggle('off',tb.disabled);
+    tb.querySelector('b').textContent=need>0&&S.cash>=need?'купить':'открыть';}
   draw();if(!$('tip').hidden)positionTip();
 }
 $('tip').onclick=hideTip;$('modal').addEventListener('click',e=>{if(e.target===$('modal')&&!modalSticky)closeModal();});$('toast').onclick=()=>{clearTimeout(toastT);$('toast').style.opacity=0;$('toast').style.pointerEvents='none';};$('bHub').onclick=()=>{if(!moving)eventHub('ticket');};$('sTimer').onclick=()=>{if(!moving)eventInfo();};[0,1].forEach(i=>{$('q'+i).onclick=()=>{if(moving)return;const q=S.q[i];if(q&&q.done&&!q.claimed){const r=q.reward;if(r.rolls){fly('🎲',AT.el('q'+i),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.el('q'+i),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;track('quest_claim',{id:q.id,goal:q.goal,reward:r});toast('🎯 Награда получена');save();render();}else if(q)toast(`🎯 ${q.text} · ${Math.min(q.prog,q.goal)}/${q.goal} · ${rwText(q.reward)}`);};});
@@ -2653,6 +2653,26 @@ showTip = function(text){
   new MutationObserver(sync).observe(modal, {attributes:true, childList:true, subtree:true});
   addEventListener('resize', () => layer && place());
 })();
+
+// ===== Онбординговый круг: на экране только кубик и строка клетки =====
+// Класс на body, CSS прячет остальные кнопки (visibility, чтобы кубик не
+// съезжал). Круг заканчивается на старте — дальше всё возвращается.
+(function(){
+  const sync = () => { try{ document.body.classList.toggle('first-lap', !!firstLapActive()); }catch(e){} };
+  const base = render;
+  render = function(){ const r = base.apply(this, arguments); sync(); return r; };
+  sync();
+})();
+
+// Серые клетки — стройка: за проход мимо неё капает мелочь. Один раз
+// объясняем, откуда деньги. Флаг ставится, только если совет реально показан.
+function streetPassTip(){
+  try{
+    if(S.tips.streetPass || !document.getElementById('tip').hidden) return;
+    S.tips.streetPass = true; save();
+    showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда район откроется, здесь появятся новые точки.');
+  }catch(e){}
+}
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.png',sw=1536,sh=1024){

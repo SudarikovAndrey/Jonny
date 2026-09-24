@@ -437,3 +437,9 @@ body #tip::before,body #tip::after{content:none!important;display:none!important
 @keyframes shipRing{50%{transform:scale(1.06)}}
 @keyframes shipArrow{50%{translate:0 7px}}
 @media (prefers-reduced-motion:reduce){.ship-hint *{animation:none!important}}
+
+/* Карточка «Первый круг · N/9» убрана совсем: ведут пульсация и советы Джонни. */
+#guide{display:none!important}
+/* Онбординговый круг: только кубик и строка клетки. */
+body.first-lap #bTaxi,body.first-lap #bShip,body.first-lap #bJohnny,body.first-lap #bShop,
+body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .map-controls{visibility:hidden!important;pointer-events:none!important}

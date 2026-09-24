@@ -621,3 +621,23 @@ showTip = function(text){
   new MutationObserver(sync).observe(modal, {attributes:true, childList:true, subtree:true});
   addEventListener('resize', () => layer && place());
 })();
+
+// ===== Онбординговый круг: на экране только кубик и строка клетки =====
+// Класс на body, CSS прячет остальные кнопки (visibility, чтобы кубик не
+// съезжал). Круг заканчивается на старте — дальше всё возвращается.
+(function(){
+  const sync = () => { try{ document.body.classList.toggle('first-lap', !!firstLapActive()); }catch(e){} };
+  const base = render;
+  render = function(){ const r = base.apply(this, arguments); sync(); return r; };
+  sync();
+})();
+
+// Серые клетки — стройка: за проход мимо неё капает мелочь. Один раз
+// объясняем, откуда деньги. Флаг ставится, только если совет реально показан.
+function streetPassTip(){
+  try{
+    if(S.tips.streetPass || !document.getElementById('tip').hidden) return;
+    S.tips.streetPass = true; save();
+    showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда район откроется, здесь появятся новые точки.');
+  }catch(e){}
+}
