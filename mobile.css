@@ -509,3 +509,18 @@ body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .ma
 #stage::after{bottom:0;height:calc(var(--world-bottom,150px) + 56px);
   background:linear-gradient(0deg,rgba(38,29,20,.8) 0%,rgba(38,29,20,.55) calc(100% - 56px),rgba(38,29,20,.22) calc(100% - 28px),rgba(38,29,20,0) 100%)}
 .map-controls{z-index:2}
+
+/* ===== v62: широкий режим на компьютере ===== */
+#wideBtn{position:fixed;top:12px;right:14px;z-index:60;display:flex;align-items:center;gap:8px;
+  padding:9px 14px 9px 11px;border-radius:12px;border:2.5px solid #2a2118;cursor:pointer;
+  background:#f2e6c6 url(assets/paper-grain.svg);box-shadow:0 3px 0 #2a2118;color:#2a2118;
+  font:700 15px/1 var(--txt)}
+#wideBtn svg{width:22px;height:22px}
+#wideBtn:hover{background-color:#fff3d3}
+#wideBtn:active{translate:0 2px;box-shadow:0 1px 0 #2a2118}
+#wideBtn[hidden]{display:none}
+body.wide-mode #app{max-width:none}
+body.wide-mode #top,body.wide-mode #panel{left:50%!important;right:auto!important;width:min(480px,100%);translate:-50% 0}
+body.wide-mode #inv{left:calc(50% - 230px)}
+body.wide-mode .map-controls{left:calc(50% + 240px + 12px);right:auto}
+body.wide-mode #wideBtn{top:14px;right:18px}

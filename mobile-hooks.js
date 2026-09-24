@@ -97,7 +97,7 @@ window.MobileGame={
     placeDiceResult(el,x,y);
   }
 };
-let mobileDebug=false;
+let mobileDebug=false, mobileWindMap=false;
 const originalSettings=settings;
 settings=function(){
   originalSettings();
@@ -147,6 +147,9 @@ settings=function(){
   const debug=document.createElement('button');debug.className='sec';debug.textContent=mobileDebug?'Скрыть коллайдеры':'Показать коллайдеры';
   debug.onclick=()=>{mobileDebug=!mobileDebug;MobileGame.debugColliders(mobileDebug);closeModal();};
   row.append(debug);
+  const windBtn=document.createElement('button');windBtn.className='sec';windBtn.textContent=mobileWindMap?'Скрыть карту ветров':'Карта ветров';
+  windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
+  row.append(windBtn);
   const audit=document.createElement('a');audit.className='btn sec';audit.textContent='Стыковка 3D и карты';audit.href='collider-audit.html';audit.target='_blank';audit.rel='noopener';row.append(audit);
   $('card').append(row);
   const cameras=document.createElement('div');cameras.className='mbtns';
@@ -706,4 +709,32 @@ function streetPassTip(){
   const fmt=()=>{ const t=span.textContent, m=t.match(/^До полуночи\s+(.+)$/);
     if(m && !span.querySelector('b')){ span.innerHTML=`<b>${m[1]}</b><small>до полуночи</small>`; } };
   new MutationObserver(fmt).observe(span,{childList:true,characterData:true,subtree:true}); fmt();
+})();
+
+// ===== Широкий экран на компьютере =====
+// На телефоне игра — вертикальная колонка. С мышью и на широком мониторе есть
+// кнопка «Во весь экран»: браузер уходит в полноэкранный режим, карта
+// растягивается на весь экран, а панели остаются колонкой по центру.
+(function(){
+  const desktop=()=>matchMedia('(pointer:fine)').matches&&innerWidth>=760;
+  const btn=document.createElement('button');
+  btn.id='wideBtn';btn.type='button';
+  const ICON_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const paint=()=>{const wide=document.body.classList.contains('wide-mode');
+    btn.innerHTML=(wide?ICON_OFF:ICON_ON)+`<span>${wide?'Обычный вид':'Во весь экран'}</span>`;
+    btn.hidden=!desktop();};
+  const setWide=on=>{document.body.classList.toggle('wide-mode',on);paint();
+    // поле и HUD пересчитывают раскладку под новую ширину
+    requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));mobileLayout();});};
+  btn.onclick=async()=>{
+    const wide=document.body.classList.contains('wide-mode');
+    if(wide){setWide(false);if(FullScreen.active())await FullScreen.toggle();return;}
+    setWide(true);
+    if(FullScreen.supported()&&!FullScreen.active())await FullScreen.toggle();
+  };
+  // Вышли из полноэкранного клавишей Esc — остаёмся в широком виде, кнопка вернёт колонку.
+  addEventListener('resize',paint);
+  const mount=()=>{document.body.append(btn);paint();};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();

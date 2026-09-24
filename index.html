@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=71"><link rel="stylesheet" href="mobile-windows.css?v=49"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=51"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=5"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=72"><link rel="stylesheet" href="mobile-windows.css?v=49"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=51"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=5"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -330,7 +330,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=35";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'c7eafce9'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=35";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'b4a250d1'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -2142,7 +2142,7 @@ window.MobileGame={
     placeDiceResult(el,x,y);
   }
 };
-let mobileDebug=false;
+let mobileDebug=false, mobileWindMap=false;
 const originalSettings=settings;
 settings=function(){
   originalSettings();
@@ -2192,6 +2192,9 @@ settings=function(){
   const debug=document.createElement('button');debug.className='sec';debug.textContent=mobileDebug?'Скрыть коллайдеры':'Показать коллайдеры';
   debug.onclick=()=>{mobileDebug=!mobileDebug;MobileGame.debugColliders(mobileDebug);closeModal();};
   row.append(debug);
+  const windBtn=document.createElement('button');windBtn.className='sec';windBtn.textContent=mobileWindMap?'Скрыть карту ветров':'Карта ветров';
+  windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
+  row.append(windBtn);
   const audit=document.createElement('a');audit.className='btn sec';audit.textContent='Стыковка 3D и карты';audit.href='collider-audit.html';audit.target='_blank';audit.rel='noopener';row.append(audit);
   $('card').append(row);
   const cameras=document.createElement('div');cameras.className='mbtns';
@@ -2751,6 +2754,34 @@ function streetPassTip(){
   const fmt=()=>{ const t=span.textContent, m=t.match(/^До полуночи\s+(.+)$/);
     if(m && !span.querySelector('b')){ span.innerHTML=`<b>${m[1]}</b><small>до полуночи</small>`; } };
   new MutationObserver(fmt).observe(span,{childList:true,characterData:true,subtree:true}); fmt();
+})();
+
+// ===== Широкий экран на компьютере =====
+// На телефоне игра — вертикальная колонка. С мышью и на широком мониторе есть
+// кнопка «Во весь экран»: браузер уходит в полноэкранный режим, карта
+// растягивается на весь экран, а панели остаются колонкой по центру.
+(function(){
+  const desktop=()=>matchMedia('(pointer:fine)').matches&&innerWidth>=760;
+  const btn=document.createElement('button');
+  btn.id='wideBtn';btn.type='button';
+  const ICON_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const paint=()=>{const wide=document.body.classList.contains('wide-mode');
+    btn.innerHTML=(wide?ICON_OFF:ICON_ON)+`<span>${wide?'Обычный вид':'Во весь экран'}</span>`;
+    btn.hidden=!desktop();};
+  const setWide=on=>{document.body.classList.toggle('wide-mode',on);paint();
+    // поле и HUD пересчитывают раскладку под новую ширину
+    requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));mobileLayout();});};
+  btn.onclick=async()=>{
+    const wide=document.body.classList.contains('wide-mode');
+    if(wide){setWide(false);if(FullScreen.active())await FullScreen.toggle();return;}
+    setWide(true);
+    if(FullScreen.supported()&&!FullScreen.active())await FullScreen.toggle();
+  };
+  // Вышли из полноэкранного клавишей Esc — остаёмся в широком виде, кнопка вернёт колонку.
+  addEventListener('resize',paint);
+  const mount=()=>{document.body.append(btn);paint();};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.

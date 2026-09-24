@@ -1,0 +1,22 @@
+{
+  "note": "Карта ветров поля: поток считается из коллайдеров (design/scenery-colliders.json) при загрузке. dir — направление ветра в плоскости мира (x, z); speed — скорость, ед/с; extent — половина стороны области; cell — шаг сетки; height — высота слоя песка: препятствия ниже minTop и выше height не мешают потоку; iterations — точность расчёта обтекания.",
+  "dir": [
+    -0.93,
+    0.37
+  ],
+  "speed": 1.35,
+  "extent": 10,
+  "cell": 0.12,
+  "height": 0.35,
+  "minTop": 0.18,
+  "tilesBlock": false,
+  "iterations": 160,
+  "particles": 7000,
+  "particlesMobile": 4200,
+  "size": 4.2,
+  "minY": 0.04,
+  "maxY": 0.7,
+  "life": 9,
+  "turbulence": 0.22,
+  "opacity": 0.95
+}
