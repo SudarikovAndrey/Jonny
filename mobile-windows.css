@@ -296,3 +296,15 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
   #card.pc-card .pc-gicon,#card.pc-card .pc-extra>img{width:36px;height:36px}
 }
 @media (max-width:360px){#card.pc-card .pc-name small{white-space:normal}}
+/* оценка фуры: звёзды и слово — видно, много очков или мало */
+#card.pc-card .pc-goal{display:flex;flex-direction:column;gap:2px}
+#card.pc-card .pc-stars{display:flex;gap:3px}
+#card.pc-card .pc-stars i{width:24px;height:24px;background:#2a211833;
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+#card.pc-card .pc-stars i.on{background:#fff4c9;filter:drop-shadow(0 0 0 #2a2118)}
+#card.pc-card .pc-sum.on .pc-stars i{background:#2a211840}
+#card.pc-card .pc-sum.on .pc-stars i.on{background:#fff6d6}
+#card.pc-card .pc-verdict{font-family:var(--num);font-weight:800;font-size:18px;color:var(--ink);line-height:1.1}
+#card.pc-card .pc-goal small{font-size:13px;color:#3c3325}
+#card.pc-card .pc-next{padding:0 2px}
+#card.pc-card .pc-next span{display:block;font-size:14px;font-weight:600;color:#2a2118;margin-bottom:4px}

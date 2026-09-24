@@ -23,7 +23,8 @@ function shopFrame(t,inner){
   track('window',{w:t.type==='biz'?'biz':'point',tile:t.i,owner:!!t.owner});
   const isPoint=t.type==='kiosk',g=isPoint?good(t.good):null,title=isPoint?pointName(t):bizName(t);
   const path=isPoint?`img/pt_${t.base||'gum'}_${t.tier||1}.webp`:`img/biz_${t.i}.webp`;
-  const illustration=isPoint&&t.base==='cola'?atlasArt(443,63,374,241,'property-illustration'):
+  // Вырезка из атласа — только для Soda Cart; у Beer & Wine и Champagne Bar свои баннеры.
+  const illustration=isPoint&&t.base==='cola'&&(t.tier||1)===1?atlasArt(443,63,374,241,'property-illustration'):
     `<img class="property-illustration" src="${path}" alt="${title}">`;
   $('modal').classList.add('mid');$('card').className='card bare illustrated-property';
   $('card').innerHTML=`<div class="shop"><header class="property-title"><span class="property-mark">${g?g.icon:bizIcon(t)}</span><h2>${title}</h2></header><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;

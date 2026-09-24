@@ -31,10 +31,10 @@ shopHard=async function(){ track('window',{w:'hard_shop',hard:S.hard,day:S.day})
     const price=CFG.HARD.overtime*Math.pow(2,S.overtime);
     const soft=CFG.SHOP_SOFT, hard=CFG.SHOP_HARD;
     const rolls=shopCard({kind:'rolls',art:shopPile(SHOP_ART.rolls),amount:'+'+CFG.OVERTIME_ROLLS,unit:'ходов',
-      note:S.overtime?`потом ${shopGem}${price*2}`:'цена растёт с каждой покупкой за день',
+      note:S.overtime?`потом ${shopGem}${price*2}`:'дорожает с каждой покупкой',
       off:S.hard<price,button:`<button class="hard shop-buy" id="shRolls" ${S.hard<price?'disabled':''}>${shopGem}${price}</button>`});
     const cash=soft.map((pk,i)=>{const amt=softPackAmount(pk.mult);
-      return shopCard({kind:'cash',art:shopPile(SHOP_ART.soft[i]||SHOP_ART.soft[2]),amount:amt.toLocaleString('ru-RU'),unit:'наличных',
+      return shopCard({kind:'cash',art:shopPile(SHOP_ART.soft[i]||SHOP_ART.soft[2]),amount:amt.toLocaleString('ru-RU'),unit:'денег',
         ribbon:i?shopBonus(amt,pk.hard,softPackAmount(soft[0].mult),soft[0].hard):'',off:S.hard<pk.hard,
         button:`<button class="hard shop-buy" data-soft="${i}" ${S.hard<pk.hard?'disabled':''}>${shopGem}${pk.hard}</button>`});}).join('');
     const gems=hard.map((pk,i)=>shopCard({kind:'gems',art:shopPile(SHOP_ART.hard[i]||SHOP_ART.hard[3]),amount:pk.hard,unit:'кристаллов',
