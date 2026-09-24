@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=68"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=47"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=68"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -2936,6 +2936,54 @@ function passPremiumOffer(redraw,tabs){
  $('card').append(layer);layer.querySelectorAll('button').forEach(enamelButton);PaperMotion.enter(layer.querySelector('.pass-offer-paper'));$('passCancel').onclick=()=>dismissPaperOffer(layer);layer.onclick=e=>{if(e.target===layer)dismissPaperOffer(layer);};
  $('passConfirm').onclick=()=>{if(S.bp.paid)return;bpBuy();save();render();dismissPaperOffer(layer,()=>{renderBattlePass(redraw,tabs);bindPassTabs(redraw);});queueMobileJoy('dance');};$('passConfirm').focus();
 }
+
+// ===== «Билет» и «Топ» в стиле баттлпасса =====
+// Та же рамка, что у пропуска: клеймо NY 01, заголовок-шильда, строка
+// прогресса, небо с городом, плашки-ступени, вкладки в подвале. Лишние тексты
+// убраны: справка, колонки таблицы, дубль прогресса билета в рейтинге,
+// кнопки «Джонни» и «Как играть» (обе есть на главном экране).
+function hubHead(title,badge,note,progress,right){
+ return `<header class="pass-header hub-head"><span class="pass-stamp">NY<br><b>01</b></span><div><h2 class="hub-title">${title}</h2></div><button id="hNo" class="xhead" aria-label="Закрыть"></button>
+  <div class="pass-progress"><b>${badge}</b><div><span>${note}</span><div class="pass-meter"><i style="--progress:${Math.max(0,Math.min(1,progress))}"></i></div></div><small>${right}</small></div></header>`;
+}
+function hubLoot(r){
+ return `${r.rolls?`<span>${passIcon('dice')}<b>+${r.rolls}</b></span>`:''}${r.hard?`<span>${passIcon('gem')}<b>+${r.hard}</b></span>`:''}${r.cash?`<span><b>+$${r.cash}</b></span>`:''}`;
+}
+function hubTicket(tabs){
+ const nm=nextMilestone(), prev=reachedMilestones().slice(-1)[0], from=prev?prev.pts:0, to=nm?nm.pts:from, nz=nextZone();
+ const goals=CFG.MILESTONES.map((m,i)=>{const done=S.pts>=m.pts,next=nm&&nm.pts===m.pts;
+  return `<div class="hub-plate hub-goal ${done?'claimed':next?'available':'locked'}"><span class="pass-level hub-pts">${m.pts}</span><span class="hub-text"><b>${m.name}</b><small>${m.reward}</small></span><span class="pass-state"></span></div>`;}).reverse().join('');
+ const quests=S.q.map((q,i)=>`<div class="hub-plate hub-quest ${q.claimed?'claimed':q.done?'available':'locked'}"><span class="hub-text"><b>${q.text}</b></span><span class="pass-loot">${hubLoot(q.reward)}</span>${q.claimed?'<span class="pass-state"></span>':q.done?`<button class="ok hub-claim" data-claim="${i}">Забрать</button>`:`<span class="hub-prog">${Math.min(q.prog,q.goal)}/${q.goal}</span>`}</div>`).join('');
+ const zone=nz>0?`<div class="hub-plate hub-zone"><span class="hub-text"><b>${CFG.ZONES[nz].name}</b><small>откроется в день ${CFG.ZONES[nz].day}</small></span>${zonePrice(nz)>0?`<button class="hard" id="hZone" ${S.hard<zonePrice(nz)?'disabled':''}>${passIcon('gem')}<b>${zonePrice(nz)}</b></button>`:`<button class="ok" id="hZone">Открыть</button>`}</div>`:'';
+ return hubHead('Билет Джонни',S.pts,nm?`до ${nm.pts} ещё ${nm.pts-S.pts}`:'Все рубежи взяты',nm?(S.pts-from)/(to-from):1,`До конца<br><b>${lbTimeLeft()}</b>`)
+  +`<div class="pass-scroll hub-scroll"><div class="hub-list">${goals}<h3 class="hub-sub">Задания дня</h3>${quests}${zone}</div></div><footer class="pass-footer">${tabs}</footer>`;
+}
+function hubTop(tabs){
+ const rows=lbRows(), me=rows.findIndex(r=>r.you), above=me>0?rows[me-1]:null;
+ const row=(r,i)=>`<div class="hub-plate hub-rank ${r.you?'me':''} ${i<3?'top'+(i+1):''}"><span class="pass-level">${i+1}</span><span class="hub-ava">${r.you?'🧢':LB_AVA[LB_NAMES.indexOf(r.n)]||'🙂'}</span><span class="hub-text"><b>${r.you?'Ты':r.n}</b><small>${r.pts} очк.</small></span><span class="pass-loot"><span>${passIcon('gem')}<b>${LB_REWARD[i]||0}</b></span></span></div>`;
+ return hubHead('Бруклин',`#${me+1}`,above?`до #${me} ещё ${Math.max(1,above.pts-S.pts)}`:'Ты первый!',above?S.pts/Math.max(1,above.pts):1,`До конца<br><b>${lbTimeLeft()}</b>`)
+  +`<div class="pass-scroll hub-scroll"><div class="hub-list">${rows.slice(0,10).map(row).join('')}${me>=10?row(rows[me],me):''}</div></div><footer class="pass-footer">${tabs}</footer>`;
+}
+eventHub=async function(tab){
+ if(tab)hubTab=tab; else if(bpClaimable()>0)hubTab='pass';
+ if(hubTab==='pass'&&!(S.bp&&S.bp.paid))offerShow('pass',{level:bpLevel(),pts:S.pts,day:S.day});
+ const draw=()=>{
+  const bc=bpClaimable(),place=lbPlace(),card=$('card');
+  const tabs=`<div class="segbar"><button class="${hubTab==='ticket'?'on':''}" data-tab="ticket">Билет</button><button class="${hubTab==='pass'?'on':''}" data-tab="pass">Пропуск${bc?' <i class="dot"></i>':''}</button><button class="${hubTab==='lb'?'on':''}" data-tab="lb">Топ #${place}</button></div>`;
+  if(hubTab==='pass'){card.classList.remove('hub-card');renderBattlePass(draw,tabs);}
+  else{
+   card.className='card battlepass-card hub-card';
+   card.innerHTML=hubTab==='lb'?hubTop(tabs):hubTicket(tabs);
+   paintedClose($('hNo'));card.querySelectorAll('.hub-claim,#hZone').forEach(enamelButton);
+   if(hubTab==='lb')setTimeout(()=>card.querySelector('.hub-rank.me')?.scrollIntoView({block:'nearest'}),30);
+  }
+  card.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{hubTab=b.dataset.tab;track('hub_tab',{tab:hubTab});draw();});
+  card.querySelectorAll('button[data-claim]').forEach(b=>b.onclick=()=>{const q=S.q[+b.dataset.claim],r=q.reward;track('quest_claim',{id:q.id,goal:q.goal,reward:r});if(r.rolls){fly('🎲',AT.card(),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.card(),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;log(`🎯 Награда за «${q.text}»: ${rwText(r)}.`);toast('Награда получена');save();render();draw();});
+  const hz=$('hZone');if(hz)hz.onclick=async()=>{closeModal();await offerOpen(nextZone());};
+  $('hNo').onclick=()=>closeModal();
+ };
+ draw();await openCustom();save();render();
+};
 
 // Costco presentation reuses the prototype's purchase, hold, allocation and tutorial handlers.
 function costcoArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'costco-atlas.png',1222,1287);}

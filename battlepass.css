@@ -212,3 +212,84 @@
     #000 calc(100% - 22px), rgba(0,0,0,.4) calc(100% - 8px), transparent 100%)}
 /* Тень под шапкой усиливает ощущение, что список уходит под неё. */
 #card.battlepass-card .pass-header{box-shadow:0 5px 9px #2a211826; position:relative; z-index:2}
+
+/* ===== «Билет» и «Топ» в стиле пропуска =====
+   Каркас общий с баттлпассом (шапка, прогресс, небо, подвал). Своё здесь:
+   текстовая шильда заголовка и плашки-ступени списка. */
+#card.battlepass-card .pass-header h2.hub-title{
+  height:auto; width:max-content; max-width:100%; color:var(--ink); text-indent:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap;
+  background:#f3e6c2 url(assets/paper-grain.svg); border:3px solid var(--ink); border-radius:7px;
+  box-shadow:3px 3px 0 #2a211866; padding:3px 12px 4px; rotate:-2deg;
+  font-family:var(--num); font-weight:900; font-size:23px; line-height:1.15; text-transform:uppercase; letter-spacing:.01em}
+#card.hub-card .pass-progress>b{min-width:52px; text-align:center}
+#card.hub-card .pass-progress span{font-size:14px; font-weight:600; color:#3c3325}
+
+#card.hub-card .hub-scroll{position:relative}
+#card.hub-card .hub-list{position:relative; padding:16px 10px 96px}
+#card.hub-card .hub-list::after{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:92px; z-index:0; pointer-events:none;
+  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat; opacity:.5}
+
+#card.hub-card .hub-plate{
+  position:relative; z-index:1; display:flex; align-items:center; gap:10px;
+  min-height:62px; margin-bottom:9px; padding:7px 10px 7px 8px; border-radius:11px;
+  border:2.5px solid var(--ink); box-shadow:0 3px 0 #00000055;
+  background:var(--stone-a) url(assets/paper-grain.svg)}
+#card.hub-card .hub-plate .pass-level{flex:none}
+#card.hub-card .hub-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+#card.hub-card .hub-text b{font-family:var(--txt); font-weight:700; font-size:17px; line-height:1.18; color:var(--ink)}
+#card.hub-card .hub-text small{font-size:13.5px; line-height:1.25; color:#4b4132}
+#card.hub-card .hub-plate .pass-loot{flex:none; min-width:0}
+#card.hub-card .hub-plate .pass-loot b{font-size:18px}
+#card.hub-card .hub-plate .pass-loot svg{width:28px; height:28px}
+
+/* состояния — как у наград пропуска */
+#card.hub-card .hub-plate.available{box-shadow:0 3px 0 #00000055, 0 0 0 3px #ffd76a}
+#card.hub-card .hub-plate.claimed{opacity:.75}
+#card.hub-card .hub-plate .pass-state{flex:none; width:32px; height:32px; font-size:0}
+#card.hub-card .hub-plate.claimed .pass-state{background:url(assets/bp/bp-check.png) center/contain no-repeat}
+#card.hub-card .hub-plate.locked .pass-state{background:url(assets/bp/bp-lock.png) center/contain no-repeat}
+#card.hub-card .hub-goal.available .pass-state{display:none}
+
+/* рубежи билета: жетон шире — в нём до четырёх цифр */
+#card.hub-card .hub-goal .pass-level{width:58px; height:58px; font-size:17px}
+#card.hub-card .hub-goal.available{background:linear-gradient(var(--gold-a),var(--gold-b))}
+
+#card.hub-card .hub-sub{
+  position:relative; z-index:1; margin:16px 2px 8px; font-family:var(--num); font-weight:800; font-size:18px;
+  color:var(--ink); text-transform:uppercase; letter-spacing:.02em}
+#card.hub-card .hub-prog{flex:none; font-family:var(--num); font-weight:800; font-size:17px; color:#3c3325;
+  background:#f6ecd0; border:2px solid var(--ink); border-radius:999px; padding:2px 10px}
+#card.hub-card .hub-claim{flex:none; min-height:40px; padding:4px 12px; font-size:15px}
+#card.hub-card #hZone{flex:none; display:flex; align-items:center; gap:4px; min-height:42px; padding:4px 12px}
+#card.hub-card #hZone svg{width:24px; height:24px}
+#card.hub-card #hZone b{font-family:var(--num); font-size:18px}
+
+/* рейтинг: призовые места золото, серебро, бронза; своя строка подсвечена */
+#card.hub-card .hub-rank .pass-level{width:44px; height:44px; font-size:18px}
+#card.hub-card .hub-ava{flex:none; width:42px; height:42px; display:grid; place-items:center; font-size:24px;
+  border-radius:50%; background:#f6ecd0; border:2px solid var(--ink)}
+#card.hub-card .hub-rank.top1{background:linear-gradient(var(--gold-a),var(--gold-b))}
+#card.hub-card .hub-rank.top2{background:linear-gradient(#e3e6e4,#b9c0c0)}
+#card.hub-card .hub-rank.top3{background:linear-gradient(#e7b98a,#c1834f)}
+#card.hub-card .hub-rank.me{box-shadow:0 3px 0 #00000055, 0 0 0 3px #ffd76a; outline:0}
+#card.hub-card .hub-rank.me .hub-text b{color:#8c1f18}
+
+@media (max-width:360px){
+  #card.battlepass-card .pass-header h2.hub-title{font-size:19px; padding:2px 9px 3px}
+  #card.hub-card .hub-plate{gap:7px; padding:6px 8px 6px 6px}
+  #card.hub-card .hub-text b{font-size:15.5px}
+  #card.hub-card .hub-text small{font-size:12.5px}
+  #card.hub-card .hub-goal .pass-level{width:50px; height:50px; font-size:15px}
+  #card.hub-card .hub-ava{width:36px; height:36px; font-size:20px}
+}
+
+/* крестик в шапке стоит поверх сетки — шильде оставляем под него место */
+#card.hub-card .hub-head>div:not(.pass-progress){padding-right:50px}
+#card.battlepass-card .pass-header h2.hub-title{font-size:21px}
+@media (max-width:360px){
+  #card.battlepass-card .pass-header h2.hub-title{font-size:16px; padding:2px 7px 3px; letter-spacing:0}
+  #card.hub-card .hub-head>div:not(.pass-progress){padding-right:38px}
+  #card.hub-card .hub-goal .pass-level{font-size:13.5px}
+}
