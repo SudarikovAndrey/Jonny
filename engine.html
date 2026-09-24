@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>
 html,body,canvas{margin:0;width:100%;height:100%;display:block;overflow:hidden;background:#b1a087}canvas:focus{outline:none}
 </style></head><body><canvas id="canvas"></canvas><script src="engine.js"></script><script>
-const engine = new Engine({"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"engine","experimentalVK":false,"fileSizes":{"engine.pck":17075476,"engine.wasm":39514754},"focusCanvas":false,"gdextensionLibs":[],"godotPoolSize":4});
+const engine = new Engine({"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"engine","experimentalVK":false,"fileSizes":{"engine.pck":17076340,"engine.wasm":39514754},"focusCanvas":false,"gdextensionLibs":[],"godotPoolSize":4});
 engine.startGame({canvas:document.getElementById('canvas'),canvasResizePolicy:2,onProgress:(n,total)=>{
  if(parent.MobileHost)parent.MobileHost.progress(total?Math.round(n/total*100):0);
 }}).catch(error=>{console.error(error);if(parent.MobileHost)parent.MobileHost.failed(String(error));});
