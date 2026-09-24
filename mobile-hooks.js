@@ -630,6 +630,8 @@ showTip = function(text){
 (function(){
   const sync = () => { try{
     document.body.classList.toggle('first-lap', !!firstLapActive());
+    // Иконка плашки задания — по его типу (earn, sell, buy, upg, parcel).
+    (S.q||[]).forEach((q,i)=>{ const el=document.getElementById('q'+i); if(el) el.dataset.kind=q.id; });
     // Поставка дня уже ушла: вместо ящика мелкая надпись «Отправка завтра».
     // «Догнать» (пропущенные дни) и «Итоги» остаются обычной кнопкой.
     const ship = document.getElementById('bShip');
@@ -683,4 +685,12 @@ function streetPassTip(){
   const reset = () => { const t = document.getElementById('tip'), m = document.getElementById('modal');
     if(t.hidden || m.hidden) m.style.paddingTop = ''; };
   for(const id of ['tip','modal']){ const el = document.getElementById(id); if(el) new MutationObserver(reset).observe(el, {attributes:true, attributeFilter:['hidden']}); }
+})();
+
+// Таймер дня: часы на плашке уже говорят о времени — крупно остаток, мелко «до полуночи».
+(function(){
+  const span=document.querySelector('#sTimer span'); if(!span) return;
+  const fmt=()=>{ const t=span.textContent, m=t.match(/^До полуночи\s+(.+)$/);
+    if(m && !span.querySelector('b')){ span.innerHTML=`<b>${m[1]}</b><small>до полуночи</small>`; } };
+  new MutationObserver(fmt).observe(span,{childList:true,characterData:true,subtree:true}); fmt();
 })();

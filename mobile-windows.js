@@ -131,8 +131,8 @@ function decorateWindows(){
   card.classList.toggle('settings-card',!!card.querySelector('#iRolls'));
   card.classList.toggle('shipping-window',!!card.querySelector('#mSend'));
   card.classList.toggle('warehouse-card',!!card.querySelector('#wNo'));
-  decorateWarehouse(card);decorateSettings(card);decorateParcel(card);
-  if(!card.classList.contains('bare')&&!card.classList.contains('battlepass-card'))paperSurface(card);
+  decorateWarehouse(card);decorateSettings(card);decorateParcel(card);decorateEvent(card);
+  if(!card.classList.contains('bare')&&!card.classList.contains('battlepass-card')&&!card.classList.contains('event-card'))paperSurface(card);
   else card.querySelectorAll('.shop').forEach(paperSurface);
   card.querySelectorAll('.xclose,.xhead').forEach(paintedClose);
   upgradeIcons(card);
@@ -158,3 +158,57 @@ new MutationObserver(()=>{
 new MutationObserver(()=>{if(!$('toast').querySelector('.feedback-sun'))decorateWindows();}).observe($('toast'),{childList:true});
 new MutationObserver(decorateHelp).observe($('helpBody'),{childList:true});
 decorateWindows();
+
+// ===== Событийные окна в стиле баттлпасса =====
+// Обычные окна modal() прототипа (копилка, шанс, полиция, итоги дня и т. д.)
+// получают общий каркас: кремовая шапка со значком-жетоном и шильдой,
+// небо с городом, содержимое на бумажной плашке, подвал с кнопками.
+// Эмодзи из заголовка заменяется иконкой кита или знаком клетки.
+// var, а не const: decorateWindows() вызывается выше по файлу, до этих строк.
+var EVENT_BADGES = [
+  [/Копилка/, 'board/assets/symbols/piggy.svg'], [/Шанс/, 'board/assets/symbols/chance.svg'],
+  [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.png'],
+  [/Не хватает/, 'assets/icons/soft.png'], [/Ходы (кончились|вышли)/, 'assets/icons/die.png'],
+  [/Итоги дня|День \d+ из/, 'assets/icons/calendar.png'], [/Задания/, 'assets/icons/crown.png'],
+  [/Бандл|груза/, 'assets/icons/crate.png'], [/Yellow Cab|Такси/, 'assets/icons/taxi.png'],
+  [/Сегодня|День \d/, 'assets/icons/clock.png'], [/Джонни/, 'assets/icons/cap.png', 'full'],
+  [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.png'], [/Кто играет/, 'assets/icons/cap.png', 'full'], [/Магазин/, 'assets/icons/shop.png'],
+];
+var EVENT_SKIP = ['training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
+function decorateEvent(card){
+  if(!EVENT_SKIP)return;
+  if(EVENT_SKIP.some(c=>card.classList.contains(c)))return;
+  let h2=card.querySelector(':scope>h2');
+  const btns=card.querySelector(':scope>.mbtns');
+  if(!btns||card.querySelector(':scope>.ev-head'))return;
+  // Окна закрытого района начинаются не с заголовка, а со строки «🔒 Район».
+  const lockLine=!h2&&card.querySelector(':scope>p.dim:first-child');
+  if(lockLine&&/🔒/.test(lockLine.textContent)){
+    h2=document.createElement('h2'); h2.textContent=lockLine.textContent.replace(/🔒\s*/,'');
+    h2.dataset.badge='assets/bp/bp-lock.png'; lockLine.replaceWith(h2);
+  }
+  if(!h2)return;
+  card.classList.add('event-card');
+  const title=h2.textContent;
+  const hit=h2.dataset.badge?[null,h2.dataset.badge]:EVENT_BADGES.find(([re])=>re.test(title));
+  // Монета, в которую уже превратилась купюра из заголовка, и кнопка «?» —
+  // не часть шильды: монету убираем, «?» переносим в шапку справа.
+  while(h2.firstChild&&(h2.firstChild.nodeType===Node.ELEMENT_NODE?h2.firstChild.classList.contains('cash-glyph'):!h2.firstChild.nodeValue.trim()))h2.firstChild.remove();
+  const help=h2.querySelector('.qm'); if(help)help.remove();
+  // Эмодзи в начале заголовка убираем: его место занимает значок.
+  const first=h2.firstChild;
+  if(first&&first.nodeType===Node.TEXT_NODE)first.nodeValue=first.nodeValue.replace(/^[\p{Extended_Pictographic}️‍\s]+/u,'');
+  h2.classList.add('ev-title');
+  const small=h2.querySelector('small'); if(small){small.remove();}
+  const head=document.createElement('header'); head.className='ev-head';
+  head.innerHTML=`<span class="ev-badge${hit&&hit[2]?' ev-badge-'+hit[2]:''}">${hit?`<img src="${hit[1]}" alt="">`:''}</span><div class="ev-titles"></div>`;
+  head.querySelector('.ev-titles').append(h2); if(small){small.className='ev-sub';head.querySelector('.ev-titles').append(small);}
+  if(help){help.classList.add('ev-help');head.append(help);}
+  const body=document.createElement('div'); body.className='ev-body';
+  const plate=document.createElement('div'); plate.className='ev-plate';
+  for(const node of [...card.childNodes]) if(node!==btns&&node!==head) plate.append(node);
+  const prize=plate.querySelector('.ev-prize'); if(prize) body.append(prize);
+  if(plate.textContent.trim()||plate.children.length) body.append(plate);
+  const foot=document.createElement('footer'); foot.className='ev-foot'; foot.append(btns);
+  card.replaceChildren(head,body,foot);
+}

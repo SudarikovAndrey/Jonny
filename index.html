@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=68"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=70"><link rel="stylesheet" href="mobile-windows.css?v=45"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -330,7 +330,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=33";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'8aaf4084'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=33";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'470a9c89'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -1489,7 +1489,7 @@ async function police(){
 // ---------- копилка: сюда падают все штрафы ----------
 async function potTile(){
   const m=S.pot;track('pot',{m});S.pot=0;S.cash+=m;S.stat.earned+=m;fly('💵',AT.pot(),AT.cash(),flyN(m),{pulse:'sCash'});float(25,'+$'+m,'#ffd54f');log(`🎰 Забрал копилку: $${m}.`);
-  await modal(`<h2>🎰 Копилка</h2><p class="t">Всё, что город собрал штрафами, — твоё: <b>$${m}</b>.</p><p>Копилка снова растёт с нуля: сама по $${CFG.POT_PER_LAP*S.day*S.day} за круг плюс каждый штраф — а штрафы к концу недели злее.</p>`,[{t:'Красава',v:1,cls:'ok'}]);
+  await modal(`<h2>🎰 Копилка</h2><div class="ev-prize">$+${m}</div><p class="t">Всё, что город собрал штрафами, — твоё.</p><p>Копилка снова копит: $${CFG.POT_PER_LAP*S.day*S.day} за круг и каждый новый штраф.</p>`,[{t:'Красава',v:1,cls:'ok'}]);
 }
 // ---------- инкассатор: раскидывает деньги и неприятности по стройке ----------
 // множители на день: когда свободных клеток не осталось, события вешают ×1,5 и ×0,5 на точки и бизнесы
@@ -2662,6 +2662,8 @@ showTip = function(text){
 (function(){
   const sync = () => { try{
     document.body.classList.toggle('first-lap', !!firstLapActive());
+    // Иконка плашки задания — по его типу (earn, sell, buy, upg, parcel).
+    (S.q||[]).forEach((q,i)=>{ const el=document.getElementById('q'+i); if(el) el.dataset.kind=q.id; });
     // Поставка дня уже ушла: вместо ящика мелкая надпись «Отправка завтра».
     // «Догнать» (пропущенные дни) и «Итоги» остаются обычной кнопкой.
     const ship = document.getElementById('bShip');
@@ -2715,6 +2717,14 @@ function streetPassTip(){
   const reset = () => { const t = document.getElementById('tip'), m = document.getElementById('modal');
     if(t.hidden || m.hidden) m.style.paddingTop = ''; };
   for(const id of ['tip','modal']){ const el = document.getElementById(id); if(el) new MutationObserver(reset).observe(el, {attributes:true, attributeFilter:['hidden']}); }
+})();
+
+// Таймер дня: часы на плашке уже говорят о времени — крупно остаток, мелко «до полуночи».
+(function(){
+  const span=document.querySelector('#sTimer span'); if(!span) return;
+  const fmt=()=>{ const t=span.textContent, m=t.match(/^До полуночи\s+(.+)$/);
+    if(m && !span.querySelector('b')){ span.innerHTML=`<b>${m[1]}</b><small>до полуночи</small>`; } };
+  new MutationObserver(fmt).observe(span,{childList:true,characterData:true,subtree:true}); fmt();
 })();
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
@@ -2850,8 +2860,8 @@ function decorateWindows(){
   card.classList.toggle('settings-card',!!card.querySelector('#iRolls'));
   card.classList.toggle('shipping-window',!!card.querySelector('#mSend'));
   card.classList.toggle('warehouse-card',!!card.querySelector('#wNo'));
-  decorateWarehouse(card);decorateSettings(card);decorateParcel(card);
-  if(!card.classList.contains('bare')&&!card.classList.contains('battlepass-card'))paperSurface(card);
+  decorateWarehouse(card);decorateSettings(card);decorateParcel(card);decorateEvent(card);
+  if(!card.classList.contains('bare')&&!card.classList.contains('battlepass-card')&&!card.classList.contains('event-card'))paperSurface(card);
   else card.querySelectorAll('.shop').forEach(paperSurface);
   card.querySelectorAll('.xclose,.xhead').forEach(paintedClose);
   upgradeIcons(card);
@@ -2877,6 +2887,60 @@ new MutationObserver(()=>{
 new MutationObserver(()=>{if(!$('toast').querySelector('.feedback-sun'))decorateWindows();}).observe($('toast'),{childList:true});
 new MutationObserver(decorateHelp).observe($('helpBody'),{childList:true});
 decorateWindows();
+
+// ===== Событийные окна в стиле баттлпасса =====
+// Обычные окна modal() прототипа (копилка, шанс, полиция, итоги дня и т. д.)
+// получают общий каркас: кремовая шапка со значком-жетоном и шильдой,
+// небо с городом, содержимое на бумажной плашке, подвал с кнопками.
+// Эмодзи из заголовка заменяется иконкой кита или знаком клетки.
+// var, а не const: decorateWindows() вызывается выше по файлу, до этих строк.
+var EVENT_BADGES = [
+  [/Копилка/, 'board/assets/symbols/piggy.svg'], [/Шанс/, 'board/assets/symbols/chance.svg'],
+  [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.png'],
+  [/Не хватает/, 'assets/icons/soft.png'], [/Ходы (кончились|вышли)/, 'assets/icons/die.png'],
+  [/Итоги дня|День \d+ из/, 'assets/icons/calendar.png'], [/Задания/, 'assets/icons/crown.png'],
+  [/Бандл|груза/, 'assets/icons/crate.png'], [/Yellow Cab|Такси/, 'assets/icons/taxi.png'],
+  [/Сегодня|День \d/, 'assets/icons/clock.png'], [/Джонни/, 'assets/icons/cap.png', 'full'],
+  [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.png'], [/Кто играет/, 'assets/icons/cap.png', 'full'], [/Магазин/, 'assets/icons/shop.png'],
+];
+var EVENT_SKIP = ['training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
+function decorateEvent(card){
+  if(!EVENT_SKIP)return;
+  if(EVENT_SKIP.some(c=>card.classList.contains(c)))return;
+  let h2=card.querySelector(':scope>h2');
+  const btns=card.querySelector(':scope>.mbtns');
+  if(!btns||card.querySelector(':scope>.ev-head'))return;
+  // Окна закрытого района начинаются не с заголовка, а со строки «🔒 Район».
+  const lockLine=!h2&&card.querySelector(':scope>p.dim:first-child');
+  if(lockLine&&/🔒/.test(lockLine.textContent)){
+    h2=document.createElement('h2'); h2.textContent=lockLine.textContent.replace(/🔒\s*/,'');
+    h2.dataset.badge='assets/bp/bp-lock.png'; lockLine.replaceWith(h2);
+  }
+  if(!h2)return;
+  card.classList.add('event-card');
+  const title=h2.textContent;
+  const hit=h2.dataset.badge?[null,h2.dataset.badge]:EVENT_BADGES.find(([re])=>re.test(title));
+  // Монета, в которую уже превратилась купюра из заголовка, и кнопка «?» —
+  // не часть шильды: монету убираем, «?» переносим в шапку справа.
+  while(h2.firstChild&&(h2.firstChild.nodeType===Node.ELEMENT_NODE?h2.firstChild.classList.contains('cash-glyph'):!h2.firstChild.nodeValue.trim()))h2.firstChild.remove();
+  const help=h2.querySelector('.qm'); if(help)help.remove();
+  // Эмодзи в начале заголовка убираем: его место занимает значок.
+  const first=h2.firstChild;
+  if(first&&first.nodeType===Node.TEXT_NODE)first.nodeValue=first.nodeValue.replace(/^[\p{Extended_Pictographic}️‍\s]+/u,'');
+  h2.classList.add('ev-title');
+  const small=h2.querySelector('small'); if(small){small.remove();}
+  const head=document.createElement('header'); head.className='ev-head';
+  head.innerHTML=`<span class="ev-badge${hit&&hit[2]?' ev-badge-'+hit[2]:''}">${hit?`<img src="${hit[1]}" alt="">`:''}</span><div class="ev-titles"></div>`;
+  head.querySelector('.ev-titles').append(h2); if(small){small.className='ev-sub';head.querySelector('.ev-titles').append(small);}
+  if(help){help.classList.add('ev-help');head.append(help);}
+  const body=document.createElement('div'); body.className='ev-body';
+  const plate=document.createElement('div'); plate.className='ev-plate';
+  for(const node of [...card.childNodes]) if(node!==btns&&node!==head) plate.append(node);
+  const prize=plate.querySelector('.ev-prize'); if(prize) body.append(prize);
+  if(plate.textContent.trim()||plate.children.length) body.append(plate);
+  const foot=document.createElement('footer'); foot.className='ev-foot'; foot.append(btns);
+  card.replaceChildren(head,body,foot);
+}
 
 // Same BP rewards, price, and save fields as the prototype; live painted presentation.
 function passArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'battlepass-reference.png',1024,1536);}

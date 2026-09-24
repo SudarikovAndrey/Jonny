@@ -178,3 +178,41 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 #card .mbtns button small{display:block; font-size:11.5px; opacity:.92; font-weight:700}
 /* «Отмена» уходит на свою строку и не спорит с выбором назначения */
 #card .mbtns button.sec:last-child{flex:1 1 100%; min-height:50px}
+
+/* ===== Событийные окна в стиле баттлпасса (decorateEvent) ===== */
+#card.event-card{--ink:#2a2118;padding:0!important;overflow:hidden;border-radius:18px;display:flex;flex-direction:column;
+  max-height:calc(100dvh - 24px);background:linear-gradient(#a9c3d2 0%,#bcc7c2 55%,#b3a88c 100%)!important}
+#card.event-card .ev-head{position:relative;z-index:2;flex:none;display:flex;align-items:center;gap:11px;
+  padding:12px 14px 11px;background:linear-gradient(#f2e6c6,#e6d7b0);border-bottom:3px solid var(--ink);box-shadow:0 5px 9px #2a211826}
+#card.event-card .ev-badge{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  background:#f6ecd0 url(assets/paper-grain.svg);border:3px solid var(--ink);box-shadow:0 3px 0 #00000055}
+#card.event-card .ev-badge img{width:40px;height:40px;object-fit:contain}
+#card.event-card .ev-badge-full{background:none;border:0;box-shadow:none}
+#card.event-card .ev-badge-full img{width:62px;height:62px;filter:drop-shadow(0 3px 0 #00000044)}
+#card.event-card .ev-badge:empty{display:none}
+#card.event-card .ev-titles{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+#card.event-card h2.ev-title{margin:0;padding:3px 12px 4px;max-width:100%;width:max-content;rotate:-2deg;
+  background:#f3e6c2 url(assets/paper-grain.svg);border:3px solid var(--ink);border-radius:7px;box-shadow:3px 3px 0 #2a211866;
+  font-family:var(--num);font-weight:900;font-size:21px;line-height:1.15;text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
+#card.event-card .ev-sub{font-size:13px;line-height:1.25;color:#4b4132;padding-left:3px}
+#card.event-card .ev-body{position:relative;flex:1 1 auto;min-height:0;overflow:auto;padding:14px 12px 74px}
+#card.event-card .ev-body::after{content:'';position:absolute;left:0;right:0;bottom:0;height:84px;z-index:0;pointer-events:none;
+  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat;opacity:.45}
+#card.event-card .ev-plate{position:relative;z-index:1;padding:13px 14px;border-radius:12px;
+  background:#e9dcbb url(assets/paper-grain.svg);border:2.5px solid var(--ink);box-shadow:0 3px 0 #00000055}
+#card.event-card .ev-plate>p{font-size:15.5px;line-height:1.38;color:#3c3325;margin:0 0 8px}
+#card.event-card .ev-plate>p:last-child{margin-bottom:0}
+#card.event-card .ev-plate>p.t{font-size:17px;font-weight:600;color:var(--ink)}
+#card.event-card .ev-plate .row{font-size:15px}
+#card.event-card .ev-foot{position:relative;z-index:2;flex:none;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);
+  background:linear-gradient(#efe2c2,#e2d2ab);border-top:3px solid var(--ink)}
+#card.event-card .ev-foot .mbtns{margin:0}
+/* крупная награда: монеты и сумма на золотой плашке */
+#card.event-card .ev-prize{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin:0 auto 12px;width:max-content;min-width:60%;padding:8px 22px;border-radius:14px;
+  background:linear-gradient(#f0c44e,#d79a26);border:3px solid var(--ink);box-shadow:0 4px 0 #00000055;
+  font-family:var(--num);font-weight:900;font-size:40px;line-height:1;color:var(--ink)}
+#card.event-card .ev-prize .cash-glyph{width:46px!important;height:44px!important;margin:0!important;vertical-align:0!important}
+@media (max-width:360px){#card.event-card h2.ev-title{font-size:18px}#card.event-card .ev-badge{width:50px;height:50px}#card.event-card .ev-badge img{width:34px;height:34px}}
+#card.event-card .ev-titles{flex:1}
+#card.event-card .ev-help{flex:none;margin-left:auto;align-self:center}
