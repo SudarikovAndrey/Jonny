@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=67"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=68"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -2660,7 +2660,13 @@ showTip = function(text){
 // Класс на body, CSS прячет остальные кнопки (visibility, чтобы кубик не
 // съезжал). Круг заканчивается на старте — дальше всё возвращается.
 (function(){
-  const sync = () => { try{ document.body.classList.toggle('first-lap', !!firstLapActive()); }catch(e){} };
+  const sync = () => { try{
+    document.body.classList.toggle('first-lap', !!firstLapActive());
+    // Поставка дня уже ушла: вместо ящика мелкая надпись «Отправка завтра».
+    // «Догнать» (пропущенные дни) и «Итоги» остаются обычной кнопкой.
+    const ship = document.getElementById('bShip');
+    if(ship) ship.classList.toggle('ship-done', !!S.parcelSent && !canFinish() && !(parcelsBehind() > 0));
+  }catch(e){} };
   const base = render;
   render = function(){ const r = base.apply(this, arguments); sync(); return r; };
   sync();

@@ -628,7 +628,13 @@ showTip = function(text){
 // Класс на body, CSS прячет остальные кнопки (visibility, чтобы кубик не
 // съезжал). Круг заканчивается на старте — дальше всё возвращается.
 (function(){
-  const sync = () => { try{ document.body.classList.toggle('first-lap', !!firstLapActive()); }catch(e){} };
+  const sync = () => { try{
+    document.body.classList.toggle('first-lap', !!firstLapActive());
+    // Поставка дня уже ушла: вместо ящика мелкая надпись «Отправка завтра».
+    // «Догнать» (пропущенные дни) и «Итоги» остаются обычной кнопкой.
+    const ship = document.getElementById('bShip');
+    if(ship) ship.classList.toggle('ship-done', !!S.parcelSent && !canFinish() && !(parcelsBehind() > 0));
+  }catch(e){} };
   const base = render;
   render = function(){ const r = base.apply(this, arguments); sync(); return r; };
   sync();
