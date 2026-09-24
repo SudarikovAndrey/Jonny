@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=62"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=64"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -1295,7 +1295,7 @@ async function land(t){
   if(t.type==='wh')return shop();
   // точки и бизнесы не открываются сами — строка над доком подсвечивается, окно по тапу
   render(); const tb=$('tilebar'); if(tb&&!tb.hidden){tb.classList.add('pulse');setTimeout(()=>tb.classList.remove('pulse'),2400);}
-  if(!t.owner&&S.cash>=t.price)hint('tapRow','Остановился на свободной точке — строка внизу открывает карточку и покупку.');
+  if(!t.owner&&S.cash>=t.price)hint('tapRow','Ты попал на точку, которую можно купить. Жми на строку для открытия карточки точки.');
 }
 
 // ---------- окно ларька (KioskWindow) ----------
@@ -1319,7 +1319,7 @@ async function kioskWindow(t){
   const draw=()=>{
     const g=good(t.good), margin=Math.max(0,sellPrice(t.good)-buyPrice(t.good));
     if(!t.owner){
-      hintHtml('kiosk','Купи точку — в ней будет храниться твой товар. Следующий шаг: закупка на Costco.');
+      hintHtml('kiosk','Купи свою первую точку по продаже сладостей.');
       shopFrame(t,`<div class="srow"><span class="ico">${g.icon}</span><span class="nm">${g.name}</span>${helpBtn('Товар точки продаётся при проходе старта. Купи точку и закупись на Costco.')}</div>
         <div class="box"><span>Прибыль с товара за круг<br><small style="color:#6b5f52">${salesBoost(CFG.KIOSK.sales[0][0])} шт × $${margin}</small></span><b>$${salesBoost(CFG.KIOSK.sales[0][0])*margin}</b></div>
         <div class="box"><span>Вместимость</span><b>${CFG.KIOSK.capacity[0][0]} шт</b></div>
@@ -1401,7 +1401,7 @@ async function shop(){ track('window',{w:'costco',cash:S.cash,day:S.day});
     const ks=myKiosks(), need=ks.reduce((s,t)=>s+(cap(t)-t.goods)*buyPrice(t.good),0), minP=Math.min(...ks.filter(t=>t.goods<cap(t)).map(t=>buyPrice(t.good)),Infinity);
     const rows=gs.map(g=>{const kk=goodKiosks(g.id),c=goodCap(g.id),st=stock(g.id),p=buyPrice(g.id),free=c-st,pc=c?Math.round(st/c*100):0;
       return `<div class="wr ${S.trend===g.id?'trend':''}"><span class="ring" style="--p:${pc}%"><i>${g.icon}</i></span><div class="wn">${g.name}${S.trend===g.id?' 🔥×'+CFG.TREND_MULT:''}<small>${[...new Set(kk.map(k=>pointName(k)))].join(', ')} · ⟳ ${goodSales(g.id)}/круг · $${sellPrice(g.id)}</small></div><span class="wq">${st}/${c}</span><button data-g="${g.id}" title="${free<=0?'склад полон':S.cash<p?'не хватает $':''}" ${free<=0||S.cash<p?'disabled':''}>${free<=0?'Полно':'+1 · $'+p}</button></div>`;}).join('');
-    hintHtml('shop','Товар хранится в точках. На старте часть продастся за доллары. Для очков отправь его через «Поставку» до продажи.');
+    hintHtml('shop','Это склад. Закупай здесь товары для своих точек. Проходя клетку СТАРТ, товары продаются автоматически, а ты получаешь прибыль.');
     $('modal').classList.add('mid'); $('card').className='card bare';
     $('card').innerHTML=`<div class="shop"><div class="banner"><b>Costco</b><span class="big">🏬</span></div>
       <div class="whead">Покупай товары для точек ${helpBtn('Тут ты можешь закупить товар, который продается автоматически с наценкой, когда ты проходишь клетку старт. Чем больше у тебя точек, тем больше товара ты можешь купить. Также, товар нужен, чтобы делать отправку партий, а это твоя главная задача!')}</div>
@@ -2589,6 +2589,27 @@ openHelp = function(topic,welcome,context){
   const rp = document.getElementById('helpReplay');
   if(rp) rp.onclick = () => { closeHelp(); showOnboarding(); };
   return r;
+};
+
+// Подсказка «Совет Джонни» — реплика персонажа, а не тёмная системная плашка:
+// Джонни с поднятым пальцем из кита и бумажный пузырь с чернильным контуром.
+// Вместо строки «Тапни здесь…» — нарисованный крестик; тап вне окна закрывает
+// подсказку как и раньше (обработчик pointerdown в прототипе).
+// card-motion.js оборачивает showTip уже после этого файла, поэтому анимация
+// появления сохраняется: её обёртка вызывает эту версию.
+const tipOriginalShow = showTip;
+showTip = function(text){
+  tipOriginalShow(text);
+  const el = $('tip');
+  if(!el || el.hidden) return;                 // окно справки открыто — подсказки нет
+  el.innerHTML = '<span class="tip-johnny" aria-hidden="true"></span>'
+    + '<div class="tip-bubble"><b class="tip-label">Совет Джонни</b><p class="tip-text"></p></div>'
+    + '<button class="tip-x" type="button" aria-label="Закрыть"></button>';
+  el.querySelector('.tip-text').textContent = text;
+  const x = el.querySelector('.tip-x');
+  if(typeof paintedClose === 'function') paintedClose(x);
+  x.onclick = e => { e.stopPropagation(); hideTip(); };
+  positionTip();
 };
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.

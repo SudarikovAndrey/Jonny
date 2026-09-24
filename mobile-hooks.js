@@ -558,3 +558,24 @@ openHelp = function(topic,welcome,context){
   if(rp) rp.onclick = () => { closeHelp(); showOnboarding(); };
   return r;
 };
+
+// Подсказка «Совет Джонни» — реплика персонажа, а не тёмная системная плашка:
+// Джонни с поднятым пальцем из кита и бумажный пузырь с чернильным контуром.
+// Вместо строки «Тапни здесь…» — нарисованный крестик; тап вне окна закрывает
+// подсказку как и раньше (обработчик pointerdown в прототипе).
+// card-motion.js оборачивает showTip уже после этого файла, поэтому анимация
+// появления сохраняется: её обёртка вызывает эту версию.
+const tipOriginalShow = showTip;
+showTip = function(text){
+  tipOriginalShow(text);
+  const el = $('tip');
+  if(!el || el.hidden) return;                 // окно справки открыто — подсказки нет
+  el.innerHTML = '<span class="tip-johnny" aria-hidden="true"></span>'
+    + '<div class="tip-bubble"><b class="tip-label">Совет Джонни</b><p class="tip-text"></p></div>'
+    + '<button class="tip-x" type="button" aria-label="Закрыть"></button>';
+  el.querySelector('.tip-text').textContent = text;
+  const x = el.querySelector('.tip-x');
+  if(typeof paintedClose === 'function') paintedClose(x);
+  x.onclick = e => { e.stopPropagation(); hideTip(); };
+  positionTip();
+};

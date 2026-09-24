@@ -393,3 +393,26 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 #onboard .ob-mini{width:54%}
 #onboard .ob-row .ob-chip{font-size:14px;padding:7px 11px}
 #onboard .ob-row{flex-wrap:nowrap}
+
+/* ===== «Совет Джонни» ===== */
+body #tip{background:none!important;border:0!important;outline:0!important;box-shadow:none!important;
+  padding:0!important;color:#2a2118!important;display:flex;align-items:flex-end;gap:0;
+  font-family:var(--txt);overflow:visible;max-width:min(92vw,400px)}
+body #tip::before,body #tip::after{content:none!important;display:none!important}
+#tip .tip-johnny{flex:0 0 86px;height:74px;margin:0 -10px 4px 0;position:relative;z-index:2;
+  background:url(assets/bp/tip-johnny.png) left bottom/contain no-repeat;
+  filter:drop-shadow(0 3px 0 #17120d66)}
+#tip .tip-bubble{position:relative;flex:1;min-width:0;
+  background:#f4e6c4 url(assets/paper-grain.svg);border:3px solid #2a2118;
+  border-radius:16px 13px 17px 11px;box-shadow:0 5px 0 #17120d,0 10px 22px #0006;
+  padding:12px 40px 13px 16px;rotate:-.6deg}
+#tip .tip-bubble::before{content:'';position:absolute;left:-15px;bottom:14px;width:18px;height:18px;
+  background:#f4e6c4;border-left:3px solid #2a2118;border-bottom:3px solid #2a2118;
+  transform:skewY(28deg) rotate(8deg);border-radius:0 0 0 4px}
+#tip .tip-label{display:block;font:700 12.5px/1 var(--disp);color:#b12f26;letter-spacing:.04em;
+  text-transform:uppercase;margin-bottom:6px}
+#tip .tip-text{margin:0;font:500 16px/1.38 var(--txt);color:#2a2118}
+#tip .tip-x{position:absolute;top:-14px;right:-12px;width:38px;height:38px;min-height:0;padding:0;z-index:3}
+/* крестик подсказки: только нарисованный круг, без подложки кнопки */
+#tip .tip-x{background:none!important;border:0!important;box-shadow:none!important;
+  border-radius:50%!important;overflow:hidden!important}
