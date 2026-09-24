@@ -1130,6 +1130,976 @@
         ]
       ],
       "height": 0.45
+    },
+    {
+      "name": "NWDockCrate",
+      "roof": [
+        [
+          281,
+          210
+        ],
+        [
+          300,
+          201
+        ],
+        [
+          318,
+          211
+        ],
+        [
+          300,
+          220
+        ]
+      ],
+      "height": 0.44
+    },
+    {
+      "name": "NWCraneTower",
+      "roof": [
+        [
+          0,
+          294
+        ],
+        [
+          55,
+          264
+        ],
+        [
+          100,
+          289
+        ],
+        [
+          45,
+          319
+        ]
+      ],
+      "height": 1.8
+    },
+    {
+      "name": "NWCanalCrate",
+      "roof": [
+        [
+          70,
+          425
+        ],
+        [
+          85,
+          417
+        ],
+        [
+          100,
+          425
+        ],
+        [
+          85,
+          433
+        ]
+      ],
+      "height": 0.33
+    },
+    {
+      "name": "NWPierPost0",
+      "roof": [
+        [
+          212,
+          207
+        ],
+        [
+          220,
+          202.2
+        ],
+        [
+          228,
+          207
+        ],
+        [
+          220,
+          211.8
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "NWPierPost1",
+      "roof": [
+        [
+          240,
+          188
+        ],
+        [
+          248,
+          183.2
+        ],
+        [
+          256,
+          188
+        ],
+        [
+          248,
+          192.8
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "NWPierPost2",
+      "roof": [
+        [
+          275,
+          140
+        ],
+        [
+          283,
+          135.2
+        ],
+        [
+          291,
+          140
+        ],
+        [
+          283,
+          144.8
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "NWPierPost3",
+      "roof": [
+        [
+          312,
+          112
+        ],
+        [
+          320,
+          107.2
+        ],
+        [
+          328,
+          112
+        ],
+        [
+          320,
+          116.8
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "NWPierPost4",
+      "roof": [
+        [
+          348,
+          92
+        ],
+        [
+          356,
+          87.2
+        ],
+        [
+          364,
+          92
+        ],
+        [
+          356,
+          96.8
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "CanalPost0",
+      "roof": [
+        [
+          72,
+          485
+        ],
+        [
+          82,
+          479.0
+        ],
+        [
+          92,
+          485
+        ],
+        [
+          82,
+          491.0
+        ]
+      ],
+      "height": 0.9
+    },
+    {
+      "name": "CanalPost1",
+      "roof": [
+        [
+          108,
+          502
+        ],
+        [
+          118,
+          496.0
+        ],
+        [
+          128,
+          502
+        ],
+        [
+          118,
+          508.0
+        ]
+      ],
+      "height": 0.9
+    },
+    {
+      "name": "CanalPost2",
+      "roof": [
+        [
+          152,
+          532
+        ],
+        [
+          162,
+          526.0
+        ],
+        [
+          172,
+          532
+        ],
+        [
+          162,
+          538.0
+        ]
+      ],
+      "height": 0.9
+    },
+    {
+      "name": "CanalPost3",
+      "roof": [
+        [
+          12,
+          545
+        ],
+        [
+          22,
+          539.0
+        ],
+        [
+          32,
+          545
+        ],
+        [
+          22,
+          551.0
+        ]
+      ],
+      "height": 0.4
+    },
+    {
+      "name": "PierPostA",
+      "roof": [
+        [
+          417,
+          750
+        ],
+        [
+          427,
+          744.0
+        ],
+        [
+          437,
+          750
+        ],
+        [
+          427,
+          756.0
+        ]
+      ],
+      "height": 0.7
+    },
+    {
+      "name": "PierPostB",
+      "roof": [
+        [
+          472,
+          800
+        ],
+        [
+          481,
+          794.6
+        ],
+        [
+          490,
+          800
+        ],
+        [
+          481,
+          805.4
+        ]
+      ],
+      "height": 0.8
+    },
+    {
+      "name": "PierPostC",
+      "roof": [
+        [
+          517,
+          835
+        ],
+        [
+          527,
+          829.0
+        ],
+        [
+          537,
+          835
+        ],
+        [
+          527,
+          841.0
+        ]
+      ],
+      "height": 0.8
+    },
+    {
+      "name": "PierStub",
+      "roof": [
+        [
+          426,
+          806
+        ],
+        [
+          433,
+          801.8
+        ],
+        [
+          440,
+          806
+        ],
+        [
+          433,
+          810.2
+        ]
+      ],
+      "height": 0.4
+    },
+    {
+      "name": "FrontPostA",
+      "roof": [
+        [
+          613,
+          967
+        ],
+        [
+          620,
+          962.8
+        ],
+        [
+          627,
+          967
+        ],
+        [
+          620,
+          971.2
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "FrontPostB",
+      "roof": [
+        [
+          641,
+          979
+        ],
+        [
+          650,
+          973.6
+        ],
+        [
+          659,
+          979
+        ],
+        [
+          650,
+          984.4
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "name": "FrontCrate",
+      "roof": [
+        [
+          523,
+          985
+        ],
+        [
+          538,
+          977
+        ],
+        [
+          555,
+          985
+        ],
+        [
+          540,
+          993
+        ]
+      ],
+      "height": 0.2
+    },
+    {
+      "name": "LotWStoneA",
+      "roof": [
+        [
+          462,
+          452
+        ],
+        [
+          475,
+          444
+        ],
+        [
+          483,
+          450
+        ],
+        [
+          470,
+          457
+        ]
+      ],
+      "height": 0.2
+    },
+    {
+      "name": "LotWStoneB",
+      "roof": [
+        [
+          441,
+          470
+        ],
+        [
+          452,
+          463
+        ],
+        [
+          459,
+          468
+        ],
+        [
+          448,
+          475
+        ]
+      ],
+      "height": 0.21
+    },
+    {
+      "name": "LotNLog",
+      "roof": [
+        [
+          747,
+          303
+        ],
+        [
+          784,
+          282
+        ],
+        [
+          788,
+          287
+        ],
+        [
+          752,
+          308
+        ]
+      ],
+      "height": 0.16
+    },
+    {
+      "name": "LotSBench",
+      "roof": [
+        [
+          705,
+          677
+        ],
+        [
+          713,
+          671
+        ],
+        [
+          753,
+          697
+        ],
+        [
+          745,
+          703
+        ]
+      ],
+      "height": 0.22
+    },
+    {
+      "name": "PlazaPlanterNE",
+      "roof": [
+        [
+          1037,
+          876
+        ],
+        [
+          1066,
+          860
+        ],
+        [
+          1092,
+          873
+        ],
+        [
+          1063,
+          890
+        ]
+      ],
+      "height": 0.27
+    },
+    {
+      "name": "PlazaBench",
+      "roof": [
+        [
+          922,
+          920
+        ],
+        [
+          980,
+          877
+        ],
+        [
+          997,
+          891
+        ],
+        [
+          938,
+          934
+        ]
+      ],
+      "height": 0.32
+    },
+    {
+      "name": "PlazaPlanterS",
+      "roof": [
+        [
+          990,
+          993
+        ],
+        [
+          1012,
+          982
+        ],
+        [
+          1043,
+          997
+        ],
+        [
+          1018,
+          1012
+        ]
+      ],
+      "height": 0.25
+    },
+    {
+      "name": "PlazaFencePost",
+      "roof": [
+        [
+          928,
+          968
+        ],
+        [
+          940,
+          960.8
+        ],
+        [
+          952,
+          968
+        ],
+        [
+          940,
+          975.2
+        ]
+      ],
+      "height": 0.8
+    },
+    {
+      "name": "EastBin",
+      "roof": [
+        [
+          1363,
+          284
+        ],
+        [
+          1374,
+          278
+        ],
+        [
+          1385,
+          284
+        ],
+        [
+          1374,
+          290
+        ]
+      ],
+      "height": 0.57
+    },
+    {
+      "name": "BillboardPlanter",
+      "roof": [
+        [
+          1398,
+          447
+        ],
+        [
+          1414,
+          437
+        ],
+        [
+          1435,
+          448
+        ],
+        [
+          1418,
+          458
+        ]
+      ],
+      "height": 0.25
+    },
+    {
+      "name": "EastStoneBox",
+      "roof": [
+        [
+          1308,
+          623
+        ],
+        [
+          1318,
+          618
+        ],
+        [
+          1330,
+          623
+        ],
+        [
+          1319,
+          628
+        ]
+      ],
+      "height": 0.47
+    },
+    {
+      "name": "FlagBuilding",
+      "roof": [
+        [
+          1410,
+          609
+        ],
+        [
+          1487,
+          556
+        ],
+        [
+          1536,
+          587
+        ],
+        [
+          1536,
+          690
+        ]
+      ],
+      "height": 2.5
+    },
+    {
+      "name": "FlagChimneyA",
+      "roof": [
+        [
+          1497,
+          578
+        ],
+        [
+          1503,
+          574
+        ],
+        [
+          1510,
+          578
+        ],
+        [
+          1503,
+          582
+        ]
+      ],
+      "height": 2.8,
+      "bottom": 2.5
+    },
+    {
+      "name": "FlagChimneyB",
+      "roof": [
+        [
+          1489,
+          618
+        ],
+        [
+          1499,
+          611
+        ],
+        [
+          1509,
+          617
+        ],
+        [
+          1499,
+          624
+        ]
+      ],
+      "height": 2.82,
+      "bottom": 2.5
+    },
+    {
+      "name": "EastCrateBig",
+      "roof": [
+        [
+          1495,
+          808
+        ],
+        [
+          1515,
+          797
+        ],
+        [
+          1535,
+          808
+        ],
+        [
+          1515,
+          818
+        ]
+      ],
+      "height": 0.44
+    },
+    {
+      "name": "EastCrate",
+      "roof": [
+        [
+          1431,
+          893
+        ],
+        [
+          1446,
+          884
+        ],
+        [
+          1462,
+          893
+        ],
+        [
+          1447,
+          901
+        ]
+      ],
+      "height": 0.47
+    },
+    {
+      "name": "EastBox",
+      "roof": [
+        [
+          1428,
+          962
+        ],
+        [
+          1442,
+          954
+        ],
+        [
+          1457,
+          962
+        ],
+        [
+          1443,
+          970
+        ]
+      ],
+      "height": 0.4
+    },
+    {
+      "name": "NorthPlanter",
+      "roof": [
+        [
+          934,
+          112
+        ],
+        [
+          954,
+          102
+        ],
+        [
+          982,
+          114
+        ],
+        [
+          960,
+          125
+        ]
+      ],
+      "height": 0.2
+    },
+    {
+      "name": "NorthStoneBox",
+      "roof": [
+        [
+          979,
+          100
+        ],
+        [
+          990,
+          94
+        ],
+        [
+          1002,
+          100
+        ],
+        [
+          991,
+          106
+        ]
+      ],
+      "height": 0.4
+    },
+    {
+      "name": "BankCrates",
+      "roof": [
+        [
+          1051,
+          178
+        ],
+        [
+          1063,
+          171
+        ],
+        [
+          1080,
+          180
+        ],
+        [
+          1068,
+          187
+        ]
+      ],
+      "height": 0.37
+    },
+    {
+      "name": "DinerBox",
+      "roof": [
+        [
+          508,
+          162
+        ],
+        [
+          519,
+          156
+        ],
+        [
+          530,
+          162
+        ],
+        [
+          519,
+          168
+        ]
+      ],
+      "height": 0.36
+    },
+    {
+      "name": "PlazaFencePost2",
+      "roof": [
+        [
+          887,
+          960
+        ],
+        [
+          894,
+          956
+        ],
+        [
+          902,
+          960
+        ],
+        [
+          894,
+          964
+        ]
+      ],
+      "height": 0.8
+    },
+    {
+      "name": "GarageTires",
+      "roof": [
+        [
+          1262,
+          836
+        ],
+        [
+          1276,
+          828
+        ],
+        [
+          1292,
+          836
+        ],
+        [
+          1278,
+          844
+        ]
+      ],
+      "height": 0.5
+    },
+    {
+      "name": "NorthPillar",
+      "roof": [
+        [
+          697,
+          40
+        ],
+        [
+          705,
+          35
+        ],
+        [
+          714,
+          40
+        ],
+        [
+          705,
+          45
+        ]
+      ],
+      "height": 0.57
+    },
+    {
+      "name": "WarehouseBench",
+      "roof": [
+        [
+          552,
+          556
+        ],
+        [
+          580,
+          541
+        ],
+        [
+          596,
+          549
+        ],
+        [
+          568,
+          564
+        ]
+      ],
+      "height": 0.3
     }
   ],
   "rounds": [
@@ -1491,6 +2461,606 @@
       ],
       "radius": 0.14,
       "height": 0.57,
+      "bottom": 0
+    },
+    {
+      "name": "NWDockBollard",
+      "pixel": [
+        261,
+        276
+      ],
+      "radius": 0.17,
+      "height": 1.0,
+      "bottom": 0
+    },
+    {
+      "name": "NWHydrant",
+      "pixel": [
+        365,
+        244
+      ],
+      "radius": 0.1,
+      "height": 0.47,
+      "bottom": 0
+    },
+    {
+      "name": "LampPier",
+      "pixel": [
+        400,
+        794
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampPierStem",
+      "pixel": [
+        400,
+        787
+      ],
+      "radius": 0.039,
+      "height": 0.94,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampPierLantern",
+      "pixel": [
+        400,
+        737
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 0.92
+    },
+    {
+      "name": "HydrantFish",
+      "pixel": [
+        612,
+        948
+      ],
+      "radius": 0.1,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "LotWStake0",
+      "pixel": [
+        470,
+        397
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotWStake1",
+      "pixel": [
+        497,
+        415
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotWStake2",
+      "pixel": [
+        416,
+        431
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotWStake3",
+      "pixel": [
+        366,
+        466
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotWStake4",
+      "pixel": [
+        395,
+        486
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotWStake5",
+      "pixel": [
+        425,
+        510
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake0",
+      "pixel": [
+        744,
+        229
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake1",
+      "pixel": [
+        704,
+        254
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake2",
+      "pixel": [
+        780,
+        254
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake3",
+      "pixel": [
+        669,
+        276
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake4",
+      "pixel": [
+        817,
+        280
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake5",
+      "pixel": [
+        646,
+        295
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake6",
+      "pixel": [
+        804,
+        296
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake7",
+      "pixel": [
+        667,
+        310
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake8",
+      "pixel": [
+        690,
+        325
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake9",
+      "pixel": [
+        744,
+        329
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotNStake10",
+      "pixel": [
+        714,
+        340
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake0",
+      "pixel": [
+        704,
+        637
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake1",
+      "pixel": [
+        672,
+        658
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake2",
+      "pixel": [
+        738,
+        662
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake3",
+      "pixel": [
+        644,
+        682
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake4",
+      "pixel": [
+        766,
+        686
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake5",
+      "pixel": [
+        791,
+        706
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LotSStake6",
+      "pixel": [
+        724,
+        745
+      ],
+      "radius": 0.05,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LampPlaza",
+      "pixel": [
+        1033,
+        903
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampPlazaStem",
+      "pixel": [
+        1033,
+        896
+      ],
+      "radius": 0.039,
+      "height": 1.05,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampPlazaLantern",
+      "pixel": [
+        1033,
+        839
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 1.03
+    },
+    {
+      "name": "HydrantPlaza",
+      "pixel": [
+        856,
+        985
+      ],
+      "radius": 0.1,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "GasBarrel",
+      "pixel": [
+        1126,
+        885
+      ],
+      "radius": 0.17,
+      "height": 0.72,
+      "bottom": 0
+    },
+    {
+      "name": "LampEastStreet",
+      "pixel": [
+        1302,
+        338
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampEastStreetStem",
+      "pixel": [
+        1302,
+        331
+      ],
+      "radius": 0.039,
+      "height": 0.87,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampEastStreetLantern",
+      "pixel": [
+        1302,
+        285
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 0.85
+    },
+    {
+      "name": "LampBillboard",
+      "pixel": [
+        1390,
+        488
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampBillboardStem",
+      "pixel": [
+        1390,
+        481
+      ],
+      "radius": 0.039,
+      "height": 0.76,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampBillboardLantern",
+      "pixel": [
+        1390,
+        442
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 0.74
+    },
+    {
+      "name": "HydrantEast",
+      "pixel": [
+        1320,
+        605
+      ],
+      "radius": 0.1,
+      "height": 0.3,
+      "bottom": 0
+    },
+    {
+      "name": "LampGarage",
+      "pixel": [
+        1384,
+        647
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampGarageStem",
+      "pixel": [
+        1384,
+        640
+      ],
+      "radius": 0.039,
+      "height": 0.95,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampGarageLantern",
+      "pixel": [
+        1384,
+        590
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 0.93
+    },
+    {
+      "name": "EastBinRound",
+      "pixel": [
+        1466,
+        893
+      ],
+      "radius": 0.11,
+      "height": 0.45,
+      "bottom": 0
+    },
+    {
+      "name": "LampSouthEast",
+      "pixel": [
+        1497,
+        946
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampSouthEastStem",
+      "pixel": [
+        1497,
+        939
+      ],
+      "radius": 0.039,
+      "height": 1.1,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampSouthEastLantern",
+      "pixel": [
+        1497,
+        879
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 1.08
+    },
+    {
+      "name": "LampNorthStreet",
+      "pixel": [
+        856,
+        70
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampNorthStreetStem",
+      "pixel": [
+        856,
+        63
+      ],
+      "radius": 0.039,
+      "height": 0.84,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampNorthStreetLantern",
+      "pixel": [
+        856,
+        19
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 0.82
+    },
+    {
+      "name": "HydrantNorth",
+      "pixel": [
+        888,
+        86
+      ],
+      "radius": 0.09,
+      "height": 0.4,
+      "bottom": 0
+    },
+    {
+      "name": "LampBank",
+      "pixel": [
+        1097,
+        240
+      ],
+      "radius": 0.115,
+      "height": 0.12,
+      "bottom": 0
+    },
+    {
+      "name": "LampBankStem",
+      "pixel": [
+        1097,
+        233
+      ],
+      "radius": 0.039,
+      "height": 1.04,
+      "bottom": 0.12
+    },
+    {
+      "name": "LampBankLantern",
+      "pixel": [
+        1097,
+        177
+      ],
+      "radius": 0.091,
+      "height": 0.28,
+      "bottom": 1.02
+    },
+    {
+      "name": "DinerCanA",
+      "pixel": [
+        555,
+        174
+      ],
+      "radius": 0.14,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "DinerCanB",
+      "pixel": [
+        617,
+        128
+      ],
+      "radius": 0.15,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "GarageTank",
+      "pixel": [
+        1391,
+        745
+      ],
+      "radius": 0.13,
+      "height": 0.95,
+      "bottom": 1.67
+    },
+    {
+      "name": "DinerCanC",
+      "pixel": [
+        680,
+        93
+      ],
+      "radius": 0.13,
+      "height": 0.5,
       "bottom": 0
     }
   ],
@@ -2763,6 +4333,118 @@
         ]
       ],
       "radius": 0.12
+    },
+    {
+      "name": "NWCraneBoom",
+      "ends": [
+        [
+          35,
+          290,
+          1.75
+        ],
+        [
+          182,
+          188,
+          1.75
+        ]
+      ],
+      "radius": 0.12
+    },
+    {
+      "name": "FishPole",
+      "ends": [
+        [
+          557,
+          963,
+          0.0
+        ],
+        [
+          557,
+          873,
+          1.46
+        ]
+      ],
+      "radius": 0.045
+    },
+    {
+      "name": "FishBar",
+      "ends": [
+        [
+          437,
+          962,
+          1.46
+        ],
+        [
+          557,
+          873,
+          1.46
+        ]
+      ],
+      "radius": 0.035
+    },
+    {
+      "name": "PlazaTrunkNE",
+      "ends": [
+        [
+          1063,
+          880,
+          0.27
+        ],
+        [
+          1066,
+          835,
+          0.9
+        ]
+      ],
+      "radius": 0.07
+    },
+    {
+      "name": "PlazaTrunkS",
+      "ends": [
+        [
+          1017,
+          1000,
+          0.25
+        ],
+        [
+          1014,
+          960,
+          0.85
+        ]
+      ],
+      "radius": 0.07
+    },
+    {
+      "name": "Flagpole",
+      "ends": [
+        [
+          1482,
+          616,
+          2.5
+        ],
+        [
+          1482,
+          497,
+          4.43
+        ]
+      ],
+      "radius": 0.035
+    },
+    {
+      "name": "NorthTrunk",
+      "ends": [
+        [
+          955,
+          118,
+          0.2
+        ],
+        [
+          955,
+          80,
+          0.8
+        ]
+      ],
+      "radius": 0.07
     }
   ],
   "crowns": [
@@ -3173,6 +4855,251 @@
         ]
       ],
       "foliage_mask": true
+    },
+    {
+      "name": "TreePlazaNE",
+      "pixel": [
+        1061,
+        809
+      ],
+      "height": 1.15,
+      "depth": 0.34,
+      "silhouette": [
+        [
+          1028,
+          808
+        ],
+        [
+          1073,
+          778
+        ],
+        [
+          1076,
+          777
+        ],
+        [
+          1078,
+          777
+        ],
+        [
+          1079,
+          778
+        ],
+        [
+          1085,
+          785
+        ],
+        [
+          1089,
+          790
+        ],
+        [
+          1092,
+          797
+        ],
+        [
+          1094,
+          824
+        ],
+        [
+          1090,
+          828
+        ],
+        [
+          1082,
+          834
+        ],
+        [
+          1048,
+          842
+        ],
+        [
+          1043,
+          842
+        ],
+        [
+          1041,
+          840
+        ],
+        [
+          1028,
+          809
+        ]
+      ]
+    },
+    {
+      "name": "TreePlazaS",
+      "pixel": [
+        1012,
+        945
+      ],
+      "height": 0.89,
+      "depth": 0.41,
+      "silhouette": [
+        [
+          973,
+          955
+        ],
+        [
+          976,
+          942
+        ],
+        [
+          978,
+          939
+        ],
+        [
+          1006,
+          915
+        ],
+        [
+          1019,
+          912
+        ],
+        [
+          1020,
+          912
+        ],
+        [
+          1042,
+          925
+        ],
+        [
+          1043,
+          926
+        ],
+        [
+          1045,
+          929
+        ],
+        [
+          1046,
+          931
+        ],
+        [
+          1048,
+          937
+        ],
+        [
+          1052,
+          950
+        ],
+        [
+          1052,
+          951
+        ],
+        [
+          1048,
+          972
+        ],
+        [
+          1046,
+          978
+        ],
+        [
+          1045,
+          979
+        ],
+        [
+          1014,
+          978
+        ],
+        [
+          992,
+          972
+        ],
+        [
+          979,
+          966
+        ],
+        [
+          974,
+          959
+        ]
+      ]
+    },
+    {
+      "name": "TreeTopNorth",
+      "pixel": [
+        955,
+        52
+      ],
+      "height": 1.02,
+      "depth": 0.46,
+      "silhouette": [
+        [
+          911,
+          51
+        ],
+        [
+          922,
+          33
+        ],
+        [
+          946,
+          11
+        ],
+        [
+          948,
+          10
+        ],
+        [
+          954,
+          8
+        ],
+        [
+          956,
+          8
+        ],
+        [
+          983,
+          20
+        ],
+        [
+          999,
+          42
+        ],
+        [
+          1000,
+          45
+        ],
+        [
+          1000,
+          50
+        ],
+        [
+          997,
+          91
+        ],
+        [
+          996,
+          96
+        ],
+        [
+          995,
+          97
+        ],
+        [
+          943,
+          97
+        ],
+        [
+          939,
+          96
+        ],
+        [
+          917,
+          74
+        ],
+        [
+          913,
+          68
+        ],
+        [
+          911,
+          62
+        ]
+      ]
     }
   ]
 }

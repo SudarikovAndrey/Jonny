@@ -1,0 +1,94 @@
+/* ===== Магазин карточками (shop.js) =====
+   Каркас окна — событийный (ev-head / ev-body / ev-foot), внутри — сетка
+   2 в ряд. Карточка — отпечатанный ценник: бумага, неровный чернильный
+   контур, печатный «солнечный» фон под картинкой, цена эмалевой кнопкой. */
+#card.shop-card{max-width:430px}
+#card.shop-card .ev-body{padding:12px 12px 70px}
+#card.shop-card .shop-wallet{display:flex;align-items:center;gap:4px;font-size:13px}
+#card.shop-card .shop-wallet b{font-family:var(--num);font-weight:800;font-size:16px;color:var(--ink)}
+.shop-gem{width:1.25em;height:1.1em;object-fit:contain;vertical-align:-.2em;flex:none}
+
+#card .shop-sec{position:relative;z-index:1;display:flex;align-items:center;gap:8px;margin:4px 2px 9px;
+  font-family:var(--txt);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2a2118}
+#card .shop-sec::after{content:'';flex:1;height:0;border-top:2px solid #2a211855}
+#card .shop-sec:not(:first-child){margin-top:16px}
+
+.shop-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+
+.shop-item{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;
+  padding:8px 8px 9px;text-align:center;
+  background:#f3e6c2 url(assets/paper-grain.svg);border:2.5px solid #2a2118;
+  border-radius:13px 9px 12px 10px;box-shadow:0 3px 0 #2a211866,inset 0 0 0 2px #fff6dc80}
+.shop-item:nth-child(2n){border-radius:9px 13px 10px 12px}
+.shop-item:nth-child(3n){rotate:.4deg}
+.shop-item:nth-child(4n){rotate:-.4deg}
+
+/* Картинка на печатном лучистом фоне. */
+.shop-art{position:relative;width:100%;height:74px;display:grid;place-items:center;margin-bottom:6px;
+  border-radius:9px 7px 10px 8px;border:1.5px solid #2a211899;overflow:hidden;
+  background:repeating-conic-gradient(from -4deg at 50% 62%,#f6d98a 0 7deg,#f0cb6c 7deg 14deg);
+  box-shadow:inset 0 -9px 0 #c99a3230}
+.shop-item.gems .shop-art{background:repeating-conic-gradient(from -4deg at 50% 62%,#bcd3db 0 7deg,#a8c2cc 7deg 14deg);box-shadow:inset 0 -9px 0 #243f4b26}
+.shop-item.rolls .shop-art{background:repeating-conic-gradient(from -4deg at 50% 62%,#f0c9b2 0 7deg,#e8b69b 7deg 14deg);box-shadow:inset 0 -9px 0 #a9272026}
+
+.shop-pile{position:relative;display:block;width:86px;height:62px}
+.shop-pile img{position:absolute;width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 0 #2a211855)}
+.shop-pile.n1 img{left:17px;top:5px;width:54px;height:54px}
+.shop-pile.n2 img:nth-child(1){left:6px;top:10px}.shop-pile.n2 img:nth-child(2){left:30px;top:2px}
+.shop-item.rolls .shop-pile.n2 img:nth-child(1){rotate:-12deg}.shop-item.rolls .shop-pile.n2 img:nth-child(2){rotate:9deg;left:32px;top:6px}
+.shop-pile.n3 img{width:44px;height:44px}
+.shop-pile.n3 img:nth-child(1){left:2px;top:16px}.shop-pile.n3 img:nth-child(2){left:40px;top:16px}.shop-pile.n3 img:nth-child(3){left:21px;top:1px}
+.shop-pile.n4 img{width:42px;height:42px}
+.shop-pile.n4 img:nth-child(1){left:-2px;top:19px}.shop-pile.n4 img:nth-child(2){left:44px;top:19px}
+.shop-pile.n4 img:nth-child(3){left:12px;top:2px}.shop-pile.n4 img:nth-child(4){left:32px;top:0}
+
+.shop-amount{font-family:var(--num);font-weight:800;font-size:25px;line-height:1;color:#2a2118;white-space:nowrap}
+.shop-unit{font-size:12.5px;line-height:1.2;color:#4b4132;margin-top:2px}
+.shop-note{display:flex;align-items:center;justify-content:center;gap:2px;min-height:15px;margin-top:3px;
+  font-size:11px;line-height:1.25;color:#6a5a40}
+.shop-note .shop-gem{width:13px;height:12px}
+
+/* Цена — на всю ширину карточки, прижата к низу. */
+#card .shop-item button.shop-buy{width:100%;margin-top:auto;min-height:44px;padding:7px 8px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  font-family:var(--num);font-weight:800;font-size:18px;line-height:1;white-space:nowrap}
+#card .shop-item .shop-unit,#card .shop-item .shop-note{margin-bottom:8px}
+#card .shop-item .shop-unit:has(+.shop-note){margin-bottom:0}
+#card .shop-item button.shop-buy .shop-gem{width:20px;height:18px}
+#card .shop-item button.shop-buy.rub{font-size:17px}
+.shop-item.off .shop-art{filter:saturate(.55)}
+
+/* Выгода — красная бирка, как наклейка на ценнике. */
+.shop-ribbon{position:absolute;z-index:2;top:-8px;right:-6px;padding:3px 7px 4px;rotate:5deg;
+  background:#c43a2d;color:#fff0ce;border:2px solid #2a2118;border-radius:6px 4px 7px 3px;box-shadow:2px 2px 0 #2a211866;
+  font-size:11px;font-weight:700;line-height:1;white-space:nowrap}
+
+#card .shop-proto{position:relative;z-index:1;margin:12px 4px 0;font-size:12px;line-height:1.35;color:#3c3325;text-align:center}
+
+@media (max-width:350px){
+  .shop-grid{gap:8px}.shop-art{height:64px}.shop-pile{transform:scale(.86)}
+  .shop-amount{font-size:21px}#card .shop-item button.shop-buy{font-size:16px}
+  .shop-ribbon{font-size:10px;padding:3px 5px}
+}
+
+/* ===== Плашка цели недели в шапке (renderHubGoal) ===== */
+#bHub.hub-goal-chip{flex-direction:row;align-items:center;gap:8px;padding:6px 17px 6px 9px;overflow:visible}
+#bHub .hub-ticket{flex:none;width:34px;height:26px;rotate:-7deg;filter:drop-shadow(0 1.5px 0 #1d1a1566)}
+#bHub .hub-goal{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#bHub .hub-row{display:flex;align-items:baseline;justify-content:space-between;gap:6px;min-width:0;line-height:1}
+#bHub .hub-row em{font-style:normal;font-weight:700;color:#29231c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#bHub .hub-row b{font-family:var(--num);font-weight:800;font-size:17px;line-height:1;color:#29231c;white-space:nowrap}
+#bHub .hub-row b small{font:inherit;font-size:12px;font-weight:700;color:#5b4c35}
+#bHub .hub-bar{position:relative;display:block;height:7px;border:1.5px solid #29231c;border-radius:5px 3px 5px 3px;
+  background:#dcc796;overflow:hidden}
+#bHub .hub-bar i{position:absolute;left:0;top:0;bottom:0;background:repeating-linear-gradient(-45deg,#c43a2d 0 5px,#a92720 5px 9px);
+  border-right:1.5px solid #29231c;min-width:2px}
+#bHub .hub-meta{font-family:var(--txt);font-size:10.5px;font-weight:500;color:#4d4130}
+#bHub .hub-meta span{white-space:nowrap;flex:none}
+#bHub .hub-place{font-family:var(--txt);font-size:10.5px;font-weight:600;color:#243f4b;white-space:nowrap}
+#bHub .hub-claim-tag{position:absolute;top:-6px;left:-2px;padding:2px 6px 3px;rotate:-6deg;
+  background:#c43a2d;color:#fff0ce;border:2px solid #1d1a15;border-radius:5px 3px 6px 3px;box-shadow:1.5px 1.5px 0 #1d1a1566;
+  font-family:var(--txt);font-size:10px;font-weight:700;line-height:1;animation:hub-claim 1.8s ease-in-out infinite}
+@keyframes hub-claim{50%{transform:translateY(-2px) scale(1.06)}}
+@media (max-width:360px){#bHub .hub-meta{font-size:9.5px}#bHub .hub-row b{font-size:14px}#bHub .hub-meta{font-size:9.5px}#bHub .hub-ticket{width:28px}}
+@media (prefers-reduced-motion:reduce){#bHub .hub-claim-tag{animation:none}}
