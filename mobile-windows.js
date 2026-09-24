@@ -59,7 +59,7 @@ function enamelButton(button){
   button.dataset.enamel=color;
   cashGlyph(button);
 }
-// Игровые деньги в HUD показаны пачкой купюр, а не знаком доллара.
+// Игровые деньги везде показаны монетами (как на поле), а не знаком доллара.
 // Ставим ту же иконку рядом с ценой. Рубли за реальные покупки не трогаем.
 function cashGlyph(root){
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
@@ -67,10 +67,13 @@ function cashGlyph(root){
   while(walker.nextNode()){
     const node=walker.currentNode;
     if(node.parentElement.closest('.enamel-skin'))continue;
-    if(node.nodeValue.includes('$'))hits.push(node);
+    if(node.nodeValue.includes('$')||node.nodeValue.includes('💵'))hits.push(node);
   }
   for(const node of hits){
-    const parts=node.nodeValue.split('$');
+    // Эмодзи купюр из прототипа тоже становится монетой: «💵 $120» — одна
+    // монета перед суммой, одиночное «💵» — просто монета.
+    const text=node.nodeValue.replace(/💵\s?(?=\$)/g,'').replace(/💵/g,'$');
+    const parts=text.split('$');
     const frag=document.createDocumentFragment();
     frag.append(parts[0]);
     for(let i=1;i<parts.length;i++){

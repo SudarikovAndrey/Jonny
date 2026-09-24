@@ -53,14 +53,16 @@ function step(from,to,ms,kind){
 function float(i,text,color,size){
   if(!S.tiles[i]?.drop)return;
   const at=screenOfTile(i),el=document.createElement('span');
-  el.className='map-float';el.textContent=text;el.style.left=at.x+'px';el.style.top=at.y+'px';el.style.color=color||'#fff1ce';
+  el.className='map-float';el.textContent=text;el.style.left=at.x+'px';el.style.top=at.y+'px';el.style.color=color||'#fff1ce';if(typeof cashGlyph==='function')cashGlyph(el);
   document.body.append(el);setTimeout(()=>el.remove(),1400);
 }
 function fly(icon,from,to,n,o={}){
   if(!from||!to){o.onDone?.();return;}
   const count=Math.min(3,Math.max(1,n||1));
   for(let i=0;i<count;i++){
-    const el=document.createElement('span');el.className='mobile-fly';el.textContent=icon;el.style.left=from.x+'px';el.style.top=from.y+'px';document.body.append(el);
+    const el=document.createElement('span');el.className='mobile-fly';
+    // Деньги летят монетами из кита — той же иконкой, что в шапке и на поле.
+    if(icon==='💵'){el.classList.add('fly-coin');el.innerHTML='<img src="assets/icons/soft.png" alt="">';}else el.textContent=icon;el.style.left=from.x+'px';el.style.top=from.y+'px';document.body.append(el);
     const animation=el.animate([{translate:'0 0',scale:1},{translate:`${to.x-from.x}px ${to.y-from.y}px`,scale:.65}],{duration:600,delay:(o.delay||0)+i*80,easing:'ease-in-out',fill:'forwards'});
     animation.finished.then(()=>{el.remove();if(i===count-1){if(o.pulse)pulse(o.pulse);o.onDone?.();}}).catch(()=>el.remove());
   }
@@ -481,7 +483,7 @@ const ONBOARD_SLIDES = [
     art:`<div class="ob-start"><span>СТАРТ</span></div>
          <div class="ob-flow"><img class="ob-fly-good" src="assets/goods/gum.png" alt="">
          <div class="ob-arrow">➜</div>
-         <img class="ob-fly-cash" src="assets/icons/money.png" alt=""></div>
+         <img class="ob-fly-cash" src="assets/icons/soft.png" alt=""></div>
          <div class="ob-chip ob-pop ob-plus">+<i class="cash-glyph"></i>48</div>` },
   { title:'Прокачивай точку',
     text:'Больше места — больше товара. Больше продаж — быстрее уходит.',
@@ -490,7 +492,7 @@ const ONBOARD_SLIDES = [
   { title:'Продавай ещё больше',
     text:'Прокачанная точка растёт в магазин. Товар дороже — навар толще.',
     art:`<div class="ob-banner"><img src="img/pt_gum_3.webp" alt=""></div>
-         <div class="ob-row ob-stack"><img src="assets/icons/money.png" alt=""><img src="assets/icons/money.png" alt=""><img src="assets/icons/money.png" alt=""></div>`,
+         <div class="ob-row ob-stack"><img src="assets/icons/soft.png" alt=""><img src="assets/icons/soft.png" alt=""><img src="assets/icons/soft.png" alt=""></div>`,
     goal:true },
 ];
 
@@ -641,3 +643,13 @@ function streetPassTip(){
     showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда район откроется, здесь появятся новые точки.');
   }catch(e){}
 }
+
+// Тосты и советы тоже показывают деньги монетой, а не «$» или купюрой.
+(function(){
+  // #card — любое окно: не все окна прототипа проходят через fitCard().
+  for(const id of ['toast','tip','card']){
+    const el=document.getElementById(id); if(!el) continue;
+    const apply=()=>{ if(typeof cashGlyph==='function' && /[$💵]/u.test(el.textContent)) cashGlyph(el); };
+    new MutationObserver(apply).observe(el,{childList:true,subtree:true,characterData:true});
+  }
+})();

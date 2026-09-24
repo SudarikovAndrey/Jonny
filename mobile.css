@@ -443,3 +443,13 @@ body #tip::before,body #tip::after{content:none!important;display:none!important
 /* Онбординговый круг: только кубик и строка клетки. */
 body.first-lap #bTaxi,body.first-lap #bShip,body.first-lap #bJohnny,body.first-lap #bShop,
 body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .map-controls{visibility:hidden!important;pointer-events:none!important}
+
+/* ===== v50: мягкая валюта — монеты везде =====
+   Одна иконка (монеты из кита, как на поле) в шапке, в тексте, на кнопках,
+   в наградах и в летящих частицах. Пачка купюр больше нигде не используется. */
+.cur .ic.g{background-image:url(assets/icons/soft.png)!important;width:36px;height:35px}
+.cash-glyph{background-image:url(assets/icons/soft.png)!important;background-size:contain;background-position:center;
+  background-repeat:no-repeat;width:1.12em;height:1.08em;vertical-align:-.2em;margin:0 .12em 0 .06em}
+.card .v .cash-glyph,#card .v .cash-glyph{width:1.04em;height:1em;vertical-align:-.16em}
+#tbText .cash-glyph{width:1.04em;height:1em;vertical-align:-.15em}
+.mobile-fly.fly-coin img{display:block;width:30px;height:auto;filter:drop-shadow(0 2px 1px #23190e99)}
