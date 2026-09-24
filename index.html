@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=64"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=24"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=65"><link rel="stylesheet" href="mobile-windows.css?v=43"><link rel="stylesheet" href="battlepass.css?v=46"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -330,7 +330,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="godot-frame" title="Игровое поле" src="engine.html?v=27" allow="autoplay"></iframe><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="godot-frame" title="Игровое поле" src="engine.html?v=29" allow="autoplay"></iframe><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -485,7 +485,7 @@ function buildTiles(){
   const rnd=(a,b)=>Math.round((a+Math.random()*(b-a))/10)*10;
   for(let i=0;i<40;i++){
     const z=zoneOf(i); let o={i,type:'kiosk',zone:z,owner:null,level:0,capLvl:1,salesLvl:1,goods:0,tier:1};
-    if(i===0)o.type='home'; else if(wh.has(i))o.type='wh'; else if(i===20)o.type='bank'; // home — «Старт» в интерфейсе
+    if(i===0)o.type='home'; else if(wh.has(i)){o.type='wh';o.zone=-1;} else if(i===20)o.type='bank'; // home — «Старт» в интерфейсе
     else if(i===15){o.type='police';o.zone=-1;} else if(i===25){o.type='pot';o.zone=-1;} else if(i===35){o.type='scatter';o.zone=-1;}
     else if(i===5){o.type='hazard';o.zone=-1;}
     else if(biz.has(i)){o.type='biz';o.price=rnd(...CFG.BIZ_PRICE[z]);o.price0=o.price;}
@@ -703,7 +703,7 @@ function renderGuide(){
       {title:'Общак растёт каждый круг',text:'На этой клетке можно забрать накопленное или рискнуть и удвоить сумму.',img:'img/johnny-welcome-v1.png',alt:'Джонни в Бруклине'},
       {title:'На стройке остаются находки',text:'События раскидывают по карте деньги, ходы и неприятности. Они срабатывают только при остановке.',img:'img/johnny-welcome-v1.png',alt:'Уличное событие'},
       {title:'Инкассатор меняет карту',text:'Он раскидывает находки по закрытым районам. На первом круге Джонни не попадает в участок.',img:'img/johnny-welcome-v1.png',alt:'Событие на карте'},
-      {title:'Вернись на старт',text:'На старте точки продадут часть товара за доллары. Один товар останется для пробной посылки.',img:'img/shipment-crane-v1.png',alt:'Контейнер грузят на корабль'}
+      {title:'Вернись на старт',text:'На старте точки продадут часть товара за доллары. Один товар останется для пробной посылки.',img:'assets/shipping-scene-clean.png',alt:'Грузчик с коробкой у грузовика и склада'}
     ];
     const step=lessons[i],signature=`lap:${i}:${atTarget}:${need&&need.id}:${!!ownedCargoReady()}:${target&&target.i}`;
     if(el.dataset.step!==signature){el.dataset.step=signature;el.innerHTML=`<img src="${step.img}" alt="${step.alt}" width="72" height="62"><div class="guide-copy"><small>Первый круг · ${i+1}/${plan.length}</small><b>${step.title}</b><p>${step.text}</p></div>`;}
@@ -724,7 +724,7 @@ function renderGuide(){
   const steps=[
     {title:'Купи первую точку',text:atPoint?'Нажми «Купить» под этой подсказкой.':'Бросай кубик. Купи точку, на которой остановишься.',img:'img/pt_gum_1.webp',alt:'Торговая точка'},
     {title:'Закупи товар',text:atWarehouse?'Открой Costco под подсказкой и закупи товар.':'Дойди до Costco. Купленный товар попадёт в твою точку.',img:`img/pt_${own?own.base||'gum':'gum'}_${own?own.tier||1:1}.webp`,alt:goods?goods.name:'Товар точки'},
-    {title:training?'Отправим пробную посылку':hasCargo?'Теперь — поставка дня':'Закупи груз для поставки дня',text:training?'Нажми подсвеченную «Поставку» внизу. Отправим 1 шт. пацанам.':hasCargo?'Тест прошёл! Собери больше груза: «Поставка» → «Заполнить».':`Тест прошёл. Закупи товар на Costco: до ${CFG.PARCEL_SLOTS} мест в поставке дня.`,img:'img/shipment-crane-v1.png',alt:'Контейнер грузят на корабль'}
+    {title:training?'Отправим пробную посылку':hasCargo?'Теперь — поставка дня':'Закупи груз для поставки дня',text:training?'Нажми подсвеченную «Поставку» внизу. Отправим 1 шт. пацанам.':hasCargo?'Тест прошёл! Собери больше груза: «Поставка» → «Заполнить».':`Тест прошёл. Закупи товар на Costco: до ${CFG.PARCEL_SLOTS} мест в поставке дня.`,img:'assets/shipping-scene-clean.png',alt:'Грузчик с коробкой у грузовика и склада'}
   ];
   const signature=stage+':'+hasCargo+':'+atPoint+':'+atWarehouse+':'+training;
   if(el.dataset.step===signature)return;
@@ -1586,7 +1586,7 @@ async function trainingShipment(){
     $('modal').classList.add('mid');$('card').className='card training-card';
     const tr=S.training,gs=CFG.GOODS.filter(g=>stock(g.id)>0),g=chosen?good(chosen):null;
     const p=g?parcelPts({[g.id]:1},CFG.PARCEL.dayReward[0]):0;
-    const art='<img class="training-art" src="img/shipment-crane-v1.png" width="600" height="400" alt="Контейнер на тросах грузят на корабль">';
+    const art='<img class="training-art" src="assets/shipping-scene-clean.png" width="404" height="168" alt="Грузчик с коробкой у грузовика и склада">';
     let html='';
     if(step==='pack'){
       html=`<small class="training-step">Первая посылка · 1/2</small><h2>Положи товар в посылку</h2><p>Нажми на товар — он перелетит в ящик.</p><div class="training-pack"><div class="training-goods">`+
@@ -1637,7 +1637,7 @@ async function parcel(forced,catchUp){
     const gs=CFG.GOODS.filter(g=>stock(g.id)>0||box[g.id]>0);
     const next=nextMilestone(),after=S.pts+p;
     $('card').classList.add('parcel-card');
-    $('card').innerHTML=`<h2>📦 ${catchUp?'Пропущенная поставка':'Поставка'} ${helpBtn('Отправляй товар из своих точек и получай очки. Один запас используется и для продаж, и для фуры. Нажми «Все правила» → «Поставка и очки» для подробностей.')}</h2>
+    $('card').innerHTML=`<h2>📦 ${catchUp?'Пропущенная поставка':'Поставка'} ${helpBtn('Каждый день ты можешь сделать одну отправку товаров за границу. Чем больше товара ты отправляешь и чем он дороже, тем больше очков ты получаешь. Очки отправки — это главное, ради чего ты играешь!')}</h2>
       <p class="parcel-note">${forced?'День заканчивается. Проверь груз перед отправкой.':catchUp?`За пропущенный день · ${k} шт. на место.`:'Одна отправка в день. Груз — из твоих точек.'}</p>
       <div class="parcel-summary"><div class="total"><span>За этот груз</span><b>+${p} очк.</b></div>
         <p>${next?after>=next.pts?`✓ Откроет награду «${next.name}»`:`До «${next.name}» после отправки: ${next.pts-after} очк.`:'Все награды открыты. Очки идут в рейтинг.'}</p>
@@ -2612,6 +2612,48 @@ showTip = function(text){
   positionTip();
 };
 
+// Окно «Больше груза — больше очков» объясняет поставку, но сама кнопка
+// поставки внизу под затемнением. Рисуем стрелку от окна к ящику и кольцо
+// вокруг кнопки — в слое над затемнением (#modal лежит на z-index:30).
+(function(){
+  const modal = document.getElementById('modal');
+  if(!modal) return;
+  let layer = null;
+  const target = () => document.getElementById('bShip');
+  const wanted = () => {
+    if(modal.hidden) return false;
+    const h = document.querySelector('#card h2');
+    return !!h && /Больше груза/.test(h.textContent);
+  };
+  const place = () => {
+    if(!layer) return;
+    const b = target(), card = document.getElementById('card');
+    if(!b || !card) return;
+    const br = b.getBoundingClientRect(), cr = card.getBoundingClientRect();
+    const cx = br.left + br.width/2, top = br.top;
+    const ring = layer.querySelector('.ship-ring');
+    ring.style.left = (br.left-6)+'px'; ring.style.top = (br.top-6)+'px';
+    ring.style.width = (br.width+12)+'px'; ring.style.height = (br.height+12)+'px';
+    const arrow = layer.querySelector('.ship-arrow');
+    const y0 = Math.min(cr.bottom + 4, top - 40), h = Math.max(36, top - y0 - 8);
+    arrow.style.left = (cx-22)+'px'; arrow.style.top = y0+'px'; arrow.style.height = h+'px';
+  };
+  const sync = () => {
+    const on = wanted();
+    if(on && !layer){
+      layer = document.createElement('div'); layer.className='ship-hint'; layer.setAttribute('aria-hidden','true');
+      layer.innerHTML = '<div class="ship-ring"></div><svg class="ship-arrow" viewBox="0 0 44 100" preserveAspectRatio="none">'
+        + '<path d="M22 4 C 16 30, 28 56, 22 82" fill="none" stroke="#2a2118" stroke-width="9" stroke-linecap="round"/>'
+        + '<path d="M22 4 C 16 30, 28 56, 22 82" fill="none" stroke="#b12f26" stroke-width="5" stroke-linecap="round"/>'
+        + '<path d="M8 74 L22 96 L36 74 Z" fill="#b12f26" stroke="#2a2118" stroke-width="3.5" stroke-linejoin="round"/></svg>';
+      document.body.append(layer); requestAnimationFrame(place);
+    }else if(!on && layer){ layer.remove(); layer = null; }
+    else if(on) place();
+  };
+  new MutationObserver(sync).observe(modal, {attributes:true, childList:true, subtree:true});
+  addEventListener('resize', () => layer && place());
+})();
+
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.png',sw=1536,sh=1024){
   return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><image href="assets/${file}" width="${sw}" height="${sh}"/></svg>`;
@@ -2862,18 +2904,25 @@ function decorateWarehouse(card){
  footer.innerHTML=`<div class="warehouse-johnny"><div class="warehouse-portrait">${costcoArt(748,327,178,140)}</div><div class="warehouse-bubble">${discount?`Скидка Джонни <b>${discount}%</b><small>Уже учтена в ценах</small>`:'Чем больше товара —<br><b>тем больше прибыли!</b>'}</div><span class="warehouse-wallet">В кармане<b>$${S.cash}</b></span></div>`;
  const all=old.querySelector('#wAll');
  if(all){
-  const text=all.querySelector('span');if(text?.textContent==='Закупиться на точки')text.textContent='Заполнить все точки';
-  all.classList.add('bad','warehouse-bulk');all.insertAdjacentHTML('afterbegin',`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span>`);footer.append(all);enamelButton(all);
-  // Вторая закупка — на половину наличных. Логика та же, что у «на все»:
-  // берём самые выгодные товары по кругу, но не выходим за половину денег.
+  // Закупка, а не «заполнение»: две зелёные кнопки в одну строку — на все
+  // наличные и на половину, цена справа. Пачка денег слева убрана: цена и так
+  // идёт со значком, а в той вырезке из атласа была впечатана подпись «Иконка».
+  const text=all.querySelector('span');
+  if(text&&text.textContent!=='Всё заполнено')text.textContent='Закупить на всё';
+  all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
+  const buys=document.createElement('div');buys.className='warehouse-buys';
+  buys.append(all);footer.append(buys);enamelButton(all);
+  // Вторая закупка — на половину суммы «на всё» (а не половину кармана, иначе
+  // «половина» выходила дороже «всего»). Берём самые выгодные товары по кругу.
+  const allPrice=+(all.querySelector('b')?.textContent||'').replace(/\D/g,'')||0;
   if(!all.disabled){
     const half=document.createElement('button');
     half.className='ok warehouse-bulk warehouse-half';
-    const budget=Math.floor(S.cash/2);
-    half.innerHTML=`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span><span>На половину</span><b>$${budget}</b>`;
+    const budget=Math.floor(allPrice/2);
+    half.innerHTML=`<span>Закупить на половину</span><b>$${budget}</b>`;
     half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
     half.onclick=()=>{
-      let left=Math.floor(S.cash/2), spent=0;
+      let left=budget, spent=0;
       const order=myKiosks().slice().sort((a,b)=>
         sales(b)*(sellPrice(b.good)-buyPrice(b.good))-sales(a)*(sellPrice(a.good)-buyPrice(a.good)));
       for(let round=0; round<40 && left>0; round++){
@@ -2891,7 +2940,7 @@ function decorateWarehouse(card){
       else toast('Не хватает даже на одну штуку');
       closeModal();
     };
-    footer.append(half); enamelButton(half);
+    buys.append(half); enamelButton(half);
   }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
   const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Тап: +1 товар. Удерживай, чтобы покупать быстрее.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);

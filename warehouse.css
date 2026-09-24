@@ -42,3 +42,19 @@
 
 /* Две закупки рядом: на все наличные и на половину. */
 .warehouse-half{margin-left:8px}
+
+/* Две закупки в одну строку, обе зелёные, цена справа. */
+.warehouse-buys{display:flex;gap:8px;align-items:stretch}
+.warehouse-buys .warehouse-half{margin-left:0}
+#card .warehouse-buys button.warehouse-bulk{flex:1 1 0;min-width:0;width:auto;min-height:58px;
+  padding:8px 10px;gap:6px}
+#card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:14px;line-height:1.15;
+  font-weight:700;white-space:normal}
+#card .warehouse-buys button.warehouse-bulk>b{padding-left:8px;font-size:19px}
+
+/* Подпись над ценой: в строку двух кнопок «Закупить на половину» рядом с ценой
+   рвалась на три строки. */
+#card .warehouse-buys button.warehouse-bulk{flex-direction:column;gap:2px;text-align:center;padding:7px 8px;min-height:62px}
+#card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){flex:none;font-size:13px;line-height:1.1;white-space:nowrap}
+#card .warehouse-buys button.warehouse-bulk>b{padding-left:0;border-left:0;font-size:21px;line-height:1}
+@media(max-width:350px){#card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:12px}}

@@ -31,18 +31,25 @@ function decorateWarehouse(card){
  footer.innerHTML=`<div class="warehouse-johnny"><div class="warehouse-portrait">${costcoArt(748,327,178,140)}</div><div class="warehouse-bubble">${discount?`Скидка Джонни <b>${discount}%</b><small>Уже учтена в ценах</small>`:'Чем больше товара —<br><b>тем больше прибыли!</b>'}</div><span class="warehouse-wallet">В кармане<b>$${S.cash}</b></span></div>`;
  const all=old.querySelector('#wAll');
  if(all){
-  const text=all.querySelector('span');if(text?.textContent==='Закупиться на точки')text.textContent='Заполнить все точки';
-  all.classList.add('bad','warehouse-bulk');all.insertAdjacentHTML('afterbegin',`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span>`);footer.append(all);enamelButton(all);
-  // Вторая закупка — на половину наличных. Логика та же, что у «на все»:
-  // берём самые выгодные товары по кругу, но не выходим за половину денег.
+  // Закупка, а не «заполнение»: две зелёные кнопки в одну строку — на все
+  // наличные и на половину, цена справа. Пачка денег слева убрана: цена и так
+  // идёт со значком, а в той вырезке из атласа была впечатана подпись «Иконка».
+  const text=all.querySelector('span');
+  if(text&&text.textContent!=='Всё заполнено')text.textContent='Закупить на всё';
+  all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
+  const buys=document.createElement('div');buys.className='warehouse-buys';
+  buys.append(all);footer.append(buys);enamelButton(all);
+  // Вторая закупка — на половину суммы «на всё» (а не половину кармана, иначе
+  // «половина» выходила дороже «всего»). Берём самые выгодные товары по кругу.
+  const allPrice=+(all.querySelector('b')?.textContent||'').replace(/\D/g,'')||0;
   if(!all.disabled){
     const half=document.createElement('button');
     half.className='ok warehouse-bulk warehouse-half';
-    const budget=Math.floor(S.cash/2);
-    half.innerHTML=`<span class="warehouse-money">${costcoArt(1032,1024,90,69)}</span><span>На половину</span><b>$${budget}</b>`;
+    const budget=Math.floor(allPrice/2);
+    half.innerHTML=`<span>Закупить на половину</span><b>$${budget}</b>`;
     half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
     half.onclick=()=>{
-      let left=Math.floor(S.cash/2), spent=0;
+      let left=budget, spent=0;
       const order=myKiosks().slice().sort((a,b)=>
         sales(b)*(sellPrice(b.good)-buyPrice(b.good))-sales(a)*(sellPrice(a.good)-buyPrice(a.good)));
       for(let round=0; round<40 && left>0; round++){
@@ -60,7 +67,7 @@ function decorateWarehouse(card){
       else toast('Не хватает даже на одну штуку');
       closeModal();
     };
-    footer.append(half); enamelButton(half);
+    buys.append(half); enamelButton(half);
   }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
   const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Тап: +1 товар. Удерживай, чтобы покупать быстрее.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);

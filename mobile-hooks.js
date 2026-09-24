@@ -579,3 +579,45 @@ showTip = function(text){
   x.onclick = e => { e.stopPropagation(); hideTip(); };
   positionTip();
 };
+
+// Окно «Больше груза — больше очков» объясняет поставку, но сама кнопка
+// поставки внизу под затемнением. Рисуем стрелку от окна к ящику и кольцо
+// вокруг кнопки — в слое над затемнением (#modal лежит на z-index:30).
+(function(){
+  const modal = document.getElementById('modal');
+  if(!modal) return;
+  let layer = null;
+  const target = () => document.getElementById('bShip');
+  const wanted = () => {
+    if(modal.hidden) return false;
+    const h = document.querySelector('#card h2');
+    return !!h && /Больше груза/.test(h.textContent);
+  };
+  const place = () => {
+    if(!layer) return;
+    const b = target(), card = document.getElementById('card');
+    if(!b || !card) return;
+    const br = b.getBoundingClientRect(), cr = card.getBoundingClientRect();
+    const cx = br.left + br.width/2, top = br.top;
+    const ring = layer.querySelector('.ship-ring');
+    ring.style.left = (br.left-6)+'px'; ring.style.top = (br.top-6)+'px';
+    ring.style.width = (br.width+12)+'px'; ring.style.height = (br.height+12)+'px';
+    const arrow = layer.querySelector('.ship-arrow');
+    const y0 = Math.min(cr.bottom + 4, top - 40), h = Math.max(36, top - y0 - 8);
+    arrow.style.left = (cx-22)+'px'; arrow.style.top = y0+'px'; arrow.style.height = h+'px';
+  };
+  const sync = () => {
+    const on = wanted();
+    if(on && !layer){
+      layer = document.createElement('div'); layer.className='ship-hint'; layer.setAttribute('aria-hidden','true');
+      layer.innerHTML = '<div class="ship-ring"></div><svg class="ship-arrow" viewBox="0 0 44 100" preserveAspectRatio="none">'
+        + '<path d="M22 4 C 16 30, 28 56, 22 82" fill="none" stroke="#2a2118" stroke-width="9" stroke-linecap="round"/>'
+        + '<path d="M22 4 C 16 30, 28 56, 22 82" fill="none" stroke="#b12f26" stroke-width="5" stroke-linecap="round"/>'
+        + '<path d="M8 74 L22 96 L36 74 Z" fill="#b12f26" stroke="#2a2118" stroke-width="3.5" stroke-linejoin="round"/></svg>';
+      document.body.append(layer); requestAnimationFrame(place);
+    }else if(!on && layer){ layer.remove(); layer = null; }
+    else if(on) place();
+  };
+  new MutationObserver(sync).observe(modal, {attributes:true, childList:true, subtree:true});
+  addEventListener('resize', () => layer && place());
+})();
