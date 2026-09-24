@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=70"><link rel="stylesheet" href="mobile-windows.css?v=45"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=4"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=70"><link rel="stylesheet" href="mobile-windows.css?v=48"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=48"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=4"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -330,7 +330,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=34";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'470a9c89'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=34";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'8f935d0a'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -349,7 +349,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 <div id="fx"></div>
 <div id="modal" hidden><div class="card" id="card"></div></div>
 
-<script src="mobile-feedback.js?v=23"></script><script src="mobile-host.js?v=26"></script>
+<script src="mobile-feedback.js?v=24"></script><script src="mobile-host.js?v=26"></script>
 <script>
 
 // ======================= БАЛАНС — крутить здесь =======================
@@ -827,7 +827,8 @@ async function offerOpen(zi){
 function spendHard(n,to){if((S.hard||0)<n){toast('Не хватает 💎');track('hard_short',{need:n});return false;}track('hard_spend',{n});fly('💎',AT.hard(),to||AT.card(),Math.min(n,4),{pulse:'sHard'});S.hard-=n;render();return true;}
 function pay(m){m=Math.max(0,Math.min(S.cash,Math.round(m)));if(m>0)fly('💵',AT.cash(),AT.pot(),flyN(m));S.cash-=m;S.pot+=m;return m;} // все штрафы падают в копилку
 // штраф полиции берут целиком: не хватает — уходишь в минус, но не глубже половины штрафа, чтобы выбраться за круг-другой
-function payFine(m){m=Math.round(m);const floorCash=-Math.round(Math.min(m*0.5,Math.max(20,lapNet()*0.5)));const take=Math.min(m,Math.max(0,S.cash-floorCash));
+function fineTake(m){m=Math.round(m);const floorCash=-Math.round(Math.min(m*0.5,Math.max(20,lapNet()*0.5)));return Math.min(m,Math.max(0,S.cash-floorCash));}
+function payFine(m){m=Math.round(m);const take=fineTake(m);
   S.cash-=take;S.pot+=take;if(take>0)fly('💵',AT.cash(),AT.pot(),flyN(take));
   if(take<m)log(`Штраф $${m}, а в кармане было меньше: ушёл в минус на $${-S.cash}.`);
   return take;}
@@ -1478,12 +1479,16 @@ function policeFine(){return Math.max(CFG.POLICE.dayFine[Math.min(S.day,CFG.POLI
 async function police(){
   const pts=S.tiles.filter(t=>(t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t));
   const fine=policeFine();
-  const v=await modal(`<h2>🚔 NYPD <small>участок</small></h2><p class="t">«А лицензия есть, приятель?» Заплати штраф или попробуй выбросить дубль. У тебя ${CFG.POLICE.attempts} попытки: дубль освобождает бесплатно, иначе штраф спишется после последней попытки. Каждый бросок тратит ход.</p>
-    <div class="row"><span class="n">Штраф<small>половина чистой прибыли за круг, не меньше $${CFG.POLICE.dayFine[Math.min(S.day,CFG.POLICE.dayFine.length)-1]} в день ${S.day} · уходит в копилку 🎰</small></span><span class="v">$${fine}</span></div>`,
-    [{t:(S.cash>=fine?'Заплатить · $':'Заплатить в минус · $')+fine,v:1,cls:'ok'},{t:`Откупиться · 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Попробовать дубль',v:0,cls:'bad'}],{sticky:true});
+  const take=fineTake(fine),short=take<fine,minus=Math.max(0,take-Math.max(0,S.cash));
+  const v=await modal(`<h2>🚔 NYPD <small>участок</small></h2><p class="t">«А лицензия есть, приятель?»</p>
+    <div class="row"><span class="n">Штраф<small>половина прибыли за круг, в день ${S.day} — от $${CFG.POLICE.dayFine[Math.min(S.day,CFG.POLICE.dayFine.length)-1]}</small></span><span class="v">$${fine}</span></div>
+    ${short?`<div class="row"><span class="n">Заберут только<small>${S.cash>0?'в кармане $'+S.cash+', ':'в кармане пусто, '}${minus?'и ты уйдёшь в минус на $'+minus:''}</small></span><span class="v">$${take}</span></div>`:''}
+    <p>Всё, что заберут, ляжет в копилку — встанешь на неё, вернёшь.</p>
+    <p>Или лови дубль: ${CFG.POLICE.attempts} броска, каждый тратит ход. Дубль — выходишь даром, три промаха — тот же штраф.</p>`,
+    [{t:'Заплатить · $'+take,v:1,cls:'ok'},{t:`Откупиться · 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
   track('police',{choice:v===3?'bail':v===1?'pay':'sit',fine});
   if(v===3){spendHard(CFG.HARD.bail,AT.tile(15));log(`Откупился от полиции за 💎 ${CFG.HARD.bail}.`);}
-  else if(v===1){payFine(fine);log(`Заплатил полиции $${fine}.`);}else{S.jail=CFG.POLICE.attempts;S.jailFine=fine;log(`Сел в участок: ${CFG.POLICE.attempts} попытки на дубль, иначе штраф $${fine}.`);hint('jail','В участке кнопка «Бросить» ловит дубль. Три промаха — отпустят со штрафом.');}
+  else if(v===1){const paid=payFine(fine);log(`Заплатил полиции $${paid}${paid<fine?' из $'+fine:''} — ушло в копилку.`);}else{S.jail=CFG.POLICE.attempts;S.jailFine=fine;log(`Сел в участок: ${CFG.POLICE.attempts} попытки на дубль, иначе штраф $${fine}.`);hint('jail','В участке кнопка «Бросить» ловит дубль. Три промаха — отпустят со штрафом.');}
   save();render();
 }
 // ---------- копилка: сюда падают все штрафы ----------
@@ -1636,22 +1641,27 @@ async function parcel(forced,catchUp){
     const canSlot=S.extraSlots<CFG.EXTRA_SLOT.perDay, hp=slotPriceHard(); // место действует до полуночи, а цена растёт за всю неделю
     const gs=CFG.GOODS.filter(g=>stock(g.id)>0||box[g.id]>0);
     const next=nextMilestone(),after=S.pts+p;
-    $('card').classList.add('parcel-card');
-    $('card').innerHTML=`<h2>📦 ${catchUp?'Пропущенная поставка':'Поставка'} ${helpBtn('Каждый день ты можешь сделать одну отправку товаров за границу. Чем больше товара ты отправляешь и чем он дороже, тем больше очков ты получаешь. Очки отправки — это главное, ради чего ты играешь!')}</h2>
-      <p class="parcel-note">${forced?'День заканчивается. Проверь груз перед отправкой.':catchUp?`За пропущенный день · ${k} шт. на место.`:'Одна отправка в день. Груз — из твоих точек.'}</p>
-      <div class="parcel-summary"><div class="total"><span>За этот груз</span><b>+${p} очк.</b></div>
-        <p>${next?after>=next.pts?`✓ Откроет награду «${next.name}»`:`До «${next.name}» после отправки: ${next.pts-after} очк.`:'Все награды открыты. Очки идут в рейтинг.'}</p>
-        <div class="bar"><i style="width:${next?Math.min(100,after/next.pts*100):100}%"></i></div>
+    $('card').className='card parcel-card pc-card';
+    const gi=g=>`<img class="pc-gicon" src="assets/goods/${g.id}.png" alt="">`;
+    let cells='';CFG.GOODS.forEach(g=>{for(let i=0;i<box[g.id];i++)cells+=`<span class="pc-slot f">${gi(g)}</span>`;});
+    for(let i=n;i<N;i++)cells+=`<span class="pc-slot"></span>`;
+    const warn=total<=0?(myKiosks().length?`На место нужно ${k} шт. одного товара — закупись в Costco.`:'Сначала купи точку и закупи товар в Costco.'):n>0&&n<N&&total>n?`Свободно ${N-n} ${N-n===1?'место':'места'} — добавь товар, будет больше очков.`:'';
+    const extra=canSlot?(()=>{const rest=CFG.GOODS.filter(g=>Math.floor(stock(g.id)/k)-box[g.id]>0).sort((a,b)=>b.pts-a.pts)[0],gain=rest?parcelPts(Object.assign({},box,{[rest.id]:(box[rest.id]||0)+1}),R)-p:0,full=n>=N&&!!rest;
+      return `<div class="pc-extra ${full?'hot':''}"><img src="assets/icons/crate.png" alt=""><span class="pc-name"><b>Ещё место в фуре</b><small>${full?`+${gain} очков · `:''}до полуночи</small></span><button class="hard" id="mSlotH" ${S.hard<hp?'disabled':''}>💎 ${hp}</button></div>`;})():'';
+    $('card').innerHTML=`<header class="pc-head"><span class="ev-badge"><img src="assets/icons/crate.png" alt=""></span>
+        <div class="ev-titles"><h2 class="ev-title">${catchUp?'Догоняем день':'Поставка'}</h2><small class="ev-sub">${catchUp?'за пропущенный день':forced?'день заканчивается':'одна в день'}</small></div>
+        ${helpBtn('Каждый день ты можешь сделать одну отправку товаров за границу. Чем больше товара ты отправляешь и чем он дороже, тем больше очков ты получаешь. Очки отправки — это главное, ради чего ты играешь!')}
+        ${forced?'':'<button class="xclose pc-close" id="mNo" aria-label="Закрыть"></button>'}</header>
+      <div class="pc-body">
+        <div class="pc-sum ${n>0?'on':''}"><div class="pc-pts"><b>+${p}</b><span>очков</span></div>
+          <div class="pc-goal"><span>${next?after>=next.pts?`откроет «${next.name}»`:`до «${next.name}» ещё ${next.pts-after}`:'все награды открыты'}</span><div class="pass-meter"><i style="--progress:${next?Math.min(1,after/next.pts):1}"></i></div></div></div>
+        <div class="pc-truck"><div class="pc-truck-head"><b>Фура · ${n}/${N}</b><span>по ${k} шт. на место</span></div><div class="pc-slots" style="--cols:${N<=8?N:Math.ceil(N/2)}">${cells}</div>${warn?`<p class="pc-warn">${warn}</p>`:''}</div>
+        <div class="pc-list">${gs.map(g=>{const can=Math.floor(stock(g.id)/k),added=Object.assign({},box,{[g.id]:(box[g.id]||0)+1}),gain=parcelPts(added,R)-p;
+          return `<div class="pc-row ${box[g.id]>0?'on':''}">${gi(g)}<span class="pc-name"><b>${g.name}</b><small>запас ${stock(g.id)} · <em>+${gain} очк.</em></small></span>
+          <div class="pc-qty"><button class="pc-step" data-g="${g.id}" data-d="-1" aria-label="Убрать ${g.name}" ${box[g.id]<=0?'disabled':''}>−</button><b>${box[g.id]}</b><button class="pc-step" data-g="${g.id}" data-d="1" aria-label="Добавить ${g.name}" ${n>=N||box[g.id]>=can?'disabled':''}>+</button></div></div>`;}).join('')}</div>
+        ${extra}
       </div>
-      <div class="parcel-meta"><b>Занято ${n} из ${N} мест</b><span>${k} шт. на место</span></div>
-      <div class="slots">${sl}</div>
-      ${total<=0?`<p class="parcel-warning">${myKiosks().length?`На одно место нужно ${k} шт. одного товара. Пополни запас на складе Costco.`:'Сначала купи точку, затем закупи для неё товар на складе Costco.'}</p>`:n===0?'<p class="parcel-note">Выбери товар кнопкой «+» или нажми «Заполнить».</p>':n<N?`<p class="parcel-warning">Свободных мест: ${N-n}. ${total>n?'Можно добавить товар и получить больше очков.':'Для большего груза сначала пополни запас.'}</p>`:''}
-      ${gs.map(g=>{const can=Math.floor(stock(g.id)/k),added=Object.assign({},box,{[g.id]:(box[g.id]||0)+1}),gain=parcelPts(added,R)-p;return `<div class="row"><span class="n">${g.icon} ${g.name}<small>Запас: ${stock(g.id)} шт. · +${gain} очк. за место</small></span>
-        <div class="qty"><button data-g="${g.id}" data-d="-1" aria-label="Убрать ${g.name}" ${box[g.id]<=0?'disabled':''}>−</button><b>${box[g.id]}</b><button data-g="${g.id}" data-d="1" aria-label="Добавить ${g.name}" ${n>=N||box[g.id]>=can?'disabled':''}>+</button></div></div>`;}).join('')}
-      <p class="parcel-note">Ориентир дня: ${CFG.PARCEL_SLOTS} мест × ${best?best.icon+' '+best.name:'лучший товар'} = ${R} очк. Дополнительные места дают очки сверх этого.</p>
-      ${canSlot?(()=>{const rest=CFG.GOODS.filter(g=>Math.floor(stock(g.id)/k)-box[g.id]>0).sort((a,b)=>b.pts-a.pts)[0],gain=rest?parcelPts(Object.assign({},box,{[rest.id]:(box[rest.id]||0)+1}),R)-p:0,full=n>=N&&!!rest;return `<div class="row ${full?'hot':''}"><span class="n">+1 место в фуре${full?` <b>· +${gain} очк.</b>`:''}<small>До полуночи · без товара${full?' · для '+rest.name:''}<br>Следующее место: 💎 ${hp*2}. Цена растёт до конца недели.</small></span><button class="sm hard" id="mSlotH" ${S.hard<hp?'disabled':''}>💎 ${hp}</button></div>`;})():''}
-      <div class="parcel-actions"><button class="sec" id="mAuto" ${total<=0?'disabled':''}>Заполнить</button><button class="sec" id="mNo">${forced?'Без отправки':'Вернуться'}</button><button class="ok" id="mSend" ${n<=0?'disabled':''}>Отправить · +${p} очк.</button></div>
-      <p class="parcel-note">${n>0?`${n*k} шт. спишется из точек. Продать этот товар уже не получится.`:'Товар списывается только при отправке.'}</p>`;
+      <footer class="pc-foot">${forced?'<button class="sec" id="mNo">Без отправки</button>':''}<button class="sec" id="mAuto" ${total<=0?'disabled':''}>Заполнить</button><button class="ok" id="mSend" ${n<=0?'disabled':''}>Отправить · +${p}</button></footer>`;
     $('card').querySelectorAll('button[data-g][data-d]').forEach(b=>b.onclick=()=>{const g=b.dataset.g;box[g]=Math.max(0,box[g]+ +b.dataset.d);draw();});
     $('mAuto').onclick=()=>{autofill();draw();};
     const mh=$('mSlotH'); if(mh)mh.onclick=()=>{if(spendHard(hp)){track('slot_buy',{cost:hp,cur:'hard',buys:(S.slotBuys||0)+1});S.extraSlots++;S.slotBuys=(S.slotBuys||0)+1;log(`Докупил место в фуре за 💎 ${hp}.`);draw();render();}};
@@ -2100,6 +2110,14 @@ function fly(icon,from,to,n,o={}){
   }
 }
 async function flyDrops(plan){
+  // Веб-поле само разбрасывает награды дугами по клеткам; ждём, пока всё ляжет.
+  if(MobileHost.ready&&MobileHost.sceneState?.engine==='web'&&plan.length){
+    try{await MobileHost.request('scatter',{from:S.pos,drops:plan.map(pl=>({to:pl.t.i,drop:pl.drop}))},15000);}
+    catch(e){console.warn('Разлёт не отыгран:',e.message);}
+    plan.forEach(pl=>{pl.t.drop=mergeDrop(pl.t.drop,pl.drop);});
+    mobileSync();
+    return;
+  }
   const from=screenOfTile(S.pos);
   await Promise.all(plan.map((pl,index)=>new Promise(resolve=>{
     fly(pl.icon,from,screenOfTile(pl.t.i),1,{delay:index*90/CFG.SPEED,onDone:()=>{
@@ -2835,7 +2853,7 @@ function decorateSettings(card){
   }
 }
 function decorateParcel(card){
-  if(!card.querySelector('#mSend')||card.querySelector('.cargo-scroll'))return;
+  if(!card.querySelector('#mSend')||card.querySelector('.cargo-scroll')||card.querySelector('.pc-head'))return;
   card.classList.add('shipping-window');
   const title=card.querySelector('h2');
   const head=document.createElement('header');head.className='cargo-head';head.append(title);
@@ -2858,7 +2876,7 @@ function decorateHelp(){
 function decorateWindows(){
   const card=$('card');
   card.classList.toggle('settings-card',!!card.querySelector('#iRolls'));
-  card.classList.toggle('shipping-window',!!card.querySelector('#mSend'));
+  card.classList.toggle('shipping-window',!!card.querySelector('#mSend')&&!card.querySelector('.pc-head'));
   card.classList.toggle('warehouse-card',!!card.querySelector('#wNo'));
   decorateWarehouse(card);decorateSettings(card);decorateParcel(card);decorateEvent(card);
   if(!card.classList.contains('bare')&&!card.classList.contains('battlepass-card')&&!card.classList.contains('event-card'))paperSurface(card);
@@ -2868,7 +2886,7 @@ function decorateWindows(){
   paperSurface($('helpDialog'));paintedClose($('helpClose'));
   decorateHelp();
   if(!card.classList.contains('battlepass-card')){
-    card.querySelectorAll('button:not(.painted-close):not(.qm):not(.training-good):not(.tab)').forEach(enamelButton);
+    card.querySelectorAll('button:not(.painted-close):not(.qm):not(.training-good):not(.tab):not(.pc-step)').forEach(enamelButton);
   }
   // Reuse the character vignette for feedback, without introducing a blocking popup.
   const toast=$('toast');
@@ -2903,7 +2921,7 @@ var EVENT_BADGES = [
   [/Сегодня|День \d/, 'assets/icons/clock.png'], [/Джонни/, 'assets/icons/cap.png', 'full'],
   [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.png'], [/Кто играет/, 'assets/icons/cap.png', 'full'], [/Магазин/, 'assets/icons/shop.png'],
 ];
-var EVENT_SKIP = ['training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
+var EVENT_SKIP = ['pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
 function decorateEvent(card){
   if(!EVENT_SKIP)return;
   if(EVENT_SKIP.some(c=>card.classList.contains(c)))return;

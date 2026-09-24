@@ -26,7 +26,7 @@ window.GameFeedback=(()=>{
  function tone(freq,end,duration,volume,type='sine',delay=0){if(!ctx||muted||ctx.state!=='running')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,end),t+duration);g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(volume,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g).connect(master);o.start(t);o.stop(t+duration+.02);played++;}
  function tap(freq=750,volume=.13,duration=.05){if(!ctx||muted||ctx.state!=='running')return;const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain(),t=ctx.currentTime;source.buffer=noise;filter.type='bandpass';filter.frequency.value=freq;filter.Q.value=.6;gain.gain.setValueAtTime(volume,t);gain.gain.exponentialRampToValueAtTime(.001,t+duration);source.connect(filter).connect(gain).connect(master);source.start();source.stop(t+duration);played++;}
  function sound(kind){
-  const now=performance.now(),gap=kind==='dice_hit'?140:kind==='step'?110:kind==='joy'?1200:100;
+  const now=performance.now(),gap=kind.startsWith('drop_')?60:kind==='dice_hit'?140:kind==='step'?110:kind==='joy'?1200:100;
   if(now-(last['s'+kind]||-9999)<gap)return;last['s'+kind]=now;
   if(kind==='step'){tap(620,.13);tone(155,85,.08,.16)}
   if(kind==='land'){tap(280,.25,.12);tone(150,65,.18,.36);tone(220,310,.12,.10,'triangle',.1)}
@@ -37,6 +37,10 @@ window.GameFeedback=(()=>{
   if(kind==='dance'){for(const [i,f] of [392,494,587,784,659,988].entries())tone(f,f*.995,.26,.17,'triangle',i*.11)}
   if(kind==='negative'){tone(330,220,.18,.14,'triangle');tone(220,130,.3,.12,'triangle',.16)}
   if(kind==='ui')tone(430,310,.04,.075,'triangle');
+  // Разлёт наград инкассатора: вылет — «пуф» вверх, приземление монеты — звон, остального — мягкий стук.
+  if(kind==='drop_launch'){tap(1400,.12,.06);tone(300,720,.16,.09,'triangle')}
+  if(kind==='drop_coin'){tap(2400,.1,.04);tone(1568,1568,.09,.07,'triangle');tone(2093,2093,.14,.05,'triangle',.05)}
+  if(kind==='drop_land'){tap(420,.18,.08);tone(210,120,.12,.14,'triangle')}
  }
  const drawings={dust:'<path d="M8 37c-9-9-1-20 10-17-4-17 18-24 25-10 15-15 35-4 30 11 18-5 23 21 7 25H19Z" fill="#e6d5b2" stroke="#554330" stroke-width="2"/><path d="m16 19-5-5m64-4 6-6M4 45l-4 3" stroke="#554330" stroke-width="3" fill="none"/>',star:'<path d="m40 2 8 24 25-9-14 22 22 15-27 1 1 25-16-20-20 17 6-25L1 44l26-10Z" fill="#f4cc57" stroke="#473325" stroke-width="3"/>',hit:'<path d="M9 24 2 6m20 18 2-22m12 24L50 9" fill="none" stroke="#efe0bd" stroke-width="5" stroke-linecap="round"/>'};
  function sprite(type,x,y,size,dx,dy){

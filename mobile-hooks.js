@@ -68,6 +68,14 @@ function fly(icon,from,to,n,o={}){
   }
 }
 async function flyDrops(plan){
+  // Веб-поле само разбрасывает награды дугами по клеткам; ждём, пока всё ляжет.
+  if(MobileHost.ready&&MobileHost.sceneState?.engine==='web'&&plan.length){
+    try{await MobileHost.request('scatter',{from:S.pos,drops:plan.map(pl=>({to:pl.t.i,drop:pl.drop}))},15000);}
+    catch(e){console.warn('Разлёт не отыгран:',e.message);}
+    plan.forEach(pl=>{pl.t.drop=mergeDrop(pl.t.drop,pl.drop);});
+    mobileSync();
+    return;
+  }
   const from=screenOfTile(S.pos);
   await Promise.all(plan.map((pl,index)=>new Promise(resolve=>{
     fly(pl.icon,from,screenOfTile(pl.t.i),1,{delay:index*90/CFG.SPEED,onDone:()=>{

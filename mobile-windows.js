@@ -106,7 +106,7 @@ function decorateSettings(card){
   }
 }
 function decorateParcel(card){
-  if(!card.querySelector('#mSend')||card.querySelector('.cargo-scroll'))return;
+  if(!card.querySelector('#mSend')||card.querySelector('.cargo-scroll')||card.querySelector('.pc-head'))return;
   card.classList.add('shipping-window');
   const title=card.querySelector('h2');
   const head=document.createElement('header');head.className='cargo-head';head.append(title);
@@ -129,7 +129,7 @@ function decorateHelp(){
 function decorateWindows(){
   const card=$('card');
   card.classList.toggle('settings-card',!!card.querySelector('#iRolls'));
-  card.classList.toggle('shipping-window',!!card.querySelector('#mSend'));
+  card.classList.toggle('shipping-window',!!card.querySelector('#mSend')&&!card.querySelector('.pc-head'));
   card.classList.toggle('warehouse-card',!!card.querySelector('#wNo'));
   decorateWarehouse(card);decorateSettings(card);decorateParcel(card);decorateEvent(card);
   if(!card.classList.contains('bare')&&!card.classList.contains('battlepass-card')&&!card.classList.contains('event-card'))paperSurface(card);
@@ -139,7 +139,7 @@ function decorateWindows(){
   paperSurface($('helpDialog'));paintedClose($('helpClose'));
   decorateHelp();
   if(!card.classList.contains('battlepass-card')){
-    card.querySelectorAll('button:not(.painted-close):not(.qm):not(.training-good):not(.tab)').forEach(enamelButton);
+    card.querySelectorAll('button:not(.painted-close):not(.qm):not(.training-good):not(.tab):not(.pc-step)').forEach(enamelButton);
   }
   // Reuse the character vignette for feedback, without introducing a blocking popup.
   const toast=$('toast');
@@ -174,7 +174,7 @@ var EVENT_BADGES = [
   [/Сегодня|День \d/, 'assets/icons/clock.png'], [/Джонни/, 'assets/icons/cap.png', 'full'],
   [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.png'], [/Кто играет/, 'assets/icons/cap.png', 'full'], [/Магазин/, 'assets/icons/shop.png'],
 ];
-var EVENT_SKIP = ['training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
+var EVENT_SKIP = ['pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
 function decorateEvent(card){
   if(!EVENT_SKIP)return;
   if(EVENT_SKIP.some(c=>card.classList.contains(c)))return;
