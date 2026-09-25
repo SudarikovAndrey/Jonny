@@ -7,7 +7,7 @@ function mobileSync(){
     i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||null,
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
-      t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':''
+      t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':''
   }))};
   const json=JSON.stringify(snapshot);
   if(json!==mobileLastState){mobileLastState=json;MobileHost.send(snapshot);}
@@ -396,14 +396,23 @@ function placeDiceResult(el,x,y){
   el.style.visibility='hidden';
   requestAnimationFrame(() => {
     const w = el.offsetWidth || 150, h = el.offsetHeight || 54, M = 8;
+    // Плашка выезжает под кубиками, а не над ними: верх экрана с Джонни и полем
+    // остаётся открытым. Снизу её держит край нижних интерфейсов (строка клетки,
+    // док, индикатор груза), сверху — шапка.
+    const vis = id => { const e = document.getElementById(id); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return b.height ? b : null; };
+    const topLimit = (vis('top')?.bottom ?? r.top) + M;
+    const lows = ['tilebar','dock','inv','guide'].map(vis).filter(Boolean).map(b => b.top);
+    const bottomLimit = (lows.length ? Math.min(...lows) : r.bottom) - M;
     let left = r.left + x * r.width - w / 2;
-    let top  = r.top  + y * r.height - h - 18;          // на 18 px выше кубиков
+    let top  = r.top  + y * r.height + 38;              // на 38 px ниже центра кубиков
     left = Math.max(M, Math.min(left, window.innerWidth - w - M));
-    top  = Math.max(r.top + M, Math.min(top, r.bottom - h - M));
+    top  = Math.max(topLimit, Math.min(top, bottomLimit - h));
     el.style.left = Math.round(left) + 'px';
     el.style.top = Math.round(top) + 'px';
     el.style.transform = 'none';
     el.style.visibility='';
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      el.animate([{translate:'0 -14px',opacity:0},{translate:'0 3px',opacity:1,offset:.7},{translate:'0 0'}],{duration:260,easing:'cubic-bezier(.34,1.56,.64,1)'});
   });
 }
 

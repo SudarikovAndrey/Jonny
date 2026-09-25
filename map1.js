@@ -11,7 +11,7 @@ if(MAP1){
 document.body.classList.add('map-mode');
 Object.assign(CFG,{START_CASH:600,REAL_DAYS:false});
 CFG.KIOSK.showProfit=true;
-const M1={levelCap:4,rollsStart:80,taskRolls:10,soldStep:50,soldBonus:100,soldBonusRolls:10,
+const M1={rescue:50,levelCap:4,rollsStart:80,taskRolls:10,soldStep:50,soldBonus:100,soldBonusRolls:10,
   biz:{3:'Мотель «Motor Court»',8:'Прачечная',17:'Кинотеатр «Рокси»',23:'Закусочная у трассы',32:'Автомастерская',37:'Бензоколонка'},
   chance:[{p:.5,cash:30,text:'Нашёл заначку в старом пиджаке'},{p:.5,cash:15,text:'Сосед вернул долг'}],
   formats:{cola:['Тележка колы','Ларёк колы','Киоск колы','Магазинчик напитков'],gum:['Лоток жвачки','Прилавок сладостей','Киоск сладостей','Магазинчик сладостей']}};
@@ -92,8 +92,10 @@ function m1Progress(){
   // Ловушка бедности (модель: ~1% партий, автопрогон 25.09): товара нет, денег на закупку нет.
   // Только совет, без денег — по §12 помощь не исправляет решения игрока.
   const mine=myKiosks(),stock=mine.reduce((a,t)=>a+t.goods,0);
-  if(mine.length&&!stock&&S.cash<Math.min(...mine.map(t=>buyPrice(t.good)))*4&&$('modal').hidden&&!moving)
-    hint('m1poor','Товар кончился, а денег на закупку мало. Бизнесы и «Шансы» подкинут денег — первым делом вези их на склад, прокачка подождёт.');
+  // Решение 25.09: на первой карте один раз помогаем деньгами — карта обучающая и прощает ошибки.
+  if(mine.length&&!stock&&S.cash<Math.min(...mine.map(t=>buyPrice(t.good)))*4&&$('modal').hidden&&!moving&&!st.rescued){
+    st.rescued=true;S.cash+=M1.rescue;track('map_rescue',{map:1,cash:M1.rescue});fly('💵',AT.cash(),AT.cash(),4,{pulse:'sCash'});save();
+    setTimeout(()=>modal(`<h2>🤝 Джонни подкинул</h2><div class="ev-prize">$+${M1.rescue}</div><p class="t">Товар кончился, а на закупку не хватает. Вот на первую партию.</p><p>Вези деньги на склад: без товара точки не продают. Прокачка подождёт.</p>`,[{t:'Спасибо, Джонни',v:1,cls:'ok'}]),200);}
   if(!st.ended&&m1Tasks().every(q=>q.ok)&&!moving&&$('modal').hidden){st.ended=true;save();setTimeout(()=>mapEndFlow(1),600);}
 }
 renderHubGoal=function(){

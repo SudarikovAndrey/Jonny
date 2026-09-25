@@ -1,9 +1,9 @@
 /* Lightweight original Web Audio foley; no remote audio or autoplay. */
 window.GameFeedback=(()=>{
- let ctx,master,noise,muted=false,last={},played=0;
- let music=null,musicIndex=0,musicStarted=false,musicMuted=false;
+ let ctx,master,noise,muted=true,last={},played=0;
+ let music=null,musicIndex=0,musicStarted=false,musicMuted=true;
  const musicTracks=['assets/audio/bouncy-arcade-fun.mp3','assets/audio/arcade-bounce.mp3'];
- try{muted=localStorage.getItem('americanboy_sound_muted')==='1';musicMuted=localStorage.getItem('americanboy_music_muted')==='1'}catch{}
+ try{muted=localStorage.getItem('americanboy_sound_muted')!=='0';musicMuted=localStorage.getItem('americanboy_music_muted')!=='0'}catch{muted=musicMuted=true}
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  function makeMusic(){
   if(music)return music;
