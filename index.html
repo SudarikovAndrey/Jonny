@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="engine.png"><link rel="stylesheet" href="mobile.css?v=72"><link rel="stylesheet" href="mobile-windows.css?v=49"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=51"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=5"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=73"><link rel="stylesheet" href="mobile-windows.css?v=49"><link rel="stylesheet" href="battlepass.css?v=48"><link rel="stylesheet" href="warehouse.css?v=51"><link rel="stylesheet" href="card-motion.css?v=26"><link rel="stylesheet" href="shop.css?v=5"><link rel="stylesheet" href="unified-upgrade.css?v=2"><meta name="theme-color" content="#302d27"></head>
 <body>
 <div id="app">
   <div id="top">
@@ -330,7 +330,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="godot-frame" title="Игровое поле" allow="autoplay"></iframe><script>/* Поле: веб-поле по умолчанию; ?engine=godot — прежняя сцена Godot. */window.GODOT_SRC="engine.html?v=35";document.getElementById("godot-frame").src=new URLSearchParams(location.search).get("engine")==="godot"?GODOT_SRC:"board.html?v="+'b4a250d1'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>document.getElementById("board-frame").src="board.html?v="+'bbd842cd'</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -1329,7 +1329,7 @@ async function kioskWindow(t){
       $('kBuy').onclick=()=>{track('buy_point',{tile:t.i,good:t.good,price:t.price});fly('💵',AT.cash(),AT.tile(t.i),flyN(t.price));S.cash-=t.price;t.owner='you';t.capLvl=1;t.salesLvl=1;t.goods=0;S.stat.bought++;S.dstat.bought++;qProg('buy',1);earnStarter('point');log(`Купил ${name(t)} за $${t.price}.`);toast('Точка твоя! Закупи товар на Costco.');render();draw();};
     } else {
       const cMax=t.capLvl>=capTab(t).length, sMax=t.salesLvl>=salTab(t).length, pc=Math.round(t.goods/cap(t)*100), es=evolveState(t);
-      if(S.stat.parcels>0&&S.day<=2)hintHtml('upgrade','Прокачай запас и продажи до максимума — и точку можно будет улучшить.');
+      if(S.stat.parcels>0&&S.day<=2)hintHtml('upgrade','Прокачай точку до 4-го уровня — и её можно будет улучшить.');
       if(es==='ok')hintHtml('evolve','Точку можно улучшить! Новый товар дороже и даёт больше очков.');
       const evoRow=(()=>{if(es==='max')return '';const nt=evolveTarget(t),nm=(CFG.POINT_NAMES[t.base||'gum']||[])[nt-1]||CFG.TIER_NAMES.kiosk[nt-1],ng=good(good(t.good).next||t.good);
         if(es==='ok')return `<div class="wide"><span class="n">Улучшить до «${nm}»<small>новый товар: ${ng.icon} ${ng.name}</small></span><button id="kEvo" ${S.cash<evolveCost(t)?'disabled':''}>$${evolveCost(t)}</button></div>`;
@@ -1446,7 +1446,7 @@ async function street(t){
     S.cash+=total;S.stat.earned+=total;S.dstat.earned+=total;S.stat.sold+=units;S.dstat.sold+=units;qProg('sell',units);qProg('earn',total);
     const what=k.one?`весь твой товар «${good(goods[0]).name}»`:k.share>=1?'весь товар с твоих точек':`${Math.round(k.share*100)}% товара с твоих точек`;
     return `🤵 ${k.who} скупил ${what}: ${units} шт за $${total}, на ${Math.round((k.mult-1)*100)}% дороже обычного.`;});
-  if(ks.length)ev.push(()=>{const k=ks[Math.floor(Math.random()*ks.length)];if(k.capLvl<capTab(k).length){const was=cap(k);k.capLvl++;float(k.i,'📦 '+was+'→'+cap(k),'#8bc34a',1.2);return `🇺🇸 Грант малому бизнесу: твоей точке «${good(k.good).name}» бесплатно подняли вместимость ${was} → ${cap(k)} шт.`;}S.cash+=50*sc;return `🇺🇸 Грант малому бизнесу: +$${50*sc} наличными.`;});
+  if(ks.length)ev.push(()=>{const k=ks[Math.floor(Math.random()*ks.length)];if(k.capLvl<capTab(k).length){const was=cap(k);k.capLvl++;float(k.i,'📦 '+was+'→'+cap(k),'#8bc34a',1.2);return `🇺🇸 Грант малому бизнесу: твоей точке «${good(k.good).name}» бесплатно подняли точку на уровень: запас ${was} → ${cap(k)} шт.`;}S.cash+=50*sc;return `🇺🇸 Грант малому бизнесу: +$${50*sc} наличными.`;});
   pushW(1,()=>{const m=capMoney(5*sc+Math.floor(Math.random()*8*sc));S.cash+=m;return `🗽 Турист заблудился, показал дорогу до метро: +$${m} на чай.`;});
   pushW(1,()=>{const m=capMoney(4*sc+Math.floor(Math.random()*6*sc));S.cash+=m;return `🛒 Помог бабушке донести сумки до дома: +$${m} и пирожок в дорогу.`;});
   pushW(1,()=>{const m=capMoney(6*sc+Math.floor(Math.random()*10*sc));S.cash+=m;return `🎺 Подыграл уличному саксофонисту на ведре: +$${m} с прохожих.`;});
@@ -1685,7 +1685,7 @@ async function chance(){
   ev.push(()=>{const m=20*sc+Math.floor(Math.random()*30*sc);S.cash+=m;return `👟 Нашёл в старых кроссовках $${m}. Америка!`;});
   ev.push(()=>{const p=pay(10*sc+Math.floor(Math.random()*20*sc));return `🚔 Штраф за парковку: −$${p}. Тут так нельзя.`;});
   if(S.day>=CFG.TREND_FROM_DAY)ev.push(()=>{const g=open[Math.floor(Math.random()*open.length)];S.trend=g.id;return `📺 По MTV показали ${g.name.toLowerCase()} — все хотят! Сегодня ${g.icon} продаётся ×${CFG.TREND_MULT}.`;});
-  if(mine.length)ev.push(()=>{const t=mine[Math.floor(Math.random()*mine.length)];if(t.capLvl<capTab(t).length){t.capLvl++;return `🇺🇸 Грант от дяди Сэма: в ${pointName(t)} бесплатно добавили места под товар.`;}S.cash+=50*sc;return `🇺🇸 Грант от дяди Сэма: +$${50*sc}.`;});
+  if(mine.length)ev.push(()=>{const t=mine[Math.floor(Math.random()*mine.length)];if(t.capLvl<capTab(t).length){t.capLvl++;return `🇺🇸 Грант от дяди Сэма: ${pointName(t)} бесплатно подняли на уровень.`;}S.cash+=50*sc;return `🇺🇸 Грант от дяди Сэма: +$${50*sc}.`;});
   if(have.length)ev.push(()=>{const t=have[Math.floor(Math.random()*have.length)],n=Math.ceil(t.goods*0.5);t.goods-=n;return `🧪 Санитарная инспекция в ${name(t)}: конфисковали ${n} шт.`;});
   if(have.length)ev.push(()=>{ // оптовики: 25% / 50% / 100% всего запаса или 100% одной категории
     const roll=Math.random(), kinds=[{w:.4,share:.25,mult:1.3,who:'Мелкий оптовик'},{w:.3,share:.5,mult:1.4,who:'Оптовик из Нью-Джерси'},{w:.1,share:1,mult:1.5,who:'Крупный оптовик'},{w:.2,share:1,mult:1.6,who:'Коллекционер',one:true}];
@@ -2070,7 +2070,7 @@ function mobileLayout(){
   $('bRoll').disabled=$('bRoll').disabled||!MobileHost.ready;
 }
 function screenOfTile(i){
-  const r=$('godot-frame').getBoundingClientRect(),p=MobileHost.points[i];
+  const r=$('board-frame').getBoundingClientRect(),p=MobileHost.points[i];
   return p?{x:r.left+p[0]*r.width,y:r.top+p[1]*r.height}:{x:r.left+r.width/2,y:r.top+r.height/2};
 }
 async function mobileDice(planned){
@@ -2176,14 +2176,18 @@ settings=function(){
     const SHRINK='<path d="M19 8v11H8M31 42V31h11M31 8v11h11M19 42V31H8" fill="none" stroke="#2a2118" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
     const fs=document.createElement('button'); fs.className='sec audio-toggle';
     const paint=()=>{
-      const on=FullScreen.active();
+      const on=document.body.classList.contains('wide-mode');
       fs.innerHTML='<svg viewBox="0 0 50 50" aria-hidden="true">'+(on?SHRINK:EXPAND)+'</svg>';
       fs.setAttribute('aria-pressed',String(on));
       fs.setAttribute('aria-label',on?'Выйти из полного экрана':'Во весь экран');
       fs.title=fs.getAttribute('aria-label');
     };
     paint();
-    fs.onclick=async()=>{ await FullScreen.toggle(); setTimeout(paint,150); };
+    fs.onclick=async()=>{
+      if(document.body.classList.contains('wide-mode')){ window.setWideMode?.(false); if(FullScreen.active()) await FullScreen.toggle(); }
+      else{ window.setWideMode?.(true); if(!FullScreen.active()) await FullScreen.toggle(); }
+      setTimeout(paint,150);
+    };
     document.addEventListener('fullscreenchange',paint);
     audioRow.append(fs);
   }
@@ -2195,7 +2199,6 @@ settings=function(){
   const windBtn=document.createElement('button');windBtn.className='sec';windBtn.textContent=mobileWindMap?'Скрыть карту ветров':'Карта ветров';
   windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
   row.append(windBtn);
-  const audit=document.createElement('a');audit.className='btn sec';audit.textContent='Стыковка 3D и карты';audit.href='collider-audit.html';audit.target='_blank';audit.rel='noopener';row.append(audit);
   $('card').append(row);
   const cameras=document.createElement('div');cameras.className='mbtns';
   for(const [label,action] of [['Обзор поля','overview'],['К Джонни','home']]){
@@ -2209,13 +2212,13 @@ $('mapOverview').onclick=()=>MobileHost.send({action:'overview'});
 $('mapFollow').onclick=()=>MobileHost.send({action:'home'});
 let gesture=null, pinchDistance=0, tapMoved=false;
 function panMap(dx,dy){
-  MobileHost.send({action:'pan',dx,dy,input_width:$('godot-frame').getBoundingClientRect().width});
+  MobileHost.send({action:'pan',dx,dy,input_width:$('board-frame').getBoundingClientRect().width});
 }
 cv.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY};tapMoved=false;cv.setPointerCapture(e.pointerId);});
 cv.addEventListener('pointermove',e=>{if(!gesture||pinchDistance)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>2)tapMoved=true;panMap(dx,dy);gesture={x:e.clientX,y:e.clientY};});
 cv.addEventListener('pointerup',e=>{
   gesture=null;if(tapMoved||moving||trainingPending()||!$('modal').hidden)return;
-  const r=$('godot-frame').getBoundingClientRect();
+  const r=$('board-frame').getBoundingClientRect();
   if(e.clientY<r.top||e.clientY>r.bottom)return;
   let nearest=-1,best=Infinity;
   MobileHost.points.forEach((_,i)=>{const p=screenOfTile(i),d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<best){best=d;nearest=i;}});
@@ -2425,13 +2428,13 @@ function goodsIcons(root){
 
 
 // Карточка результата всплывает над тем местом, где легли кубики. Координаты
-// приходят из Godot в долях вьюпорта сцены; сцена занимает полосу между
+// приходят из веб-поля в долях вьюпорта сцены; сцена занимает полосу между
 // --world-top и --world-bottom, поэтому пересчитываем в пиксели окна.
 // Если координат нет (старый вызов или кубик улетел за кадр) — прежнее место.
 function placeDiceResult(el,x,y){
   el.style.removeProperty('left'); el.style.removeProperty('top'); el.style.removeProperty('transform');
   if (typeof x !== 'number' || typeof y !== 'number' || !isFinite(x) || !isFinite(y)) return;
-  const frame = document.getElementById('godot-frame');
+  const frame = document.getElementById('board-frame');
   if (!frame) return;
   const r = frame.getBoundingClientRect();
   if (!r.width || !r.height) return;
@@ -2451,6 +2454,8 @@ function placeDiceResult(el,x,y){
 
 // Полноэкранный режим. На iOS Safari Element.requestFullscreen отсутствует —
 // там кнопка прячется, вместо неё работает «На экран Домой».
+// Полный экран включает широкий вид (wide-mode): поле на всю ширину экрана,
+// интерфейс остаётся вертикальной колонкой по центру. Ориентацию не держим.
 const FullScreen = {
   supported(){
     const el = document.documentElement;
@@ -2464,9 +2469,6 @@ const FullScreen = {
         await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
       }else{
         await (el.requestFullscreen ? el.requestFullscreen({navigationUI:'hide'}) : el.webkitRequestFullscreen());
-        if(screen.orientation && screen.orientation.lock){
-          screen.orientation.lock('portrait').catch(()=>{});
-        }
       }
     }catch(e){ /* отказ браузера не должен ломать игру */ }
   }
@@ -2479,13 +2481,16 @@ function bindBootFullscreen(){
   const b = document.getElementById('bootFull');
   if(!b || !FullScreen.supported()) return;
   b.hidden = false;
-  b.onclick = () => FullScreen.toggle();
+  b.onclick = () => { window.setWideMode?.(true); if(!FullScreen.active()) FullScreen.toggle(); };
 }
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bindBootFullscreen);
 }else{
   bindBootFullscreen();
 }
+const syncFullScreenWide = () => { if(FullScreen.active()) window.setWideMode?.(true); };
+document.addEventListener('fullscreenchange', syncFullScreenWide);
+document.addEventListener('webkitfullscreenchange', syncFullScreenWide);
 
 // Строка точки сереет, когда денег не хватает ни на одно действие внутри.
 // Кнопка остаётся нажимаемой: заглянуть в окно можно всегда, серый цвет
@@ -2507,9 +2512,9 @@ function tilebarAffordable(){
         const canLevel = t.level < CFG.BIZ.maxLevel && !bizLevelLocked(t) && S.cash >= bizUpCost(t);
         return canLevel || canEvolve;
       }
-      const canCap    = t.capLvl   < capTab(t).length && S.cash >= capCost(t);
-      const canSales  = t.salesLvl < salTab(t).length && S.cash >= salesCost(t);
-      return canCap || canSales || canEvolve;
+      // Единый апгрейд (§4): одна прокачка, цена — сумма двух прежних.
+      const canUp = kioskLvl(t) < kioskMaxLvl(t) && S.cash >= kioskUpCost(t);
+      return canUp || canEvolve;
     }
     return true;
   }catch(e){ return true; }                        // при любой неожиданности не сереем
@@ -2772,6 +2777,7 @@ function streetPassTip(){
   const setWide=on=>{document.body.classList.toggle('wide-mode',on);paint();
     // поле и HUD пересчитывают раскладку под новую ширину
     requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));mobileLayout();});};
+  window.setWideMode=setWide;
   btn.onclick=async()=>{
     const wide=document.body.classList.contains('wide-mode');
     if(wide){setWide(false);if(FullScreen.active())await FullScreen.toggle();return;}
@@ -3384,6 +3390,154 @@ function renderHubGoal(){
   const base=render;
   render=function(){const r=base.apply(this,arguments);try{renderHubGoal();}catch(e){}return r;};
 })();
+
+// ===== Направленный рандом бросков (бэклог §9–12) =====
+// Дизайн: черновики/америкэн-бой-направленный-рандом.md.
+// Кубик честный, пока не сработал триггер: засуха по складам (§10) или полиция
+// два круга подряд (§11). Тогда перед броском меняются веса сумм 2–12, пара
+// кубиков берётся случайно из комбинаций выбранной суммы, а поле показывает её
+// обычным кувыркающимся броском (перемаркировка граней после предпросчёта).
+// §12: веса не читают наличные, запас, долг, кристаллы и очки — только позицию,
+// клетки поля и счётчики кругов.
+CFG.DR={
+  on:true,
+  dryLaps1:3, dryLaps2:4,   // кругов без склада до магнита и сильного магнита
+  q1:.25, q2:.45,           // целевая вероятность попасть на склад этим броском
+  cap1:4, cap2:8,           // потолок множителя одной суммы
+  tv:.35,                   // потолок отклонения распределения от честного
+  policeStreak:2,           // полиция на стольких кругах подряд…
+  policeBlockLaps:1,        // …и столько следующих кругов суммы в полицию не выпадают
+};
+const DR_P0=(()=>{const p={};for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)p[a+b]=(p[a+b]||0)+1/36;return p;})();
+function drState(){
+  if(!S.dr)S.dr={laps:S.laps||0,dry:0,lapWh:false,polLap:-9,polStreak:0,polBlockUntil:-9,rolls:0,guided:0,mismatch:0};
+  return S.dr;
+}
+// Засуха считается полными кругами без остановки на складе, пока есть своя точка.
+function drLapTick(){
+  const d=drState();
+  while(d.laps<S.laps){d.laps++;if(!d.lapWh&&myKiosks().length)d.dry++;d.lapWh=false;}
+}
+function drLanded(t){
+  const d=drState();
+  if(t.type==='wh'&&unlocked(t)){d.dry=0;d.lapWh=true;}
+  if(t.type==='police'){
+    if(d.polLap===S.laps-1)d.polStreak++;else if(d.polLap!==S.laps)d.polStreak=1;
+    d.polLap=S.laps;
+    if(d.polStreak>=CFG.DR.policeStreak)d.polBlockUntil=S.laps+CFG.DR.policeBlockLaps;
+  }
+}
+function drWeights(pos){
+  const d=drState(),c=CFG.DR,w={...DR_P0},trig=[];
+  const at=s=>S.tiles[(pos+s)%40];
+  if(d.dry>=c.dryLaps1){
+    const strong=d.dry>=c.dryLaps2,q=strong?c.q2:c.q1,cap=strong?c.cap2:c.cap1;
+    const hit=s=>at(s).type==='wh'&&unlocked(at(s));
+    let p=0;for(const s in w)if(hit(+s))p+=w[s];
+    if(p>0&&p<q){const k=Math.min(cap,q*(1-p)/(p*(1-q)));for(const s in w)if(hit(+s))w[s]*=k;trig.push(strong?'wh_pity2':'wh_pity1');}
+  }
+  if(S.laps>d.polLap&&S.laps<=d.polBlockUntil){
+    for(const s in w)if(at(+s).type==='police'&&w[s]>0){w[s]=0;if(!trig.includes('police'))trig.push('police');}
+  }
+  if(!trig.length)return null;
+  let tot=0;for(const s in w)tot+=w[s];for(const s in w)w[s]/=tot;
+  let tv=0;for(const s in w)tv+=Math.abs(w[s]-DR_P0[s])/2;
+  // Полицию не возвращаем при сжатии: её ноль — жёсткое правило §11.
+  if(tv>c.tv&&!trig.includes('police')){const k=c.tv/tv;for(const s in w)w[s]=DR_P0[s]+(w[s]-DR_P0[s])*k;}
+  return {w,trig};
+}
+function drPick(w){let x=Math.random(),sum=12;for(const s of Object.keys(w).map(Number).sort((a,b)=>a-b)){x-=w[s];if(x<=0){sum=s;break;}}
+  const pairs=[];for(let a=1;a<=6;a++){const b=sum-a;if(b>=1&&b<=6)pairs.push([a,b]);}
+  const [a,b]=pairs[Math.floor(Math.random()*pairs.length)];return {sum,a,b};}
+
+const drBaseOpening=openingDice;
+openingDice=function(){
+  const plan=drBaseOpening();
+  // Учебный круг, участок и выключенный режим — честный бросок как был.
+  if(plan.lesson||S.jail>0||!CFG.DR.on)return plan;
+  drLapTick();
+  const d=drState();d.rolls++;
+  const r=drWeights(S.pos);
+  if(!r)return plan;
+  const {sum,a,b}=drPick(r.w);d.guided++;
+  const reach=(w,f)=>{let p=0;for(const s in w)if(f(S.tiles[(S.pos+ +s)%40]))p+=w[s];return Math.round(p*1000)/1000;};
+  const isWh=t=>t.type==='wh'&&unlocked(t);
+  track('dr',{trig:r.trig.join('+'),dry:d.dry,p0:reach(DR_P0,isWh),p1:reach(r.w,isWh),sum,from:S.pos});
+  return {a,b,lesson:false,guided:true};
+};
+// Поле получает заданную пару. Если физика разошлась с предпросчётом,
+// засчитывается реальный бросок: честность дороже точности.
+mobileDice=async function(planned){
+  document.body.classList.add('dice-rolling');
+  GameFeedback.sound('throw');
+  $('diceResult').hidden=true;
+  try{
+    const payload=planned.lesson?{lesson:true,a:planned.a,b:planned.b}:planned.guided?{guided:true,a:planned.a,b:planned.b}:{};
+    const result=await MobileHost.request('roll',payload);
+    if(planned.lesson&&(result.a!==planned.a||result.b!==planned.b))throw new Error('Учебный бросок не совпал с маршрутом');
+    if(planned.guided&&(result.a+result.b!==planned.a+planned.b)){drState().mismatch++;track('dr_mismatch',{want:[planned.a,planned.b],got:[result.a,result.b]});}
+    return {...result,lesson:!!planned.lesson};
+  }finally{document.body.classList.remove('dice-rolling');}
+};
+const drBaseLand=land;
+land=async function(t){drLapTick();drLanded(t);return drBaseLand.apply(this,arguments);};
+
+// ===== Единый апгрейд точки (бэклог §4) =====
+// Дизайн: черновики/америкэн-бой-единый-апгрейд.md.
+// Уровень точки 1–4 внутри тира: одна кнопка поднимает вместимость и продажи
+// на следующую ступень их лесенок. Цена шага — сумма двух прежних, так что
+// полная прокачка тира стоит столько же и даёт те же значения; меньше только
+// нажатий. Хранение прежнее (capLvl = salesLvl), поэтому сбор за проход,
+// расширение и сохранения работают без изменений.
+function kioskLvl(t){return Math.min(t.capLvl,t.salesLvl);}
+function kioskMaxLvl(t){return Math.min(capTab(t).length,salTab(t).length);}
+// unifiedCostMult < 1 — скидка на единый шаг (проверяется ботами, см. дизайн).
+CFG.KIOSK.unifiedCostMult=CFG.KIOSK.unifiedCostMult??1;
+function kioskUpCost(t){return Math.round((capCost(t)+salesCost(t))*CFG.KIOSK.unifiedCostMult);}
+// Старые сохранения и «грант» (он поднимает только вместимость) выравниваются
+// до большего из двух: грант становится бесплатным уровнем точки.
+function kioskLevelsEqualize(){
+  if(!S||!S.tiles)return;
+  for(const t of S.tiles)if(t.type==='kiosk'&&t.owner&&t.capLvl!==t.salesLvl){
+    const L=Math.min(kioskMaxLvl(t),Math.max(t.capLvl,t.salesLvl));t.capLvl=L;t.salesLvl=L;
+  }
+}
+(function(){
+  const base=render;
+  render=function(){kioskLevelsEqualize();return base.apply(this,arguments);};
+})();
+
+let uuTile=null;
+const uuBaseKiosk=kioskWindow;
+kioskWindow=async function(t){uuTile=t;kioskLevelsEqualize();try{return await uuBaseKiosk.apply(this,arguments);}finally{uuTile=null;}};
+
+function uuDots(L,max){return Array.from({length:max},(_,i)=>`<i class="${i<L?'on':''}"></i>`).join('');}
+function decorateUnifiedUpgrade(){
+  const card=$('card'),t=uuTile,capBtn=$('kCap'),two=card.querySelector('.shop .two');
+  if(!t||!capBtn||!two||card.querySelector('.uup'))return;
+  const L=kioskLvl(t),max=kioskMaxLvl(t),atMax=L>=max,cost=kioskUpCost(t);
+  const tierName=CFG.TIER_NAMES.kiosk[(t.tier||1)-1]||'Точка';
+  const row=(label,now,next)=>`<span class="uup-stat"><small>${label}</small><b>${now}</b>${atMax?'':`<i>→</i><b class="up">${next}</b>`}</span>`;
+  const block=document.createElement('div');block.className='uup';
+  block.innerHTML=`<div class="uup-head"><span class="uup-lvl">${tierName} · ур. <b>${L}</b> из ${max}</span><span class="uup-dots" aria-hidden="true">${uuDots(L,max)}</span></div>
+    <div class="uup-stats">${row('Запас',cap(t),atMax?'':capTab(t)[L])}${row('Продажи за круг',sales(t),atMax?'':salesBoost(salTab(t)[L]))}</div>
+    ${atMax?`<p class="uup-max">Прокачка на максимуме.${evolveState(t)==='max'?'':' Дальше — улучшение ниже.'}</p>`:`<button class="ok uup-btn" id="kUp" ${S.cash<cost?'disabled':''}><span>Улучшить</span><b>$${cost}</b></button>`}`;
+  two.replaceWith(block);
+  // Номер уровня в шапке карточки — единый уровень, а не сумма двух статов.
+  const lvl=card.querySelector('.shop .srow .lvl');if(lvl)lvl.textContent=L;
+  const up=$('kUp');
+  if(up)up.onclick=()=>{
+    const c=kioskUpCost(t);if(S.cash<c||kioskLvl(t)>=kioskMaxLvl(t))return;
+    track('upgrade',{tile:t.i,stat:'level',lvl:L+1,cost:c});
+    // Продажная часть — здесь, вместимость и перерисовка — прежним обработчиком
+    // (он списывает свою цену, засчитывает задание «прокачай» и обновляет окно).
+    S.cash-=c-capCost(t);t.salesLvl++;
+    capBtn.onclick();
+  };
+  if(typeof enamelButton==='function'&&up)enamelButton(up);
+  if(typeof cashGlyph==='function')cashGlyph(block);
+}
+new MutationObserver(()=>decorateUnifiedUpgrade()).observe($('card'),{childList:true,subtree:true});
 
 if(!load())newGame();else if(S.finished)newGame();else if(!S.player)setTimeout(()=>askName(),50);
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});

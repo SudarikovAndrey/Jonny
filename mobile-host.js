@@ -1,4 +1,4 @@
-/* Same-origin bridge: prototype owns game state, Godot owns the 3D scene. */
+/* Мост в пределах одного origin: прототип владеет состоянием игры, веб-поле (board.html) — 3D-сценой. */
 window.MobileHost = (() => {
   let callback=null, nextId=1;
   const pending=new Map();
@@ -17,9 +17,6 @@ window.MobileHost = (() => {
       if(box)box.setAttribute('aria-valuenow',String(percent||0));
     },
     failed(message){
-      // Веб-поле не запустилось (нет WebGL, ошибка загрузки) — тихо переходим на Godot.
-      const frame=document.getElementById('godot-frame');
-      if(frame&&/board\.html/.test(frame.src)&&window.GODOT_SRC){console.warn('Веб-поле не запустилось, открываем Godot:',message);frame.src=window.GODOT_SRC;return;}
       api.ready=false;document.body.classList.remove('engine-ready');const el=document.getElementById('loadProgress');if(el)el.textContent='Не удалось открыть 3D. Перезагрузите страницу.';console.error(message);},
     send(data){if(callback)callback(JSON.stringify(data));},
     request(action,data={},timeout=25000){return new Promise((resolve,reject)=>{
@@ -34,8 +31,8 @@ window.MobileHost = (() => {
     diceDone(id,a,b){api.complete(id,{a,b});},
     positions(json){api.points=JSON.parse(json);}
   };
-  // Страховка: веб-поле не ответило за 15 секунд — открываем Godot.
-  setTimeout(()=>{const frame=document.getElementById('godot-frame');if(!api.ready&&frame&&/board\.html/.test(frame.src))api.failed('нет ответа за 15 с');},15000);
+  // Страховка: веб-поле не ответило за 15 секунд — показываем ошибку.
+  setTimeout(()=>{const frame=document.getElementById('board-frame');if(!api.ready&&frame&&/board\.html/.test(frame.src))api.failed('нет ответа за 15 с');},15000);
   reducedMotion.addEventListener("change",()=>api.send({action:"ambience",on:!reducedMotion.matches}));
   return api;
 })();

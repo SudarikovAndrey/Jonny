@@ -52,7 +52,7 @@ window.GameFeedback=(()=>{
   sound(kind);
   if(reduced.matches||document.body.classList.contains('mobile-modal'))return;
   const now=performance.now();if(now-(last['v'+kind]||-9999)<(kind==='step'?300:kind==='dice_hit'?220:250))return;last['v'+kind]=now;
-  const r=document.querySelector('#godot-frame')?.getBoundingClientRect(),s=window.MobileHost?.sceneState;if(!r||!s)return;
+  const r=document.querySelector('#board-frame')?.getBoundingClientRect(),s=window.MobileHost?.sceneState;if(!r||!s)return;
   const x=r.left+(nx??s.hero_screen[0])*r.width,y=r.top+(ny??s.hero_screen[1])*r.height;
   if(kind==='step')sprite('dust',x,y,22,-15,3);
   if(kind==='land'){sprite('dust',x-10,y,34,-20,3);sprite('dust',x+10,y,30,20,3)}

@@ -25,7 +25,7 @@ function mobileLayout(){
   $('bRoll').disabled=$('bRoll').disabled||!MobileHost.ready;
 }
 function screenOfTile(i){
-  const r=$('godot-frame').getBoundingClientRect(),p=MobileHost.points[i];
+  const r=$('board-frame').getBoundingClientRect(),p=MobileHost.points[i];
   return p?{x:r.left+p[0]*r.width,y:r.top+p[1]*r.height}:{x:r.left+r.width/2,y:r.top+r.height/2};
 }
 async function mobileDice(planned){
@@ -131,14 +131,18 @@ settings=function(){
     const SHRINK='<path d="M19 8v11H8M31 42V31h11M31 8v11h11M19 42V31H8" fill="none" stroke="#2a2118" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
     const fs=document.createElement('button'); fs.className='sec audio-toggle';
     const paint=()=>{
-      const on=FullScreen.active();
+      const on=document.body.classList.contains('wide-mode');
       fs.innerHTML='<svg viewBox="0 0 50 50" aria-hidden="true">'+(on?SHRINK:EXPAND)+'</svg>';
       fs.setAttribute('aria-pressed',String(on));
       fs.setAttribute('aria-label',on?'Выйти из полного экрана':'Во весь экран');
       fs.title=fs.getAttribute('aria-label');
     };
     paint();
-    fs.onclick=async()=>{ await FullScreen.toggle(); setTimeout(paint,150); };
+    fs.onclick=async()=>{
+      if(document.body.classList.contains('wide-mode')){ window.setWideMode?.(false); if(FullScreen.active()) await FullScreen.toggle(); }
+      else{ window.setWideMode?.(true); if(!FullScreen.active()) await FullScreen.toggle(); }
+      setTimeout(paint,150);
+    };
     document.addEventListener('fullscreenchange',paint);
     audioRow.append(fs);
   }
@@ -150,7 +154,6 @@ settings=function(){
   const windBtn=document.createElement('button');windBtn.className='sec';windBtn.textContent=mobileWindMap?'Скрыть карту ветров':'Карта ветров';
   windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
   row.append(windBtn);
-  const audit=document.createElement('a');audit.className='btn sec';audit.textContent='Стыковка 3D и карты';audit.href='collider-audit.html';audit.target='_blank';audit.rel='noopener';row.append(audit);
   $('card').append(row);
   const cameras=document.createElement('div');cameras.className='mbtns';
   for(const [label,action] of [['Обзор поля','overview'],['К Джонни','home']]){
@@ -164,13 +167,13 @@ $('mapOverview').onclick=()=>MobileHost.send({action:'overview'});
 $('mapFollow').onclick=()=>MobileHost.send({action:'home'});
 let gesture=null, pinchDistance=0, tapMoved=false;
 function panMap(dx,dy){
-  MobileHost.send({action:'pan',dx,dy,input_width:$('godot-frame').getBoundingClientRect().width});
+  MobileHost.send({action:'pan',dx,dy,input_width:$('board-frame').getBoundingClientRect().width});
 }
 cv.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY};tapMoved=false;cv.setPointerCapture(e.pointerId);});
 cv.addEventListener('pointermove',e=>{if(!gesture||pinchDistance)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>2)tapMoved=true;panMap(dx,dy);gesture={x:e.clientX,y:e.clientY};});
 cv.addEventListener('pointerup',e=>{
   gesture=null;if(tapMoved||moving||trainingPending()||!$('modal').hidden)return;
-  const r=$('godot-frame').getBoundingClientRect();
+  const r=$('board-frame').getBoundingClientRect();
   if(e.clientY<r.top||e.clientY>r.bottom)return;
   let nearest=-1,best=Infinity;
   MobileHost.points.forEach((_,i)=>{const p=screenOfTile(i),d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<best){best=d;nearest=i;}});
@@ -380,13 +383,13 @@ function goodsIcons(root){
 
 
 // Карточка результата всплывает над тем местом, где легли кубики. Координаты
-// приходят из Godot в долях вьюпорта сцены; сцена занимает полосу между
+// приходят из веб-поля в долях вьюпорта сцены; сцена занимает полосу между
 // --world-top и --world-bottom, поэтому пересчитываем в пиксели окна.
 // Если координат нет (старый вызов или кубик улетел за кадр) — прежнее место.
 function placeDiceResult(el,x,y){
   el.style.removeProperty('left'); el.style.removeProperty('top'); el.style.removeProperty('transform');
   if (typeof x !== 'number' || typeof y !== 'number' || !isFinite(x) || !isFinite(y)) return;
-  const frame = document.getElementById('godot-frame');
+  const frame = document.getElementById('board-frame');
   if (!frame) return;
   const r = frame.getBoundingClientRect();
   if (!r.width || !r.height) return;
@@ -406,6 +409,8 @@ function placeDiceResult(el,x,y){
 
 // Полноэкранный режим. На iOS Safari Element.requestFullscreen отсутствует —
 // там кнопка прячется, вместо неё работает «На экран Домой».
+// Полный экран включает широкий вид (wide-mode): поле на всю ширину экрана,
+// интерфейс остаётся вертикальной колонкой по центру. Ориентацию не держим.
 const FullScreen = {
   supported(){
     const el = document.documentElement;
@@ -419,9 +424,6 @@ const FullScreen = {
         await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
       }else{
         await (el.requestFullscreen ? el.requestFullscreen({navigationUI:'hide'}) : el.webkitRequestFullscreen());
-        if(screen.orientation && screen.orientation.lock){
-          screen.orientation.lock('portrait').catch(()=>{});
-        }
       }
     }catch(e){ /* отказ браузера не должен ломать игру */ }
   }
@@ -434,13 +436,16 @@ function bindBootFullscreen(){
   const b = document.getElementById('bootFull');
   if(!b || !FullScreen.supported()) return;
   b.hidden = false;
-  b.onclick = () => FullScreen.toggle();
+  b.onclick = () => { window.setWideMode?.(true); if(!FullScreen.active()) FullScreen.toggle(); };
 }
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bindBootFullscreen);
 }else{
   bindBootFullscreen();
 }
+const syncFullScreenWide = () => { if(FullScreen.active()) window.setWideMode?.(true); };
+document.addEventListener('fullscreenchange', syncFullScreenWide);
+document.addEventListener('webkitfullscreenchange', syncFullScreenWide);
 
 // Строка точки сереет, когда денег не хватает ни на одно действие внутри.
 // Кнопка остаётся нажимаемой: заглянуть в окно можно всегда, серый цвет
@@ -462,9 +467,9 @@ function tilebarAffordable(){
         const canLevel = t.level < CFG.BIZ.maxLevel && !bizLevelLocked(t) && S.cash >= bizUpCost(t);
         return canLevel || canEvolve;
       }
-      const canCap    = t.capLvl   < capTab(t).length && S.cash >= capCost(t);
-      const canSales  = t.salesLvl < salTab(t).length && S.cash >= salesCost(t);
-      return canCap || canSales || canEvolve;
+      // Единый апгрейд (§4): одна прокачка, цена — сумма двух прежних.
+      const canUp = kioskLvl(t) < kioskMaxLvl(t) && S.cash >= kioskUpCost(t);
+      return canUp || canEvolve;
     }
     return true;
   }catch(e){ return true; }                        // при любой неожиданности не сереем
@@ -727,6 +732,7 @@ function streetPassTip(){
   const setWide=on=>{document.body.classList.toggle('wide-mode',on);paint();
     // поле и HUD пересчитывают раскладку под новую ширину
     requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));mobileLayout();});};
+  window.setWideMode=setWide;
   btn.onclick=async()=>{
     const wide=document.body.classList.contains('wide-mode');
     if(wide){setWide(false);if(FullScreen.active())await FullScreen.toggle();return;}
