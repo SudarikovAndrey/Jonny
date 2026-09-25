@@ -1,0 +1,266 @@
+/* ===== «Однорукий бандит» (slot.js) — автомат по постеру: красный корпус, хром,
+   вывеска с лампочками, табло JACKPOT, три окна барабанов, рычаг справа ===== */
+:root{--sl-ink:#2a221c;--sl-red:#c9432f;--sl-red2:#9e2f22;--sl-gold:#e0a52a;--sl-cream:#efe4cc;--sl-chrome1:#e9e4dc;--sl-chrome2:#8d8a86}
+.sl-layer{position:fixed;left:0;right:0;top:var(--world-top,150px);bottom:0;z-index:80;display:flex;justify-content:center;align-items:flex-start;
+  padding:4px 10px calc(env(safe-area-inset-bottom,0px) + 8px);background:rgba(24,18,12,.72);overflow:auto}
+.sl-machine{position:relative;width:100%;max-width:400px;display:flex;flex-direction:column;gap:7px}
+
+/* вывеска */
+.sl-sign{position:relative;margin:0 38px 0 26px;padding:10px 12px 12px;text-align:center;border:3.5px solid var(--sl-ink);border-radius:22px 22px 10px 10px;
+  background:radial-gradient(120% 90% at 50% 20%,#e0553d,var(--sl-red) 55%,var(--sl-red2));box-shadow:0 4px 0 var(--sl-ink),inset 0 0 0 3px #f2c86a}
+.sl-sign small{display:block;font:italic 900 17px/1 var(--num);letter-spacing:.06em;color:#fbe6b0;text-shadow:2px 2px 0 var(--sl-ink)}
+.sl-sign b{display:block;margin-top:2px;font:900 44px/.95 var(--num);letter-spacing:.02em;color:#fff3d6;
+  -webkit-text-stroke:2.5px var(--sl-ink);text-shadow:3px 4px 0 var(--sl-ink),0 0 0 #000}
+.sl-bulbs{position:absolute;inset:4px;border-radius:18px 18px 7px 7px;pointer-events:none;
+  background:radial-gradient(circle,#fff6c8 0 2.4px,#8a5a1d 2.8px 3.4px,transparent 3.8px) 0 0/15px 15px;
+  -webkit-mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);padding:6px;opacity:.9}
+.sl-layer.lvl-2 .sl-bulbs,.sl-layer.lvl-3 .sl-bulbs{animation:slChase .28s steps(2) infinite}
+@keyframes slChase{50%{background-position:7.5px 7.5px;filter:brightness(1.5) drop-shadow(0 0 3px #ffe38a)}}
+.sl-johnny{position:absolute;right:-50px;bottom:-14px;width:86px;filter:drop-shadow(0 3px 0 #0006);transform-origin:50% 100%;animation:slBob 2.4s ease-in-out infinite}
+@keyframes slBob{50%{transform:rotate(-4deg) translateY(-3px)}}
+.sl-layer.lvl-1 .sl-johnny,.sl-layer.lvl-2 .sl-johnny{animation:slHop .5s ease-out 2}
+.sl-layer.lvl-3 .sl-johnny{animation:slHop .45s ease-out infinite}
+@keyframes slHop{40%{transform:translateY(-14px) scale(1.05,.95)}70%{transform:translateY(0) scale(.95,1.05)}}
+.sl-x,.sl-help{position:absolute;top:-6px;width:38px;height:38px;border-radius:50%;border:2.5px solid var(--sl-ink);font:900 18px/1 var(--txt);box-shadow:0 3px 0 var(--sl-ink);z-index:2}
+.sl-x{right:-46px;top:-4px;background:var(--sl-red);color:#fff3d6}
+.sl-help{left:-34px;background:var(--sl-cream);color:var(--sl-ink)}
+.sl-x[hidden]{display:none}
+
+/* табло */
+.sl-jackpot{margin:0 18px;padding:5px 10px 8px;text-align:center;border:3px solid var(--sl-ink);border-radius:12px;background:linear-gradient(#b73a2a,#8f281c);box-shadow:0 3px 0 var(--sl-ink)}
+.sl-jl{display:inline-flex;align-items:center;gap:7px;font:900 16px/1 var(--num);letter-spacing:.12em;color:var(--sl-gold);text-shadow:1px 2px 0 var(--sl-ink)}
+.sl-crown{width:18px;height:13px;background:var(--sl-gold);clip-path:polygon(0 100%,0 20%,25% 60%,50% 0,75% 60%,100% 20%,100% 100%);filter:drop-shadow(0 1px 0 #000)}
+.sl-counter{display:flex;justify-content:center;gap:3px;margin-top:5px;padding:4px 6px;border:2.5px solid #111;border-radius:6px;background:#1c1714;box-shadow:inset 0 3px 6px #000}
+.sl-dg{width:24px;height:34px;overflow:hidden;border-radius:3px;background:linear-gradient(#2c2520,#15110e 50%,#2c2520)}
+.sl-dg.gap{margin-right:6px}
+.sl-dr{display:flex;flex-direction:column;transform:translateY(calc(var(--d) * -34px));transition:transform .9s cubic-bezier(.3,1.3,.5,1)}
+.sl-dr b{height:34px;display:grid;place-items:center;font:900 24px/1 var(--num);color:#f6cf62}
+.sl-layer.lvl-3 .sl-jackpot{animation:slFlash .3s steps(2) 8;border-color:var(--sl-gold)}
+@keyframes slFlash{50%{filter:brightness(1.6)}}
+
+/* корпус и барабаны */
+.sl-body{position:relative;padding:10px 46px 12px 12px;border:3.5px solid var(--sl-ink);border-radius:16px;
+  background:linear-gradient(#d24d36,var(--sl-red) 30%,var(--sl-red2));box-shadow:0 4px 0 var(--sl-ink)}
+.sl-reels{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:7px;border:3px solid var(--sl-ink);border-radius:12px;
+  background:linear-gradient(var(--sl-chrome1),var(--sl-chrome2));box-shadow:inset 0 2px 0 #fff,0 2px 0 #0004}
+.sl-reels::before,.sl-reels::after{content:'';position:absolute;top:-8px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#9a948c);border:1.5px solid var(--sl-ink)}
+.sl-reels::before{left:-8px}.sl-reels::after{right:-8px}
+.sl-win{position:relative;height:calc(var(--row,62px) * 3);overflow:hidden;border:2.5px solid var(--sl-ink);border-radius:8px;
+  background:repeating-linear-gradient(#f7eed8 0 calc(var(--row,62px) - 1px),#e7dbc0 calc(var(--row,62px) - 1px) var(--row,62px));
+  box-shadow:inset 0 10px 12px -6px #0007,inset 0 -10px 12px -6px #0007}
+.sl-strip{will-change:transform}
+.sl-sym{height:var(--row,62px);display:grid;place-items:center;position:relative}
+.sl-sym img,.sl-sym svg{width:calc(var(--row,62px) * .78);height:calc(var(--row,62px) * .78);object-fit:contain;filter:drop-shadow(0 2px 0 #2a221c55)}
+.sl-sym.s-box img{width:calc(var(--row,62px) * .7)}
+.sl-costco{position:absolute;left:50%;top:58%;translate:-50% -50%;padding:0 3px;border:1.5px solid var(--sl-ink);border-radius:3px;background:#2f5e9e;color:#fff;font:900 8px/1.3 var(--num);letter-spacing:.04em;font-style:normal}
+.sl-win.blur .sl-strip{filter:blur(1.6px);transform-origin:50% 50%}
+.sl-win.blur .sl-sym{transform:scaleY(1.35)}
+.sl-win.hit{animation:slHit .26s ease-out}
+@keyframes slHit{0%{box-shadow:inset 0 0 0 4px #fff6c8,inset 0 10px 12px -6px #0007}100%{box-shadow:inset 0 10px 12px -6px #0007,inset 0 -10px 12px -6px #0007}}
+.sl-line{position:absolute;left:4px;right:4px;top:50%;height:3px;translate:0 -50%;background:#c9432f99;border-radius:2px;pointer-events:none;box-shadow:0 0 0 1px #2a221c55}
+.sl-layer.lvl-1 .sl-line,.sl-layer.lvl-2 .sl-line,.sl-layer.lvl-3 .sl-line{height:calc(var(--row,62px) - 4px);background:transparent;border:3px solid var(--sl-gold);
+  box-shadow:0 0 12px #ffcf4acc,inset 0 0 10px #ffcf4a88;border-radius:10px;animation:slLine .6s ease-in-out infinite alternate}
+@keyframes slLine{to{box-shadow:0 0 20px #ffe07a,inset 0 0 14px #ffcf4acc}}
+
+/* рычаг */
+.sl-lever{position:absolute;right:-8px;top:14px;width:40px;height:150px;transform-origin:50% 88%;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
+.sl-rod{position:absolute;left:50%;top:16px;bottom:18px;width:9px;translate:-50% 0;border:2px solid var(--sl-ink);border-radius:5px;background:linear-gradient(90deg,#9d9892,#f4f0ea 40%,#8d8a86)}
+.sl-ball{position:absolute;left:50%;top:-22px;width:34px;height:34px;translate:-50% 0;border:3px solid var(--sl-ink);border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ff9b86,#d63a2a 45%,#8f241e);box-shadow:0 3px 0 #0005}
+.sl-mount{position:absolute;left:50%;bottom:0;width:30px;height:30px;translate:-50% 0;border:3px solid var(--sl-ink);border-radius:8px;background:linear-gradient(var(--sl-chrome1),var(--sl-chrome2))}
+.sl-hand{position:absolute;right:-6px;top:70px;padding:5px 9px;border:2.5px solid var(--sl-ink);border-radius:9px;background:#fff3cf;font:900 13px/1 var(--txt);color:var(--sl-ink);
+  box-shadow:0 3px 0 var(--sl-ink);animation:slHand 1s ease-in-out infinite;pointer-events:none}
+.sl-hand::after{content:'👇';position:absolute;left:50%;top:-22px;translate:-50% 0;font-size:20px}
+@keyframes slHand{50%{transform:translateY(8px)}}
+
+/* выигрыши */
+.sl-pay{padding:6px 8px 8px;border:3px solid var(--sl-ink);border-radius:12px;background:var(--sl-cream) url(assets/paper-grain.svg);box-shadow:0 3px 0 var(--sl-ink)}
+.sl-pay h3{margin:0 0 5px;padding:3px 0;text-align:center;border-radius:6px;background:var(--sl-red);color:#fff3d6;font:900 15px/1.2 var(--num);letter-spacing:.08em;text-transform:uppercase}
+.sl-pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.sl-pay-col+.sl-pay-col{border-left:2px solid #2a221c33;padding-left:8px}
+.sl-pr{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:28px;padding:1px 4px;border-radius:7px;border:2px solid transparent}
+.sl-pr-s{display:flex;gap:1px;align-items:center}
+.sl-pi{width:21px;height:21px;display:grid;place-items:center;font-style:normal}
+.sl-pi img,.sl-pi svg{width:21px;height:21px;object-fit:contain}.sl-pi .sl-costco{display:none}
+.sl-any{width:14px;text-align:center;font:900 16px/1 var(--num);color:#8a7a60;font-style:normal}
+.sl-pr-s em{font:700 12.5px/1 var(--txt);color:#5b4c35;font-style:normal}
+.sl-pr-v{font:800 13.5px/1 var(--num);color:var(--sl-ink);white-space:nowrap;display:flex;align-items:center;gap:2px}
+.sl-jp{color:var(--sl-red)}
+.sl-g{display:inline-block;width:14px;height:14px;background:url(assets/icons/gem-clean.png) center/contain no-repeat;vertical-align:-2px}
+.sl-pr.win{border-color:var(--sl-gold);background:#fff0b8;box-shadow:0 0 0 2px var(--sl-ink),0 0 10px #ffcf4a;animation:slRow .5s ease-out}
+@keyframes slRow{0%{transform:scale(1.12)}}
+
+/* результат и кнопки */
+.sl-result{margin:0;min-height:36px;display:flex;align-items:center;justify-content:center;padding:5px 10px;text-align:center;border:2.5px solid var(--sl-ink);border-radius:10px;
+  background:#f2e6c6;font:600 14px/1.25 var(--txt);color:#3c3325}
+.sl-result.on{background:#fff3cf}.sl-result b{color:var(--sl-red);margin-right:3px}
+.sl-foot{display:flex;gap:8px;min-height:58px}
+.sl-foot button{min-height:58px;font-size:19px}
+.sl-take{flex:1.6}.sl-again{flex:1;font-size:16px!important;white-space:nowrap}
+.sl-again b{margin-left:4px;display:inline-flex;align-items:center;gap:2px}
+.sl-again.poor{filter:saturate(.35) brightness(.9)}
+.sl-foot button[hidden]{display:none}
+
+/* карточка приза и джекпот */
+.sl-prize{position:fixed;inset:0;z-index:2;display:grid;place-items:center;pointer-events:none}
+.sl-prize>div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 26px 14px;border:4px solid var(--sl-ink);border-radius:18px;
+  background:var(--sl-cream);box-shadow:0 0 0 5px var(--sl-gold),0 0 0 8px var(--sl-ink),0 10px 30px #000a}
+.sl-prize-ic{position:relative;width:96px;height:96px;display:grid;place-items:center}.sl-prize-ic img,.sl-prize-ic svg{width:96px;height:96px;object-fit:contain}
+.sl-prize b{font:900 30px/1 var(--num);color:var(--sl-ink)}.sl-prize small{font:700 15px/1.2 var(--txt);color:#5b4c35}
+.sl-jov{position:fixed;inset:0;z-index:3;display:grid;place-items:center;background:rgba(15,10,6,.8)}
+.sl-jov canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sl-jov-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:min(340px,90vw);text-align:center}
+.sl-jov-in img{width:150px;filter:drop-shadow(0 5px 0 #0008)}
+.sl-jov-logo{font:900 56px/1 var(--num);color:#ffd76a;-webkit-text-stroke:3px var(--sl-ink);text-shadow:4px 5px 0 var(--sl-ink);rotate:-4deg;animation:slPulse .5s ease-in-out infinite alternate}
+@keyframes slPulse{to{transform:scale(1.07)}}
+.sl-jov-sum{padding:6px 16px;border:3px solid var(--sl-ink);border-radius:10px;background:#1c1714;color:#f6cf62;font:900 28px/1 var(--num);display:inline-flex;gap:6px;align-items:center}
+.sl-jov-sum .sl-g{width:24px;height:24px}
+.sl-jov-in small{font:700 16px/1.2 var(--txt);color:#fff3d6}
+.sl-jov-in button{width:100%;min-height:58px;font-size:20px;margin-top:6px}
+.sl-odds{position:fixed;inset:0;z-index:4;display:grid;place-items:center;background:rgba(15,10,6,.6)}
+.sl-odds[hidden]{display:none}
+.sl-odds>div{width:min(320px,88vw);padding:14px 16px;border:3px solid var(--sl-ink);border-radius:16px;background:var(--sl-cream) url(assets/paper-grain.svg);box-shadow:0 4px 0 var(--sl-ink)}
+.sl-odds h3{margin:0 0 8px;font:900 20px/1 var(--num);text-align:center}
+.sl-odds p{display:flex;justify-content:space-between;margin:0;padding:5px 2px;border-bottom:1px dashed #2a221c33;font:600 15px/1.2 var(--txt)}
+.sl-odds p b{font-family:var(--num)}.sl-odds .sl-odds-n{justify-content:center;border:0;color:#2f6b2a;font-weight:700}
+.sl-odds button{width:100%;min-height:48px;margin-top:8px}
+@media (max-height:760px){.sl-sign b{font-size:36px}.sl-machine{gap:5px}.sl-pr{min-height:24px}}
+@media (max-width:360px){.sl-sign{margin:0 34px 0 22px}.sl-sign b{font-size:34px}.sl-johnny{width:72px;right:-42px}.sl-pr-v{font-size:12px}.sl-pi,.sl-pi img,.sl-pi svg{width:18px;height:18px}}
+@media (prefers-reduced-motion:reduce){.sl-layer *{animation:none!important}}
+
+
+/* компактнее: табло в одну строку, таблица плотнее */
+.sl-jackpot{display:flex;align-items:center;justify-content:center;gap:10px;padding:5px 10px}
+.sl-jackpot .sl-counter{margin:0}
+.sl-jl{flex-direction:column;gap:2px;font-size:14px}
+.sl-dg{width:22px;height:30px}.sl-dr{transform:translateY(calc(var(--d) * -30px))}.sl-dr b{height:30px;font-size:21px}
+.sl-pr{min-height:25px}
+.sl-foot{min-height:0}
+.sl-foot:not(:has(button:not([hidden]))){display:none}
+.sl-sign{padding:7px 12px 9px}.sl-sign b{font-size:40px}
+
+/* низкий экран: вывеска и таблица плотнее */
+.sl-machine.tight{gap:4px}
+.sl-machine.tight .sl-sign small{display:none}.sl-machine.tight .sl-sign b{font-size:32px}
+.sl-machine.tight .sl-pr{min-height:20px}.sl-machine.tight .sl-pay h3{font-size:13px;padding:1px 0;margin-bottom:3px}
+.sl-machine.tight .sl-pi,.sl-machine.tight .sl-pi img,.sl-machine.tight .sl-pi svg{width:17px;height:17px}
+.sl-machine.tight .sl-result{min-height:30px;font-size:13px}.sl-machine.tight .sl-foot button{min-height:50px}
+.sl-machine.tight .sl-dg{height:26px}.sl-machine.tight .sl-dr{transform:translateY(calc(var(--d) * -26px))}.sl-machine.tight .sl-dr b{height:26px;font-size:19px}
+
+/* ===== v2: выпуклый автомат, стикеры отдельными слоями, крупная таблица ===== */
+/* корпус: толщина (нижняя и боковая грань), затенение к краям, вертикальный блик */
+.sl-body{background:
+   linear-gradient(90deg,#0000004d 0,#0000 12%,#0000 88%,#00000059 100%),
+   linear-gradient(#e2573d,var(--sl-red) 26%,#b2382a 70%,#8a261b);
+  box-shadow:0 6px 0 #6e1d14,0 6px 0 3.5px var(--sl-ink),0 14px 18px #0007,inset 0 3px 0 #ff8f70aa,inset 0 -4px 0 #0000004d}
+.sl-body::before{content:'';position:absolute;left:18%;top:6px;bottom:6px;width:10px;border-radius:6px;background:linear-gradient(#fff6,#fff0);pointer-events:none}
+.sl-reels{box-shadow:inset 0 3px 0 #fff,inset 0 -3px 0 #6d6964,0 3px 0 #0006,0 0 0 2px #fff3 inset}
+.sl-win{box-shadow:inset 0 14px 16px -8px #000a,inset 0 -14px 16px -8px #000a,inset 10px 0 12px -10px #0006,inset -10px 0 12px -10px #0006}
+.sl-sign{background:linear-gradient(90deg,#0000003d,#0000 14%,#0000 86%,#00000045),radial-gradient(120% 90% at 50% 20%,#e0553d,var(--sl-red) 55%,var(--sl-red2));
+  box-shadow:0 5px 0 #6e1d14,0 5px 0 3.5px var(--sl-ink),inset 0 0 0 3px #f2c86a,inset 0 4px 0 #ffffff33}
+.sl-jackpot{box-shadow:0 4px 0 #5e1a12,0 4px 0 3px var(--sl-ink),inset 0 3px 0 #ffffff26}
+.sl-ball{background:radial-gradient(circle at 32% 28%,#fff 0 8%,#ff9b86 14%,#d63a2a 48%,#7d1f19)}
+/* лампочки — только по контуру вывески, без захода на Джонни и стикеры */
+.sl-bulbs{z-index:0}.sl-sign>small,.sl-sign>b{position:relative;z-index:1}
+/* стикеры — отдельные слои, покачиваются и подпрыгивают на выигрыше */
+.sl-sticker{position:absolute;z-index:3;display:grid;place-items:center;text-align:center;pointer-events:none;
+  font:900 10px/1.05 var(--num);text-transform:uppercase;color:var(--sl-ink)}
+.sl-st1{left:-30px;top:30px;width:72px;height:72px;padding:12px;box-sizing:border-box;background:#f0c44e;
+  clip-path:polygon(50% 0,61% 12%,76% 5%,80% 21%,96% 22%,90% 37%,100% 50%,90% 63%,96% 78%,80% 79%,76% 95%,61% 88%,50% 100%,39% 88%,24% 95%,20% 79%,4% 78%,10% 63%,0 50%,10% 37%,4% 22%,20% 21%,24% 5%,39% 12%);
+  animation:slSway 3s ease-in-out infinite;transform-origin:50% 50%}
+.sl-st2{right:-44px;top:-18px;padding:4px 7px 5px;max-width:74px;border:2.5px solid var(--sl-ink);border-radius:12px 12px 12px 3px;background:#fff6de;
+  font-size:9.5px;box-shadow:2px 2px 0 #0005;animation:slSway 3.4s ease-in-out -1.2s infinite}
+@keyframes slSway{0%,100%{rotate:-6deg}50%{rotate:5deg;translate:0 -2px}}
+.sl-machine.tight .sl-sticker{display:none}
+/* таблица крупнее и проще */
+.sl-tri{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.sl-tri .sl-pr{min-height:34px;padding:2px 6px}
+.sl-tri .sl-pi,.sl-tri .sl-pi img,.sl-tri .sl-pi svg{width:27px;height:27px}
+.sl-tri .sl-pr-v{font-size:17px}
+.sl-small{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
+.sl-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border:2px solid #2a221c55;border-radius:9px;background:#fff8e4}
+.sl-chip .sl-pi,.sl-chip .sl-pi img,.sl-chip .sl-pi svg{width:19px;height:19px}
+.sl-chip{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.sl-chip b{flex-basis:100%;text-align:center;font:800 13.5px/1.1 var(--num)}
+.sl-chip em{font:700 12.5px/1.2 var(--txt);font-style:normal;color:#5b4c35;flex-basis:100%;text-align:center}
+.sl-chip.win{border-color:var(--sl-gold);background:#fff0b8;box-shadow:0 0 0 2px var(--sl-ink),0 0 10px #ffcf4a}
+.sl-result{font-size:16px;min-height:40px}
+.sl-machine.tight .sl-tri .sl-pr{min-height:26px}.sl-machine.tight .sl-tri .sl-pi,.sl-machine.tight .sl-tri .sl-pi img,.sl-machine.tight .sl-tri .sl-pi svg{width:22px;height:22px}
+.sl-machine.tight .sl-tri .sl-pr-v{font-size:15px}
+/* кнопки — крупные цели, без перекрытия */
+.sl-x,.sl-help{width:44px;height:44px;z-index:5}
+.sl-lever{z-index:4}
+.sl-pay-grid{display:block}
+.sl-machine{padding-top:20px}
+.sl-st1{left:-14px;top:54px;width:88px;height:88px;padding:16px;font-size:9px;line-height:1.02}
+.sl-st2{right:auto;left:52%;top:-24px;max-width:none;white-space:nowrap;font-size:11px;padding:4px 9px 5px;border-radius:12px 12px 3px 12px}
+.sl-result{flex-wrap:wrap;gap:0 6px;line-height:1.2}
+.sl-result b{white-space:nowrap}
+/* в плотной раскладке стикеры не прячем — уменьшаем и сажаем на свободные углы вывески */
+.sl-machine.tight .sl-sticker{display:grid}
+.sl-machine.tight .sl-st1{left:34px;top:-6px;width:62px;height:62px;padding:11px;font-size:7px;line-height:1}
+.sl-machine.tight .sl-st2{left:auto;right:70px;top:-20px;font-size:9.5px;padding:3px 7px 4px}
+.sl-hand{z-index:5;right:30px}
+.sl-hand::after{left:auto;right:-4px;translate:0 0;rotate:-30deg}
+.sl-machine.tight .sl-st1{left:18px;width:58px;height:58px;padding:10px;font-size:6.6px}
+
+/* ===== v3: низ автомата по референсу — две панели, тёмная строка, «Крутить» ===== */
+.sl-machine{--sl-cond:'Oswald','Arial Narrow',sans-serif}
+.sl-pay{padding:6px;border:3px solid var(--sl-ink);border-radius:12px;background:linear-gradient(#c44a36,#a8382a);
+  box-shadow:0 4px 0 #6e1d14,0 4px 0 3px var(--sl-ink),inset 0 2px 0 #ffffff30,inset 0 -3px 0 #0003}
+.sl-pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sl-panel{display:flex;flex-direction:column;justify-content:space-around;padding:4px 8px 5px;border:2px solid #2a221c66;border-radius:8px;
+  background:#ece2c9 url(assets/paper-grain.svg);box-shadow:inset 0 2px 5px #0002}
+.sl-panel h3{margin:0 -4px 3px;padding:2px 0;border:2px solid #2a221c55;border-radius:6px;background:var(--sl-red);
+  font:700 16px/1.2 var(--sl-cond);letter-spacing:.06em;color:#f3dfb7;text-transform:uppercase;text-align:center}
+.sl-panel .sl-pr{min-height:30px;padding:1px 3px;gap:6px}
+.sl-panel .sl-pr-s{gap:3px}
+.sl-panel .sl-pi,.sl-panel .sl-pi img,.sl-panel .sl-pi svg{width:24px;height:24px}
+.sl-panel .sl-pr-v{font:700 19px/1 var(--sl-cond);color:var(--sl-ink);gap:3px}
+.sl-panel .sl-pr-v .sl-g{width:18px;height:18px}
+.sl-panel .sl-pr-s em{font:500 11px/1.05 var(--sl-cond);letter-spacing:.03em;text-transform:uppercase;color:#6f604a}
+.sl-panel .sl-pr-v:has(+*),.sl-panel .sl-pr[data-row="p2 n"] .sl-pr-v{font-size:17px}
+/* тёмная строка результата с «Ещё разок» справа */
+.sl-bar{display:flex;align-items:center;gap:8px;min-height:54px;padding:5px 5px 5px 14px;border:3px solid var(--sl-ink);border-radius:11px;
+  background:linear-gradient(#2e2520,#1d1714);box-shadow:0 3px 0 #0006,inset 0 1px 0 #ffffff1a}
+.sl-bar .sl-result{flex:1;min-width:0;min-height:0;margin:0;padding:0;border:0;background:none;box-shadow:none;justify-content:flex-start;text-align:left;
+  font:700 21px/1.1 var(--sl-cond);letter-spacing:.03em;text-transform:uppercase;color:#f3e3c0;text-shadow:0 2px 0 #000}
+.sl-bar .sl-result.on{background:none;display:block;font:500 14px/1.2 var(--txt);text-transform:none;letter-spacing:0;color:#e9dcc0}
+.sl-bar .sl-result.on b{display:block;margin:0 0 1px;font:700 19px/1.1 var(--sl-cond);text-transform:uppercase;color:#ffd05a;white-space:normal}
+.sl-again{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:112px;min-height:44px;padding:3px 12px;
+  border:2.5px solid #d6a93e;border-radius:10px;background:linear-gradient(#3a302a,#241d19);box-shadow:0 3px 0 #000,inset 0 1px 0 #ffffff22;
+  font:700 16px/1 var(--sl-cond);letter-spacing:.04em;text-transform:uppercase;color:#f3e3c0;cursor:pointer}
+.sl-again b{display:inline-flex;align-items:center;gap:3px;margin-top:2px;font:700 17px/1 var(--sl-cond);color:#ffd05a}
+.sl-again .sl-g{width:16px;height:16px}
+.sl-again[hidden]{display:none}.sl-again:active{translate:0 2px;box-shadow:0 1px 0 #000}
+.sl-again.poor b{color:#e58a7a}
+/* большая кнопка «Крутить» с лучами */
+.sl-foot{justify-content:center;min-height:0;padding:6px 0 2px}
+.sl-go{position:relative;min-width:64%;min-height:64px;padding:4px 28px 6px;border:4px solid var(--sl-ink);border-radius:999px;
+  background:radial-gradient(120% 90% at 50% 20%,#e0503a,#b3301f 60%,#8e2417);box-shadow:0 6px 0 #5a160e,0 6px 0 4px var(--sl-ink),inset 0 3px 0 #ffffff40,inset 0 -4px 0 #0003;
+  font:700 34px/1 var(--sl-cond);letter-spacing:.04em;text-transform:uppercase;color:#f6e6c4;text-shadow:0 2px 0 #5a160e;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.sl-go b{display:inline-flex;align-items:center;gap:3px;font-size:24px;color:#ffe08a}.sl-go .sl-g{width:22px;height:22px}
+.sl-go::before,.sl-go::after{content:'';position:absolute;top:50%;width:26px;height:36px;translate:0 -50%;pointer-events:none;
+  background:linear-gradient(var(--sl-ink),var(--sl-ink)) 0 0/18px 3px no-repeat,linear-gradient(var(--sl-ink),var(--sl-ink)) 0 50%/24px 3px no-repeat,linear-gradient(var(--sl-ink),var(--sl-ink)) 0 100%/18px 3px no-repeat}
+.sl-go::before{right:calc(100% + 8px);rotate:180deg}.sl-go::after{left:calc(100% + 8px)}
+.sl-go:active{translate:0 4px;box-shadow:0 2px 0 #5a160e,0 2px 0 4px var(--sl-ink),inset 0 3px 0 #ffffff40}
+.sl-go:disabled{filter:saturate(.55) brightness(.9);cursor:default}
+.sl-go.take{background:radial-gradient(120% 90% at 50% 20%,#5fae4c,#3d8a35 60%,#2b6a26);box-shadow:0 6px 0 #1c4a19,0 6px 0 4px var(--sl-ink),inset 0 3px 0 #ffffff40;text-shadow:0 2px 0 #1c4a19}
+@media (prefers-reduced-motion:no-preference){.sl-go:not(:disabled)::before,.sl-go:not(:disabled)::after{animation:slRays 1s steps(2) infinite}}
+@keyframes slRays{50%{opacity:.35}}
+/* плотная раскладка */
+.sl-machine.tight .sl-panel .sl-pr{min-height:24px}
+.sl-machine.tight .sl-panel .sl-pi,.sl-machine.tight .sl-panel .sl-pi img,.sl-machine.tight .sl-panel .sl-pi svg{width:20px;height:20px}
+.sl-machine.tight .sl-panel .sl-pr-v{font-size:16px}
+.sl-machine.tight .sl-panel h3{font-size:14px;padding:0}
+.sl-machine.tight .sl-bar{min-height:46px}.sl-machine.tight .sl-bar .sl-result{font-size:18px}
+.sl-machine.tight .sl-go{min-height:54px;font-size:28px}
+@media (max-width:360px){.sl-panel{padding:3px 5px}.sl-panel .sl-pr-v{font-size:16px}.sl-panel .sl-pi,.sl-panel .sl-pi img,.sl-panel .sl-pi svg{width:20px;height:20px}.sl-again{min-width:98px}}
+/* основание автомата: бумажная подложка под строкой и кнопкой, чтобы игра не просвечивала */
+.sl-base{display:flex;flex-direction:column;gap:6px;padding:7px 7px 10px;border:3px solid var(--sl-ink);border-radius:12px 12px 20px 20px;
+  background:#e6d6b2 url(assets/paper-grain.svg);box-shadow:0 5px 0 #8b7550,0 5px 0 3px var(--sl-ink),inset 0 2px 0 #fff6}
+.sl-base .sl-foot{padding:4px 0 2px}
+.sl-machine.tight .sl-base{padding:5px 5px 7px;gap:4px}
+/* низкий экран: автомат занимает его целиком, иначе строка и кнопка уезжают под прокрутку */
+@media (max-height:700px){.sl-layer{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 6px)}}

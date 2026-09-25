@@ -269,7 +269,7 @@ function renderEntry(){
 const baseRender2=render;render=function(){const r=baseRender2.apply(this,arguments);try{renderEntry();}catch(e){}return r;};
 
 // Тест в настройках: рядом со строкой этапов — коллекция, колода, раскрытие.
-new MutationObserver(()=>{const box=document.getElementById('chTest');if(!box||box.querySelector('#cuTestColl'))return;
+new MutationObserver(()=>{const box=document.getElementById('chTest');if(!box||document.getElementById('cuTestColl'))return;
   const row=document.createElement('div');row.className='cu-testrow';
   row.innerHTML=`<button class="sec" id="cuTestColl">Коллекция</button><button class="sec" id="cuTestDeck">Колода</button><button class="sec" id="cuTestRev">Раскрытие</button><button class="sec" id="cuTestReset">Сброс заставок</button>`;
   box.after(row);

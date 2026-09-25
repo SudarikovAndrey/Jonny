@@ -1,0 +1,36 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>Однорукий бандит</title>
+<meta name="theme-color" content="#1c1712">
+<link rel="stylesheet" href="slot/slot.css?v=73c2330f">
+</head><body>
+<div id="bar" aria-hidden="true"></div>
+<div id="app">
+  <header id="hud">
+    <div class="hud-card hud-player"><span class="hud-ava"><img src="assets/bp/bp-johnny.png" alt=""></span><span class="hud-name">Пацан<small>ур. 12</small><i class="hud-xp"><b style="width:38%"></b></i></span></div>
+    <div class="hud-card hud-cash"><img class="hud-ic" src="assets/icons/money.png" alt=""><b id="balance">12 430</b></div>
+    <button class="hud-card hud-gear" id="btnSettings" aria-label="Настройки"><span>⚙</span></button>
+  </header>
+  <section id="machine">
+    <div class="sign"><span class="sign-small">ONE ARMED</span><span class="sign-big">BANDIT</span><img class="sign-johnny" src="assets/bp/tip-johnny.png" alt=""></div>
+    <div class="jackpot"><span class="jp-crown">♛</span><span class="jp-label">JACKPOT</span><span class="jp-crown">♛</span><div class="jp-board"><span class="jp-star">★</span><b id="jackpot">100 000</b><span class="jp-star">★</span></div></div>
+    <div class="window"><div class="win-frame"><i class="lamps" id="lamps"></i></div><div class="payline"><span></span><span></span></div><div class="win-glass"></div><div id="winFlash"></div></div>
+    <canvas id="scene" aria-label="Барабаны и рукоятка"></canvas>
+    <div class="paytable"><div class="pt-title">★ Выигрыши ★</div><div class="pt-grid" id="paytable"></div></div>
+    <div class="controls">
+      <span class="ctl-label">Ставка:</span>
+      <button class="ctl-btn" id="betMinus" aria-label="Меньше ставка">−</button>
+      <span class="ctl-bet"><img src="assets/icons/soft.png" alt=""><b id="bet">100</b></span>
+      <button class="ctl-btn" id="betPlus" aria-label="Больше ставка">+</button>
+      <button class="ctl-auto" id="auto" aria-pressed="false"><i></i>Автоигра</button>
+    </div>
+    <button class="spin" id="spin"><span>КРУТИТЬ</span></button>
+    <div class="note note-l">Играй,<br>выигрывай!</div>
+    <div class="note note-r">Одна крутка<br>ближе к большому<br>делу!</div>
+  </section>
+  <div id="toast" hidden></div>
+  <div id="bigwin" hidden><div class="bw-card"><img src="assets/bp/bp-johnny.png" alt=""><div class="bw-text"><b id="bwTitle">Крупный выигрыш!</b><span id="bwSum">+12 500</span></div><button id="bwTake">Забрать</button></div></div>
+</div>
+<div id="confetti" aria-hidden="true"></div>
+<script type="module" src="slot/slot.js?v=73c2330f"></script>
+</body></html>
