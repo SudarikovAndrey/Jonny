@@ -1,0 +1,13 @@
+{
+  "plate": [1536, 1024],
+  "note": "Мейн-стрит: беседка в центре и четыре фонаря вокруг площади. Пиксели — кадр основной подложки 1536×1024 этой карты (plate.webp).",
+  "prisms": [],
+  "hulls": [],
+  "beams": [],
+  "crowns": [],
+  "rounds": [
+    {"name": "Gazebo", "pixel": [773, 478], "radius": 0.85, "height": 1.9, "bottom": 0},
+    {"name": "LampWest", "pixel": [571, 470], "radius": 0.08, "height": 1.3, "bottom": 0},
+    {"name": "LampEast", "pixel": [975, 470], "radius": 0.08, "height": 1.3, "bottom": 0}
+  ]
+}
