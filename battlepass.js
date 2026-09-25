@@ -9,17 +9,17 @@ function passReward(w){return `${w.rolls?`<span>${passIcon('dice')}<b>+${w.rolls
 function passRewardText(w){return [w.rolls?`${w.rolls} ходов`:'',w.hard?`${w.hard} кристаллов`:'',w.skin?'скин Джонни':''].filter(Boolean).join(', ');}
 let passClaimBusy=false;
 function renderBattlePass(redraw,tabs){
- const card=$('card'),L=bpLevel(),available=bpClaimable(),progress=L>=BP.max?1:(S.pts%BP.step)/BP.step;
+ const card=$('card'),L=bpLevel(),available=bpClaimable(),progress=L>=BP.max?1:(S.pts-bpNeed(L))/(bpNeed(L+1)-bpNeed(L));
  card.className='card battlepass-card';
  const row=(k)=>{
   const lane=t=>{const premium=t==='paid',reward=premium?BP.paid(k):BP.free(k),claimed=k<=(premium?S.bp.claimedPaid:S.bp.claimedFree),locked=premium&&!S.bp.paid,ready=k<=L&&!locked&&!claimed;
-   return `<button class="pass-reward ${premium?'premium':'free'} ${claimed?'claimed':ready?'available':'locked'}" data-level="${k}" data-lane="${t}" ${claimed||(!ready&&!locked)?'disabled':''} aria-label="Уровень ${k}, ${premium?'премиум':'бесплатно'}: ${passRewardText(reward)}. ${claimed?'Получено':ready?'Забрать доступные награды':locked?'Открыть премиум':'Нужно '+k*BP.step+' очков'}"><span class="pass-loot">${passReward(reward)}</span><span class="pass-state">${claimed?passIcon('check'):ready?'Забрать':locked?passIcon('lock'):k*BP.step+' очк.'}</span></button>`;};
+   return `<button class="pass-reward ${premium?'premium':'free'} ${claimed?'claimed':ready?'available':'locked'}" data-level="${k}" data-lane="${t}" ${claimed||(!ready&&!locked)?'disabled':''} aria-label="Уровень ${k}, ${premium?'премиум':'бесплатно'}: ${passRewardText(reward)}. ${claimed?'Получено':ready?'Забрать доступные награды':locked?'Открыть премиум':'Нужно '+bpNeed(k)+' очков'}"><span class="pass-loot">${passReward(reward)}</span><span class="pass-state">${claimed?passIcon('check'):ready?'Забрать':locked?passIcon('lock'):bpNeed(k)+' очк.'}</span></button>`;};
   return `<div class="pass-rung ${k<=L?'reached':''}" data-level="${k}">${lane('free')}<span class="pass-level ${k===L+1?'next':''}">${k}</span>${lane('paid')}</div>`;
  };
- card.innerHTML=`<header class="pass-header"><span class="pass-stamp">NY<br><b>01</b></span><div><h2>Баттлпасс</h2><small>Джонни идёт к успеху</small></div><button id="hNo" class="xhead" aria-label="Закрыть"></button><div class="pass-progress"><b>Ур. ${L}</b><div><span>${L>=BP.max?'Все уровни открыты':`${S.pts%BP.step} / ${BP.step} очков`}</span><div class="pass-meter"><i style="--progress:${progress}"></i></div></div><small>До конца<br><b>${lbTimeLeft()}</b></small></div></header>
+ card.innerHTML=`<header class="pass-header"><span class="pass-stamp">NY<br><b>01</b></span><div><h2>Баттлпасс</h2><small>Джонни идёт к успеху</small></div><button id="hNo" class="xhead" aria-label="Закрыть"></button><div class="pass-progress"><b>Ур. ${L}</b><div><span>${L>=BP.max?'Все уровни открыты':`${S.pts-bpNeed(L)} / ${bpNeed(L+1)-bpNeed(L)} очков`}</span><div class="pass-meter"><i style="--progress:${progress}"></i></div></div><small>До конца<br><b>${lbTimeLeft()}</b></small></div></header>
  <div class="pass-scene">${passArt(0,240,420,145)}<span>Каждая поставка —<br>ступень к наградам</span><div class="pass-hero">${passArt(452,234,172,160)}</div></div><div class="pass-scroll">
  <div class="pass-lanes"><b>Бесплатно</b><span></span><b>${passIcon('crown')}Премиум</b></div><div class="pass-stairs"><div class="pass-side left">${passArt(0,280,175,350).replace('xMidYMid meet','xMidYMid slice')}</div><div class="pass-side right">${passArt(900,430,120,280).replace('xMidYMid meet','xMidYMid slice')}</div>${Array.from({length:BP.max},(_,i)=>row(BP.max-i)).join('')}</div>
- <details class="pass-tasks"><summary>Как продвигаться?</summary><p>Отправляй товары пацанам. Каждые ${BP.step} очков ивента открывают новый уровень.</p><button class="sec" id="passShip">К поставке</button></details></div>
+ <details class="pass-tasks"><summary>Как продвигаться?</summary><p>Отправляй товары пацанам. Первые уровни открываются почти сразу, дальше каждый требует чуть больше очков ивента.</p><button class="sec" id="passShip">К поставке</button></details></div>
  <footer class="pass-footer"><div class="pass-feedback" aria-live="polite">${available?`Доступно наград: ${available}`:L>=BP.max?'Все ступени пройдены!':`Следующая награда: ${passRewardText(BP.free(L+1))}`}</div>${available?`<button id="bpClaim" class="ok">Забрать всё · ${available}</button>`:''}${S.bp.paid?`<div class="pass-owned">${passIcon('crown')}Премиум открыт · +1 место в фуре</div>`:`<button id="bpBuy" class="bad">${passIcon('crown')}Открыть премиум <b>${BP.price} ₽</b></button>`}${tabs}</footer>`;
  paintedClose($('hNo'));card.querySelectorAll('.pass-footer button:not([data-tab]),#passShip').forEach(enamelButton);
  const claim=async()=>{
@@ -56,3 +56,51 @@ function passPremiumOffer(redraw,tabs){
  $('card').append(layer);layer.querySelectorAll('button').forEach(enamelButton);PaperMotion.enter(layer.querySelector('.pass-offer-paper'));$('passCancel').onclick=()=>dismissPaperOffer(layer);layer.onclick=e=>{if(e.target===layer)dismissPaperOffer(layer);};
  $('passConfirm').onclick=()=>{if(S.bp.paid)return;bpBuy();save();render();dismissPaperOffer(layer,()=>{renderBattlePass(redraw,tabs);bindPassTabs(redraw);});queueMobileJoy('dance');};$('passConfirm').focus();
 }
+
+// ===== «Билет» и «Топ» в стиле баттлпасса =====
+// Та же рамка, что у пропуска: клеймо NY 01, заголовок-шильда, строка
+// прогресса, небо с городом, плашки-ступени, вкладки в подвале. Лишние тексты
+// убраны: справка, колонки таблицы, дубль прогресса билета в рейтинге,
+// кнопки «Джонни» и «Как играть» (обе есть на главном экране).
+function hubHead(title,badge,note,progress,right){
+ return `<header class="pass-header hub-head"><span class="pass-stamp">NY<br><b>01</b></span><div><h2 class="hub-title">${title}</h2></div><button id="hNo" class="xhead" aria-label="Закрыть"></button>
+  <div class="pass-progress"><b>${badge}</b><div><span>${note}</span><div class="pass-meter"><i style="--progress:${Math.max(0,Math.min(1,progress))}"></i></div></div><small>${right}</small></div></header>`;
+}
+function hubLoot(r){
+ return `${r.rolls?`<span>${passIcon('dice')}<b>+${r.rolls}</b></span>`:''}${r.hard?`<span>${passIcon('gem')}<b>+${r.hard}</b></span>`:''}${r.cash?`<span><b>+$${r.cash}</b></span>`:''}`;
+}
+function hubTicket(tabs){
+ const nm=nextMilestone(), prev=reachedMilestones().slice(-1)[0], from=prev?prev.pts:0, to=nm?nm.pts:from, nz=nextZone();
+ const goals=CFG.MILESTONES.map((m,i)=>{const done=S.pts>=m.pts,next=nm&&nm.pts===m.pts;
+  return `<div class="hub-plate hub-goal ${done?'claimed':next?'available':'locked'}"><span class="pass-level hub-pts">${m.pts}</span><span class="hub-text"><b>${m.name}</b><small>${m.reward}</small></span><span class="pass-state"></span></div>`;}).reverse().join('');
+ const quests=S.q.map((q,i)=>`<div class="hub-plate hub-quest ${q.claimed?'claimed':q.done?'available':'locked'}"><span class="hub-text"><b>${q.text}</b></span><span class="pass-loot">${hubLoot(q.reward)}</span>${q.claimed?'<span class="pass-state"></span>':q.done?`<button class="ok hub-claim" data-claim="${i}">Забрать</button>`:`<span class="hub-prog">${Math.min(q.prog,q.goal)}/${q.goal}</span>`}</div>`).join('');
+ const zone=nz>0?`<div class="hub-plate hub-zone"><span class="hub-text"><b>${CFG.ZONES[nz].name}</b><small>откроется в день ${CFG.ZONES[nz].day}</small></span>${zonePrice(nz)>0?`<button class="hard" id="hZone" ${S.hard<zonePrice(nz)?'disabled':''}>${passIcon('gem')}<b>${zonePrice(nz)}</b></button>`:`<button class="ok" id="hZone">Открыть</button>`}</div>`:'';
+ return hubHead('Билет Джонни',S.pts,nm?`до ${nm.pts} ещё ${nm.pts-S.pts}`:'Все рубежи взяты',nm?(S.pts-from)/(to-from):1,`До конца<br><b>${lbTimeLeft()}</b>`)
+  +`<div class="pass-scroll hub-scroll"><div class="hub-list">${goals}<h3 class="hub-sub">Задания дня</h3>${quests}${zone}</div></div><footer class="pass-footer">${tabs}</footer>`;
+}
+function hubTop(tabs){
+ const rows=lbRows(), me=rows.findIndex(r=>r.you), above=me>0?rows[me-1]:null;
+ const row=(r,i)=>`<div class="hub-plate hub-rank ${r.you?'me':''} ${i<3?'top'+(i+1):''}"><span class="pass-level">${i+1}</span><span class="hub-ava">${r.you?'🧢':LB_AVA[LB_NAMES.indexOf(r.n)]||'🙂'}</span><span class="hub-text"><b>${r.you?'Ты':r.n}</b><small>${r.pts} очк.</small></span><span class="pass-loot"><span>${passIcon('gem')}<b>${LB_REWARD[i]||0}</b></span></span></div>`;
+ return hubHead('Бруклин',`#${me+1}`,above?`до #${me} ещё ${Math.max(1,above.pts-S.pts)}`:'Ты первый!',above?S.pts/Math.max(1,above.pts):1,`До конца<br><b>${lbTimeLeft()}</b>`)
+  +`<div class="pass-scroll hub-scroll"><div class="hub-list">${rows.slice(0,10).map(row).join('')}${me>=10?row(rows[me],me):''}</div></div><footer class="pass-footer">${tabs}</footer>`;
+}
+eventHub=async function(tab){
+ if(tab)hubTab=tab; else if(bpClaimable()>0)hubTab='pass';
+ if(hubTab==='pass'&&!(S.bp&&S.bp.paid))offerShow('pass',{level:bpLevel(),pts:S.pts,day:S.day});
+ const draw=()=>{
+  const bc=bpClaimable(),place=lbPlace(),card=$('card');
+  const tabs=`<div class="segbar"><button class="${hubTab==='ticket'?'on':''}" data-tab="ticket">Билет</button><button class="${hubTab==='pass'?'on':''}" data-tab="pass">Пропуск${bc?' <i class="dot"></i>':''}</button><button class="${hubTab==='lb'?'on':''}" data-tab="lb">Топ #${place}</button></div>`;
+  if(hubTab==='pass'){card.classList.remove('hub-card');renderBattlePass(draw,tabs);}
+  else{
+   card.className='card battlepass-card hub-card';
+   card.innerHTML=hubTab==='lb'?hubTop(tabs):hubTicket(tabs);
+   paintedClose($('hNo'));card.querySelectorAll('.hub-claim,#hZone').forEach(enamelButton);
+   if(hubTab==='lb')setTimeout(()=>card.querySelector('.hub-rank.me')?.scrollIntoView({block:'nearest'}),30);
+  }
+  card.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{hubTab=b.dataset.tab;track('hub_tab',{tab:hubTab});draw();});
+  card.querySelectorAll('button[data-claim]').forEach(b=>b.onclick=()=>{const q=S.q[+b.dataset.claim],r=q.reward;track('quest_claim',{id:q.id,goal:q.goal,reward:r});if(r.rolls){fly('🎲',AT.card(),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.card(),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;log(`🎯 Награда за «${q.text}»: ${rwText(r)}.`);toast('Награда получена');save();render();draw();});
+  const hz=$('hZone');if(hz)hz.onclick=async()=>{closeModal();await offerOpen(nextZone());};
+  $('hNo').onclick=()=>closeModal();
+ };
+ draw();await openCustom();save();render();
+};
