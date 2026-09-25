@@ -154,6 +154,12 @@ settings=function(){
   const windBtn=document.createElement('button');windBtn.className='sec';windBtn.textContent=mobileWindMap?'Скрыть карту ветров':'Карта ветров';
   windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
   row.append(windBtn);
+  // Отладка: переключить карту поля для просмотра; выбор помнится в этом браузере.
+  const maps=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит']];
+  const nextMap=maps[(maps.findIndex(m=>m[0]===boardMap())+1)%maps.length];
+  const mapBtn=document.createElement('button');mapBtn.className='sec';mapBtn.textContent='Карта: '+nextMap[1];
+  mapBtn.onclick=()=>{setBoardMap(nextMap[0]);closeModal();};
+  row.append(mapBtn);
   $('card').append(row);
   const cameras=document.createElement('div');cameras.className='mbtns';
   for(const [label,action] of [['Обзор поля','overview'],['К Джонни','home']]){
@@ -414,6 +420,17 @@ function placeDiceResult(el,x,y){
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
       el.animate([{translate:'0 -14px',opacity:0},{translate:'0 3px',opacity:1,offset:.7},{translate:'0 0'}],{duration:260,easing:'cubic-bezier(.34,1.56,.64,1)'});
   });
+}
+
+// Карта поля (board.html?map=…): Бруклин по умолчанию, остальные — для просмотра.
+function boardMap(){try{return localStorage.getItem('americanboy_board_map')||'brooklyn';}catch(e){return 'brooklyn';}}
+function setBoardMap(id){
+  try{localStorage.setItem('americanboy_board_map',id);}catch(e){}
+  const f=$('board-frame'),u=new URL(f.src,location.href);
+  if(id==='brooklyn')u.searchParams.delete('map');else u.searchParams.set('map',id);
+  // поле перезагрузится и заново попросит состояние через sceneReady
+  MobileHost.ready=false;document.body.classList.remove('engine-ready');
+  f.src=u.pathname.split('/').pop()+u.search;
 }
 
 // Полноэкранный режим. На iOS Safari Element.requestFullscreen отсутствует —
