@@ -19,3 +19,8 @@
 #card .shop .uup-max{margin:0;font-size:13px;color:#4b4132;text-align:center}
 /* Числа статов — не поля ввода: снимаем общий стиль «плашки» у b внутри окна. */
 #card .shop .uup-stat b{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-width:0!important;border-radius:0!important}
+/* Шаги по очереди: растущий стат подсвечен, на кнопке — что даст шаг. */
+#card .shop .uup-dots{gap:3px}#card .shop .uup-dots i{width:11px;height:11px}
+#card .shop .uup-stat.grows{border-color:#347347;background:#dfe9c86b}
+#card .shop button.uup-btn>span:not(.enamel-skin){display:flex;flex-direction:column;align-items:flex-start;line-height:1.1}
+#card .shop button.uup-btn>span:not(.enamel-skin) small{font-size:12px;font-weight:600;opacity:.92;margin-top:2px}
