@@ -308,3 +308,15 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 #card.pc-card .pc-goal small{font-size:13px;color:#3c3325}
 #card.pc-card .pc-next{padding:0 2px}
 #card.pc-card .pc-next span{display:block;font-size:14px;font-weight:600;color:#2a2118;margin-bottom:4px}
+/* ячейки фуры одного размера: заполненная не растёт и не раздвигает ряд */
+#card.pc-card .pc-slots{align-items:start}
+#card.pc-card .pc-slot{position:relative;box-sizing:border-box;width:100%;max-width:58px;aspect-ratio:1;border-width:2px;overflow:hidden}
+#card.pc-card .pc-slot.f{box-shadow:none}
+#card.pc-card .pc-slot img{position:absolute;inset:14%;width:72%;height:72%;object-fit:contain}
+/* выбранный товар в фуре: заметно, как отмеченная клетка настольной игры —
+   золотая заливка, толстое золотое кольцо, приподнята, слева — красная закладка */
+#card.pc-card .pc-row.on{position:relative;background:linear-gradient(#f7d97a,#e9b945)!important;
+  box-shadow:0 0 0 4px #ffcf4a,0 0 0 6.5px #2a2118,0 5px 0 6px #00000040;translate:0 -2px}
+#card.pc-card .pc-row.on::before{content:'';position:absolute;left:-2px;top:10px;bottom:10px;width:7px;border-radius:0 4px 4px 0;background:#c43a2d;border:2px solid #2a2118;border-left:0}
+#card.pc-card .pc-row.on .pc-name small{color:#3c2f1f}
+#card.pc-card .pc-row.on .pc-qty b{font-size:26px}

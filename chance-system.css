@@ -1,0 +1,13 @@
+/* ===== «Шанс»: временное функциональное окно (chance-system.js). Финальный вид — «Американ Интерфейс». ===== */
+#card .ch-rarity{width:max-content;margin:0 auto 4px;padding:3px 10px;border:2px solid #2a2118;border-radius:6px;background:var(--rc);color:#fff4d8;
+  font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.m1-card3d[class*="ch-"] .m1-face{border-color:var(--rc);box-shadow:0 5px 0 #00000055,inset 0 0 0 3px var(--rc)}
+.m1-card3d .m1-face em{font-style:normal;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#3c3325}
+.m1-card3d.ch-gold .m1-face{background:#f3e0a8 url(assets/paper-grain.svg)}
+.m1-card3d.ch-purple .m1-face{background:#e6dcef url(assets/paper-grain.svg)}
+.m1-card3d.ch-blue .m1-face{background:#dce7ef url(assets/paper-grain.svg)}
+#card .ch-test{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+#card .ch-test span{font-size:13px;font-weight:700;margin-right:4px}
+#card .ch-test button[data-st]{min-width:40px;min-height:40px;padding:0}
+#card .ch-test button.on{outline:3px solid #c43a2d}
+#card .ch-test #chPlay{flex:1 1 100%}

@@ -293,3 +293,94 @@
   #card.hub-card .hub-head>div:not(.pass-progress){padding-right:38px}
   #card.hub-card .hub-goal .pass-level{font-size:13.5px}
 }
+
+/* ===== Окно премиума (навык game-ui-designer) ===== */
+.pass-offer{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:14px;background:rgba(24,18,12,.55)}
+.pass-offer-paper{position:relative;width:100%;max-width:360px;box-sizing:border-box;padding:0 16px 14px;text-align:center;
+  border:3px solid #2a2118;border-radius:18px;background:#f2e6c6 url(assets/paper-grain.svg);box-shadow:0 5px 0 #2a2118,0 14px 30px #0006}
+.po-hero{position:relative;height:118px;margin:0 -16px 4px;border-radius:15px 15px 0 0;overflow:hidden;
+  background:linear-gradient(#b1332a,#8f241e);border-bottom:3px solid #2a2118;display:grid;place-items:center}
+.po-sun{position:absolute;width:250px;opacity:.55;animation:poSpin 18s linear infinite}
+.po-crown{position:relative;width:86px;height:86px;filter:drop-shadow(0 4px 0 #2a2118aa);animation:poBob 2.2s ease-in-out infinite}
+.po-crown svg{width:100%;height:100%}
+@keyframes poSpin{to{rotate:360deg}}
+@keyframes poBob{50%{translate:0 -5px;rotate:-3deg}}
+.po-title{margin:10px auto 0;width:max-content;padding:3px 16px 4px;rotate:-2deg;background:#f3e6c2 url(assets/paper-grain.svg);
+  border:3px solid #2a2118;border-radius:7px;box-shadow:3px 3px 0 #2a211866;font-family:var(--num);font-weight:900;font-size:26px;text-transform:uppercase;color:#2a2118}
+.po-sub{margin:7px 0 12px;font-size:15px;color:#4b4132}
+.po-list{display:flex;flex-direction:column;gap:7px;text-align:left}
+.po-row{display:flex;align-items:center;gap:11px;padding:8px 10px;border:2.5px solid #2a2118;border-radius:11px;
+  background:linear-gradient(#f0c44e,#d79a26);box-shadow:0 3px 0 #00000055}
+.po-ic{flex:none;width:38px;height:38px;display:grid;place-items:center}
+.po-ic svg,.po-ic img{width:36px;height:36px;object-fit:contain}
+.po-t{display:flex;flex-direction:column;min-width:0}
+.po-t b{font-family:var(--num);font-weight:800;font-size:18px;color:#2a2118;line-height:1.1}
+.po-t small{font-size:13px;color:#3c3325}
+.po-now{margin:11px 0 0;font-size:15px;font-weight:700;color:#2f6b2a}
+#card .pass-offer-paper #passConfirm{width:100%;min-height:58px;margin:12px 0 0;font-size:20px}
+#card .pass-offer-paper .po-later{display:block;margin:8px auto 0;padding:6px 12px;min-height:40px;border:0;background:none;box-shadow:none;
+  font:600 15px var(--txt);color:#5b4c35;text-decoration:underline;text-underline-offset:3px}
+.po-note{display:block;margin-top:2px;font-size:12px;color:#7a6a50}
+
+/* ===== Сцена покупки ===== */
+.prem-stage{position:fixed;inset:0;z-index:90;pointer-events:none;background:rgba(24,18,12,.62)}
+.prem-confetti{position:absolute;inset:0;width:100%;height:100%}
+.prem-rays,.prem-crown{position:absolute;left:50%;top:42%;translate:-50% -50%}
+.prem-rays{opacity:0}
+.prem-crown{filter:drop-shadow(0 6px 0 #2a2118aa)}
+.prem-crown svg{width:100%;height:100%}
+.prem-plate{position:absolute;left:50%;top:calc(42% + min(23vw,110px) + 26px);opacity:0;padding:8px 22px 10px;text-align:center;white-space:nowrap;
+  background:#f3e6c2 url(assets/paper-grain.svg);border:3px solid #2a2118;border-radius:9px;box-shadow:4px 4px 0 #2a2118aa}
+.prem-plate b{display:block;font-family:var(--num);font-weight:900;font-size:28px;text-transform:uppercase;color:#b1332a}
+.prem-plate small{display:block;margin-top:2px;font-size:15px;font-weight:700;color:#2f6b2a}
+.prem-stage.reduced .prem-crown{width:160px;height:160px;opacity:1}
+.prem-stage.reduced .prem-plate{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.po-sun,.po-crown{animation:none}}
+/* лучи — рисованный веер вместо картинки солнца */
+.po-sun,.prem-rays{display:block;aspect-ratio:1;border-radius:50%;
+  background:repeating-conic-gradient(#ffd76a 0 9deg,transparent 9deg 22.5deg);
+  -webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%)}
+.po-sun{width:320px;opacity:.5}
+.prem-rays{background:repeating-conic-gradient(#ffe08a 0 8deg,#ffe08a00 8deg 20deg)}
+#card .pass-offer-paper h2.po-title{display:table;margin:10px auto 0}
+#card .pass-offer-paper button.po-later{border:0!important;background:none!important;box-shadow:none!important}
+/* своя строка в топе: золото, толстое кольцо и закладка «ТЫ» */
+#card.hub-card .hub-rank.me{position:relative;background:linear-gradient(#f7d97a,#e9b945)!important;
+  box-shadow:0 0 0 4px #ffcf4a,0 0 0 6.5px #2a2118,0 5px 0 6px #00000040!important;translate:0 -2px;margin:12px 0 14px}
+#card.hub-card .hub-rank.me::after{content:'ТЫ';position:absolute;right:-6px;top:-11px;padding:2px 8px 3px;rotate:6deg;border:2.5px solid #2a2118;border-radius:6px;
+  background:#c43a2d;color:#fff6de;font:900 13px/1 var(--num);letter-spacing:.06em;box-shadow:2px 2px 0 #2a211899}
+#card.hub-card .hub-rank.me .hub-text b{color:#2a2118}
+#card.hub-card .hub-rank.me .hub-ava{background:#fff3cf}
+/* своя строка не путается с золотым 1-м местом: светлая заливка, красное кольцо */
+#card.hub-card .hub-rank.me{background:#fff0c2 url(assets/paper-grain.svg)!important;box-shadow:0 0 0 4px #c43a2d,0 0 0 6.5px #2a2118,0 5px 0 6px #00000040!important}
+#card.hub-card .hub-rank.me .hub-text b{color:#8c1f18}
+
+/* ===== окно «Сегодня» ===== */
+#card.today-card .td-stamp{background:#f6ecd0 url(assets/icons/clock.png) center/70% no-repeat;border:3px solid #2a2118;border-radius:50%;width:50px;height:50px}
+#card.today-card .td-scroll{overscroll-behavior:contain}
+#card.today-card .td-list{padding:14px 10px 18px}
+#card.today-card .td-list::after{display:none}
+#card.today-card .td-now{min-height:58px}
+#card.today-card .td-now.hot{background:linear-gradient(#f7d97a,#e9b945)}
+#card.today-card .td-now.bad{background:#f3d4c8 url(assets/paper-grain.svg)}
+#card.today-card .td-ic{flex:none;width:40px;height:40px;display:grid;place-items:center;font-size:28px}
+#card.today-card .td-ic img{width:38px;height:38px;object-fit:contain}
+#card.today-card .td-week{position:relative;display:flex;flex-direction:column;gap:6px}
+#card.today-card .td-week::before{content:'';position:absolute;left:21px;top:10px;bottom:10px;width:6px;border-radius:3px;background:#6b4f31;border:2px solid #402d1b}
+#card.today-card .td-day{position:relative;display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 10px 6px 0;border-radius:11px}
+#card.today-card .td-num{flex:none;width:46px;height:46px;font-size:18px;z-index:1}
+#card.today-card .td-tags{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px}
+#card.today-card .td-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border:2px solid #2a2118;border-radius:999px;background:#f2e6c6 url(assets/paper-grain.svg);
+  font:700 13.5px/1.15 var(--txt);color:#2a2118;box-shadow:0 2px 0 #00000040}
+#card.today-card .td-tag i{font-style:normal;font-size:15px}
+#card.today-card .td-tag.none{background:none;border-style:dashed;box-shadow:none;color:#5b4c35;font-weight:600}
+#card.today-card .td-day.past{opacity:.55}
+#card.today-card .td-day.past .td-tag{box-shadow:none}
+#card.today-card .td-check{flex:none;width:28px;height:28px;background:url(assets/bp/bp-check.png) center/contain no-repeat}
+#card.today-card .td-day.today{background:#fff0c2 url(assets/paper-grain.svg);box-shadow:0 0 0 3px #c43a2d,0 0 0 5px #2a2118;margin:6px 0}
+#card.today-card .td-day.today .td-num{filter:drop-shadow(0 0 5px #ffcf4a)}
+#card.today-card .td-now-mark{flex:none;padding:3px 7px 4px;rotate:5deg;border:2px solid #2a2118;border-radius:6px;background:#c43a2d;color:#fff6de;font:900 12px/1 var(--num);text-transform:uppercase}
+#card.today-card .td-foot .segbar{display:none}
+#card.today-card #tdOk{width:100%;min-height:56px;font-size:19px}
+#card.today-card .td-now-mark{position:absolute;right:-5px;top:-10px}
+#card.today-card .td-day.today{padding-right:8px}
