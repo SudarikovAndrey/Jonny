@@ -24,11 +24,12 @@ const M1_TASKS=[
 
 // Поле: номера клеток Бруклина, как у подложки (design/районы/01-мейн-стрит.md).
 buildTiles=function(){
-  const biz=new Set([3,8,17,23,32,37]),wh=new Set([6,10,19,24,30,34]),ch=new Set([5,20,25]);
+  const biz=new Set([3,8,17,23,32,37]),wh=new Set([6,19,24,30,34]),ch=new Set([5,20,25]);
   const r10=(a,b)=>Math.round((a+Math.random()*(b-a))/10)*10;let k=0;const t=[];
   for(let i=0;i<40;i++){
     const o={i,type:'kiosk',zone:0,owner:null,level:0,capLvl:1,salesLvl:1,goods:0,tier:1};
     if(i===0)o.type='home';
+    else if(i===10){o.type='slot';o.zone=-1;}
     else if(wh.has(i)){o.type='wh';o.zone=-1;}
     else if(ch.has(i)){o.type='chance';o.zone=-1;}
     else if(i===15){o.type='police';o.zone=-1;}

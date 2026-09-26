@@ -187,6 +187,7 @@ cv.addEventListener('pointerup',e=>{
   const t=S.tiles[nearest];if(!canUseTile(t))return;
   if(t.type==='kiosk'&&(t.owner||S.cash>=t.price))kioskWindow(t);
   else if(t.type==='biz'&&(t.owner||S.cash>=t.price))bizWindow(t);
+  else if(t.type==='slot'&&window.Slot)Slot.open({free:false});
   else if(t.type==='wh')shop();
   else if(t.type==='bank'&&S.day>=CFG.BANK_DAY)bank();
 });
