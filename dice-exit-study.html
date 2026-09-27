@@ -1,0 +1,8 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Кубики — исчезновение</title>
+<style>body{margin:0;background:#25221c;color:#f3dfab;font:700 16px Georgia}iframe{width:100%;height:calc(100dvh - 100px);border:0;display:block}nav{padding:12px;display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;border:2px solid #f3dfab;border-radius:8px;padding:12px;background:#a9372c;color:#fff0ce}output{padding:10px}</style>
+<iframe id="field" src="board.html?mute&study=1" title="Поле"></iframe><nav><button data-time="play">Повторить</button><button data-time="0.083">Замах</button><button data-time="0.208">Подскок</button><button data-time="0.27">Штрихи</button><button data-time="0.35">Второй кубик</button><button data-occlusion="hero-behind">За Джонни</button><button data-occlusion="hero-front">Перед Джонни</button><button data-occlusion="building-behind">За зданием</button><button data-occlusion="building-front">Перед зданием</button><output id="status">Загрузка…</output></nav>
+<script>
+const field=document.getElementById('field');let ready=false;
+addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==field.contentWindow||e.data?.type!=='art-ready')return;ready=true;document.getElementById('status').textContent='Готово';});
+document.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(!ready)return;const at=b.dataset.occlusion?'0.27':b.dataset.time;field.contentWindow.devSend({action:'dice_exit_study',occlusion:b.dataset.occlusion,...(at==='play'?{}:{at:+at})});document.getElementById('status').textContent=at==='play'?'440 мс':`${Math.round(+at*1000)} мс`;});
+</script></html>
