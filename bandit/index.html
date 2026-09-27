@@ -265,6 +265,11 @@ button:focus-visible{outline:2px solid #f4c247;outline-offset:4px}
 @media(prefers-reduced-motion:reduce){.win-fx{display:none}.celebrating .face.lit img,.celebrating .face.lit svg{animation:none}}
 
 .win-banner strong.word-reward{font-size:8cqw}
+/* Два ящика: «+ картинка товара» и подпись строкой ниже. */
+.win-banner strong.stock-reward{display:flex;flex-direction:column;align-items:center;line-height:.9;gap:0;translate:0 -.12em}
+.stock-reward .stock-row{display:inline-flex;align-items:center;gap:.08em;font-size:1.2em}
+.stock-reward .stock-row .prize-unit{font-size:1em}.stock-reward .stock-row .prize-unit img,.stock-reward .stock-row .prize-unit svg{width:1.35em;height:1.35em}
+.stock-reward .stock-line{font-size:.38em;margin-top:.1em;font-weight:900;letter-spacing:-.02em;-webkit-text-stroke:.45cqw #74350f;text-shadow:0 .3cqw #9c5316}
 
 /* Triple matches celebrate across the viewport, outside the machine's layout. */
 .win-fx.fullscreen{position:fixed;inset:0;left:0;top:0;width:100%;height:100%;z-index:80;overflow:hidden;container-type:normal;background:radial-gradient(ellipse at center,#51301688,#160d08ed 85%);animation:full-win-scene 4.8s both}
@@ -936,8 +941,8 @@ const SYMBOLS=['seven','gem','dice','coin','box','cherry'];
 const OUTCOMES=[
  ['jackpot',1,'seven',3,'Джекпот'],['gem3',3,'gem',3,'3 кристалла'],
  ['dice3',4,'dice',3,'10 ходов'],['coin3',5,'coin',3,'Монеты ×3'],
- ['box3',5,'box',3,'Все точки'],['cherry3',7,'cherry',3,'Вишни ×3'],
- ['dice2',8,'dice',2,'3 хода'],['box2',8,'box',2,'Одна точка'],
+ ['box3',5,'box',3,'Товар во все точки'],['cherry3',7,'cherry',3,'Вишни ×3'],
+ ['dice2',8,'dice',2,'3 хода'],['box2',8,'box',2,'Товар в лучшую точку'],
  ['pair',24,null,2,'Любая другая пара'],['none',35,null,1,'Разнобой']
 ].map(([id,chance,symbol,count,label])=>({id,chance,symbol,count,label}));
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -983,7 +988,7 @@ function award(s,o,syms){
  }
  return p;
 }
-function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.move?`+${p.move} ${p.move===3?"хода":"ходов"}`:'',p.restock==='all'?'Затарить все точки':p.restock==='one'?'Затарить точку':''].filter(Boolean).join(' + ');}
+function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.move?`+${p.move} ${p.move===3?"хода":"ходов"}`:'',p.restock==='all'?'Затарить все точки':p.restock==='one'?'Затарить лучшую точку':''].filter(Boolean).join(' + ');}
 class Game {
  constructor(raw,rng=Math.random){this.state=restore(raw);this.rng=rng;this.busy=false;}
  available(){return this.state.paidSpins+(this.state.freeSpin?1:0);}
@@ -1003,7 +1008,7 @@ class Game {
   if(p.restock){
    const eligible=s.points.filter(x=>x.q<x.cap).sort((a,b)=>b.profit-a.profit);
    const selected=p.restock==='all'?eligible:eligible.slice(0,1);
-   if(selected.length){selected.forEach(x=>{stocked.push(`${x.n}: +${x.cap-x.q}`);x.q=x.cap;});}
+   if(selected.length){selected.forEach(x=>{stocked.push({n:x.n,add:x.cap-x.q,good:x.good||null});x.q=x.cap;});}
    else refund=s.points.length?Math.max(0,...s.points.map(x=>x.cap*x.buy)):Math.max(s.P,15*s.day);
   }
   const cash=p.cash+refund;s.cash+=cash;s.gem+=p.gem;s.move+=p.move;
@@ -1188,8 +1193,8 @@ function renderRows(){
  const P=Math.max(S.P,15*S.day),spec=[
  ['jackpot',['seven','seven','seven'],'Касса + 5 💎'],['gem3',['gem','gem','gem'],'3 💎'],
  ['dice3',['dice','dice','dice'],'+10 ходов'],['coin3',['coin','coin','coin'],money(1.5*P)],
- ['cherry3',['cherry','cherry','cherry'],money(.5*P)],['box3',['box','box','box'],'Все точки'],
- ['dice2',['dice','dice','·'],'+3 хода'],['box2',['box','box','·'],'Одна точка'],
+ ['cherry3',['cherry','cherry','cherry'],money(.5*P)],['box3',['box','box','box'],'Во все точки'],
+ ['dice2',['dice','dice','·'],'+3 хода'],['box2',['box','box','·'],'В лучшую точку'],
  ['pair',null,money(.25*P)],['none',null,money(.1*P)]];
  $('colL').innerHTML='';$('colR').innerHTML='';
  spec.forEach(([id,syms,value],i)=>{const d=document.createElement('div');d.className='row';d.dataset.row=id;
@@ -1249,7 +1254,7 @@ function spin(source='button'){
 function settle(celebrate=true){
  const p=game.settle();if(!p)return;save();render();result('Начислено: '+describe({...p,restock:p.refund?null:p.restock}));
  if(p.refund)log(`Точки полные — компенсация ${money(p.refund)}.`);
- if(p.stocked.length)log(p.stocked.join('; '));
+ if(p.stocked.length)log(p.stocked.map(x=>`${x.n}: +${x.add}`).join('; '));
  const counts={};p.syms.forEach(x=>counts[x]=(counts[x]||0)+1);
  if(p.id!=='none'){reels.forEach((r,i)=>{if(counts[p.syms[i]]>=2)r.faces[frontIndex(r)].classList.add('lit');});$('mL').classList.add('win');$('mR').classList.add('win');}
  const big=OUTCOMES.find(o=>o.id===p.id).count===3;
@@ -1263,7 +1268,7 @@ function closeGame(){if(game.busy||modal)return;sound.stop();clearWin();game.clo
 function renderReceipt(p){
  $('receiptTitle').textContent=p?.id==='jackpot'?'Джекпот!':p?'Приз твой!':'До следующего круга!';
  document.querySelector('.receipt-icon').innerHTML=p?svg(p.syms[0]):'★';
- $('receiptText').textContent=p?`${p.stocked.length?(p.restock==='all'?'Все точки заполнены':'Точка заполнена'):describe({...p,restock:null})}. ${p.refund?'Все точки полные — товар заменён деньгами.':phrases[p.id]}`:'Бесплатный спин ждёт на следующей остановке. Купленные спины остаются у тебя.';
+ $('receiptText').textContent=p?`${p.stocked.length?(p.restock==='all'?'Все точки заполнены':'Заполнена самая прибыльная точка — '+p.stocked[0].n+' (+'+p.stocked[0].add+')'):describe({...p,restock:null})}. ${p.refund?'Все точки полные — товар заменён деньгами.':phrases[p.id]}`:'Бесплатный спин ждёт на следующей остановке. Купленные спины остаются у тебя.';
  $('bReturn').textContent=game.available()?`Вернуться · ${game.available()} ${spinWord(game.available())}`:'Вернуться к автомату';
 }
 function returnToGame(){S.closed=false;save();render();setRadius();if(S.pending)result(describe(S.pending),phrases[S.pending.id]);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',game.available()?'Или нажми «Крутить»':'5 спинов за 1 кристалл');$('bMain').focus();}
@@ -1369,8 +1374,17 @@ function winFx(p,big){
  const fx=activeWin={layer,timers:[],animations:[],frame:0};
  const reward=layer.querySelector('strong'),amount=layer.querySelector('.prize-number');
  const target=p.cash||p.gem||p.move||0;
- const format=n=>p.cash?money(n):p.gem||p.move?'+'+n:p.restock==='all'?'Все точки':'Точка полна';
- if(p.restock&&!p.cash)reward.classList.add('word-reward');
+ const one=p.restock==='one'&&!p.cash;
+ const format=n=>p.cash?money(n):p.gem||p.move?'+'+n:one?'+':p.restock==='all'?'Полное заполнение твоих точек!':'Точка заполнена!';
+ if(p.restock&&!p.cash)reward.classList.add(one?'stock-reward':'word-reward');
+ if(one){
+  // Два ящика: «+», картинка товара заполненной точки, строка «в лучшую точку» — без длинного текста.
+  const good=p.stocked&&p.stocked[0]&&p.stocked[0].good;
+  const row=document.createElement('span');row.className='stock-row';row.append(amount);
+  const icon=document.createElement('span');icon.className='prize-unit';icon.innerHTML=good?`<img src="../assets/goods/${good}.webp" alt="" aria-hidden="true" onerror="this.outerHTML=${JSON.stringify(svg('box')).replace(/"/g,'&quot;')}">`:svg('box');row.append(icon);
+  const line=document.createElement('small');line.className='stock-line';line.textContent='в лучшую точку';
+  reward.replaceChildren(row,line);
+ }
  if(p.gem||p.move){
   const unit=document.createElement('span');unit.className='prize-unit';
   unit.innerHTML=p.cash?'+ '+p.gem+' '+svg('gem'):svg(p.gem?'gem':'dice');
@@ -1401,7 +1415,7 @@ function dialog(title,html,actions=[['Понятно',()=>{}]]){
  actions.forEach(([label,fn])=>{const b=document.createElement('button');b.className='cbtn';b.textContent=label;b.onclick=()=>{d.close();fn();};d.querySelector('.dialog-actions').append(b);});
  d.addEventListener('close',()=>{d.remove();modal=null;idle.refresh();returnFocus?.focus();});d.addEventListener('click',e=>{if(e.target===d)d.close();});document.body.append(d);modal=d;idle.quiet();d.showModal();
 }
-function help(){const P=Math.max(S.P,15*S.day),values={jackpot:money(S.pot)+' + 5 💎',gem3:'3 💎',dice3:'+10 ходов',coin3:money(1.5*P),box3:'Все точки',cherry3:money(.5*P),dice2:'+3 хода',box2:'Одна точка',pair:money(.25*P),none:money(.1*P)};
+function help(){const P=Math.max(S.P,15*S.day),values={jackpot:money(S.pot)+' + 5 💎',gem3:'3 💎',dice3:'+10 ходов',coin3:money(1.5*P),box3:'Товар во все точки',cherry3:money(.5*P),dice2:'+3 хода',box2:'Товар в лучшую точку',pair:money(.25*P),none:money(.1*P)};
  dialog('Каждый спин с призом',`<p>На клетке — один бесплатный спин. Считается только средняя линия между золотыми стрелками.</p><table class="odds"><thead><tr><th>Комбинация</th><th>Приз</th><th>Шанс</th></tr></thead><tbody>${OUTCOMES.map(o=>`<tr><td aria-label="${o.symbol?names[o.symbol]+' ×'+o.count:o.label}">${o.symbol?svg(o.symbol):''}${o.symbol?' ×'+o.count:o.label}</td><td>${values[o.id]}</td><td>${o.chance}%</td></tr>`).join('')}</tbody></table><p><strong>1 кристалл = 5 спинов.</strong> Цена постоянная. Покупка только добавляет спины, вращение запускается отдельно. Купленные спины сохраняются между остановками. Все призы начисляются автоматически после остановки барабанов. Кнопка «Крутить» и рычаг запускают следующий спин. Рычаг можно нажать или потянуть вниз.</p><p>Коробки пополняют запас точек. Одна коробочная пара выбирает самую прибыльную незаполненную точку. Если всё заполнено, выдаются деньги.</p><p class="fine">Денежные призы зависят от прибыли за круг. Таблица показывает суммы для текущих параметров демо.</p>`);
 }
 function toggleSound(){S.sound=!S.sound;sound.stop();save();render();if(S.sound)sound.button();}

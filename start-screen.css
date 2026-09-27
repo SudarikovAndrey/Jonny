@@ -1,0 +1,75 @@
+/* A printed game-box cover, composed independently for each orientation. */
+body #boot{position:fixed;inset:0;z-index:300;width:100%;height:100%;height:100dvh;max-width:none;margin:0;padding:0;display:block;overflow:hidden;background:#385664;color:#f3e1b9;text-align:center;isolation:isolate;font-family:Bitter,Georgia,serif}
+body.engine-ready #boot{display:block}
+body #boot[hidden]{display:none!important}
+#boot .start-city{position:absolute;inset:0;z-index:-3;display:block}
+#boot .start-city img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+#boot .start-print-edge{position:absolute;inset:12px;z-index:5;border:2px solid #efdfb78c;border-radius:9px 6px 10px 7px;box-shadow:0 0 0 5px #30261b40,inset 0 0 0 2px #30261b4d;pointer-events:none}
+#boot .start-title{position:absolute;z-index:3;top:max(5.5%,env(safe-area-inset-top));left:7%;width:86%;animation:start-title-in 500ms cubic-bezier(.2,.8,.25,1) both;transform:rotate(-2deg)}
+#boot .start-title h1{margin:0;color:#a53627;font:800 clamp(32px,11.5vw,76px)/.92 Bitter,Georgia,serif;text-transform:uppercase;letter-spacing:-.025em;filter:drop-shadow(0 4px 0 #30261b)}
+#boot .start-title h1 span,#boot .start-title h1 strong{display:block;-webkit-text-stroke:clamp(2px,.55vw,4px) #f6e8c6;paint-order:stroke fill}
+#boot .start-title h1 strong{font-size:2.25em;line-height:.95;letter-spacing:-.025em;padding-right:.025em}
+#boot .start-title p{display:inline-block;max-width:100%;margin:13px 0 0;padding:5px 12px 6px;background:#efdfb7;color:#352b20;box-shadow:0 3px #30261b;font:700 clamp(12px,3.45vw,18px)/1.25 Bitter,Georgia,serif;border-radius:3px 2px 4px 2px}
+#boot .start-character{position:absolute;z-index:2;left:17%;width:66%;top:30%;height:49%;transform-origin:50% 85%;animation:start-boy-sway 7s ease-in-out infinite}
+#boot .start-character::after{content:'';position:absolute;z-index:-1;left:22%;right:22%;bottom:1%;height:4%;background:#30261b66;border-radius:50%;filter:blur(5px)}
+#boot .start-character img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(3px 5px 0 #30261b55)}
+#boot .start-sun{position:absolute;z-index:1;right:4%;top:29%;width:clamp(65px,20vw,120px);height:auto;animation:start-sun-drift 10s ease-in-out infinite;transform-origin:center}
+#boot .start-cloud{position:absolute;z-index:-2;width:130px;height:36px;background:url(assets/start/cloud.svg) center/contain no-repeat;opacity:.6;pointer-events:none;animation:start-cloud-drift 22s ease-in-out infinite}
+#boot .start-cloud-one{top:27%;left:-35px}
+#boot .start-cloud-two{top:42%;right:-40px;width:100px;animation-delay:-9s;animation-duration:28s}
+#boot .start-controls{position:absolute;z-index:4;left:11%;width:78%;bottom:max(5%,calc(env(safe-area-inset-bottom) + 16px));display:flex;flex-direction:column;align-items:center;gap:10px}
+#boot .start-loading{width:100%;min-height:39px;display:flex;flex-direction:column;align-items:center;gap:7px}
+#boot .boot-meter{width:88%;height:10px;border:2px solid #30261b;border-radius:5px;background:#eddbb4;box-shadow:0 2px #30261b80;overflow:hidden}
+#boot .boot-meter i{height:100%;background:#a53627 url(assets/print/ink-wear.svg) center/240px;transition:width 200ms ease-out}
+#boot #loadProgress{font:700 13px/1.2 Bitter,Georgia,serif;color:#f6e8c6;text-shadow:0 1px 2px #30261b,1px 0 #30261b,-1px 0 #30261b}
+#boot #startPlay{display:block;width:100%;max-width:340px;min-height:60px;margin:0;padding:12px 28px 14px;border:3px solid #30261b;outline:2px solid #efdfb7;border-radius:13px 10px 15px 11px;background:#aa3628 url(assets/print/ink-wear.svg) center/350px 180px;box-shadow:inset 0 0 0 2px #edd7a2,0 5px #30261b;color:#fff0cb;font:800 29px/1 Bitter,Georgia,serif;text-shadow:1px 2px #5d251d;cursor:pointer;transition:translate 100ms ease,filter 100ms ease}
+#boot #startPlay:disabled{background-color:#746e53;color:#e6ddbd;cursor:wait;filter:saturate(.5)}
+#boot #startPlay:active:not(:disabled){translate:0 3px;box-shadow:inset 0 0 0 2px #edd7a2,0 2px #30261b}
+#boot #startPlay:focus-visible,#boot #bootFull:focus-visible{outline:3px solid #f8e8bf;outline-offset:5px}
+#boot #bootFull{position:relative;min-height:32px;margin:2px 0 0;padding:4px 10px;color:#f6e8c6;font:700 13px/1.2 Bitter,Georgia,serif;background:#30261b9c;border:1px solid #e6d4a588;border-radius:4px;box-shadow:none;text-shadow:none}
+#boot #bootFull[hidden]{display:none}
+#boot.start-ready .start-loading{visibility:hidden}
+#boot.start-ready #startPlay{animation:start-play-ready 320ms ease-out}
+body #boot.start-closing{animation:start-cover-out 220ms ease-in forwards;pointer-events:none}
+@keyframes start-title-in{from{opacity:0;translate:0 -12px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+@keyframes start-boy-sway{0%,100%{transform:translateY(0) rotate(-.6deg)}50%{transform:translateY(-3px) rotate(.6deg)}}
+@keyframes start-sun-drift{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-5px) rotate(3deg)}}
+@keyframes start-cloud-drift{0%,100%{translate:-8px 0}50%{translate:12px 0}}
+@keyframes start-play-ready{0%{scale:.97}65%{scale:1.025}100%{scale:1}}
+@keyframes start-cover-out{to{opacity:0;scale:1.015}}
+@media(orientation:landscape){
+ #boot .start-title{top:16%;left:5%;width:44%}
+ #boot .start-title h1{font-size:clamp(34px,5.1vw,86px)}
+ #boot .start-title p{font-size:clamp(12px,1.35vw,18px);margin-top:17px}
+ #boot .start-character{top:8%;left:51%;width:39%;height:82%}
+ #boot .start-sun{top:7%;right:5%;width:clamp(80px,10vw,150px)}
+ #boot .start-controls{left:11%;width:32%;bottom:12%;gap:12px}
+ #boot #startPlay{max-width:360px;min-height:65px;font-size:32px}
+ #boot .start-cloud-one{top:7%;left:36%;width:170px}
+ #boot .start-cloud-two{top:28%;right:0;width:150px}
+}
+@media(orientation:portrait) and (min-width:600px){
+ #boot .start-title{top:6%}#boot .start-title h1{font-size:clamp(60px,8.5vw,95px)}
+ #boot .start-character{top:32%;height:46%}
+ #boot .start-controls{left:25%;width:50%}
+}
+@media(max-height:650px) and (orientation:portrait){
+ #boot .start-title{top:5%}#boot .start-title h1{font-size:clamp(29px,8vw,45px)}
+ #boot .start-title p{font-size:11px;margin-top:9px}
+ #boot .start-character{top:33%;height:41%}
+ #boot .start-controls{bottom:4%;gap:7px}#boot #startPlay{min-height:52px;font-size:25px}
+ #boot .start-loading{min-height:30px;gap:4px}
+}
+@media(max-height:450px) and (orientation:landscape){
+ #boot .start-title{top:9%}#boot .start-title h1{font-size:clamp(30px,4.4vw,48px)}
+ #boot .start-title p{font-size:11px;margin-top:10px}
+ #boot .start-controls{bottom:8%;gap:6px}#boot #startPlay{min-height:47px;font-size:26px}
+ #boot .start-loading{min-height:25px;gap:4px}#boot #bootFull{min-height:24px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){#boot *,body #boot.start-closing{animation:none!important;transition:none!important}}
+body.page-hidden #boot *{animation-play-state:paused!important}
+
+#boot.start-paused *{animation-play-state:paused!important}
+
+#boot #startPlay,#boot #bootFull{font-family:Bitter,Georgia,serif!important}
+body:has(#boot:not([hidden])) #wideBtn{visibility:hidden;pointer-events:none}

@@ -1,9 +1,8 @@
 /* Presentation only: existing game controls retain their handlers and state. */
 (()=>{
  const button=document.getElementById('bRoll'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
- const pips=[[5],[1,9],[1,5,9],[1,3,7,9],[1,3,5,7,9],[1,3,4,6,7,9]];
  const space=document.createElement('span');space.className='roll-cube-space';space.setAttribute('aria-hidden','true');
- space.innerHTML=`<span class="roll-cube">${pips.map((spots,i)=>`<span class="roll-cube-face f${i+1}">${spots.map(n=>`<i style="grid-area:${Math.ceil(n/3)}/${(n-1)%3+1}"></i>`).join('')}</span>`).join('')}</span>`;
+ space.innerHTML='<img class="roll-cube-fallback" src="assets/icons/die.webp" alt="">';
  const label=document.createElement('span');label.className='roll-label';label.textContent='Бросить';button.append(space,label);button.setAttribute('aria-label','Бросить кубики');
  const originalRoll=button.onclick;let dismissing=false;
  button.onclick=async function(event){

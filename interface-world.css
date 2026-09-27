@@ -84,19 +84,12 @@ body.map-mode #bRoll .roll-label{display:block}
 #bRoll.guide-target{animation:none!important}
 /* Native corners keep a consistent radius even on the narrow +1 buttons. */
 #card button.enamel-button::before,#bRoll::before{inset:4px;border:1.5px solid #e6d5a7!important;border-radius:8px 6px 7px 5px;background:url(assets/print/ink-wear.svg) center/280px 180px!important;box-shadow:0 0 0 1px #3b302280}
-.roll-cube-space{position:relative;display:block;width:34px;height:38px;perspective:300px;flex:none;pointer-events:none}
-.roll-cube-space::after{content:'';position:absolute;bottom:-8px;left:-2px;width:40px;height:7px;background:#54281b88;border-radius:50%;filter:blur(2px)}
-.roll-cube{position:absolute;inset:0;width:34px;height:34px;transform-style:preserve-3d;transform:rotateX(-24deg) rotateY(32deg) rotateZ(-6deg);animation:die-invitation 8s ease-in-out infinite}
-.roll-cube-face{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:5px;border:2px solid #413420;border-radius:5px;background:#efdfb7 url(assets/print/card-stock.webp) center/140px;backface-visibility:hidden;box-shadow:inset 0 0 0 1px #fff1ce}
-.roll-cube-face i{width:5px;height:5px;background:#342b20;border-radius:48%;align-self:center;justify-self:center}
-.roll-cube-face.f1{transform:translateZ(17px)}.roll-cube-face.f2{transform:rotateY(90deg) translateZ(17px);background-color:#cbb17b}.roll-cube-face.f3{transform:rotateX(90deg) translateZ(17px);background-color:#fff1ca}.roll-cube-face.f4{transform:rotateY(-90deg) translateZ(17px)}.roll-cube-face.f5{transform:rotateX(-90deg) translateZ(17px)}.roll-cube-face.f6{transform:rotateY(180deg) translateZ(17px)}
+.roll-cube-space{position:relative;display:block;width:52px;height:52px;flex:none;pointer-events:none}
+.roll-cube-space::after{content:'';position:absolute;bottom:1px;left:9px;width:34px;height:6px;background:#54281b66;border-radius:50%;filter:blur(2px);z-index:-1}
+.roll-cube-canvas,.roll-cube-fallback{position:absolute;display:block;left:-4px;top:-4px;width:60px!important;height:60px!important;object-fit:contain}
 .roll-cube-space.pressed{transform:translateY(3px) scale(1.10,.82)}
-body.dice-rolling .roll-cube{animation:die-tumble .6s cubic-bezier(.4,.1,.5,1) infinite}
 .roll-cube-space.landed{animation:die-land 340ms ease-out}
-body.mobile-modal .roll-cube,body.page-hidden .roll-cube{animation-play-state:paused}
-@keyframes die-invitation{0%,88%,100%{transform:rotateX(-24deg) rotateY(32deg) rotateZ(-6deg)}92%{transform:translateY(-4px) rotateX(-30deg) rotateY(46deg) rotateZ(4deg)}96%{transform:rotateX(-20deg) rotateY(30deg) rotateZ(-8deg)}}
-@keyframes die-tumble{from{transform:translateY(-2px) rotateX(-24deg) rotateY(32deg) rotateZ(-6deg)}50%{transform:translateY(-10px) rotateX(156deg) rotateY(212deg) rotateZ(10deg)}to{transform:translateY(-2px) rotateX(336deg) rotateY(392deg) rotateZ(-6deg)}}
 @keyframes die-land{0%{transform:translateY(-8px) scale(.95,1.05)}35%{transform:translateY(3px) scale(1.12,.8)}70%{transform:translateY(-2px) scale(.98,1.04)}100%{transform:none}}
 @media(max-width:360px){#card.print-property .srow .nm{font-size:23px}#card.print-property .property-body{padding:12px}#card.print-property .uup-stat b{font-size:22px}#card.business-property .srow .nm{font-size:19px}#card.warehouse-card .warehouse-list{padding:10px}#card.warehouse-card .warehouse-list .wn{font-size:18px}#card.warehouse-card .warehouse-footer{padding:8px 10px 12px}#bRoll{gap:10px}#bRoll .roll-label{font-size:20px}body.map-mode #dock{grid-template-columns:56px minmax(0,1fr) 56px}}
 @media(max-height:700px){#card.warehouse-card{height:calc(100dvh - 64px)}#card.warehouse-card .costco-sign{height:58px;max-height:58px}#card.print-property .property-picture{max-height:205px}#qrow .qchip.m1-task{min-height:54px}#bRoll{height:64px}}
-@media(prefers-reduced-motion:reduce){.roll-cube,.roll-cube-space.landed,body.dice-rolling .roll-cube{animation:none}.wh-stock-track::before{transition:none}}
+@media(prefers-reduced-motion:reduce){.roll-cube-space.landed{animation:none}.wh-stock-track::before{transition:none}}

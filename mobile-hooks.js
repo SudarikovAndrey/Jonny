@@ -23,6 +23,7 @@ function mobileLayout(){
   const layout=JSON.stringify({action:'layout',top:(top-app.top)/height,bottom:(app.bottom-panel.top)/height});
   if(MobileHost.ready&&mobileLastLayout!==layout){mobileLastLayout=layout;MobileHost.send(JSON.parse(layout));}
   $('bRoll').disabled=$('bRoll').disabled||!MobileHost.ready;
+  if(!$('diceResult').hidden)placeDiceResult($('diceResult'));
 }
 function screenOfTile(i){
   const r=$('board-frame').getBoundingClientRect(),p=MobileHost.points[i];
@@ -90,11 +91,14 @@ window.MobileGame={
   async requestRoll(){await roll();},
   debugColliders(on){MobileHost.send({action:'debug',on});},
   showDiceResult(a,b,lesson,x,y){
-    const el=$('diceResult'),faces=['','⚀','⚁','⚂','⚃','⚄','⚅'],total=a+b,word=total<5?'клетки':'клеток';
+    const el=$('diceResult'),total=a+b,word=total<5?'клетки':'клеток';
     el.setAttribute('aria-label',`${lesson?'Учебный бросок. ':''}Выпало ${a} и ${b}. ${total} ${word}.`);
-    el.innerHTML=`<span class="result-faces" aria-hidden="true">${faces[a]} ${faces[b]}</span><span class="result-total" aria-hidden="true"><b>${total}</b><small>${word}</small></span>`;
+    el.innerHTML=`<b aria-hidden="true">${total}</b>`;
     el.hidden=false;
-    placeDiceResult(el,x,y);
+    placeDiceResult(el);
+    el.getAnimations().forEach(animation=>animation.cancel());
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      el.animate([{opacity:0,translate:'0 6px',scale:'.92'},{opacity:1,translate:'0 0',scale:'1'}],{duration:180,easing:'ease-out'});
   }
 };
 let mobileDebug=false, mobileWindMap=false;
@@ -392,38 +396,25 @@ function goodsIcons(root){
 }
 
 
-// Карточка результата всплывает над тем местом, где легли кубики. Координаты
-// приходят из веб-поля в долях вьюпорта сцены; сцена занимает полосу между
-// --world-top и --world-bottom, поэтому пересчитываем в пиксели окна.
-// Если координат нет (старый вызов или кубик улетел за кадр) — прежнее место.
-function placeDiceResult(el,x,y){
-  el.style.removeProperty('left'); el.style.removeProperty('top'); el.style.removeProperty('transform');
-  if (typeof x !== 'number' || typeof y !== 'number' || !isFinite(x) || !isFinite(y)) return;
-  const frame = document.getElementById('board-frame');
-  if (!frame) return;
-  const r = frame.getBoundingClientRect();
-  if (!r.width || !r.height) return;
-  el.style.visibility='hidden';
-  requestAnimationFrame(() => {
-    const w = el.offsetWidth || 150, h = el.offsetHeight || 54, M = 8;
-    // Плашка выезжает под кубиками, а не над ними: верх экрана с Джонни и полем
-    // остаётся открытым. Снизу её держит край нижних интерфейсов (строка клетки,
-    // док, индикатор груза), сверху — шапка.
-    const vis = id => { const e = document.getElementById(id); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return b.height ? b : null; };
-    const topLimit = (vis('top')?.bottom ?? r.top) + M;
-    const lows = ['tilebar','dock','inv','guide'].map(vis).filter(Boolean).map(b => b.top);
-    const bottomLimit = (lows.length ? Math.min(...lows) : r.bottom) - M;
-    let left = r.left + x * r.width - w / 2;
-    let top  = r.top  + y * r.height + 38;              // на 38 px ниже центра кубиков
-    left = Math.max(M, Math.min(left, window.innerWidth - w - M));
-    top  = Math.max(topLimit, Math.min(top, bottomLimit - h));
-    el.style.left = Math.round(left) + 'px';
-    el.style.top = Math.round(top) + 'px';
-    el.style.transform = 'none';
-    el.style.visibility='';
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
-      el.animate([{translate:'0 -14px',opacity:0},{translate:'0 3px',opacity:1,offset:.7},{translate:'0 0'}],{duration:260,easing:'cubic-bezier(.34,1.56,.64,1)'});
-  });
+// Число броска гаснет, когда Джонни добежал и остановился: land() зовётся сразу
+// после последнего шага. Оборачиваем последним, поверх всех хуков land.
+function hideDiceResult(){
+  const el=$('diceResult');if(!el||el.hidden)return;
+  el.getAnimations().forEach(a=>a.cancel());
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){el.hidden=true;return;}
+  el.animate([{opacity:1,scale:'1'},{opacity:0,scale:'.85'}],{duration:160,easing:'ease-in'}).finished.then(()=>{el.hidden=true;},()=>{});
+}
+addEventListener('DOMContentLoaded',()=>{
+  if(typeof land!=='function')return;
+  const base=land;land=function(){hideDiceResult();return base.apply(this,arguments);};
+});
+// A stable caption above the controls, independent of the dice/camera position.
+function placeDiceResult(el){
+  const app=$('app').getBoundingClientRect(),panel=$('panel').getBoundingClientRect();
+  el.style.left='50%';
+  el.style.top='auto';
+  el.style.bottom=Math.max(8,Math.round(app.bottom-panel.top+10))+'px';
+  el.style.transform='translateX(-50%)';
 }
 
 // Карта поля (board.html?map=…): Бруклин по умолчанию, остальные — для просмотра.
@@ -627,10 +618,13 @@ showTip = function(text){
     + '<div class="tip-bubble"><b class="tip-label">Совет Джонни</b><p class="tip-text"></p></div>'
     + '<button class="tip-x" type="button" aria-label="Закрыть"></button>';
   el.querySelector('.tip-text').textContent = text;
+  el.setAttribute('role','dialog');
+  el.setAttribute('aria-label','Совет Джонни');
   const x = el.querySelector('.tip-x');
   if(typeof paintedClose === 'function') paintedClose(x);
   x.onclick = e => { e.stopPropagation(); hideTip(); };
   positionTip();
+  fitCard();
 };
 
 // Окно «Больше груза — больше очков» объясняет поставку, но сама кнопка
@@ -713,29 +707,46 @@ function streetPassTip(){
   }
 })();
 
-// Совет над окном крепится к верху окна, а не к шапке экрана: прототип ставил
-// его под шапку, и над невысоким окном по центру оставалась дыра.
-// Место под совет (--tip-space) резервируется как раньше, потом совет
-// опускается к краю карточки. offsetTop — без transform анимации появления.
+// One advice component, two compositions: a complete centered card on the
+// board and a compact companion above an existing popup.
 (function(){
   const base = positionTip;
   positionTip = function(){
-    base.apply(this, arguments);
-    const tip = document.getElementById('tip'), modal = document.getElementById('modal'), card = document.getElementById('card');
-    if(tip.hidden || modal.hidden || !card){ modal.style.paddingTop = ''; return; }
-    const h = tip.getBoundingClientRect().height;
-    const head = document.getElementById('top').getBoundingClientRect().bottom + 8;
-    // Окно центрируется в месте под советом — и высокая карточка не заезжает под него.
-    modal.style.paddingTop = Math.round(head + h + 8) + 'px';
-    const cardTop = modal.getBoundingClientRect().top + card.offsetTop;
-    tip.style.top = Math.max(head, Math.round(cardTop - h - 4)) + 'px';
+    const tip=$('tip'),modal=$('modal'),card=$('card');
+    if(tip.hidden){modal.style.paddingTop='';return;}
+    const standalone=modal.hidden;
+    tip.classList.toggle('tip-standalone',standalone);
+    tip.classList.toggle('tip-attached',!standalone);
+    if(standalone){
+      modal.classList.remove('has-tip');modal.style.paddingTop='';
+      document.documentElement.style.setProperty('--tip-space','0px');
+      const view=window.visualViewport,height=view?.height||innerHeight,offset=view?.offsetTop||0;
+      tip.style.maxHeight=Math.max(120,height-40)+'px';
+      tip.style.bottom='auto';
+      // offsetHeight excludes the entrance animation's scale and rotation.
+      tip.style.top=Math.round(offset+Math.max(20,(height-tip.offsetHeight)/2))+'px';
+      return;
+    }
+    base.apply(this,arguments);
+    if(!card)return;
+    const h=tip.offsetHeight;
+    const head=$('top').getBoundingClientRect().bottom+8;
+    modal.style.paddingTop=Math.round(head+h+8)+'px';
+    const cardTop=modal.getBoundingClientRect().top+card.offsetTop;
+    tip.style.top=Math.max(head,Math.round(cardTop-h-4))+'px';
   };
-  const card = document.getElementById('card');
-  if(card && 'ResizeObserver' in window) new ResizeObserver(() => positionTip()).observe(card);
-  // Совет скрыли или окно закрыли — возвращаем обычный отступ окна.
-  const reset = () => { const t = document.getElementById('tip'), m = document.getElementById('modal');
-    if(t.hidden || m.hidden) m.style.paddingTop = ''; };
-  for(const id of ['tip','modal']){ const el = document.getElementById(id); if(el) new MutationObserver(reset).observe(el, {attributes:true, attributeFilter:['hidden']}); }
+  const card=$('card');
+  if(card&&'ResizeObserver' in window)new ResizeObserver(()=>positionTip()).observe(card);
+  const reset=()=>{
+    const tip=$('tip'),modal=$('modal');
+    if(tip.hidden){modal.style.paddingTop='';return;}
+    positionTip();
+  };
+  for(const id of ['tip','modal'])new MutationObserver(reset).observe($(id),{attributes:true,attributeFilter:['hidden']});
+  window.visualViewport?.addEventListener('resize',()=>positionTip());
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!$('tip').hidden){event.preventDefault();hideTip();}
+  });
 })();
 
 // Таймер дня: часы на плашке уже говорят о времени — крупно остаток, мелко «до полуночи».

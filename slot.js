@@ -8,7 +8,7 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function context(){return {
  P:Math.max(0,Math.round(lapNet())),day:S.day,cash:S.cash,gem:S.hard,move:S.rolls,pot:st().pot||0,
  sound:!GameFeedback.muted,
- points:myKiosks().map(t=>({id:t.i,n:pointName(t),cap:cap(t),q:t.goods,buy:buyPrice(t.good),profit:sales(t)*(sellPrice(t.good)-buyPrice(t.good))})),
+ points:myKiosks().map(t=>({id:t.i,n:pointName(t),cap:cap(t),q:t.goods,good:t.good,buy:buyPrice(t.good),profit:sales(t)*(sellPrice(t.good)-buyPrice(t.good))})),
 };}
 function makeSession(){return Session.createSession(Engine,{
  saved:()=>st().bandit||{...Engine.initial(),freeSpin:false,paidSpins:0,pot:st().pot||0,visits:st().visits||0,pending:null,lastPrize:null,totalSpins:0},

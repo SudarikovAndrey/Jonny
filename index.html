@@ -312,8 +312,25 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=001b9c81"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="unified-upgrade.css?v=148de54d"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=34a1811c"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=58d2c8e1"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=e6300978"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
-<body>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=34a1811c"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=e6300978"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
+<body><section id="boot" aria-labelledby="bootTitle">
+  <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
+  <div class="start-print-edge" aria-hidden="true"></div>
+  <img class="start-sun" src="assets/bp/bp-sun.webp" alt="" aria-hidden="true">
+  <div class="start-cloud start-cloud-one" aria-hidden="true"></div>
+  <div class="start-cloud start-cloud-two" aria-hidden="true"></div>
+  <header class="start-title">
+    <h1 id="bootTitle"><span>Америкэн</span><strong>Бой</strong></h1>
+    <p>Бруклин · товар едет к пацанам</p>
+  </header>
+  <div class="start-character" aria-hidden="true"><img src="assets/start/johnny-v2.webp" alt="" fetchpriority="high" width="1024" height="1536"></div>
+  <div class="start-controls">
+    <div class="start-loading"><div class="boot-meter" role="progressbar" aria-label="Загрузка" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loadBar"></i></div><span id="loadProgress" role="status">Загружаем поле…</span></div>
+    <button id="startPlay" type="button" disabled>Играть</button>
+    <button id="bootFull" type="button" hidden>Во весь экран</button>
+  </div>
+</section><script src="start-screen.js?v=c962a743"></script>
+
 <div id="app">
   <div id="top">
     <div class="bar0">
@@ -330,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'ab32a5ec'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'96198260'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -349,7 +366,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 <div id="fx"></div>
 <div id="modal" hidden><div class="card" id="card"></div></div>
 
-<script src="mobile-feedback.js?v=304ad22e"></script><script src="mobile-host.js?v=af0d227d"></script>
+<script src="mobile-feedback.js?v=e4f943d2"></script><script src="mobile-host.js?v=af0d227d"></script>
 <script>
 
 // ======================= БАЛАНС — крутить здесь =======================
@@ -1416,7 +1433,7 @@ async function shop(){ track('window',{w:'costco',cash:S.cash,day:S.day});
       // денег на всё хватает — просто заполнить; не хватает — сначала самое выгодное, по одному кругу продаж на точку, кругами
       if(S.cash>=need){for(const g of CFG.GOODS){const p=buyPrice(g.id);while(goodCap(g.id)-stock(g.id)>0&&S.cash>=p){if(!addGoods(g.id,1))break;S.cash-=p;spent+=p;}}}
       else{const order=myKiosks().slice().sort((a,b)=>sales(b)*(sellPrice(b.good)-buyPrice(b.good))-sales(a)*(sellPrice(a.good)-buyPrice(a.good)));
-        for(let round=0;round<40;round++){let any=false;for(const t of order){const p=buyPrice(t.good);let n=Math.min(sales(t),cap(t)-t.goods);while(n>0&&S.cash>=p){t.goods++;S.cash-=p;spent+=p;n--;any=true;}}if(!any)break;}}
+        for(let round=0;round<40;round++){let any=false;for(const t of order){const p=buyPrice(t.good);let n=Math.min(sales(t),cap(t)-t.goods);while(n>0&&S.cash>=p&&(typeof tutorialCanSpend!=='function'||tutorialCanSpend(p))){t.goods++;S.cash-=p;spent+=p;n--;any=true;}}if(!any)break;}}
       log(`Закупился на $${spent}.`);if(spent>0)earnStarter('stock');if(spent>0&&trainingPending()){holdStop();closeModal();save();render();return;}draw();render();};
     $('wNo').onclick=()=>closeModal();
   };
@@ -2075,6 +2092,7 @@ function mobileLayout(){
   const layout=JSON.stringify({action:'layout',top:(top-app.top)/height,bottom:(app.bottom-panel.top)/height});
   if(MobileHost.ready&&mobileLastLayout!==layout){mobileLastLayout=layout;MobileHost.send(JSON.parse(layout));}
   $('bRoll').disabled=$('bRoll').disabled||!MobileHost.ready;
+  if(!$('diceResult').hidden)placeDiceResult($('diceResult'));
 }
 function screenOfTile(i){
   const r=$('board-frame').getBoundingClientRect(),p=MobileHost.points[i];
@@ -2142,11 +2160,14 @@ window.MobileGame={
   async requestRoll(){await roll();},
   debugColliders(on){MobileHost.send({action:'debug',on});},
   showDiceResult(a,b,lesson,x,y){
-    const el=$('diceResult'),faces=['','⚀','⚁','⚂','⚃','⚄','⚅'],total=a+b,word=total<5?'клетки':'клеток';
+    const el=$('diceResult'),total=a+b,word=total<5?'клетки':'клеток';
     el.setAttribute('aria-label',`${lesson?'Учебный бросок. ':''}Выпало ${a} и ${b}. ${total} ${word}.`);
-    el.innerHTML=`<span class="result-faces" aria-hidden="true">${faces[a]} ${faces[b]}</span><span class="result-total" aria-hidden="true"><b>${total}</b><small>${word}</small></span>`;
+    el.innerHTML=`<b aria-hidden="true">${total}</b>`;
     el.hidden=false;
-    placeDiceResult(el,x,y);
+    placeDiceResult(el);
+    el.getAnimations().forEach(animation=>animation.cancel());
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      el.animate([{opacity:0,translate:'0 6px',scale:'.92'},{opacity:1,translate:'0 0',scale:'1'}],{duration:180,easing:'ease-out'});
   }
 };
 let mobileDebug=false, mobileWindMap=false;
@@ -2444,38 +2465,25 @@ function goodsIcons(root){
 }
 
 
-// Карточка результата всплывает над тем местом, где легли кубики. Координаты
-// приходят из веб-поля в долях вьюпорта сцены; сцена занимает полосу между
-// --world-top и --world-bottom, поэтому пересчитываем в пиксели окна.
-// Если координат нет (старый вызов или кубик улетел за кадр) — прежнее место.
-function placeDiceResult(el,x,y){
-  el.style.removeProperty('left'); el.style.removeProperty('top'); el.style.removeProperty('transform');
-  if (typeof x !== 'number' || typeof y !== 'number' || !isFinite(x) || !isFinite(y)) return;
-  const frame = document.getElementById('board-frame');
-  if (!frame) return;
-  const r = frame.getBoundingClientRect();
-  if (!r.width || !r.height) return;
-  el.style.visibility='hidden';
-  requestAnimationFrame(() => {
-    const w = el.offsetWidth || 150, h = el.offsetHeight || 54, M = 8;
-    // Плашка выезжает под кубиками, а не над ними: верх экрана с Джонни и полем
-    // остаётся открытым. Снизу её держит край нижних интерфейсов (строка клетки,
-    // док, индикатор груза), сверху — шапка.
-    const vis = id => { const e = document.getElementById(id); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return b.height ? b : null; };
-    const topLimit = (vis('top')?.bottom ?? r.top) + M;
-    const lows = ['tilebar','dock','inv','guide'].map(vis).filter(Boolean).map(b => b.top);
-    const bottomLimit = (lows.length ? Math.min(...lows) : r.bottom) - M;
-    let left = r.left + x * r.width - w / 2;
-    let top  = r.top  + y * r.height + 38;              // на 38 px ниже центра кубиков
-    left = Math.max(M, Math.min(left, window.innerWidth - w - M));
-    top  = Math.max(topLimit, Math.min(top, bottomLimit - h));
-    el.style.left = Math.round(left) + 'px';
-    el.style.top = Math.round(top) + 'px';
-    el.style.transform = 'none';
-    el.style.visibility='';
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
-      el.animate([{translate:'0 -14px',opacity:0},{translate:'0 3px',opacity:1,offset:.7},{translate:'0 0'}],{duration:260,easing:'cubic-bezier(.34,1.56,.64,1)'});
-  });
+// Число броска гаснет, когда Джонни добежал и остановился: land() зовётся сразу
+// после последнего шага. Оборачиваем последним, поверх всех хуков land.
+function hideDiceResult(){
+  const el=$('diceResult');if(!el||el.hidden)return;
+  el.getAnimations().forEach(a=>a.cancel());
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){el.hidden=true;return;}
+  el.animate([{opacity:1,scale:'1'},{opacity:0,scale:'.85'}],{duration:160,easing:'ease-in'}).finished.then(()=>{el.hidden=true;},()=>{});
+}
+addEventListener('DOMContentLoaded',()=>{
+  if(typeof land!=='function')return;
+  const base=land;land=function(){hideDiceResult();return base.apply(this,arguments);};
+});
+// A stable caption above the controls, independent of the dice/camera position.
+function placeDiceResult(el){
+  const app=$('app').getBoundingClientRect(),panel=$('panel').getBoundingClientRect();
+  el.style.left='50%';
+  el.style.top='auto';
+  el.style.bottom=Math.max(8,Math.round(app.bottom-panel.top+10))+'px';
+  el.style.transform='translateX(-50%)';
 }
 
 // Карта поля (board.html?map=…): Бруклин по умолчанию, остальные — для просмотра.
@@ -2679,10 +2687,13 @@ showTip = function(text){
     + '<div class="tip-bubble"><b class="tip-label">Совет Джонни</b><p class="tip-text"></p></div>'
     + '<button class="tip-x" type="button" aria-label="Закрыть"></button>';
   el.querySelector('.tip-text').textContent = text;
+  el.setAttribute('role','dialog');
+  el.setAttribute('aria-label','Совет Джонни');
   const x = el.querySelector('.tip-x');
   if(typeof paintedClose === 'function') paintedClose(x);
   x.onclick = e => { e.stopPropagation(); hideTip(); };
   positionTip();
+  fitCard();
 };
 
 // Окно «Больше груза — больше очков» объясняет поставку, но сама кнопка
@@ -2765,29 +2776,46 @@ function streetPassTip(){
   }
 })();
 
-// Совет над окном крепится к верху окна, а не к шапке экрана: прототип ставил
-// его под шапку, и над невысоким окном по центру оставалась дыра.
-// Место под совет (--tip-space) резервируется как раньше, потом совет
-// опускается к краю карточки. offsetTop — без transform анимации появления.
+// One advice component, two compositions: a complete centered card on the
+// board and a compact companion above an existing popup.
 (function(){
   const base = positionTip;
   positionTip = function(){
-    base.apply(this, arguments);
-    const tip = document.getElementById('tip'), modal = document.getElementById('modal'), card = document.getElementById('card');
-    if(tip.hidden || modal.hidden || !card){ modal.style.paddingTop = ''; return; }
-    const h = tip.getBoundingClientRect().height;
-    const head = document.getElementById('top').getBoundingClientRect().bottom + 8;
-    // Окно центрируется в месте под советом — и высокая карточка не заезжает под него.
-    modal.style.paddingTop = Math.round(head + h + 8) + 'px';
-    const cardTop = modal.getBoundingClientRect().top + card.offsetTop;
-    tip.style.top = Math.max(head, Math.round(cardTop - h - 4)) + 'px';
+    const tip=$('tip'),modal=$('modal'),card=$('card');
+    if(tip.hidden){modal.style.paddingTop='';return;}
+    const standalone=modal.hidden;
+    tip.classList.toggle('tip-standalone',standalone);
+    tip.classList.toggle('tip-attached',!standalone);
+    if(standalone){
+      modal.classList.remove('has-tip');modal.style.paddingTop='';
+      document.documentElement.style.setProperty('--tip-space','0px');
+      const view=window.visualViewport,height=view?.height||innerHeight,offset=view?.offsetTop||0;
+      tip.style.maxHeight=Math.max(120,height-40)+'px';
+      tip.style.bottom='auto';
+      // offsetHeight excludes the entrance animation's scale and rotation.
+      tip.style.top=Math.round(offset+Math.max(20,(height-tip.offsetHeight)/2))+'px';
+      return;
+    }
+    base.apply(this,arguments);
+    if(!card)return;
+    const h=tip.offsetHeight;
+    const head=$('top').getBoundingClientRect().bottom+8;
+    modal.style.paddingTop=Math.round(head+h+8)+'px';
+    const cardTop=modal.getBoundingClientRect().top+card.offsetTop;
+    tip.style.top=Math.max(head,Math.round(cardTop-h-4))+'px';
   };
-  const card = document.getElementById('card');
-  if(card && 'ResizeObserver' in window) new ResizeObserver(() => positionTip()).observe(card);
-  // Совет скрыли или окно закрыли — возвращаем обычный отступ окна.
-  const reset = () => { const t = document.getElementById('tip'), m = document.getElementById('modal');
-    if(t.hidden || m.hidden) m.style.paddingTop = ''; };
-  for(const id of ['tip','modal']){ const el = document.getElementById(id); if(el) new MutationObserver(reset).observe(el, {attributes:true, attributeFilter:['hidden']}); }
+  const card=$('card');
+  if(card&&'ResizeObserver' in window)new ResizeObserver(()=>positionTip()).observe(card);
+  const reset=()=>{
+    const tip=$('tip'),modal=$('modal');
+    if(tip.hidden){modal.style.paddingTop='';return;}
+    positionTip();
+  };
+  for(const id of ['tip','modal'])new MutationObserver(reset).observe($(id),{attributes:true,attributeFilter:['hidden']});
+  window.visualViewport?.addEventListener('resize',()=>positionTip());
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!$('tip').hidden){event.preventDefault();hideTip();}
+  });
 })();
 
 // Таймер дня: часы на плашке уже говорят о времени — крупно остаток, мелко «до полуночи».
@@ -3725,6 +3753,68 @@ function decorateUnifiedUpgrade(){
 }
 new MutationObserver(()=>decorateUnifiedUpgrade()).observe($('card'),{childList:true,subtree:true});
 
+// ===== Страховка учебного круга: деньги на обязательные шаги нельзя потратить =====
+// Правила: черновики/америкэн-бой-тутор-правила.md. Проверка: node tests/tutorial-guard.cjs.
+// Учебный круг (FIRST_LAP_ROUTES) требует три покупки: точка на первой клетке,
+// хотя бы один товар на Costco, бизнес на третьей. Всё, что не требуется, пока
+// шаги не пройдены, либо заперто (прокачки), либо ограничено резервом (закупка).
+// Резерв — сумма цен ещё не сделанных обязательных покупок; касса ниже резерва
+// опуститься не может. Баланс первого круга может меняться — правило остаётся.
+
+// Сколько денег нельзя тратить прямо сейчас.
+function tutorialReserve(){
+  if(typeof firstLapActive!=='function'||!S||!firstLapActive())return 0;
+  const p=firstLapPlan(),i=S.firstRoute.index||0;let r=0;
+  const k=S.tiles[p[0]];if(i<=0&&k&&k.type==='kiosk'&&!k.owner)r+=k.price;
+  if(i<=1&&!myKiosks().some(x=>x.goods>0)){const gs=CFG.GOODS.filter(g=>g.zone===0);if(gs.length)r+=Math.min(...gs.map(g=>buyPrice(g.id)));}
+  const b=S.tiles[p[2]];if(i<=2&&b&&b.type==='biz'&&!b.owner)r+=b.price;
+  return r;
+}
+// Обязательные шаги ещё идут — необязательные траты заперты.
+function tutorialLocked(){return tutorialReserve()>0;}
+// Что ещё осталось купить по маршруту — для подписи на замке.
+function tutorialLeft(){
+  if(!tutorialLocked())return [];const p=firstLapPlan(),i=S.firstRoute.index||0,out=[];
+  const k=S.tiles[p[0]];if(i<=0&&k&&!k.owner)out.push('точку');
+  if(i<=1&&!myKiosks().some(x=>x.goods>0))out.push('товар на Costco');
+  const b=S.tiles[p[2]];if(i<=2&&b&&!b.owner)out.push('бизнес');
+  return out;
+}
+// Можно ли потратить сумму, не тронув резерв.
+function tutorialCanSpend(cost){return S.cash-cost>=tutorialReserve();}
+
+// Закупка: все пути покупки товара идут через addGoods — здесь и держим резерв.
+(function(){
+  const base=addGoods;
+  addGoods=function(g,n){
+    const r=tutorialReserve();if(r>0){const p=buyPrice(g);n=Math.max(0,Math.min(n,Math.floor((S.cash-r)/p)));if(n<=0)return 0;}
+    return base.call(this,g,n);
+  };
+})();
+
+// Прокачки точки и бизнеса на учебном круге заперты с пояснением.
+function tutorialLockButtons(){
+  if(!tutorialLocked())return;
+  const card=$('card');if(!card)return;
+  for(const id of ['kUp','kCap','kSal','bUp','kEvo','bEvo']){
+    const b=card.querySelector('#'+id);if(!b||b.dataset.tutLocked)continue;
+    b.dataset.tutLocked='1';b.disabled=true;b.setAttribute('aria-disabled','true');
+    const left=tutorialLeft();
+    const label=b.querySelector('span:not(.enamel-skin)')||b;label.textContent='Сначала — '+(left[left.length-1]||'маршрут');
+    const bEl=b.querySelector('b');if(bEl)bEl.remove();
+  }
+  if(!card.querySelector('.tut-lock-note')&&card.querySelector('[data-tut-locked]')){
+    const left=tutorialLeft();
+    const n=document.createElement('p');n.className='tut-lock-note';n.textContent=`Прокачка откроется, когда купишь ${left.join(' и ')} по маршруту — деньги отложены на это.`;
+    card.querySelector('[data-tut-locked]').after(n);
+  }
+  // Costco: «на всё» не должно опускать кассу ниже резерва — кнопка остаётся, но addGoods режет.
+  const all=card.querySelector('#wAll');
+  if(all&&!all.dataset.tutNote){all.dataset.tutNote='1';const r=tutorialReserve();const note=document.createElement('small');note.className='tut-lock-note';note.textContent=`$${r} отложено на бизнес по маршруту`;all.after(note);}
+}
+new MutationObserver(()=>tutorialLockButtons()).observe($('card'),{childList:true,subtree:true});
+window.TutorialGuard={reserve:tutorialReserve,locked:tutorialLocked,canSpend:tutorialCanSpend,left:tutorialLeft};
+
 // ===== Бруклин (карта 5) на новой лестнице =====
 // Спек: черновики/америкэн-бой-карты-и-дерево.md §2, §3, §6; решение 25.09 — перевести.
 // Прежняя структура прототипа сохраняется: у линии три товара (tier, next), смена
@@ -4628,8 +4718,8 @@ const SYMBOLS=['seven','gem','dice','coin','box','cherry'];
 const OUTCOMES=[
  ['jackpot',1,'seven',3,'Джекпот'],['gem3',3,'gem',3,'3 кристалла'],
  ['dice3',4,'dice',3,'10 ходов'],['coin3',5,'coin',3,'Монеты ×3'],
- ['box3',5,'box',3,'Все точки'],['cherry3',7,'cherry',3,'Вишни ×3'],
- ['dice2',8,'dice',2,'3 хода'],['box2',8,'box',2,'Одна точка'],
+ ['box3',5,'box',3,'Товар во все точки'],['cherry3',7,'cherry',3,'Вишни ×3'],
+ ['dice2',8,'dice',2,'3 хода'],['box2',8,'box',2,'Товар в лучшую точку'],
  ['pair',24,null,2,'Любая другая пара'],['none',35,null,1,'Разнобой']
 ].map(([id,chance,symbol,count,label])=>({id,chance,symbol,count,label}));
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -4675,7 +4765,7 @@ function award(s,o,syms){
  }
  return p;
 }
-function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.move?`+${p.move} ${p.move===3?"хода":"ходов"}`:'',p.restock==='all'?'Затарить все точки':p.restock==='one'?'Затарить точку':''].filter(Boolean).join(' + ');}
+function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.move?`+${p.move} ${p.move===3?"хода":"ходов"}`:'',p.restock==='all'?'Затарить все точки':p.restock==='one'?'Затарить лучшую точку':''].filter(Boolean).join(' + ');}
 class Game {
  constructor(raw,rng=Math.random){this.state=restore(raw);this.rng=rng;this.busy=false;}
  available(){return this.state.paidSpins+(this.state.freeSpin?1:0);}
@@ -4695,7 +4785,7 @@ class Game {
   if(p.restock){
    const eligible=s.points.filter(x=>x.q<x.cap).sort((a,b)=>b.profit-a.profit);
    const selected=p.restock==='all'?eligible:eligible.slice(0,1);
-   if(selected.length){selected.forEach(x=>{stocked.push(`${x.n}: +${x.cap-x.q}`);x.q=x.cap;});}
+   if(selected.length){selected.forEach(x=>{stocked.push({n:x.n,add:x.cap-x.q,good:x.good||null});x.q=x.cap;});}
    else refund=s.points.length?Math.max(0,...s.points.map(x=>x.cap*x.buy)):Math.max(s.P,15*s.day);
   }
   const cash=p.cash+refund;s.cash+=cash;s.gem+=p.gem;s.move+=p.move;
@@ -4748,7 +4838,7 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function context(){return {
  P:Math.max(0,Math.round(lapNet())),day:S.day,cash:S.cash,gem:S.hard,move:S.rolls,pot:st().pot||0,
  sound:!GameFeedback.muted,
- points:myKiosks().map(t=>({id:t.i,n:pointName(t),cap:cap(t),q:t.goods,buy:buyPrice(t.good),profit:sales(t)*(sellPrice(t.good)-buyPrice(t.good))})),
+ points:myKiosks().map(t=>({id:t.i,n:pointName(t),cap:cap(t),q:t.goods,good:t.good,buy:buyPrice(t.good),profit:sales(t)*(sellPrice(t.good)-buyPrice(t.good))})),
 };}
 function makeSession(){return Session.createSession(Engine,{
  saved:()=>st().bandit||{...Engine.initial(),freeSpin:false,paidSpins:0,pot:st().pot||0,visits:st().visits||0,pending:null,lastPrize:null,totalSpins:0},
@@ -4783,7 +4873,7 @@ function open(opts={}){
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Однорукий бандит');
  const loading=document.createElement('div');loading.className='sl-loading';loading.textContent='Открываем автомат…';
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
- const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=e3827403d8f8#'+encodeURIComponent(token);
+ const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=9f893394c1b3#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
  current={promise,session,frame,token,layer,closing:false,resolve};
  const finish=()=>{
@@ -5081,10 +5171,13 @@ new MutationObserver(()=>{
 }).observe($('card'),{childList:true,subtree:true});
 })();
 
+const startAskName=askName,startIntro=intro;
+askName=async(...args)=>{await window.GameStart.whenEntered;return startAskName(...args);};
+intro=async(...args)=>{await window.GameStart.whenEntered;return startIntro(...args);};
 if(UI_REVIEW){askName=async()=>{};intro=async()=>{};}
 if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)setTimeout(()=>askName(),50);
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<div id="boot"><div class="boot-city" aria-hidden="true"></div><div class="boot-sun" aria-hidden="true"></div><div class="boot-head"><span class="boot-stamp" aria-hidden="true"></span><div><b>АМЕРИКЭН БОЙ</b><small>Бруклин · товар едет к пацанам</small></div></div><img class="boot-hero" src="assets/bp/bp-johnny.webp" width="260" height="323" alt=""><div class="boot-meter" role="progressbar" aria-label="Загрузка"><i id="loadBar"></i></div><span id="loadProgress">Загружаем поле…</span><button id="bootFull" type="button" hidden>Во весь экран</button><small class="boot-tip">Первый запуск дольше: подтягивается движок</small></div><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=19f4dbaf"></script><script src="interface-review.js?v=46122472"></script></body>
+<script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=710c976d"></script><script src="interface-review.js?v=944b63f4"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
 </html>

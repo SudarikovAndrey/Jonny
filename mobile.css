@@ -154,15 +154,10 @@ body.mobile-modal #toast{visibility:hidden;pointer-events:none!important}
 #inv{bottom:calc(var(--world-bottom) + 13px);left:10px;pointer-events:none}#inv button,#invList{pointer-events:auto}
 .map-controls{top:calc(var(--world-top) + 7px);right:9px;gap:4px}
 .map-controls button{min-height:34px;font-size:10px;padding:6px 8px;box-shadow:0 2px #33271788}
-#diceResult{position:absolute;z-index:10;top:calc(var(--world-top) + 48px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:6px 13px;text-align:center;background:#f3dfb4 url(assets/paper-grain.svg);border:2px solid #30261b;border-radius:13px;box-shadow:0 3px #30261b;color:#27231c;pointer-events:none}
-#diceResult[hidden]{display:none}#diceResult small{display:block;font-size:10px}#diceResult b{display:block;font-size:26px;line-height:1}
-#diceResult .result-faces{font-family:'Apple Symbols','Segoe UI Symbol',sans-serif;font-size:36px;line-height:1;white-space:nowrap}
-#diceResult .result-total{border-left:1px solid #ac9466;padding-left:12px;min-width:40px}
+#diceResult{position:absolute;z-index:10;left:50%;transform:translateX(-50%);display:flex;align-items:baseline;justify-content:center;gap:7px;padding:0;text-align:center;background:none;border:0;border-radius:0;box-shadow:none;color:#fff0cd;pointer-events:none;white-space:nowrap;font:800 19px/1.15 Bitter,Georgia,serif;text-shadow:0 2px 1px #30261b,1px 0 #30261b,-1px 0 #30261b,0 -1px #30261b}
+#diceResult[hidden]{display:none}
+#diceResult b{font-size:36px;line-height:1;letter-spacing:-1px}
 .map-controls{display:none}
-#diceResult{top:calc(var(--world-top) + 9px);left:8px;transform:none;gap:8px;padding:5px 8px}
-#diceResult .result-faces{font-size:30px}
-#diceResult .result-total{padding-left:8px;min-width:32px}
-#diceResult b{font-size:23px}
 .mobile-modal #diceResult,.coach-tip-open #diceResult{visibility:hidden}
 .dice-rolling .map-controls,.dice-rolling #inv,.dice-rolling #guide{visibility:hidden}
 .dice-rolling #toast{visibility:hidden;pointer-events:none!important}
@@ -395,6 +390,7 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 #onboard .ob-row{flex-wrap:nowrap}
 
 /* ===== «Совет Джонни» ===== */
+body #tip[hidden]{display:none!important}
 body #tip{background:none!important;border:0!important;outline:0!important;box-shadow:none!important;
   padding:0!important;color:#2a2118!important;display:flex;align-items:flex-end;gap:0;
   font-family:var(--txt);overflow:visible;max-width:min(92vw,400px)}
@@ -416,6 +412,34 @@ body #tip::before,body #tip::after{content:none!important;display:none!important
 /* крестик подсказки: только нарисованный круг, без подложки кнопки */
 #tip .tip-x{background:none!important;border:0!important;box-shadow:none!important;
   border-radius:50%!important;overflow:hidden!important}
+
+/* Standalone advice is one printed card: the portrait stays inside its header. */
+body #tip.tip-standalone{display:block;width:calc(100% - 40px);max-width:400px;overflow:visible;cursor:pointer}
+#tip.tip-standalone .tip-bubble{padding:22px 24px 25px;border:3px solid #392d1e;
+  border-radius:23px 18px 24px 20px;background:#efdfb7 url(assets/print/card-stock.webp) center/400px 600px;
+  box-shadow:0 0 0 3px #ead7a6,inset 0 0 0 2px #f7e9c5,0 7px 0 3px #30261b,0 15px 26px #0005;rotate:0}
+#tip.tip-standalone .tip-bubble::before{display:none}
+#tip.tip-standalone .tip-johnny{position:absolute;top:18px;left:20px;width:83px;height:87px;margin:0;
+  background-position:center bottom;filter:none}
+#tip.tip-standalone .tip-label{display:flex;align-items:center;min-height:80px;margin:0 14px 19px 94px;
+  font:800 25px/1.12 Bitter,Georgia,serif;letter-spacing:-.4px;text-transform:none;color:#a53627}
+#tip.tip-standalone .tip-text{padding-top:17px;border-top:2px solid #9a8054;
+  font:600 18px/1.48 Bitter,Georgia,serif;color:#332b20;text-wrap:pretty}
+#tip.tip-standalone .tip-x{top:-13px;right:-10px;width:44px;height:44px}
+#tip.tip-attached .tip-label{font:800 14px/1.2 Bitter,Georgia,serif;text-transform:none;letter-spacing:0}
+#tip.tip-attached .tip-text{font:600 16px/1.38 Bitter,Georgia,serif}
+@media(max-width:360px){
+ #tip.tip-standalone .tip-bubble{padding:18px 19px 21px}
+ #tip.tip-standalone .tip-johnny{width:72px;height:76px;left:17px;top:17px}
+ #tip.tip-standalone .tip-label{min-height:73px;margin-left:82px;font-size:23px}
+ #tip.tip-standalone .tip-text{font-size:17px;line-height:1.43}
+}
+@media(max-height:500px){
+ #tip.tip-standalone .tip-bubble{padding:14px 20px 17px}
+ #tip.tip-standalone .tip-johnny{height:56px;width:58px;top:11px;left:19px}
+ #tip.tip-standalone .tip-label{min-height:48px;margin:0 25px 10px 70px;font-size:22px}
+ #tip.tip-standalone .tip-text{padding-top:11px;font-size:16px;line-height:1.35}
+}
 
 /* Строка товара в обучении посылки: общая пульсация масштабирует до 1.08
    и даёт кольцо 7 px — у широкой строки это вылезало за край окна и
@@ -499,15 +523,8 @@ body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .ma
 /* строка клетки: серая «открыть», если здесь не на что потратиться; зелёная — если есть */
 #tilebar.poor>b{background:#8f887d!important;color:#f3efe6!important;box-shadow:inset 0 -2px 0 #0000002a}
 
-/* ===== v61: отбивки под верхней и нижней панелью =====
-   Карта не обрывается о панели, а уходит под них в тёплую тень. Слой — внутри
-   #stage над полем и под HUD, клики пропускает. Высота — по реальной высоте
-   панелей (--world-top / --world-bottom) плюс 56 px растворения. */
-#stage::before,#stage::after{content:'';position:absolute;left:0;right:0;z-index:1;pointer-events:none}
-#stage::before{top:0;height:calc(var(--world-top,150px) + 56px);
-  background:linear-gradient(rgba(38,29,20,.78) 0%,rgba(38,29,20,.55) calc(100% - 56px),rgba(38,29,20,.22) calc(100% - 28px),rgba(38,29,20,0) 100%)}
-#stage::after{bottom:0;height:calc(var(--world-bottom,150px) + 56px);
-  background:linear-gradient(0deg,rgba(38,29,20,.8) 0%,rgba(38,29,20,.55) calc(100% - 56px),rgba(38,29,20,.22) calc(100% - 28px),rgba(38,29,20,0) 100%)}
+/* Тени под панелями (v61) убраны: их высота шла за панелью и прыгала, когда
+   появлялась строка клетки. Поле идёт до краёв без затемнения. */
 .map-controls{z-index:2}
 
 /* ===== v62: широкий режим на компьютере ===== */
@@ -527,3 +544,9 @@ body.wide-mode #wideBtn{top:14px;right:18px}
 /* Общие плашки ресурсов обеих мини-игр; размещение задаёт minigame-shell. */
 .sl-res{position:absolute;z-index:6;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 6px);display:grid;grid-template-columns:1fr 1fr;gap:6px;pointer-events:none}
 .sl-res .cur{height:36px}
+/* широкий режим: ячейки ресурсов над мини-игрой — по ширине колонки игры, как #top */
+body.wide-mode .minigame-layer .sl-res{width:min(460px,calc(100% - 20px));justify-self:center;margin-left:auto;margin-right:auto}
+/* число броска — на квадратной бумажной подложке, как ячейки шапки */
+#diceResult{display:grid;place-items:center;min-width:58px;height:58px;padding:0 10px;box-sizing:border-box;border:2.5px solid #2a221c;border-radius:12px;
+  background:#f4e5c4 url(assets/paper-grain.svg);box-shadow:0 3px 0 #2a221c,0 6px 12px #0005;color:#2a221c;text-shadow:none}
+#diceResult b{font:800 36px/1 Bitter,Georgia,serif;letter-spacing:-1px}

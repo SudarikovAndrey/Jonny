@@ -53,6 +53,8 @@
   business:()=>{const t=reviewTile||S.tiles.find(t=>t.type==='biz'&&!t.owner&&unlocked(t))||S.tiles.find(t=>t.type==='biz');if(t)bizWindow(t);},
   tree:()=>{treeScreen(Math.max(1,Math.min(4,Number(params.get('after'))||1)));openCustom();},
   'map-end':()=>mapEndFlow(Math.max(1,Math.min(4,Number(params.get('after'))||1))),
+  tip:()=>showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.'),
+  'tip-attached':()=>{shop();showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.');},
   warehouse:()=>shop(),shipping:()=>shipClick(),police:()=>police(),chance:()=>Chance.play(),johnny:()=>johnny(),shop:()=>shopHard()
  }[name];
  if(!open)return;

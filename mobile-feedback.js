@@ -4,6 +4,13 @@ window.GameFeedback=(()=>{
  let music=null,musicIndex=0,musicStarted=false,musicMuted=true;
  const musicTracks=['assets/audio/bouncy-arcade-fun.mp3','assets/audio/arcade-bounce.mp3'];
  try{muted=localStorage.getItem('americanboy_sound_muted')!=='0';musicMuted=localStorage.getItem('americanboy_music_muted')!=='0'}catch{muted=musicMuted=true}
+ // Тишина без спроса: игру открыл робот (Playwright, браузер агента — navigator.webdriver)
+ // или адрес с ?mute / ?silent. Тогда ни музыки, ни звуков за всю сессию, а переключатели
+ // в меню не трогают настройки игрока в localStorage.
+ const forcedSilent=(()=>{try{const q=new URLSearchParams(location.search);return !!navigator.webdriver||q.has('mute')||q.has('silent');}catch{return false}})();
+ // Вкладка в фоне или без фокуса (превью в чате, скрытая панель) — тоже молчим.
+ const away=()=>document.hidden||!document.hasFocus();
+ const quiet=()=>forcedSilent||document.hidden;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  function makeMusic(){
   if(music)return music;
@@ -13,16 +20,23 @@ window.GameFeedback=(()=>{
   return music;
  }
  function startMusic(){
-  if(musicMuted)return;
+  if(musicMuted||quiet())return;
   const player=makeMusic();
   if(!musicStarted){musicStarted=true;player.play().catch(()=>{musicStarted=false;});}
  }
- function unlock(){
+ function unlock(e){
+  // Звук будит только живое касание в видимой вкладке с фокусом.
+  if(forcedSilent||away()||(e&&!e.isTrusted))return;
   if(!ctx){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;ctx=new Audio();master=ctx.createGain();master.gain.value=muted?0:.20;master.connect(ctx.destination);noise=ctx.createBuffer(1,ctx.sampleRate*.18,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);}
   if(ctx.state==='suspended')ctx.resume().catch(()=>{});
   startMusic();
  }
  document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('keydown',unlock,{passive:true});
+ // Ушли со вкладки — музыка на паузу, звуки усыпляем; вернулись — музыка продолжается.
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(music&&!music.paused)music.pause();if(ctx&&ctx.state==='running')ctx.suspend().catch(()=>{});}
+  else if(!forcedSilent&&musicStarted&&!musicMuted&&music){music.play().catch(()=>{});if(ctx&&ctx.state==='suspended')ctx.resume().catch(()=>{});}
+ });
  function tone(freq,end,duration,volume,type='sine',delay=0){if(!ctx||muted||ctx.state!=='running')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,end),t+duration);g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(volume,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g).connect(master);o.start(t);o.stop(t+duration+.02);played++;}
  function tap(freq=750,volume=.13,duration=.05){if(!ctx||muted||ctx.state!=='running')return;const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain(),t=ctx.currentTime;source.buffer=noise;filter.type='bandpass';filter.frequency.value=freq;filter.Q.value=.6;gain.gain.setValueAtTime(volume,t);gain.gain.exponentialRampToValueAtTime(.001,t+duration);source.connect(filter).connect(gain).connect(master);source.start();source.stop(t+duration);played++;}
  function sound(kind){
@@ -61,5 +75,5 @@ window.GameFeedback=(()=>{
   if(kind==='joy')for(const [dx,dy] of [[-32,-10],[32,-6],[0,-38]])sprite('star',x+dx,y+dy,23,dx*.3,-20);
  }
  document.addEventListener('click',e=>{if(e.target.closest('button:not(:disabled)')&&!e.target.closest('#bRoll'))sound('ui')});
- return {play,sound,unlock,get muted(){return muted},get musicMuted(){return musicMuted},toggle(){muted=!muted;try{localStorage.setItem('americanboy_sound_muted',muted?'1':'0')}catch{}if(master)master.gain.setTargetAtTime(muted?0:.20,ctx.currentTime,.03);return muted},toggleMusic(){musicMuted=!musicMuted;try{localStorage.setItem('americanboy_music_muted',musicMuted?'1':'0')}catch{}if(musicMuted){if(music)music.pause();}else{startMusic();}return musicMuted},status(){return{muted,musicMuted,state:ctx?.state||'locked',played}}};
+ return {play,sound,unlock,get muted(){return muted},get musicMuted(){return musicMuted},toggle(){muted=!muted;if(!forcedSilent)try{localStorage.setItem('americanboy_sound_muted',muted?'1':'0')}catch{}if(master)master.gain.setTargetAtTime(muted?0:.20,ctx.currentTime,.03);return muted},toggleMusic(){musicMuted=!musicMuted;if(!forcedSilent)try{localStorage.setItem('americanboy_music_muted',musicMuted?'1':'0')}catch{}if(musicMuted){if(music)music.pause();}else{startMusic();}return musicMuted},status(){return{muted,musicMuted,forcedSilent,state:ctx?.state||'locked',played}}};
 })();
