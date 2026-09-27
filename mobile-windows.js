@@ -1,6 +1,6 @@
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
-function atlasArt(x,y,w,h,cls='',file='modal-atlas.png',sw=1536,sh=1024){
-  return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><image href="assets/${file}" width="${sw}" height="${sh}"/></svg>`;
+function atlasArt(x,y,w,h,cls='',file='modal-atlas.webp',sw=1536,sh=1024){
+  return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" overflow="hidden"><image href="assets/${file}" width="${sw}" height="${sh}"/></svg></svg>`;
 }
 function paperSurface(el){
   if(!el)return;
@@ -16,18 +16,21 @@ function upgradeIcons(root){
   root.querySelectorAll('.up').forEach(up=>{
     const ic=up.querySelector('.uic');if(!ic||ic.dataset.painted)return;
     ic.dataset.painted='1';const lab=up.querySelector('.lab')?.textContent||'';
-    ic.innerHTML=lab.includes('Вместимость')?atlasArt(929,706,89,80,'','interface-atlas.png'):lab.includes('Продажи')?atlasArt(623,700,80,80,'','interface-atlas.png'):atlasArt(1435,541,88,83,'round-art');
+    ic.innerHTML=lab.includes('Вместимость')?atlasArt(929,706,89,80,'','interface-atlas.webp'):lab.includes('Продажи')?atlasArt(623,700,80,80,'','interface-atlas.webp'):atlasArt(1435,541,88,83,'round-art');
   });
 }
 function shopFrame(t,inner){
   track('window',{w:t.type==='biz'?'biz':'point',tile:t.i,owner:!!t.owner});
   const isPoint=t.type==='kiosk',g=isPoint?good(t.good):null,title=isPoint?pointName(t):bizName(t);
-  const path=isPoint?`img/pt_${t.base||'gum'}_${t.tier||1}.webp`:`img/biz_${t.i}.webp`;
-  // Вырезка из атласа — только для Soda Cart; у Beer & Wine и Champagne Bar свои баннеры.
-  const illustration=isPoint&&t.base==='cola'&&(t.tier||1)===1?atlasArt(443,63,374,241,'property-illustration'):
-    `<img class="property-illustration" src="${path}" alt="${title}">`;
-  $('modal').classList.add('mid');$('card').className='card bare illustrated-property';
-  $('card').innerHTML=`<div class="shop"><header class="property-title"><span class="property-mark">${g?g.icon:bizIcon(t)}</span><h2>${title}</h2></header><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;
+  const format=(MAP1||CFG.L5_LADDER)?Math.min(4,Math.floor(((t.salesLvl||1)-1)/4)+1):1;
+  const stage=CFG.L5_LADDER?Math.min(3,Math.floor(((t.level||1)-1)/3)+1):Math.min(3,t.tier||1);
+  const path=isPoint?PropertyArt.point(t.good||t.base,format):PropertyArt.business(t.i,stage,MAP1?'mainstreet':'brooklyn');
+  const illustration=`<img class="property-illustration" src="${path}" alt="${title}" decoding="async">`;
+  const c=$('card');
+  $('modal').classList.add('mid');c.className='card bare illustrated-property print-property'+(!isPoint?' business-property':'');
+  c.dataset.propertyId=String(t.i);c.dataset.propertyOwned=t.owner?'true':'false';
+  c.innerHTML=`<div class="shop"><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;
+  if(!isPoint){const level=c.querySelector('.lvl');if(level){level.textContent=MAP1?'1/1':`${t.level}/${CFG.BIZ.maxLevel}`;level.setAttribute('aria-label',MAP1?'Уровень 1 из 1':`Уровень ${t.level} из ${CFG.BIZ.maxLevel}`);}}
   $('xNo').onclick=()=>closeModal();paperSurface($('card').querySelector('.shop'));paintedClose($('xNo'));upgradeIcons($('card'));fitCard();
 }
 // Readable scrolling replaces automatic shrinking between the top and bottom HUD.
@@ -46,17 +49,17 @@ function windowScene(kind){
   // Rendering it as a plain image avoids SVG atlas overflow leaking the
   // neighbouring interface panels into the card header.
   if(kind==='shipping'){
-    return `<div class="window-scene shipping-scene" aria-hidden="true"><img class="shipping-scene-image" src="assets/shipping-scene-clean.png" alt=""></div>`;
+    return `<div class="window-scene shipping-scene" aria-hidden="true"><img class="shipping-scene-image" src="assets/shipping-scene-clean.webp" alt=""></div>`;
   }
   const region=[38,73,408,150];
-  return `<div class="window-scene ${kind}-scene" aria-hidden="true">${atlasArt(...region,'','windows-scenes.png')}</div>`;
+  return `<div class="window-scene ${kind}-scene" aria-hidden="true">${atlasArt(...region,'','windows-scenes.webp')}</div>`;
 }
 function enamelButton(button){
   if(button.querySelector('.enamel-skin'))return;
   const color=button.classList.contains('bad')?'red':button.classList.contains('ok')?'green':button.classList.contains('sec')||button.classList.contains('hard')?'blue':'dark';
   const regions={green:[29,708,229,58],red:[275,707,229,60],blue:[524,708,190,60],dark:[730,707,181,61]};
   button.classList.add('enamel-button');
-  button.insertAdjacentHTML('afterbegin',`<span class="enamel-skin">${atlasArt(...regions[color],'','windows-kit.png').replace('xMidYMid meet','none')}</span>`);
+  button.insertAdjacentHTML('afterbegin',`<span class="enamel-skin">${atlasArt(...regions[color],'','windows-kit.webp').replace('xMidYMid meet','none')}</span>`);
   button.dataset.enamel=color;
   cashGlyph(button);
 }
@@ -94,7 +97,7 @@ function decorateSettings(card){
   if(!card.querySelector('#iRolls')||card.querySelector('.settings-title'))return;
   card.classList.add('settings-card');
   const title=card.querySelector('h2');title.classList.add('settings-title');title.textContent='Настройки';
-  title.insertAdjacentHTML('afterbegin',`<span class="settings-gear">${atlasArt(1332,584,59,59,'round-art','windows-kit.png')}</span>`);
+  title.insertAdjacentHTML('afterbegin',`<span class="settings-gear">${atlasArt(1332,584,59,59,'round-art','windows-kit.webp')}</span>`);
   windowClose(card,()=>$('cClose').click());
   for(const [id,label,min,step] of [['iRolls','Ходов в день',1,1],['iCash','Денег на старте',0,50],['iSlots','Мест в фуре',1,1],['iStart','Начать с дня',1,1]]){
     const input=$(id);input.setAttribute('aria-label',label);input.min=String(min);input.step=String(step);
@@ -149,7 +152,7 @@ function decorateWindows(){
     for(const node of [...toast.childNodes])if(node.nodeType===Node.TEXT_NODE)text.append(node);
     toast.append(text);
   }
-  if(!toast.querySelector('.feedback-sun'))toast.insertAdjacentHTML('afterbegin',`<span class="feedback-sun">${atlasArt(1194,39,122,119,'','windows-kit.png')}</span>`);
+  if(!toast.querySelector('.feedback-sun'))toast.insertAdjacentHTML('afterbegin',`<span class="feedback-sun">${atlasArt(1194,39,122,119,'','windows-kit.webp')}</span>`);
 }
 let windowPaintPending=false;
 new MutationObserver(()=>{
@@ -168,12 +171,12 @@ decorateWindows();
 // var, а не const: decorateWindows() вызывается выше по файлу, до этих строк.
 var EVENT_BADGES = [
   [/Копилка/, 'board/assets/symbols/piggy.svg'], [/Шанс/, 'board/assets/symbols/chance.svg'],
-  [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.png'],
-  [/Не хватает/, 'assets/icons/soft.png'], [/Ходы (кончились|вышли)/, 'assets/icons/die.png'],
-  [/Итоги дня|День \d+ из/, 'assets/icons/calendar.png'], [/Задания/, 'assets/icons/crown.png'],
-  [/Бандл|груза/, 'assets/icons/crate.png'], [/Yellow Cab|Такси/, 'assets/icons/taxi.png'],
-  [/Сегодня|День \d/, 'assets/icons/clock.png'], [/Джонни/, 'assets/icons/cap.png', 'full'],
-  [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.png'], [/Кто играет/, 'assets/icons/cap.png', 'full'], [/Магазин/, 'assets/icons/shop.png'],
+  [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.webp'],
+  [/Не хватает/, 'assets/icons/soft.webp'], [/Ходы (кончились|вышли)/, 'assets/icons/die.webp'],
+  [/Итоги дня|День \d+ из/, 'assets/icons/calendar.webp'], [/Задания/, 'assets/icons/crown.webp'],
+  [/Бандл|груза/, 'assets/icons/crate.webp'], [/Yellow Cab|Такси/, 'assets/icons/taxi.webp'],
+  [/Сегодня|День \d/, 'assets/icons/clock.webp'], [/Джонни/, 'assets/icons/cap.webp', 'full'],
+  [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.webp'], [/Кто играет/, 'assets/icons/cap.webp', 'full'], [/Магазин/, 'assets/icons/shop.webp'],
 ];
 var EVENT_SKIP = ['pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
 function decorateEvent(card){
@@ -186,7 +189,7 @@ function decorateEvent(card){
   const lockLine=!h2&&card.querySelector(':scope>p.dim:first-child');
   if(lockLine&&/🔒/.test(lockLine.textContent)){
     h2=document.createElement('h2'); h2.textContent=lockLine.textContent.replace(/🔒\s*/,'');
-    h2.dataset.badge='assets/bp/bp-lock.png'; lockLine.replaceWith(h2);
+    h2.dataset.badge='assets/bp/bp-lock.webp'; lockLine.replaceWith(h2);
   }
   if(!h2)return;
   card.classList.add('event-card');

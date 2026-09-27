@@ -4,15 +4,15 @@
 // короткая подпись и цена снизу во всю ширину.
 
 var SHOP_ART={
-  rolls:['assets/icons/die.png','assets/icons/die.png'],
-  soft:[['assets/icons/soft.png'],['assets/icons/coins.png'],['assets/icons/coins.png','assets/icons/money.png']],
+  rolls:['assets/icons/die.webp','assets/icons/die.webp'],
+  soft:[['assets/icons/soft.webp'],['assets/icons/coins.webp'],['assets/icons/coins.webp','assets/icons/money.webp']],
   hard:[['gem'],['gem','gem'],['gem','gem','gem'],['gem','gem','gem','gem']],
 };
 function shopPile(srcs){
-  const list=srcs.map(s=>s==='gem'?'assets/icons/gem-clean.png':s);
+  const list=srcs.map(s=>s==='gem'?'assets/icons/gem-clean.webp':s);
   return `<span class="shop-pile n${list.length}" aria-hidden="true">${list.map((s,i)=>`<img src="${s}" alt="" style="--i:${i}">`).join('')}</span>`;
 }
-const shopGem='<img class="shop-gem" src="assets/icons/gem-clean.png" alt="">';
+const shopGem='<img class="shop-gem" src="assets/icons/gem-clean.webp" alt="">';
 // Выгода крупного пакета против самого малого в той же линейке.
 function shopBonus(amount,cost,baseAmount,baseCost){
   const pc=Math.round((amount/cost)/(baseAmount/baseCost)*100-100);
@@ -41,7 +41,7 @@ shopHard=async function(){ track('window',{w:'hard_shop',hard:S.hard,day:S.day})
       ribbon:i?shopBonus(pk.hard,pk.rub,hard[0].hard,hard[0].rub):'',
       button:`<button class="shop-buy rub" data-pk="${i}">${pk.price}</button>`})).join('');
     card.className='card event-card shop-card';
-    card.innerHTML=`<header class="ev-head"><span class="ev-badge"><img src="assets/icons/shop.png" alt=""></span>
+    card.innerHTML=`<header class="ev-head"><span class="ev-badge"><img src="assets/icons/shop.webp" alt=""></span>
         <div class="ev-titles"><h2 class="ev-title">Магазин</h2><span class="ev-sub shop-wallet">у тебя ${shopGem}<b>${S.hard}</b></span></div>
         ${helpBtn('Кристаллы покупают ходы и наличные. Каждая покупка ходов за день удваивает цену следующей; в полночь цена сбрасывается.')}</header>
       <div class="ev-body shop-body">

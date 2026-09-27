@@ -1,0 +1,16 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>21 в кости — Америкэн бой</title><link rel="icon" href="../icon.png"><link rel="stylesheet" href="style.css?v=96c4a8cb9f3e"></head><body>
+<main id="viewport"><section id="table" aria-label="21 в кости">
+ <output id="dealer-score" class="score dealer-score" aria-label="Очки дилера">—</output>
+ <output id="player-score" class="score player-score" aria-label="Твои очки">—</output>
+ <div id="dealer-dice" class="dice dealer-dice" aria-label="Кости дилера"></div>
+ <div id="player-dice" class="dice player-dice" aria-label="Твои кости"></div>
+ <div id="invitation">Сделай ставку<br><small>Жми на фишки</small></div>
+ <div id="stakes" aria-label="Фишки на столе"></div>
+ <div class="bet-plaque"><span>СТАВКА</span><output id="bet" aria-label="Сумма ставки">$0</output><small id="chip-count">0 фишек</small></div>
+ <div id="tray" aria-label="Фишки для ставки"></div>
+ <div class="actions"><button id="primary" class="enamel"><span>БРОСИТЬ</span></button><button id="secondary" class="enamel secondary"><span>УБРАТЬ</span></button></div>
+ <button id="exit" class="exit" aria-label="Вернуться на игровое поле"><svg viewBox="1252 21 69 64" aria-hidden="true"><image href="../assets/modal-atlas.webp" width="1536" height="1024"/></svg></button>
+ <p id="status" role="status" aria-live="polite">Ближе к 21. Только без перебора!</p>
+ <div id="result" class="comparison" hidden aria-live="polite"><span id="result-title">РЕЗУЛЬТАТ БРОСКА</span><div class="comparison-scores"><div>ТЫ<strong id="compare-player"></strong></div><i>:</i><div>ДИЛЕР<strong id="compare-dealer"></strong></div></div><small id="result-detail"></small></div>
+ <div id="sparkles" aria-hidden="true"></div>
+</section></main><script src="engine.js?v=96c4a8cb9f3e"></script><script type="module" src="dice3d.js?v=96c4a8cb9f3e"></script><script src="effects.js?v=96c4a8cb9f3e"></script><script src="croupier.js?v=96c4a8cb9f3e"></script><script src="game.js?v=96c4a8cb9f3e"></script></body></html>

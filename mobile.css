@@ -6,17 +6,17 @@ button{touch-action:manipulation}
 #top,#panel,#inv,#tip,#toast{zoom:1!important}
 #top{padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 7px;gap:6px;background:linear-gradient(#b0b4a0,#656b65);border-bottom:2px solid #2d261d}
 .bar0{gap:5px;position:relative}
-#bJohnnyTop{width:49px;height:51px;flex:none;border:0;box-shadow:none;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:1097.14% 731.43%;background-position:2.22% 3.40%;border-radius:0;padding-top:33px}
+#bJohnnyTop{width:49px;height:51px;flex:none;border:0;box-shadow:none;background-color:transparent;background-image:url(assets/interface-atlas.webp);background-size:1097.14% 731.43%;background-position:2.22% 3.40%;border-radius:0;padding-top:33px}
 #bJohnnyTop span{display:none}#bJohnnyTop small{font:700 10px 'Suisse Intl',Arial,sans-serif;position:relative;top:3px;background:#f4e2bc;border-radius:4px;padding:1px 4px}
-#bHub{height:51px;min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;padding:7px 12px;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:273.80% 794%;background-position:20.06% 3.34%;box-shadow:none;border-radius:0;white-space:normal}
+#bHub{height:51px;min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;padding:7px 12px;background-color:transparent;background-image:url(assets/interface-atlas.webp);background-size:273.80% 794%;background-position:20.06% 3.34%;box-shadow:none;border-radius:0;white-space:normal}
 #bHub b{font:800 17px/1.1 'Suisse Intl',Arial,sans-serif}#bHub small{font:600 11px/1.15 'Suisse Intl',Arial,sans-serif;white-space:nowrap}
 #bHub .chipbar{display:none}
 #bHelp{flex:none;width:48px;height:46px;min-height:44px;padding:0;border:2px solid #2c2820;background:#244963;color:#fff0ce;font:700 11px/1.15 'Suisse Intl',Arial,sans-serif;white-space:normal;box-shadow:0 2px #34281b}
-#bSettings{width:40px;height:46px;flex:none;font-size:0;border:0;box-shadow:none;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:1146.27% 731.43%;background-position:98.80% 2.82%;border-radius:0}
+#bSettings{width:40px;height:46px;flex:none;font-size:0;border:0;box-shadow:none;background-color:transparent;background-image:url(assets/interface-atlas.webp);background-size:1146.27% 731.43%;background-position:98.80% 2.82%;border-radius:0}
 .bar1,.bar2{gap:5px}
 .cur{height:36px;border:0;border-radius:8px;background-color:#f4e5c4;background-image:url(assets/paper-grain.svg);box-shadow:0 2px #241c15;overflow:hidden;padding:0 6px 0 3px}
 .cur b{font-size:18px;padding:0 4px;min-width:0}
-.cur .ic{font-size:0;background-color:transparent;width:33px;height:32px;flex:none;background-image:url(assets/interface-atlas.png);background-repeat:no-repeat}
+.cur .ic{font-size:0;background-color:transparent;width:33px;height:32px;flex:none;background-image:url(assets/interface-atlas.webp);background-repeat:no-repeat}
 .cur .ic.g{background-size:2133.3% 1462.86%;background-position:3.1% 19.1%}
 .cur .ic.b{background-size:1860.6% 1511%;background-position:26.2% 19.2%}
 .cur .ic.o{background-size:2104.1% 1280%;background-position:49.02% 18.3%}
@@ -40,7 +40,7 @@ button{touch-action:manipulation}
 #tilebar>b{font:700 12px/1 'Suisse Intl',Arial,sans-serif;padding:8px;border-radius:9px;background:#397548;color:#fff2d1;white-space:nowrap}
 #tilebar.off>b{background:#8d8575;color:#eee3d1}
 #dock{display:grid;grid-template-columns:1fr 1fr 1.1fr 1fr 1fr;gap:3px;align-items:end;padding:2px 0 0}
-#dock>.dk{width:100%;height:77px;min-width:0;padding:48px 1px 6px;border:0;border-radius:0;background-color:transparent;background-image:url(assets/interface-atlas.png);box-shadow:none;color:#211b14}
+#dock>.dk{width:100%;height:77px;min-width:0;padding:48px 1px 6px;border:0;border-radius:0;background-color:transparent;background-image:url(assets/interface-atlas.webp);box-shadow:none;color:#211b14}
 #dock .dk>span{display:none}
 #dock .dk>small{font:700 10px/1.1 'Suisse Intl',Arial,sans-serif;display:block;white-space:nowrap}
 #dock #bTaxi{background-size:1052% 731%;background-position:65.00% 92.00%}
@@ -50,7 +50,7 @@ button{touch-action:manipulation}
 #dock #bJohnny small,#dock #bShop small{color:#fff1ce}
 #dock .dk:disabled{opacity:.57;filter:saturate(.55)}
 #dock .diebox{margin:0;gap:2px;width:100%;align-self:end;min-width:0}
-#bRoll{width:86px;height:80px;max-width:calc(100vw / 4.7);border-radius:0;border:0;background-color:transparent;background-image:url(assets/interface-atlas.png);background-size:734.92% 628.22%;background-position:52.7% 91.3%;box-shadow:none}
+#bRoll{width:86px;height:80px;max-width:calc(100vw / 4.7);border-radius:0;border:0;background-color:transparent;background-image:url(assets/interface-atlas.webp);background-size:734.92% 628.22%;background-position:52.7% 91.3%;box-shadow:none}
 #bRoll .die{visibility:hidden}
 #bRoll:disabled{opacity:.58}
 #sRolls{font:800 15px/1 'Suisse Intl',Arial,sans-serif;border:1px solid #2f241a;border-radius:7px;padding:3px 8px;white-space:nowrap;box-shadow:none}
@@ -78,9 +78,9 @@ button{touch-action:manipulation}
   color:#f5e4c3;gap:12px;padding:24px 22px calc(env(safe-area-inset-bottom,0px) + 24px);
   text-align:center}
 #boot .boot-city{position:absolute;left:0;right:0;bottom:0;height:46%;
-  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat;opacity:.6}
+  background:url(assets/bp/bp-city.webp) center bottom/cover no-repeat;opacity:.6}
 #boot .boot-sun{position:absolute;top:5%;right:14px;width:104px;height:104px;
-  background:url(assets/bp/bp-sun.png) center/contain no-repeat;opacity:.9;
+  background:url(assets/bp/bp-sun.webp) center/contain no-repeat;opacity:.9;
   animation:bootSun 9s ease-in-out infinite}
 @keyframes bootSun{50%{transform:translateY(7px) rotate(4deg)}}
 #boot .boot-head{position:relative;display:flex;align-items:center;gap:11px;
@@ -88,7 +88,7 @@ button{touch-action:manipulation}
   border:3px solid #2a2118;border-radius:12px;box-shadow:0 5px 0 #17120d;
   padding:10px 14px 10px 11px;rotate:-1.1deg}
 #boot .boot-stamp{width:46px;height:48px;flex:none;
-  background:url(assets/bp/bp-badge.png) center/contain no-repeat}
+  background:url(assets/bp/bp-badge.webp) center/contain no-repeat}
 #boot .boot-head b{display:block;font-family:var(--disp);font-weight:700;
   font-size:23px;line-height:1.05;letter-spacing:-.01em}
 #boot .boot-head small{display:block;font-size:11.5px;opacity:.75;margin-top:2px}
@@ -110,7 +110,7 @@ button{touch-action:manipulation}
 @media(max-height:720px){#guide p{font-size:11px}#guide{padding:7px;min-height:63px}#guide img{width:38px;height:38px}#dock>.dk{height:68px;padding-top:42px}#bRoll{height:68px}#top{gap:4px}.qchip{min-height:36px}.cur{height:33px}}
 @media(prefers-reduced-motion:reduce){.map-float{animation-duration:.1s}}
 /* Keep the atlas art crisp; original prototype color shorthands must not erase it. */
-.cur .ic.g,.cur .ic.b,.cur .ic.o{background-color:transparent;background-image:url(assets/interface-atlas.png);background-repeat:no-repeat}
+.cur .ic.g,.cur .ic.b,.cur .ic.o{background-color:transparent;background-image:url(assets/interface-atlas.webp);background-repeat:no-repeat}
 .cur .ic.g{background-size:2133.3% 1462.86%;background-position:3.1% 19.1%}
 .cur .ic.b{background-size:1860.6% 1511%;background-position:26.2% 19.2%}
 .cur .ic.o{background-size:2104.1% 1280%;background-position:49.02% 18.3%}
@@ -235,13 +235,13 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 #card button.enamel-button::before,#helpDialog button.enamel-button::before{
   content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
   border:15px solid transparent;
-  border-image:url(assets/btn-dark.png) 20 fill / 15px stretch}
-#card button.enamel-button.ok::before{border-image-source:url(assets/btn-green.png)}
-#card button.enamel-button.bad::before{border-image-source:url(assets/btn-red.png)}
-#card button.enamel-button.sec::before,#card button.enamel-button.hard::before{border-image-source:url(assets/btn-blue.png)}
+  border-image:url(assets/btn-dark.webp) 20 fill / 15px stretch}
+#card button.enamel-button.ok::before{border-image-source:url(assets/btn-green.webp)}
+#card button.enamel-button.bad::before{border-image-source:url(assets/btn-red.webp)}
+#card button.enamel-button.sec::before,#card button.enamel-button.hard::before{border-image-source:url(assets/btn-blue.webp)}
 /* иконка игровых денег вместо знака доллара — та же пачка купюр, что в шапке */
 .cash-glyph{display:inline-block;width:1.45em;height:1.3em;vertical-align:-.28em;
-  background-image:url(assets/interface-atlas.png);background-repeat:no-repeat;
+  background-image:url(assets/interface-atlas.webp);background-repeat:no-repeat;
   background-size:2133.3% 1462.86%;background-position:3.1% 19.1%;margin-right:.1em;margin-left:.06em}
 /* Крестик: арт 69x64 вписывался в квадрат 46x46 по 'meet', оставляя зазоры
    сверху и снизу — круглая маска резала кольцо неровно. Маска нужна (в атласе
@@ -257,15 +257,15 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
 .cash-glyph{width:1.18em;height:1.05em;vertical-align:-.16em;margin-right:.14em;margin-left:.1em}
 
 /* ===== v34: единый набор иконок ресурсов =====
-   Иконки нарезаны из ui4.png кита: в исходнике нет альфы (шахматка нарисована),
+   Иконки нарезаны из ui4.webp кита: в исходнике нет альфы (шахматка нарисована),
    поэтому фон выбит заливкой снаружи — внутренние белые блики сохранены.
    Раньше деньги и кристалл брались спрайтами из interface-atlas и не совпадали
    по стилю с иконками в окнах. ===== */
 .cur .ic.g,.cur .ic.b{background-image:none!important;background-repeat:no-repeat;background-position:center;background-size:contain}
-.cur .ic.g{background-image:url(assets/icons/money.png)!important;width:38px;height:34px}
-.cur .ic.b{background-image:url(assets/icons/gem.png)!important;width:34px;height:34px}
+.cur .ic.g{background-image:url(assets/icons/money.webp)!important;width:38px;height:34px}
+.cur .ic.b{background-image:url(assets/icons/gem.webp)!important;width:34px;height:34px}
 /* Иконка валюты в тексте кнопок — та же пачка купюр, что в шапке. */
-.cash-glyph{background-image:url(assets/icons/money.png);background-size:contain;
+.cash-glyph{background-image:url(assets/icons/money.webp);background-size:contain;
   background-position:center;background-repeat:no-repeat;
   width:1.3em;height:1.18em;vertical-align:-.22em;margin:0 .14em 0 .08em}
 /* В значениях строк иконка чуть мельче заголовочной, чтобы колонка не рябила. */
@@ -306,7 +306,7 @@ h2 small,h3 small,#helpTitle small{font-family:var(--txt);font-weight:400}
    сплошным зелёным поверх спрайта — рисунок пропадал совсем.
    Возвращаем спрайт и помечаем готовность пульсацией, а не заливкой. */
 #dock .dk.ok{background-color:transparent!important;
-  background-image:url(assets/interface-atlas.png)!important;
+  background-image:url(assets/interface-atlas.webp)!important;
   animation:dockReady 1.15s ease-in-out infinite}
 #dock #bShip.ok{background-size:1052% 731%;background-position:75.70% 92.00%}
 #dock #bTaxi.ok{background-size:1052% 731%;background-position:65.00% 92.00%}
@@ -400,7 +400,7 @@ body #tip{background:none!important;border:0!important;outline:0!important;box-s
   font-family:var(--txt);overflow:visible;max-width:min(92vw,400px)}
 body #tip::before,body #tip::after{content:none!important;display:none!important}
 #tip .tip-johnny{flex:0 0 86px;height:74px;margin:0 -10px 4px 0;position:relative;z-index:2;
-  background:url(assets/bp/tip-johnny.png) left bottom/contain no-repeat;
+  background:url(assets/bp/tip-johnny.webp) left bottom/contain no-repeat;
   filter:drop-shadow(0 3px 0 #17120d66)}
 #tip .tip-bubble{position:relative;flex:1;min-width:0;
   background:#f4e6c4 url(assets/paper-grain.svg);border:3px solid #2a2118;
@@ -447,8 +447,8 @@ body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .ma
 /* ===== v50: мягкая валюта — монеты везде =====
    Одна иконка (монеты из кита, как на поле) в шапке, в тексте, на кнопках,
    в наградах и в летящих частицах. Пачка купюр больше нигде не используется. */
-.cur .ic.g{background-image:url(assets/icons/soft.png)!important;width:36px;height:35px}
-.cash-glyph{background-image:url(assets/icons/soft.png)!important;background-size:contain;background-position:center;
+.cur .ic.g{background-image:url(assets/icons/soft.webp)!important;width:36px;height:35px}
+.cash-glyph{background-image:url(assets/icons/soft.webp)!important;background-size:contain;background-position:center;
   background-repeat:no-repeat;width:1.12em;height:1.08em;vertical-align:-.2em;margin:0 .12em 0 .06em}
 .card .v .cash-glyph,#card .v .cash-glyph{width:1.04em;height:1em;vertical-align:-.16em}
 #tbText .cash-glyph{width:1.04em;height:1em;vertical-align:-.15em}
@@ -465,9 +465,9 @@ body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .ma
    тащил край плашки, а кристалл — кремовую обводку-наклейку. */
 .cur .ic,.cur .ic.g,.cur .ic.b,.cur .ic.o{width:34px!important;height:30px!important;margin-left:3px;flex:none;
   background-color:transparent!important;background-position:center!important;background-size:contain!important;background-repeat:no-repeat!important}
-.cur .ic.g{background-image:url(assets/icons/soft.png)!important}
-.cur .ic.b{background-image:url(assets/icons/gem-clean.png)!important}
-.cur .ic.o{background-image:url(assets/icons/calendar.png)!important}
+.cur .ic.g{background-image:url(assets/icons/soft.webp)!important}
+.cur .ic.b{background-image:url(assets/icons/gem-clean.webp)!important}
+.cur .ic.o{background-image:url(assets/icons/calendar.webp)!important}
 /* Задания и таймер — грифельные плашки кита: тёмная доска, кремовая кайма
    внутри, иконка слева, золотая полоска прогресса по нижнему краю. */
 #qrow .qchip{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left;
@@ -476,12 +476,12 @@ body.first-lap #qrow,body.first-lap #bHub,body.first-lap #inv,body.first-lap .ma
   box-shadow:inset 0 0 0 2px #27231e,inset 0 0 0 3.5px #d8c79c99,0 2px 0 #120f0b;
   color:#f6e7c3;font:600 12.5px/1.15 var(--txt)}
 #qrow .qchip::before{content:'';flex:none;width:27px;height:27px;background:center/contain no-repeat}
-#qrow #sTimer::before{background-image:url(assets/icons/clock.png)}
-#qrow .qchip[data-kind=earn]::before{background-image:url(assets/icons/soft.png)}
-#qrow .qchip[data-kind=sell]::before{background-image:url(assets/icons/box.png)}
-#qrow .qchip[data-kind=buy]::before{background-image:url(assets/icons/shop.png)}
-#qrow .qchip[data-kind=upg]::before{background-image:url(assets/icons/crown.png)}
-#qrow .qchip[data-kind=parcel]::before{background-image:url(assets/icons/crate.png)}
+#qrow #sTimer::before{background-image:url(assets/icons/clock.webp)}
+#qrow .qchip[data-kind=earn]::before{background-image:url(assets/icons/soft.webp)}
+#qrow .qchip[data-kind=sell]::before{background-image:url(assets/icons/box.webp)}
+#qrow .qchip[data-kind=buy]::before{background-image:url(assets/icons/shop.webp)}
+#qrow .qchip[data-kind=upg]::before{background-image:url(assets/icons/crown.webp)}
+#qrow .qchip[data-kind=parcel]::before{background-image:url(assets/icons/crate.webp)}
 #qrow .qchip span{flex:1;min-width:0}
 #qrow .qchip i{position:absolute;left:0;bottom:0;height:4px;background:linear-gradient(#f0c44e,#c99a32);border-radius:0 3px 0 0}
 #qrow .qchip.done{background:#3e6d3b url(assets/paper-grain.svg)!important;box-shadow:inset 0 0 0 2px #3e6d3b,inset 0 0 0 3.5px #e9dcb899,0 2px 0 #1d3a1c;color:#fff}
@@ -524,3 +524,6 @@ body.wide-mode #top,body.wide-mode #panel{left:50%!important;right:auto!importan
 body.wide-mode #inv{left:calc(50% - 230px)}
 body.wide-mode .map-controls{left:calc(50% + 240px + 12px);right:auto}
 body.wide-mode #wideBtn{top:14px;right:18px}
+/* Общие плашки ресурсов обеих мини-игр; размещение задаёт minigame-shell. */
+.sl-res{position:absolute;z-index:6;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 6px);display:grid;grid-template-columns:1fr 1fr;gap:6px;pointer-events:none}
+.sl-res .cur{height:36px}

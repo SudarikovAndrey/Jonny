@@ -41,21 +41,22 @@ function decorateUnifiedUpgrade(){
   const card=$('card'),t=uuTile,capBtn=$('kCap'),salBtn=$('kSal'),two=card.querySelector('.shop .two');
   if(!t||!capBtn||!salBtn||!two||card.querySelector('.uup'))return;
   const L=kioskLvl(t),max=kioskMaxLvl(t),next=kioskNextStat(t),cost=kioskUpCost(t);
-  const tierName=CFG.TIER_NAMES.kiosk[(t.tier||1)-1]||'Точка';
   const after=kioskAfter(t),profitMode=!!CFG.KIOSK.showProfit,margin=Math.max(0,sellPrice(t.good)-buyPrice(t.good));
-  const capNext=after&&after.cap!==cap(t)?after.cap:null,salNext=after&&after.sales!==sales(t)?after.sales:null;
+  // Visual emphasis only: newer ladders raise both values, but the card
+  // alternates one preview per step. Prices and upgrade handlers stay unchanged.
+  const capChanges=!!after&&after.cap!==cap(t),salesChanges=!!after&&after.sales!==sales(t);
+  const focus=capChanges&&salesChanges?(L%2?'sales':'cap'):capChanges?'cap':'sales';
+  const capNext=capChanges&&focus==='cap'?after.cap:null,salNext=salesChanges&&focus==='sales'?after.sales:null;
   const row=(label,now,nx)=>`<span class="uup-stat${nx!==null?' grows':''}"><small>${label}</small><b>${now}</b>${nx!==null?`<i>→</i><b class="up">${nx}</b>`:''}</span>`;
   const dS=salNext!==null?salNext-sales(t):0,dC=capNext!==null?capNext-cap(t):0;
   const gain=[dC?`+${dC} мест`:'',dS?(profitMode?`+$${dS*margin} за круг`:`+${dS} ${dS===1?'продажа':'продажи'} за круг`):''].filter(Boolean).join(' · ');
   const salesRow=profitMode?row('Прибыль за круг','$'+sales(t)*margin,salNext!==null?'$'+salNext*margin:null):row('Продажи за круг',sales(t),salNext);
-  const stageName=typeof kioskStageName==='function'?kioskStageName(t):tierName;
   const block=document.createElement('div');block.className='uup';
-  block.innerHTML=`<div class="uup-head"><span class="uup-lvl">${stageName} · ур. <b>${L}</b> из ${max}</span><span class="uup-dots" aria-hidden="true">${uuDots(L,max)}</span></div>
-    <div class="uup-stats">${row('Запас',cap(t),capNext)}${salesRow}</div>
+  block.innerHTML=`${next?`<div class="uup-stats">${row('Запас',cap(t),capNext)}${salesRow}</div>`:''}
     ${next?`<button class="ok uup-btn" id="kUp" ${S.cash<cost?'disabled':''}><span>Улучшить<small>${gain}</small></span><b>$${cost}</b></button>`:`<p class="uup-max">Прокачка на максимуме.${evolveState(t)==='max'?'':' Дальше — улучшение ниже.'}</p>`}`;
   two.replaceWith(block);
-  // Номер уровня в шапке карточки совпадает с уровнем в блоке.
-  const lvl=card.querySelector('.shop .srow .lvl');if(lvl)lvl.textContent=L;
+  // Один индикатор уровня в шапке; повтор в блоке улучшений не нужен.
+  const lvl=card.querySelector('.shop .srow .lvl');if(lvl){lvl.textContent=`${L}/${max}`;lvl.setAttribute('aria-label',`Уровень ${L} из ${max}`);}
   const up=$('kUp');
   // Кнопка вызывает прежний обработчик нужного стата: он списывает цену,
   // засчитывает задание «прокачай», пишет лог и перерисовывает окно.

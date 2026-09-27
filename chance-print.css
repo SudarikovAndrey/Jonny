@@ -1,0 +1,46 @@
+/* Printed Chance cards: one play surface, readable outcomes, thin cardboard. */
+.cu-matte .cu-face{transform:translateZ(1px);background:#eddbb1 url(assets/print/card-stock.webp) center/400px;border-radius:15px 12px 14px 11px}
+.cu-matte .cu-back{transform:rotateY(180deg) translateZ(1px)}
+.cu-matte .cu-edge{width:2px;background:#bba479}.cu-matte .edge-l{left:-1px}.cu-matte .edge-r{right:-1px}
+.cu-matte .cu-core{border-radius:15px 12px 14px 11px}
+.cu-matte .cu-title{font-family:Bitter,Georgia,serif;font-weight:800;text-shadow:.5px .5px #715b3425;letter-spacing:-.035em}
+.cu-play{background:#151c17b8;padding:16px;overflow:auto;overflow-x:hidden}
+.cu-play-in{max-width:370px;gap:8px;margin:auto}
+.cu-play .cu-head{gap:5px}.cu-play .cu-head h2{font:800 28px/1.1 Bitter,Georgia,serif;color:#f2dfb5;padding:0}
+.cu-play .cu-big{--w:min(264px,calc(100vw - 88px),max(200px,calc((100dvh - 350px)/1.4)))}
+.cu-play .cu-stage{padding:9px 0 17px;flex:none}
+.cu-play .cu-title{font-size:24px;min-height:2.15em}
+.cu-play .cu-cap{font:700 18px/1.15 Bitter,Georgia,serif;border:0;min-height:2.4em;padding:4px 0 0}
+.cu-play .cu-stamp{font:700 13px/1.25 Bitter,Georgia,serif;letter-spacing:0;border:0;padding:3px 0;box-shadow:none}
+.cu-play .cu-side{font-family:Bitter,Georgia,serif}
+.cu-play .cu-art{min-height:0}.cu-play .cu-vignette{flex:1;height:auto;max-height:calc(var(--w)*.54)}
+.cu-play .cu-opts{grid-template-columns:1fr;gap:6px}
+.cu-play .cu-opt{font:700 17px/1.2 Bitter,Georgia,serif;min-height:50px;padding:9px 12px;border:2px solid #4b3b27;border-radius:9px 7px 8px 6px;box-shadow:0 2px #171c17;background:#e8d6ac url(assets/print/card-stock.webp) center/400px;gap:10px}
+.cu-play .cu-opt b{font:800 21px/1 Bitter,Georgia,serif;display:inline-block;width:21px}
+.cu-play .cu-opt-ic{width:32px;height:32px}
+.cu-play .cu-opt.hit{border-color:#31563c;box-shadow:0 2px #171c17,inset 0 0 0 1px #31563c;transform:none}
+.cu-play.win-bad .cu-opt.hit{border-color:#9c392c;box-shadow:0 2px #171c17,inset 0 0 0 1px #9c392c}
+.cu-play .cu-opt.miss{opacity:.62;transform:none}
+.cu-play .cu-hint{font:700 14px/1.25 Bitter,Georgia,serif;min-height:35px;margin:0;color:#f0dfb7;display:grid;place-items:center;max-width:320px}
+.cu-play .cu-stop,.cu-play .cu-take{min-height:56px}
+.cu-layer button.enamel-button{position:relative;background:#a73729!important;border:3px solid #2c281f!important;border-radius:12px 9px 11px 8px!important;box-shadow:0 4px #171d17!important;color:#fff0c5!important;font:800 24px/1.1 Bitter,Georgia,serif;text-shadow:1px 2px #34271966;isolation:isolate}
+.cu-layer button.enamel-button.ok{background:#466b44!important}.cu-layer button.enamel-button.sec{background:#536f73!important}
+.cu-layer button.enamel-button::before{content:'';position:absolute;inset:3px;border:1.5px solid #dbc99b!important;border-image:none!important;border-radius:8px 6px 7px 5px;background:url(assets/print/ink-wear.svg) center/280px 180px!important;box-shadow:none!important;pointer-events:none;z-index:-1}
+.cu-layer button.enamel-button::after,.cu-layer .enamel-skin{display:none!important}
+.cu-layer button.enamel-button:disabled{opacity:.65;filter:none!important}
+.cu-layer button.enamel-button:active:not(:disabled){translate:0 2px;box-shadow:0 2px #171d17!important}
+.cu-layer [hidden]{display:none!important}
+.cu-play .cu-rays{display:none}
+body.chance-playing #bRoll .roll-cube{animation-play-state:paused}
+.cu-panel,.cu-phead,.cu-pfoot{background:#e8d6ac url(assets/print/card-stock.webp) center/400px}
+.cu-panel{border-radius:18px 14px 17px 13px}.cu-phead h2{font-family:Bitter,Georgia,serif;text-transform:none}
+.cu-grid{grid-template-columns:repeat(2,minmax(0,1fr));mask-image:none;-webkit-mask-image:none;gap:16px 10px}
+.cu-grid .cu-card{--w:min(160px,calc((100vw - 76px)/2))}
+.cu-grid .cu-title{font-size:16px!important;min-height:2.2em}.cu-grid .cu-cap{display:none}
+.cu-grid .cu-art{max-height:90px}.cu-grid .cu-new,.cu-grid .cu-copies{font-size:13px}
+.cu-grid .cu-indeck{font-size:13px;background:#ebdbb5;border-radius:4px;padding:2px 4px}
+.cu-detail .cu-cap{font-size:18px}.cu-detail .cu-title{font-size:24px}.cu-detail .cu-opt{font-size:16px}.cu-detail .cu-opts{grid-template-columns:1fr}
+@media(max-height:690px){.cu-play .cu-title{font-size:21px;min-height:2.1em;margin-top:calc(var(--w)*.18)}.cu-play .cu-cap{font-size:16px}.cu-play .cu-stage{padding:4px 0 10px}.cu-play-in{gap:6px}.cu-play .cu-opt{min-height:46px;font-size:16px;padding:6px 10px}.cu-play .cu-head h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.cu-play .cu-tilt{transform:none!important}.cu-opt{transition:none}.cu-play .cu-shadow{display:none}}
+
+.cu-layer button:focus-visible{outline:3px solid #ead19b;outline-offset:3px}

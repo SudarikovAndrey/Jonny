@@ -1,4 +1,4 @@
-#card.warehouse-card{padding:0;overflow:hidden;max-width:450px;max-height:calc(100dvh - 46px)!important;border:2px solid #2e271d;border-radius:17px 12px 19px 13px;background:#efdbaf url(assets/window-paper.svg)!important}
+#card.warehouse-card{padding:0;overflow:hidden;max-width:450px;max-height:calc(100dvh - 46px)!important;border:2px solid #2e271d;border-radius:17px 12px 19px 13px;background:#efdbaf url(assets/window-paper.webp)!important}
 .warehouse-shell{display:flex;flex-direction:column;max-height:calc(100dvh - 50px);min-height:0}
 .warehouse-head{padding:9px 10px 10px;flex:none;border-bottom:2px solid #97743e}
 .costco-sign{width:100%;aspect-ratio:781/267;overflow:hidden;filter:drop-shadow(0 2px 0 #342719)}
@@ -18,7 +18,7 @@
 #card .warehouse-list .wq{grid-column:2;grid-row:2;font-weight:700;font-size:12px;color:#493e2a;align-self:start}
 #card .warehouse-list button.enamel-button{grid-column:3;grid-row:1/3;align-self:center;width:89px;min-width:0;height:47px;min-height:44px;margin:0;padding:6px 4px;font-size:14px;border-radius:10px;white-space:nowrap}
 #card.warehouse-card .painted-close{top:3px;right:2px;width:45px;height:45px;min-height:45px;z-index:6}
-.warehouse-footer{flex:none;padding:0 11px 11px;border-top:1px solid #ac905c;background:#efdbaf url(assets/window-paper.svg);box-shadow:0 -4px 8px #45341e15}
+.warehouse-footer{flex:none;padding:0 11px 11px;border-top:1px solid #ac905c;background:#efdbaf url(assets/window-paper.webp);box-shadow:0 -4px 8px #45341e15}
 .warehouse-johnny{height:70px;position:relative;display:flex;align-items:center;gap:8px}
 .warehouse-portrait{align-self:end;width:79px;height:65px;flex:none;filter:drop-shadow(0 1px #332b1b)}
 .warehouse-bubble{position:relative;flex:1;font-size:13px;line-height:1.25;background:#efd5a1;border:1.5px solid #44311e;border-radius:17px 13px 17px 9px;padding:7px 9px;transform:rotate(-2deg)}

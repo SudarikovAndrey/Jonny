@@ -1,5 +1,5 @@
 // Costco presentation reuses the prototype's purchase, hold, allocation and tutorial handlers.
-function costcoArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'costco-atlas.png',1222,1287);}
+function costcoArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'costco-atlas.webp',1222,1287);}
 const COSTCO_ICONS={gum:[715,1132,83,88],cola:[808,1127,58,92],bud:[880,1130,66,90],tape:[949,1137,77,82],marl:[1032,1125,87,95]};
 let warehouseScroll=0,warehouseStocks={};
 function decorateWarehouse(card){
@@ -7,7 +7,7 @@ function decorateWarehouse(card){
  card.className='card warehouse-card';
  const old=card.querySelector('.shop'),close=$('wNo');
  const head=document.createElement('header');head.className='warehouse-head';
- head.innerHTML=`<div class="costco-sign" role="img" aria-label="Costco. Товары для всех!">${costcoArt(19,10,781,267)}</div><div class="warehouse-heading"><h2>Товары для твоих точек</h2><span class="warehouse-help"></span></div><p>Один запас: продать на старте или отправить пацанам.</p>`;
+ head.innerHTML=`<div class="costco-sign" role="img" aria-label="Costco. Товары для всех!">${costcoArt(19,10,781,267)}</div><div class="warehouse-heading"><h2>Склад</h2><span class="warehouse-help"></span></div><p>Один запас: продать на старте или отправить пацанам.</p>`;
  const help=old.querySelector('.whead .qm');if(help)head.querySelector('.warehouse-help').append(help);
  const list=document.createElement('div');list.className='warehouse-list';list.setAttribute('aria-label','Товары на складе');
  const rows=[...old.querySelectorAll('.wr')];
@@ -18,6 +18,8 @@ function decorateWarehouse(card){
   const ring=row.querySelector('.ring');ring.setAttribute('role','meter');ring.setAttribute('aria-label',`Запас: ${g.name}`);ring.setAttribute('aria-valuemin','0');ring.setAttribute('aria-valuemax',String(capacity));ring.setAttribute('aria-valuenow',String(stockNow));
   const meta=row.querySelector('.wn small');meta.textContent=`${goodSales(id)} за круг · по $${sellPrice(id)}`;meta.style.whiteSpace='nowrap';
   meta.title=[...new Set(goodKiosks(id).map(pointName))].join(', ');
+  meta.classList.add('warehouse-meta');row.append(meta);
+  if(stockNow<capacity)button.innerHTML=`<span>+1</span><span class="warehouse-unit-price">$${buyPrice(id)}</span>`;
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
   // Native keyboard activation shares the same purchase path as a tap.
@@ -27,8 +29,9 @@ function decorateWarehouse(card){
  }
  if(!rows.length)list.innerHTML='<div class="warehouse-empty"><b>Сначала нужна своя точка</b><p>Там будет храниться товар. Купи точку на карте и возвращайся за первой партией.</p></div>';
  const footer=document.createElement('footer');footer.className='warehouse-footer';
- const discount=Math.round((perk().disc||0)*100);
- footer.innerHTML=`<div class="warehouse-johnny"><div class="warehouse-portrait">${costcoArt(748,327,178,140)}</div><div class="warehouse-bubble">${discount?`Скидка Джонни <b>${discount}%</b><small>Уже учтена в ценах</small>`:'Чем больше товара —<br><b>тем больше прибыли!</b>'}</div><span class="warehouse-wallet">В кармане<b>$${S.cash}</b></span></div>`;
+ let wallet=document.querySelector('#modal > .warehouse-cash');
+ if(!wallet){wallet=document.createElement('output');wallet.className='warehouse-cash';wallet.setAttribute('aria-label','В кармане');card.before(wallet);}
+ wallet.textContent='$'+S.cash;cashGlyph(wallet);
  const all=old.querySelector('#wAll');
  if(all){
   // Закупка, а не «заполнение»: две зелёные кнопки в одну строку — на все

@@ -162,8 +162,8 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 @media(max-height:650px){#card.shipping-window .shipping-scene{height:70px}.cargo-head{padding-top:10px;padding-bottom:8px}.cargo-foot{padding-top:8px;padding-bottom:8px}}
 @media(prefers-reduced-motion:reduce){#modal:not([hidden]):not(.closing) #card{animation:none}}
 /* Registered paper crop from the supplied atlas, repeated by CSS over the full shell. */
-.sheet-surface,#card{background:#efdbaf url(assets/window-paper.svg)!important}
-.cargo-head,.cargo-foot{background:#efdbaf url(assets/window-paper.svg)}
+.sheet-surface,#card{background:#efdbaf url(assets/window-paper.webp)!important}
+.cargo-head,.cargo-foot{background:#efdbaf url(assets/window-paper.webp)}
 #tip{background:#30332c!important;color:#fff0cd!important;opacity:1}
 #tip:after{background:none!important}
 
@@ -197,7 +197,7 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 #card.event-card .ev-sub{font-size:13px;line-height:1.25;color:#4b4132;padding-left:3px}
 #card.event-card .ev-body{position:relative;flex:1 1 auto;min-height:0;overflow:auto;padding:14px 12px 74px}
 #card.event-card .ev-body::after{content:'';position:absolute;left:0;right:0;bottom:0;height:84px;z-index:0;pointer-events:none;
-  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat;opacity:.45}
+  background:url(assets/bp/bp-city.webp) center bottom/cover no-repeat;opacity:.45}
 #card.event-card .ev-plate{position:relative;z-index:1;padding:13px 14px;border-radius:12px;
   background:#e9dcbb url(assets/paper-grain.svg);border:2.5px solid var(--ink);box-shadow:0 3px 0 #00000055}
 #card.event-card .ev-plate>p{font-size:15.5px;line-height:1.38;color:#3c3325;margin:0 0 8px}

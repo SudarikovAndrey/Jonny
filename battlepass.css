@@ -1,7 +1,7 @@
 /* Баттлпасс по референсу ui5: расписной задник, две линии наград, лестница
    уровней между ними, красный плакат премиума внизу.
    Детали (клеймо, заголовок, шильды, жетоны, кнопки) вырезаны из
-   battlepass-atlas.png в assets/bp/. Сами плашки собраны вёрсткой в цветах
+   battlepass-atlas.webp в assets/bp/. Сами плашки собраны вёрсткой в цветах
    кита: в атласе они идут слитой колонкой с впечатанными иконками, чистой
    пустой плашки там нет. */
 
@@ -21,12 +21,12 @@
 }
 #card.battlepass-card .pass-stamp{
   width:52px; height:54px; font-size:0; flex:none; align-self:start;
-  background:url(assets/bp/bp-badge.png) center/contain no-repeat}
+  background:url(assets/bp/bp-badge.webp) center/contain no-repeat}
 #card.battlepass-card .pass-header>div:not(.pass-progress){min-width:0}
 #card.battlepass-card .pass-header h2{
   height:44px; margin:0; color:transparent; overflow:hidden; text-indent:-999px;
   white-space:nowrap;
-  background:url(assets/bp/bp-title.png) left center/contain no-repeat}
+  background:url(assets/bp/bp-title.webp) left center/contain no-repeat}
 #card.battlepass-card .pass-header h2+small{display:none}
 #card.battlepass-card .xhead{align-self:start}
 
@@ -59,10 +59,10 @@
 #card.battlepass-card .pass-scene svg{display:none}
 #card.battlepass-card .pass-scene>span{
   flex:1; min-width:0; font-size:0;
-  height:46px; background:url(assets/bp/bp-banner.png) left center/contain no-repeat}
+  height:46px; background:url(assets/bp/bp-banner.webp) left center/contain no-repeat}
 #card.battlepass-card .pass-hero{
   width:64px; height:60px; flex:none;
-  background:url(assets/bp/bp-sun.png) center/contain no-repeat}
+  background:url(assets/bp/bp-sun.webp) center/contain no-repeat}
 #card.battlepass-card .pass-hero svg{display:none}
 
 /* ---------- заголовки колонок ---------- */
@@ -71,9 +71,9 @@
   padding:10px 9px 6px}
 #card.battlepass-card .pass-lanes b{font-size:0; height:40px}
 #card.battlepass-card .pass-lanes b:first-child{
-  background:url(assets/bp/bp-head-free.png) center/contain no-repeat}
+  background:url(assets/bp/bp-head-free.webp) center/contain no-repeat}
 #card.battlepass-card .pass-lanes b:last-child{
-  background:url(assets/bp/bp-head-prem.png) center/contain no-repeat}
+  background:url(assets/bp/bp-head-prem.webp) center/contain no-repeat}
 #card.battlepass-card .pass-lanes b svg{display:none}
 
 /* ---------- лестница ---------- */
@@ -84,7 +84,7 @@
 /* нижняя панорама города из кита */
 #card.battlepass-card .pass-stairs::after{
   content:''; position:absolute; left:0; right:0; bottom:0; height:92px; z-index:0;
-  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat; opacity:.5}
+  background:url(assets/bp/bp-city.webp) center bottom/cover no-repeat; opacity:.5}
 #card.battlepass-card .pass-side{display:none}
 
 #card.battlepass-card .pass-rung{
@@ -102,7 +102,7 @@
 #card.battlepass-card .pass-level{
   position:relative; z-index:2; width:46px; height:46px; display:grid; place-items:center;
   font-family:var(--num); font-weight:800; font-size:18px; color:#2c2318;
-  background:url(assets/bp/bp-token.png) center/contain no-repeat}
+  background:url(assets/bp/bp-token.webp) center/contain no-repeat}
 #card.battlepass-card .pass-level.next{
   filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 6px #ffd76a)}
 
@@ -137,13 +137,13 @@
 #card.battlepass-card .pass-state svg{width:0;height:0}
 #card.battlepass-card .claimed .pass-state{
   width:32px; height:32px; font-size:0;
-  background:url(assets/bp/bp-check.png) center/contain no-repeat}
+  background:url(assets/bp/bp-check.webp) center/contain no-repeat}
 #card.battlepass-card .locked .pass-state{
   width:32px; height:32px; font-size:0;
-  background:url(assets/bp/bp-lock.png) center/contain no-repeat}
+  background:url(assets/bp/bp-lock.webp) center/contain no-repeat}
 #card.battlepass-card .available .pass-state{
   font-size:0; width:64px; height:30px;
-  background:url(assets/bp/bp-ribbon-ok.png) center/contain no-repeat}
+  background:url(assets/bp/bp-ribbon-ok.webp) center/contain no-repeat}
 
 /* ---------- подвал ---------- */
 #card.battlepass-card .pass-tasks{
@@ -155,7 +155,7 @@
 #card.battlepass-card .pass-feedback{font-size:12.5px; color:#4b4132; text-align:center; margin-bottom:7px}
 #card.battlepass-card #bpBuy{
   width:100%; min-height:58px; font-size:0; border:0!important; box-shadow:none!important;
-  background:url(assets/bp/bp-btn-buy.png) center/contain no-repeat!important}
+  background:url(assets/bp/bp-btn-buy.webp) center/contain no-repeat!important}
 #card.battlepass-card #bpBuy svg,#card.battlepass-card #bpBuy b{display:none}
 #card.battlepass-card #bpBuy .enamel-skin,#card.battlepass-card #bpBuy::before{display:none!important}
 #card.battlepass-card .pass-owned{
@@ -229,7 +229,7 @@
 #card.hub-card .hub-list{position:relative; padding:16px 10px 96px}
 #card.hub-card .hub-list::after{
   content:''; position:absolute; left:0; right:0; bottom:0; height:92px; z-index:0; pointer-events:none;
-  background:url(assets/bp/bp-city.png) center bottom/cover no-repeat; opacity:.5}
+  background:url(assets/bp/bp-city.webp) center bottom/cover no-repeat; opacity:.5}
 
 #card.hub-card .hub-plate{
   position:relative; z-index:1; display:flex; align-items:center; gap:10px;
@@ -248,8 +248,8 @@
 #card.hub-card .hub-plate.available{box-shadow:0 3px 0 #00000055, 0 0 0 3px #ffd76a}
 #card.hub-card .hub-plate.claimed{opacity:.75}
 #card.hub-card .hub-plate .pass-state{flex:none; width:32px; height:32px; font-size:0}
-#card.hub-card .hub-plate.claimed .pass-state{background:url(assets/bp/bp-check.png) center/contain no-repeat}
-#card.hub-card .hub-plate.locked .pass-state{background:url(assets/bp/bp-lock.png) center/contain no-repeat}
+#card.hub-card .hub-plate.claimed .pass-state{background:url(assets/bp/bp-check.webp) center/contain no-repeat}
+#card.hub-card .hub-plate.locked .pass-state{background:url(assets/bp/bp-lock.webp) center/contain no-repeat}
 #card.hub-card .hub-goal.available .pass-state{display:none}
 
 /* рубежи билета: жетон шире — в нём до четырёх цифр */
@@ -356,7 +356,7 @@
 #card.hub-card .hub-rank.me .hub-text b{color:#8c1f18}
 
 /* ===== окно «Сегодня» ===== */
-#card.today-card .td-stamp{background:#f6ecd0 url(assets/icons/clock.png) center/70% no-repeat;border:3px solid #2a2118;border-radius:50%;width:50px;height:50px}
+#card.today-card .td-stamp{background:#f6ecd0 url(assets/icons/clock.webp) center/70% no-repeat;border:3px solid #2a2118;border-radius:50%;width:50px;height:50px}
 #card.today-card .td-scroll{overscroll-behavior:contain}
 #card.today-card .td-list{padding:14px 10px 18px}
 #card.today-card .td-list::after{display:none}
@@ -376,7 +376,7 @@
 #card.today-card .td-tag.none{background:none;border-style:dashed;box-shadow:none;color:#5b4c35;font-weight:600}
 #card.today-card .td-day.past{opacity:.55}
 #card.today-card .td-day.past .td-tag{box-shadow:none}
-#card.today-card .td-check{flex:none;width:28px;height:28px;background:url(assets/bp/bp-check.png) center/contain no-repeat}
+#card.today-card .td-check{flex:none;width:28px;height:28px;background:url(assets/bp/bp-check.webp) center/contain no-repeat}
 #card.today-card .td-day.today{background:#fff0c2 url(assets/paper-grain.svg);box-shadow:0 0 0 3px #c43a2d,0 0 0 5px #2a2118;margin:6px 0}
 #card.today-card .td-day.today .td-num{filter:drop-shadow(0 0 5px #ffcf4a)}
 #card.today-card .td-now-mark{flex:none;padding:3px 7px 4px;rotate:5deg;border:2px solid #2a2118;border-radius:6px;background:#c43a2d;color:#fff6de;font:900 12px/1 var(--num);text-transform:uppercase}

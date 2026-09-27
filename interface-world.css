@@ -1,0 +1,102 @@
+/* Shared printed stock. All values, actions and wording come from the game. */
+#modal:has(#card.print-property){pointer-events:none;backdrop-filter:none;background:#171a174d;padding:20px 12px 130px}
+#card.bare.print-property{pointer-events:auto;height:min(640px,calc(100dvh - 166px));max-height:calc(100dvh - 166px)!important}
+body:has(#modal:not([hidden]) #card.print-property) #app button:not(#bRoll),body:has(#modal:not([hidden]) #card.print-property) #board-frame{pointer-events:none}
+#card.print-property .srow{order:-2;border:0;background:none;box-shadow:none;padding:0 34px 5px 0;margin:0 0 4px;min-height:48px;gap:8px}
+#card.print-property .srow .ico{border:0;background:none;box-shadow:none;width:40px;height:44px}
+#card.print-property .srow .nm{font-size:25px;font-weight:800;line-height:1.15}
+#card.print-property .srow .lvl{font-size:21px;padding:7px 10px;min-width:58px;white-space:nowrap}
+#card.print-property .property-picture{order:-1;width:100%;height:auto;aspect-ratio:3/2;max-height:235px;margin:0 0 10px;border:0;box-shadow:none;background:none;overflow:hidden;border-radius:8px}
+#card.print-property .property-illustration{display:block;width:100%;height:100%;object-fit:contain;filter:none}
+#card.print-property .property-body{padding:14px 14px 10px}
+#card.print-property .shop .uup{padding:10px;margin:0;border-color:#918058;background:#79894c10;box-shadow:none}
+#card.print-property .uup-stats{margin:0;gap:4px}
+#card.print-property .uup-stat{display:grid;grid-template-columns:auto auto auto;justify-content:start;align-items:baseline;gap:6px 4px}
+#card.print-property .uup-stat small{grid-column:1/-1}
+#card.print-property .uup-stat small{font-size:16px}
+#card.print-property .uup-stat b{font-size:22px;white-space:nowrap}
+#card.print-property .uup-stat i{font-size:18px}
+#card.print-property .uup-stat .cash-glyph{display:none}
+#card.print-property .uup-max{margin:8px 0 0}
+#card.print-property .property-actions{border-top:0;padding-top:8px}
+#card.print-property .property-actions .wide{display:flex;gap:10px;align-items:center;border:2px solid #897248;border-radius:9px;padding:8px}
+#card.print-property .property-actions .wide .n{flex:1;font-size:16px;line-height:1.2}
+#card.print-property .property-actions .wide small{font-size:15px}
+#card.print-property .property-actions .wide button{flex:none;min-height:48px}
+#card.business-property .srow .nm{font-size:21px}
+#card.business-property .srow .ico{display:none}
+#card.business-property .shop .two{gap:10px}
+#card.business-property .shop .two .up{border:2px solid #8c7851;border-radius:9px;box-shadow:none;background:#e2cfa03b;padding:10px}
+#card.business-property .shop .two .nums{font:800 23px/1.25 Bitter,Georgia,serif}
+#card.business-property .shop .two .lab{font-size:17px}
+#card.business-property .shop .two .pb{font-size:15px;line-height:1.3}
+#card.business-property .m1-bizlock{font:600 16px/1.4 Bitter,Georgia,serif;border:0;border-top:2px solid #ac946d;background:none;border-radius:0;padding:12px 0;margin:2px 0}
+#card[data-purchase-motion=out],#card[data-purchase-motion=in]{will-change:transform;transform-origin:50% 50%}
+/* Warehouse: a printed goods ledger, ample tap areas, fixed purchase shelf. */
+#card.warehouse-card{height:min(680px,calc(100dvh - 80px));max-width:420px}
+#card.warehouse-card .warehouse-shell{height:100%;max-height:100%}
+#card.warehouse-card .warehouse-head{padding:10px 14px 12px;border-bottom:2px solid #9e865c}
+#card.warehouse-card .costco-sign{height:76px;max-height:76px;aspect-ratio:auto}
+#card.warehouse-card .warehouse-heading{padding-top:5px}
+#card.warehouse-card .warehouse-heading h2{font-size:22px;padding-right:12px}
+#card.warehouse-card .warehouse-list{padding:12px 14px;mask-image:none;-webkit-mask-image:none}
+#card.warehouse-card .warehouse-list .wr{grid-template-columns:42px minmax(0,1fr) 84px;grid-template-rows:auto auto 8px;gap:5px 8px;min-height:108px;padding:12px 10px;background:#f4e7c05c}
+#card.warehouse-card .warehouse-list .ring{grid-column:1;grid-row:1/3;background:none;box-shadow:none;padding:0;width:40px;height:46px}
+#card.warehouse-card .warehouse-list .ring i{background:none}
+#card.warehouse-card .warehouse-list .wn{grid-column:2;grid-row:1;font-size:20px}
+#card.warehouse-card .warehouse-list .wn small{font-size:14px;white-space:normal!important;overflow:visible;line-height:1.35;font-weight:600}
+#card.warehouse-card .warehouse-list .wq{grid-column:2;grid-row:2;font-size:17px;text-align:left}
+#card.warehouse-card .warehouse-list button.enamel-button{grid-column:3;grid-row:1/3;width:84px;min-height:58px;font-size:21px}
+.wh-stock-track{grid-column:1/-1;grid-row:3;height:8px;overflow:hidden;background:#b4a17d77;border-radius:4px 3px 5px 3px;box-shadow:inset 0 1px #77624466}
+.wh-stock-track::before{content:'';display:block;width:var(--stock);height:100%;background:#567849 url(assets/print/ink-wear.svg);transition:width 180ms ease-out}
+#card.warehouse-card .warehouse-footer{padding:8px 14px 14px;border-top:2px solid #9e865c;box-shadow:none}
+#card.warehouse-card .warehouse-johnny{min-height:68px}
+#card.warehouse-card .warehouse-bubble{font-size:16px}
+#card.warehouse-card .warehouse-bubble br{display:none}
+#card.warehouse-card .warehouse-portrait{width:46px;height:54px}
+#card.warehouse-card .warehouse-buys{gap:10px}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk{min-height:76px;gap:6px}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:16px;white-space:normal}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk>b{font-size:25px}
+/* Main board HUD: cream cardboard, inked figures, restrained enamel. */
+#top .cur{height:40px;border:2px solid #433323;border-radius:9px 7px 10px 8px;background:#efdfb7 url(assets/print/card-stock.webp) center/400px 600px;box-shadow:0 2px #292318}
+#top .cur b{font:800 22px/1 Bitter,Georgia,serif;color:#332b20}
+#qrow .qchip.m1-task{font-family:Bitter,Georgia,serif;min-height:59px;padding:8px 8px 10px;border-radius:10px 7px 9px 8px}
+#qrow .qchip.m1-task::before{display:none}
+#qrow .qchip.m1-task span{font-size:13px;font-weight:600;line-height:1.2}
+#qrow .qchip.m1-task b{font:800 18px/1.1 Bitter,Georgia,serif}
+#tilebar{border:2px solid #493720;border-radius:11px 8px 12px 9px;background:#efdfb7 url(assets/print/card-stock.webp) center/400px 600px}
+#tilebar #tbText{font:700 16px/1.25 Bitter,Georgia,serif}
+#tilebar .tb-good-icon{display:inline-block;width:27px;height:27px;object-fit:contain;vertical-align:middle;margin-right:6px}
+#tilebar>b{font:800 15px/1.2 Bitter,Georgia,serif}
+#dock{gap:8px}
+body.map-mode #dock{grid-template-columns:64px minmax(0,1fr) 64px;align-items:end}
+body.map-mode #dock #bJohnny{order:1}body.map-mode #dock .diebox{order:2}body.map-mode #dock #bShop{order:3}
+#dock .diebox{position:relative;padding-bottom:25px}
+#dock .diebox #sRolls{position:absolute;bottom:0;margin:0;font:800 18px/1.2 Bitter,Georgia,serif;background:#332b20;color:#efdfb7;border:1.5px solid #b69e6c;padding:2px 10px;border-radius:6px;box-shadow:0 2px #1c1914}
+#bRoll{position:relative;isolation:isolate;overflow:visible;background:#aa392b url(assets/print/ink-wear.svg)!important;border:2px solid #32291c;border-radius:15px 11px 14px 10px;box-shadow:0 4px #473120,0 6px 0 #d8be84;width:100%;max-width:none;height:74px;transform:none;display:flex;align-items:center;justify-content:center;gap:16px;color:#fff0c7;touch-action:manipulation}
+#bRoll::before{content:'';position:absolute;inset:0;border-radius:inherit;background:url(assets/print/button-frame.svg) center/100% 100%;z-index:-1;pointer-events:none}
+#bRoll .die{display:none}
+#bRoll .roll-label{display:none;font:800 22px/1 Bitter,Georgia,serif;letter-spacing:0;text-shadow:1px 1px #582519}
+body.map-mode #bRoll .roll-label{display:block}
+#bRoll:disabled{opacity:1;filter:saturate(.5)}
+#bRoll:active:not(:disabled){translate:0 3px;box-shadow:0 1px #473120,0 3px 0 #d8be84}
+#bRoll.guide-target{animation:none!important}
+/* Native corners keep a consistent radius even on the narrow +1 buttons. */
+#card button.enamel-button::before,#bRoll::before{inset:4px;border:1.5px solid #e6d5a7!important;border-radius:8px 6px 7px 5px;background:url(assets/print/ink-wear.svg) center/280px 180px!important;box-shadow:0 0 0 1px #3b302280}
+.roll-cube-space{position:relative;display:block;width:34px;height:38px;perspective:300px;flex:none;pointer-events:none}
+.roll-cube-space::after{content:'';position:absolute;bottom:-8px;left:-2px;width:40px;height:7px;background:#54281b88;border-radius:50%;filter:blur(2px)}
+.roll-cube{position:absolute;inset:0;width:34px;height:34px;transform-style:preserve-3d;transform:rotateX(-24deg) rotateY(32deg) rotateZ(-6deg);animation:die-invitation 8s ease-in-out infinite}
+.roll-cube-face{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:5px;border:2px solid #413420;border-radius:5px;background:#efdfb7 url(assets/print/card-stock.webp) center/140px;backface-visibility:hidden;box-shadow:inset 0 0 0 1px #fff1ce}
+.roll-cube-face i{width:5px;height:5px;background:#342b20;border-radius:48%;align-self:center;justify-self:center}
+.roll-cube-face.f1{transform:translateZ(17px)}.roll-cube-face.f2{transform:rotateY(90deg) translateZ(17px);background-color:#cbb17b}.roll-cube-face.f3{transform:rotateX(90deg) translateZ(17px);background-color:#fff1ca}.roll-cube-face.f4{transform:rotateY(-90deg) translateZ(17px)}.roll-cube-face.f5{transform:rotateX(-90deg) translateZ(17px)}.roll-cube-face.f6{transform:rotateY(180deg) translateZ(17px)}
+.roll-cube-space.pressed{transform:translateY(3px) scale(1.10,.82)}
+body.dice-rolling .roll-cube{animation:die-tumble .6s cubic-bezier(.4,.1,.5,1) infinite}
+.roll-cube-space.landed{animation:die-land 340ms ease-out}
+body.mobile-modal .roll-cube,body.page-hidden .roll-cube{animation-play-state:paused}
+@keyframes die-invitation{0%,88%,100%{transform:rotateX(-24deg) rotateY(32deg) rotateZ(-6deg)}92%{transform:translateY(-4px) rotateX(-30deg) rotateY(46deg) rotateZ(4deg)}96%{transform:rotateX(-20deg) rotateY(30deg) rotateZ(-8deg)}}
+@keyframes die-tumble{from{transform:translateY(-2px) rotateX(-24deg) rotateY(32deg) rotateZ(-6deg)}50%{transform:translateY(-10px) rotateX(156deg) rotateY(212deg) rotateZ(10deg)}to{transform:translateY(-2px) rotateX(336deg) rotateY(392deg) rotateZ(-6deg)}}
+@keyframes die-land{0%{transform:translateY(-8px) scale(.95,1.05)}35%{transform:translateY(3px) scale(1.12,.8)}70%{transform:translateY(-2px) scale(.98,1.04)}100%{transform:none}}
+@media(max-width:360px){#card.print-property .srow .nm{font-size:23px}#card.print-property .property-body{padding:12px}#card.print-property .uup-stat b{font-size:22px}#card.business-property .srow .nm{font-size:19px}#card.warehouse-card .warehouse-list{padding:10px}#card.warehouse-card .warehouse-list .wn{font-size:18px}#card.warehouse-card .warehouse-footer{padding:8px 10px 12px}#bRoll{gap:10px}#bRoll .roll-label{font-size:20px}body.map-mode #dock{grid-template-columns:56px minmax(0,1fr) 56px}}
+@media(max-height:700px){#card.warehouse-card{height:calc(100dvh - 64px)}#card.warehouse-card .costco-sign{height:58px;max-height:58px}#card.print-property .property-picture{max-height:205px}#qrow .qchip.m1-task{min-height:54px}#bRoll{height:64px}}
+@media(prefers-reduced-motion:reduce){.roll-cube,.roll-cube-space.landed,body.dice-rolling .roll-cube{animation:none}.wh-stock-track::before{transition:none}}

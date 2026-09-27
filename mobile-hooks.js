@@ -62,7 +62,7 @@ function fly(icon,from,to,n,o={}){
   for(let i=0;i<count;i++){
     const el=document.createElement('span');el.className='mobile-fly';
     // Деньги летят монетами из кита — той же иконкой, что в шапке и на поле.
-    if(icon==='💵'){el.classList.add('fly-coin');el.innerHTML='<img src="assets/icons/soft.png" alt="">';}else el.textContent=icon;el.style.left=from.x+'px';el.style.top=from.y+'px';document.body.append(el);
+    if(icon==='💵'){el.classList.add('fly-coin');el.innerHTML='<img src="assets/icons/soft.webp" alt="">';}else el.textContent=icon;el.style.left=from.x+'px';el.style.top=from.y+'px';document.body.append(el);
     const animation=el.animate([{translate:'0 0',scale:1},{translate:`${to.x-from.x}px ${to.y-from.y}px`,scale:.65}],{duration:600,delay:(o.delay||0)+i*80,easing:'ease-in-out',fill:'forwards'});
     animation.finished.then(()=>{el.remove();if(i===count-1){if(o.pulse)pulse(o.pulse);o.onDone?.();}}).catch(()=>el.remove());
   }
@@ -155,7 +155,7 @@ settings=function(){
   windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
   row.append(windBtn);
   // Отладка: переключить карту поля для просмотра; выбор помнится в этом браузере.
-  const maps=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит']];
+  const maps=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['mainstreet2','Мейн-стрит Б'],['capital','Столица']];
   const nextMap=maps[(maps.findIndex(m=>m[0]===boardMap())+1)%maps.length];
   const mapBtn=document.createElement('button');mapBtn.className='sec';mapBtn.textContent='Карта: '+nextMap[1];
   mapBtn.onclick=()=>{setBoardMap(nextMap[0]);closeModal();};
@@ -187,7 +187,7 @@ cv.addEventListener('pointerup',e=>{
   const t=S.tiles[nearest];if(!canUseTile(t))return;
   if(t.type==='kiosk'&&(t.owner||S.cash>=t.price))kioskWindow(t);
   else if(t.type==='biz'&&(t.owner||S.cash>=t.price))bizWindow(t);
-  else if(t.type==='slot'&&window.Slot)Slot.open({free:false});
+  else if(t.type==='slot'&&window.Slot)Slot.openTile();
   else if(t.type==='wh')shop();
   else if(t.type==='bank'&&S.day>=CFG.BANK_DAY)bank();
 });
@@ -363,17 +363,20 @@ renderRolls = function(){
   apply();
 })();
 
-// Иконки товаров. Сопоставление идёт по названию, а не по эмодзи: у Levi's 501
+// Иконки товаров. Сопоставление идёт по названию, а не по эмодзи: у Плотная джинса
 // и Косухи в данных один и тот же 🧥, а у сигар вместо предмета стоит флаг 🇨🇺.
 // Подставлять разметку прямо в g.icon нельзя — toast экранирует '<', а showTip
 // пишет в textContent, и HTML вылез бы текстом. Поэтому меняем готовый DOM.
 const GOODS_ICON = {
-  'Жвачка':'gum', 'Marlboro':'marl', 'Кубинские сигары':'cigar',
-  'Кола':'cola', 'Budweiser':'bud', 'Шампанское':'champ',
-  'Кассеты':'tape', 'Walkman':'walk', 'Discman':'disc',
-  'Джинсы':'jeans', 'Levi’s 501':'levis', "Levi's 501":'levis', 'Косуха':'jacket',
-  'Кроссы':'sneak', 'Air Jordan':'jordan', 'BMX':'bmx',
-  'Видик':'vcr', 'Видеокамера':'cam', 'Компьютер':'comp'
+  'Жвачка':'gum', 'Сигареты':'marl', 'Кубинские сигары':'cigar',
+  'Кола':'cola', 'Пиво':'bud', 'Шампанское':'champ',
+  'Кассеты':'tape', 'Плеер':'walk', 'CD-плеер':'disc',
+  'Джинсы':'jeans', 'Плотная джинса':'levis', "Плотная джинса":'levis', 'Косуха':'jacket',
+  'Кроссы':'sneak', 'Баскетбольные кеды':'jordan', 'BMX':'bmx',
+  'Видик':'vcr', 'Видеокамера':'cam', 'Компьютер':'comp',
+  'Конфеты':'candy','Кондитерская':'cake','Спорт':'sport','Джинса':'jeans','Кожаная одежда':'jacket',
+  'Кеды':'keds','Кроссовки':'sneak','Сапоги':'boots','Кассетники':'tape','Плееры':'walk','CD':'disc',
+  'Телеки':'tv','Видаки':'vcr','Видеокамеры':'cam','Алкоголь':'champ'
 };
 function goodsIcons(root){
   if(!root) return;
@@ -384,7 +387,7 @@ function goodsIcons(root){
     const key = (name.textContent || '').trim().split('\n')[0].trim();
     const id = GOODS_ICON[key];
     if(!id) return;
-    slot.innerHTML = '<i class="gi" style="background-image:url(assets/goods/' + id + '.png)"></i>';
+    slot.innerHTML = '<i class="gi" style="background-image:url(assets/goods/' + id + '.webp)"></i>';
   });
 }
 
@@ -516,31 +519,31 @@ function tilebarAffordable(){
 const ONBOARD_SLIDES = [
   { title:'Покупай точку',
     text:'Встал на свободную клетку — бери её. Своя точка — свой бизнес.',
-    art:`<div class="ob-banner"><img src="img/pt_gum_1.webp" alt=""></div>
+    art:`<div class="ob-banner"><img src="assets/points/pt_gum_1.webp" alt=""></div>
          <div class="ob-chip ob-pop">Купить · <i class="cash-glyph"></i>60</div>` },
   { title:'Покупай товар',
     text:'На Costco закупай товар. Он сам разложится по твоим точкам.',
     art:`<div class="ob-shelf"><span class="ob-sign">COSTCO</span>
-         <img class="ob-good g1" src="assets/goods/gum.png" alt="">
-         <img class="ob-good g2" src="assets/goods/cola.png" alt="">
-         <img class="ob-good g3" src="assets/goods/tape.png" alt=""></div>
+         <img class="ob-good g1" src="assets/goods/gum.webp" alt="">
+         <img class="ob-good g2" src="assets/goods/cola.webp" alt="">
+         <img class="ob-good g3" src="assets/goods/tape.webp" alt=""></div>
          <div class="ob-arrow">➜</div>
-         <div class="ob-mini"><img src="img/pt_gum_1.webp" alt=""></div>` },
+         <div class="ob-mini"><img src="assets/points/pt_gum_1.webp" alt=""></div>` },
   { title:'Прошёл старт — касса!',
     text:'Каждый раз на старте товар продаётся сам. С наценкой.',
     art:`<div class="ob-start"><span>СТАРТ</span></div>
-         <div class="ob-flow"><img class="ob-fly-good" src="assets/goods/gum.png" alt="">
+         <div class="ob-flow"><img class="ob-fly-good" src="assets/goods/gum.webp" alt="">
          <div class="ob-arrow">➜</div>
-         <img class="ob-fly-cash" src="assets/icons/soft.png" alt=""></div>
+         <img class="ob-fly-cash" src="assets/icons/soft.webp" alt=""></div>
          <div class="ob-chip ob-pop ob-plus">+<i class="cash-glyph"></i>48</div>` },
   { title:'Прокачивай точку',
     text:'Больше места — больше товара. Больше продаж — быстрее уходит.',
-    art:`<div class="ob-banner"><img src="img/pt_gum_2.webp" alt=""><span class="ob-up">↑</span></div>
+    art:`<div class="ob-banner"><img src="assets/points/pt_gum_2-v2.webp" alt=""><span class="ob-up">↑</span></div>
          <div class="ob-row"><span class="ob-chip">Вместимость ↑</span><span class="ob-chip">Продажи ↑</span></div>` },
   { title:'Продавай ещё больше',
     text:'Прокачанная точка растёт в магазин. Товар дороже — навар толще.',
-    art:`<div class="ob-banner"><img src="img/pt_gum_3.webp" alt=""></div>
-         <div class="ob-row ob-stack"><img src="assets/icons/soft.png" alt=""><img src="assets/icons/soft.png" alt=""><img src="assets/icons/soft.png" alt=""></div>`,
+    art:`<div class="ob-banner"><img src="assets/points/pt_gum_4.webp" alt=""></div>
+         <div class="ob-row ob-stack"><img src="assets/icons/soft.webp" alt=""><img src="assets/icons/soft.webp" alt=""><img src="assets/icons/soft.webp" alt=""></div>`,
     goal:true },
 ];
 

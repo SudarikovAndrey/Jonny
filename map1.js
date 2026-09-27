@@ -9,6 +9,9 @@
 var MAP1=new URLSearchParams(location.search).get('map')==='1';
 if(MAP1){
 document.body.classList.add('map-mode');
+// Подложка карты 1 — Мейн-стрит (assets/maps/mainstreet), выбирается в build_mobile.py по ?map=1;
+// отладочный переключатель карт здесь не показываем.
+boardMap=()=>'mainstreet';setBoardMap=()=>{};
 Object.assign(CFG,{START_CASH:600,REAL_DAYS:false});
 CFG.KIOSK.showProfit=true;
 const M1={rescue:50,levelCap:4,rollsStart:80,taskRolls:10,soldStep:50,soldBonus:100,soldBonusRolls:10,

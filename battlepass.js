@@ -1,7 +1,7 @@
 // Same BP rewards, price, and save fields as the prototype; live painted presentation.
-function passArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'battlepass-reference.png',1024,1536);}
+function passArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'battlepass-reference.webp',1024,1536);}
 function passIcon(kind){
- if(kind==='check')return atlasArt(1006,541,64,62,'round-art','battlepass-atlas.png');
+ if(kind==='check')return atlasArt(1006,541,64,62,'round-art','battlepass-atlas.webp');
  const art={crown:'<path d="m6 17 10 8L23 5l9 20 11-9-4 28H10Z" fill="#edb43a" stroke="#302719" stroke-width="3"/><path d="M12 37h25" stroke="#fff0ae" stroke-width="3"/>',dice:'<path d="m25 3 21 12v24L25 51 4 39V15Z" fill="#eee0bc" stroke="#302719" stroke-width="2.5"/><path d="m4 15 21 12 21-12M25 27v24" fill="none" stroke="#302719" stroke-width="2"/><g fill="#302719"><ellipse cx="25" cy="14" rx="4" ry="2.4"/><ellipse cx="13" cy="26" rx="2.8" ry="3.5"/><ellipse cx="17" cy="38" rx="2.8" ry="3.5"/><ellipse cx="34" cy="28" rx="2.6" ry="3.3"/><ellipse cx="39" cy="35" rx="2.6" ry="3.3"/></g>',gem:'<path d="M11 9h29l10 14-25 28L1 23Z" fill="#45bbdf" stroke="#302719" stroke-width="2.5"/><path d="m11 9 5 14 9 28 9-28 6-14M1 23h49M16 23 25 9l9 14" fill="none" stroke="#e0f8ff" stroke-width="2"/>',skin:'<path d="M7 32C5 6 41 4 43 30l7 8H23L7 32Z" fill="#3479a4" stroke="#302719" stroke-width="3"/><path d="M25 10v20M8 31l15 7 20-8" fill="none" stroke="#142f47" stroke-width="2"/><circle cx="30" cy="25" r="4" fill="#efc453"/>',lock:'<path d="M15 23V14c0-15 22-15 22 0v9" fill="none" stroke="currentColor" stroke-width="5"/><rect x="8" y="22" width="36" height="28" rx="6" fill="currentColor"/><path d="M26 31v9" stroke="#ebd09a" stroke-width="4"/>',check:'<circle cx="26" cy="26" r="22" fill="#347147" stroke="#2b3521" stroke-width="3"/><path d="m14 27 8 8 16-19" fill="none" stroke="#fff0cb" stroke-width="5" stroke-linecap="round"/>'};
  return `<svg viewBox="0 0 52 54" aria-hidden="true">${art[kind]||art.dice}</svg>`;
 }
@@ -62,7 +62,7 @@ function passPremiumOffer(redraw,tabs){
    <div class="po-list">
      <div class="po-row"><span class="po-ic">${passIcon('dice')}</span><span class="po-t"><b>+${rolls} ходов</b><small>за все ${BP.max} уровней</small></span></div>
      <div class="po-row"><span class="po-ic">${passIcon('gem')}</span><span class="po-t"><b>+${hard} кристаллов</b><small>и скин Джонни на ${BP.max}-м</small></span></div>
-     <div class="po-row"><span class="po-ic"><img src="assets/icons/crate.png" alt=""></span><span class="po-t"><b>+1 место в фуре</b><small>до конца недели</small></span></div>
+     <div class="po-row"><span class="po-ic"><img src="assets/icons/crate.webp" alt=""></span><span class="po-t"><b>+1 место в фуре</b><small>до конца недели</small></span></div>
    </div>
    ${waiting?`<p class="po-now">Сразу заберёшь награды за ${waiting} ${waiting===1?'уровень':waiting<5?'уровня':'уровней'}</p>`:''}
    <button class="ok" id="passConfirm">Открыть · ${BP.price} ₽</button>
@@ -217,13 +217,13 @@ eventInfo=async function(){
  const now=new Date(),mid=new Date(now);mid.setHours(24,0,0,0);
  const left=CFG.REAL_DAYS?`${Math.floor((mid-now)/36e5)}ч ${String(Math.floor(((mid-now)%36e5)/6e4)).padStart(2,'0')}м`:'—';
  const today=[];
- if(S.trend){const g=good(S.trend);today.push({cls:'hot',ic:`<img src="assets/goods/${g.id}.png" alt="">`,b:`${g.name} ×${CFG.TREND_MULT}`,s:`продаётся по $${sellPrice(S.trend)} вместо $${g.sell}`});}
+ if(S.trend){const g=good(S.trend);today.push({cls:'hot',ic:`<img src="assets/goods/${g.id}.webp" alt="">`,b:`${g.name} ×${CFG.TREND_MULT}`,s:`продаётся по $${sellPrice(S.trend)} вместо $${g.sell}`});}
  if(S.day===CFG.BLACK_FRIDAY_DAY)today.push({cls:'hot',ic:'🛍',b:`Чёрная пятница ×${String(CFG.BF_MULT).replace('.',',')}`,s:'все продажи дороже'});
  const behind=parcelsBehind()-(S.parcelSent?0:1);
- if(behind>0)today.push({ic:`<img src="assets/icons/crate.png" alt="">`,b:`Догони ${behind} ${behind===1?'поставку':'поставки'}`,s:(S.catchups||0)<CFG.LATE.catchupFree?'первая — бесплатно':'бандл «Догон»'});
+ if(behind>0)today.push({ic:`<img src="assets/icons/crate.webp" alt="">`,b:`Догони ${behind} ${behind===1?'поставку':'поставки'}`,s:(S.catchups||0)<CFG.LATE.catchupFree?'первая — бесплатно':'бандл «Догон»'});
  if((S.loans||[]).length)today.push({cls:'bad',ic:'🏦',b:`Кредит: −$${loanInterest()} за круг`,s:'при проходе банка'});
  if(S.jail>0)today.push({cls:'bad',ic:`<img src="board/assets/symbols/police.svg" alt="">`,b:'Ты в участке',s:`попыток на дубль: ${S.jail}`});
- if(!today.length)today.push({ic:`<img src="assets/icons/clock.png" alt="">`,b:'Спокойный день',s:S.parcelSent?'поставка уже ушла':'не забудь поставку'});
+ if(!today.length)today.push({ic:`<img src="assets/icons/clock.webp" alt="">`,b:'Спокойный день',s:S.parcelSent?'поставка уже ушла':'не забудь поставку'});
  const plates=today.map(r=>`<div class="hub-plate td-now ${r.cls||''}"><span class="td-ic">${r.ic}</span><span class="hub-text"><b>${r.b}</b><small>${r.s}</small></span></div>`).join('');
  const week=Array.from({length:CFG.DAYS},(_,k)=>k+1).map(d=>{const u=weekUnlocks(d),st=d<S.day?'past':d===S.day?'today':'';
    return `<div class="td-day ${st}"><span class="pass-level td-num">${d}</span><div class="td-tags">${u.length?u.map(x=>`<span class="td-tag"><i>${x.ic}</i>${x.t}</span>`).join(''):'<span class="td-tag none">обычный день</span>'}</div>${st==='today'?'<span class="td-now-mark">сегодня</span>':st==='past'?'<span class="td-check"></span>':''}</div>`;}).join('');

@@ -1,0 +1,323 @@
+{
+  "chip": {
+    "length": 0.25,
+    "events": [
+      {
+        "part": "wood",
+        "note": 80,
+        "at": 0,
+        "duration": 0.035,
+        "velocity": 90
+      },
+      {
+        "part": "wood",
+        "note": 74,
+        "at": 0.055,
+        "duration": 0.025,
+        "velocity": 55
+      },
+      {
+        "part": "pizz",
+        "note": 60,
+        "at": 0.012,
+        "duration": 0.06,
+        "velocity": 70
+      }
+    ]
+  },
+  "remove": {
+    "length": 0.26,
+    "events": [
+      {
+        "part": "wood",
+        "note": 72,
+        "at": 0,
+        "duration": 0.03,
+        "velocity": 83
+      },
+      {
+        "part": "pizz",
+        "note": 55,
+        "at": 0.045,
+        "duration": 0.06,
+        "velocity": 68
+      }
+    ]
+  },
+  "cup": {
+    "length": 0.58,
+    "events": [
+      {
+        "part": "wood",
+        "note": 66,
+        "at": 0,
+        "duration": 0.026,
+        "velocity": 45
+      },
+      {
+        "part": "wood",
+        "note": 70,
+        "at": 0.065,
+        "duration": 0.026,
+        "velocity": 49
+      },
+      {
+        "part": "wood",
+        "note": 74,
+        "at": 0.12,
+        "duration": 0.026,
+        "velocity": 53
+      },
+      {
+        "part": "wood",
+        "note": 66,
+        "at": 0.18,
+        "duration": 0.026,
+        "velocity": 57
+      },
+      {
+        "part": "wood",
+        "note": 70,
+        "at": 0.25,
+        "duration": 0.026,
+        "velocity": 61
+      },
+      {
+        "part": "wood",
+        "note": 74,
+        "at": 0.32,
+        "duration": 0.026,
+        "velocity": 65
+      },
+      {
+        "part": "wood",
+        "note": 66,
+        "at": 0.4,
+        "duration": 0.026,
+        "velocity": 69
+      },
+      {
+        "part": "pizz",
+        "note": 48,
+        "at": 0.38,
+        "duration": 0.1,
+        "velocity": 66
+      }
+    ]
+  },
+  "impact": {
+    "length": 0.21,
+    "events": [
+      {
+        "part": "wood",
+        "note": 64,
+        "at": 0,
+        "duration": 0.025,
+        "velocity": 98
+      },
+      {
+        "part": "pizz",
+        "note": 43,
+        "at": 0.004,
+        "duration": 0.055,
+        "velocity": 79
+      }
+    ]
+  },
+  "score": {
+    "length": 0.36,
+    "events": [
+      {
+        "part": "xylophone",
+        "note": 79,
+        "at": 0,
+        "duration": 0.065,
+        "velocity": 75
+      },
+      {
+        "part": "pizz",
+        "note": 67,
+        "at": 0.018,
+        "duration": 0.08,
+        "velocity": 68
+      },
+      {
+        "part": "clarinet",
+        "note": 84,
+        "at": 0.085,
+        "duration": 0.11,
+        "velocity": 60
+      }
+    ]
+  },
+  "tick": {
+    "length": 0.16,
+    "events": [
+      {
+        "part": "wood",
+        "note": 83,
+        "at": 0,
+        "duration": 0.022,
+        "velocity": 49
+      },
+      {
+        "part": "pizz",
+        "note": 72,
+        "at": 0.008,
+        "duration": 0.034,
+        "velocity": 42
+      }
+    ]
+  },
+  "collect": {
+    "length": 0.64,
+    "events": [
+      {
+        "part": "xylophone",
+        "note": 72,
+        "at": 0.0,
+        "duration": 0.08,
+        "velocity": 64
+      },
+      {
+        "part": "xylophone",
+        "note": 76,
+        "at": 0.075,
+        "duration": 0.08,
+        "velocity": 64
+      },
+      {
+        "part": "xylophone",
+        "note": 79,
+        "at": 0.15,
+        "duration": 0.08,
+        "velocity": 64
+      },
+      {
+        "part": "pizz",
+        "note": 48,
+        "at": 0.23,
+        "duration": 0.16,
+        "velocity": 75
+      },
+      {
+        "part": "pizz",
+        "note": 55,
+        "at": 0.23,
+        "duration": 0.16,
+        "velocity": 75
+      },
+      {
+        "part": "pizz",
+        "note": 60,
+        "at": 0.23,
+        "duration": 0.16,
+        "velocity": 75
+      }
+    ]
+  },
+  "draw": {
+    "length": 0.75,
+    "events": [
+      {
+        "part": "clarinet",
+        "note": 67,
+        "at": 0,
+        "duration": 0.16,
+        "velocity": 76
+      },
+      {
+        "part": "clarinet",
+        "note": 67,
+        "at": 0.23,
+        "duration": 0.23,
+        "velocity": 65
+      },
+      {
+        "part": "pizz",
+        "note": 48,
+        "at": 0.03,
+        "duration": 0.1,
+        "velocity": 65
+      },
+      {
+        "part": "pizz",
+        "note": 55,
+        "at": 0.27,
+        "duration": 0.13,
+        "velocity": 62
+      }
+    ]
+  },
+  "lose": {
+    "length": 0.92,
+    "events": [
+      {
+        "part": "trombone",
+        "note": 55,
+        "at": 0.0,
+        "duration": 0.17,
+        "velocity": 70
+      },
+      {
+        "part": "trombone",
+        "note": 52,
+        "at": 0.17,
+        "duration": 0.17,
+        "velocity": 66
+      },
+      {
+        "part": "trombone",
+        "note": 48,
+        "at": 0.34,
+        "duration": 0.17,
+        "velocity": 62
+      },
+      {
+        "part": "pizz",
+        "note": 36,
+        "at": 0.4,
+        "duration": 0.15,
+        "velocity": 84
+      }
+    ]
+  },
+  "open": {
+    "length": 0.32,
+    "events": [
+      {
+        "part": "wood",
+        "note": 74,
+        "at": 0,
+        "duration": 0.025,
+        "velocity": 58
+      },
+      {
+        "part": "pizz",
+        "note": 60,
+        "at": 0.05,
+        "duration": 0.1,
+        "velocity": 68
+      }
+    ]
+  },
+  "close": {
+    "length": 0.3,
+    "events": [
+      {
+        "part": "wood",
+        "note": 67,
+        "at": 0,
+        "duration": 0.025,
+        "velocity": 55
+      },
+      {
+        "part": "pizz",
+        "note": 48,
+        "at": 0.04,
+        "duration": 0.1,
+        "velocity": 60
+      }
+    ]
+  }
+}

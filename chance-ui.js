@@ -1,5 +1,5 @@
 // ===== «Шанс»: интерфейс карт (Американ Интерфейс) =====
-// Механика — chance-system.js (не менять). Здесь только вид: окно вращения,
+// Механика — chance-system.js. Здесь только вид: окно вращения,
 // коллекция и её раскрытие, сборщик колоды, значки эффектов в шапке, заставки
 // новых редкостей. Навыки: game-ui-designer, cartoon-animation, game-copywriter.
 //
@@ -23,20 +23,20 @@ const SVG={
 const img=src=>`<img src="${src}" alt="">`;
 // Иконка каждой стороны каждой карты — маленький мультяшный предмет из кита.
 const ICONS={
-  stash:[img(IC+'soft.png'),img(IC+'soft.png')], coffee:[img(IC+'cup.png'),img(IC+'cup.png')],
-  wholesale:[img(IC+'box.png'),img(IC+'box.png')], cab:[img(IC+'taxi.png'),img(IC+'percent.png')],
-  freegoods:[img(IC+'crate.png'),SVG.empty], grant:[img(IC+'crown.png'),SVG.empty],
-  supplier:[img(IC+'percent.png'),SVG.empty], collector:[img(IC+'coins.png'),SVG.empty],
-  sellout:[img(IC+'coins.png'),SVG.freeze], reprice:[SVG.up,SVG.down],
+  stash:[img(IC+'soft.webp'),img(IC+'soft.webp')], coffee:[img(IC+'cup.webp'),img(IC+'cup.webp')],
+  wholesale:[img(IC+'box.webp'),img(IC+'box.webp')], cab:[img(IC+'taxi.webp'),img(IC+'percent.webp')],
+  freegoods:[img(IC+'crate.webp'),SVG.empty], grant:[img(IC+'crown.webp'),SVG.empty],
+  supplier:[img(IC+'percent.webp'),SVG.empty], collector:[img(IC+'coins.webp'),SVG.empty],
+  sellout:[img(IC+'coins.webp'),SVG.freeze], reprice:[SVG.up,SVG.down],
   alibi:[SVG.star,img(SYM+'police.svg')], sure:[SVG.star,SVG.empty], double:[SVG.x2,SVG.empty],
-  jackpot:[img(IC+'money.png'),img(SYM+'police.svg')], investor:[img(IC+'shop.png'),SVG.lose],
-  credit:[img(IC+'soft.png'),img(IC+'percent.png')],
+  jackpot:[img(IC+'money.webp'),img(SYM+'police.svg')], investor:[img(IC+'shop.webp'),SVG.lose],
+  credit:[img(IC+'soft.webp'),img(IC+'percent.webp')],
 };
 const RAR=['grey','blue','purple','gold'];
 const RWORD={grey:'Серая',blue:'Синяя',purple:'Фиолетовая',gold:'Золотая'};
 const RISK={grey:'плюс или плюс поменьше',blue:'большой плюс или пусто',purple:'сильный плюс или настоящий минус',gold:'огромный плюс или огромный минус'};
 // Минус у стороны B: у фиолетовых и золотых — это настоящая потеря.
-const badB=c=>c.r==='purple'||c.r==='gold';
+const badB=c=>(c.r==='purple'||c.r==='gold')&&!/^пусто$/i.test(c.B);
 const lib=()=>Chance.library(), byId=id=>lib().find(c=>c.id===id);
 const ui=()=>{S.chanceUI=S.chanceUI||{seen:{},fresh:{},revealed:false,deckTip:false,rarityShown:{}};S.chanceUI.fresh=S.chanceUI.fresh||{};return S.chanceUI;};
 // «Новая» — карта, которую механика только что добавила в коллекцию и игрок её ещё не открывал.
@@ -55,7 +55,7 @@ function face(c,side){
     <span class="cu-cap ${bad?'bad':''} ${empty?'empty':''}">${c[side]}</span>
   </div>`;
 }
-function cardHTML(c,cls=''){return `<div class="cu-card r-${c.r} ${cls}" data-id="${c.id}"><div class="cu-spin">${face(c,'A')}${face(c,'B')}</div></div>`;}
+function cardHTML(c,cls=''){if(window.ChanceDepth)return ChanceDepth.cardHTML({...c,faceIcons:ICONS[c.id]},cls);return `<div class="cu-card r-${c.r} ${cls}" data-id="${c.id}"><div class="cu-spin">${face(c,'A')}${face(c,'B')}</div></div>`;}
 CUI.cardHTML=cardHTML;
 
 // ---------- экран 5: заставка новой редкости ----------
@@ -85,36 +85,40 @@ Chance.present=async function(card){
     const el=document.createElement('div');el.className='cu-layer cu-play r-'+card.r;
     const plate=s=>`<div class="cu-opt ${s} ${s==='B'&&badB(card)?'bad':''}" data-side="${s}"><span class="cu-opt-ic">${ICONS[card.id][s==='A'?0:1]}</span><span><b>${s}</b> ${card[s]}</span></div>`;
     el.innerHTML=`<div class="cu-play-in">
-      <header class="cu-head"><span class="cu-chip">${RWORD[card.r]}</span><h2>Шанс</h2>
+      <header class="cu-head"><h2>Шанс</h2>
         ${p.double?'<span class="cu-flag x2">×2 — и плюс, и минус</span>':''}${p.forced?'<span class="cu-flag sure">Верняк: выпадет A</span>':''}</header>
-      <div class="cu-stage" id="cuStage"><span class="cu-rays"></span><span class="cu-shadow"></span>${cardHTML(card,'cu-big')}</div>
+      <div class="cu-stage" id="cuStage" aria-hidden="true"><span class="cu-rays"></span><span class="cu-shadow"></span>${cardHTML(card,'cu-big')}</div>
       <div class="cu-opts">${plate('A')}${plate('B')}</div>
-      <p class="cu-hint" id="cuHint">Жми, когда к тебе повернётся нужная сторона</p>
+      <p class="cu-hint" id="cuHint" role="status">Жми, когда к тебе повернётся нужная сторона</p>
       <button class="bad cu-stop" id="cuStop">Стоп!</button>
       <button class="ok cu-take" id="cuTake" hidden>Забрать</button>
     </div>`;
-    document.body.append(el);
+    el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Шанс: '+card.title);
+    const game=document.getElementById('app'),wasInert=game?.inert,focusBefore=document.activeElement;if(game)game.inert=true;
+    document.body.classList.add('chance-playing');document.body.append(el);
     ['cuStop','cuTake'].forEach(id=>enamelButton($(id)));
     const cardEl=el.querySelector('.cu-big'),spinEl=cardEl.querySelector('.cu-spin'),shadow=el.querySelector('.cu-shadow');
-    let ang=0,w=p.deg,last=performance.now(),stopping=false,decel=0,side=null,done=false;const t0=last;
+    let ang=0,last=performance.now(),stopping=false,side=null,done=false,activeMs=0,claiming=false;const rotor=Chance.rotor(p);
+    const pause=()=>{last=performance.now();};document.addEventListener('visibilitychange',pause);
+    const finish=()=>{document.removeEventListener('visibilitychange',pause);if(game)game.inert=wasInert;document.body.classList.remove('chance-playing');el.remove();if(focusBefore?.isConnected)focusBefore.focus({preventScroll:true});resolve(side);};
+    el.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();(done?$('cuTake'):$('cuStop')).focus({preventScroll:true});}});
+    $('cuStop').focus({preventScroll:true});
     // вход: карта вылетает из колоды и шлёпается со сжатием
     if(!reduced())cardEl.animate([{transform:'translateY(120px) scale(.4) rotate(-12deg)',opacity:0},{transform:'translateY(-18px) scale(1.06,.94)',opacity:1,offset:.6},{transform:'translateY(4px) scale(.97,1.04)',offset:.8},{transform:'none'}],{duration:480,easing:'cubic-bezier(.3,.7,.3,1)'});
     snd('throw');
     const stop=()=>{if(stopping||done)return;stopping=true;
-      let dist=p.stopDeg*(1-p.jitter+Math.random()*2*p.jitter);
-      if(p.forced){const a=((ang+dist)%360+360)%360;if(!(a<90||a>=270))dist+=180;}
-      decel=w*w/(2*dist);$('cuStop').disabled=true;$('cuHint').textContent='Тормозит…';
+      rotor.brake();$('cuStop').disabled=true;$('cuHint').textContent='Тормозит…';
       // кнопка вдавливается — упреждение
-      $('cuStop').animate([{scale:1},{scale:.92},{scale:1}],{duration:180});
+      if(!reduced())$('cuStop').animate([{scale:1},{scale:.94},{scale:1}],{duration:160});
       snd('ui');};
     el.querySelector('#cuStage').onclick=stop;$('cuStop').onclick=stop;
     const land=()=>{done=true;
-      const a=((ang%360)+360)%360;side=(a<90||a>=270)?'A':'B';
+      side=rotor.side();cardEl.dataset.result=side;
       const good=side==='A',bad=side==='B'&&badB(card);
       el.classList.add('landed',good?'win-a':bad?'win-bad':'win-b');
       el.querySelector(`.cu-opt[data-side="${side}"]`).classList.add('hit');
       el.querySelector(`.cu-opt[data-side="${side==='A'?'B':'A'}"]`).classList.add('miss');
-      $('cuHint').innerHTML=`<b>${good?'Выпало A':'Выпало B'}:</b> ${card[side]}`;
+      $('cuHint').textContent=good?'Выпало A':'Выпало B';
       $('cuStop').hidden=true;const take=$('cuTake');take.hidden=false;
       // вспышка стороны и лёгкое покачивание вокруг итогового угла — сторона не меняется
       // Сторона уже решена углом остановки. Карта «плюхается» лицом этой же
@@ -122,28 +126,29 @@ Chance.present=async function(card){
       // читать карту ребром. Исход при этом не меняется.
       const target=Math.round((ang-(side==='A'?0:180))/360)*360+(side==='A'?0:180);
       if(!reduced()){
-        const from=ang,t1=performance.now(),D=.55;
+        const from=ang,t1=performance.now(),D=.24;
         const settle=now=>{const t=Math.min(1,(now-t1)/1000/D);if(!el.isConnected)return;
-          const k=1+2.2*Math.pow(t-1,3)+1.2*Math.pow(t-1,2); // easeOutBack
+          const k=1-Math.pow(1-t,3);window.ChanceDepth?.light(cardEl,from+(target-from)*k); // easeOutCubic
           spinEl.style.transform=`rotateY(${from+(target-from)*k}deg)`;shadow.style.transform=`scaleX(${0.35+0.65*Math.abs(Math.cos((from+(target-from)*k)*Math.PI/180))})`;
           if(t<1)requestAnimationFrame(settle);};requestAnimationFrame(settle);
-        cardEl.animate([{transform:'scale(1)'},{transform:'scale(1.12,.9)',offset:.35},{transform:'scale(.96,1.06)',offset:.6},{transform:'scale(1)'}],{duration:620,easing:'ease-out'});
+        cardEl.animate([{transform:'scale(1)'},{transform:'scale(1.035,.98)',offset:.35},{transform:'scale(.99,1.02)',offset:.6},{transform:'scale(1)'}],{duration:260,easing:'ease-out'});
         take.animate([{transform:'translateY(20px) scale(.8)',opacity:0},{transform:'translateY(-4px) scale(1.04)',opacity:1,offset:.7},{transform:'none'}],{duration:340,easing:'cubic-bezier(.34,1.56,.64,1)'});
       } else spinEl.style.transform=`rotateY(${target}deg)`;
       snd(good?'joy':bad?'negative':'ui');
       take.focus();
       take.onclick=()=>{
-        if(!reduced()){el.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});setTimeout(()=>{el.remove();resolve(side);},190);}
-        else{el.remove();resolve(side);}
+        if(claiming)return;claiming=true;take.disabled=true;
+        if(!reduced()){el.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});setTimeout(finish,160);}
+        else finish();
       };
     };
-    const tick=now=>{if(!el.isConnected||done)return;const dt=Math.min(.05,(now-last)/1000);last=now;
-      if(!stopping&&now-t0>p.autoMs)stop();
-      if(stopping)w=Math.max(0,w-decel*dt);
-      ang+=w*dt;spinEl.style.transform=`rotateY(${ang}deg)`;
+    const tick=now=>{if(!el.isConnected||done)return;const dt=Math.max(0,(now-last)/1000);last=now;
+      if(document.hidden){requestAnimationFrame(tick);return;}activeMs+=dt*1000;
+      if(!stopping&&activeMs>p.autoMs)stop();
+      ang=rotor.advance(dt);window.ChanceDepth?.light(cardEl,ang);spinEl.style.transform=`rotateY(${ang}deg)`;
       // тень сужается, когда карта стоит ребром — объём без 3D-движка
       shadow.style.transform=`scaleX(${0.35+0.65*Math.abs(Math.cos(ang*Math.PI/180))})`;
-      if(stopping&&w===0){land();return;}
+      if(rotor.stopped){land();return;}
       requestAnimationFrame(tick);};
     requestAnimationFrame(tick);
   });
@@ -169,7 +174,7 @@ function layer(cls,html){const el=document.createElement('div');el.className='cu
 CUI.openCollection=function(tab='col'){
   if(Chance.stage()>=4&&tab==='deck')return CUI.openDeck();
   let f='all';
-  const el=layer('cu-coll',`<div class="cu-panel"><header class="cu-phead"><span class="ev-badge"><img src="${IC}crown.png" alt=""></span><h2>Коллекция</h2><button class="cu-x" aria-label="Закрыть">✕</button></header>
+  const el=layer('cu-coll',`<div class="cu-panel"><header class="cu-phead"><span class="ev-badge"><img src="${IC}crown.webp" alt=""></span><h2>Коллекция</h2><button class="cu-x" aria-label="Закрыть">✕</button></header>
     <div class="cu-fwrap"></div><div class="cu-grid"></div>
     <footer class="cu-pfoot">${Chance.stage()>=4?'<button class="ok" id="cuToDeck">Собрать колоду</button>':`<p class="cu-foot-note">Колоду из 8 карт скоро соберёшь сам. Пока её собирает Джонни.</p>`}</footer></div>`);
   const draw=()=>{el.querySelector('.cu-fwrap').innerHTML=filters(f);el.querySelector('.cu-grid').innerHTML=collectionGrid(f);
@@ -203,7 +208,7 @@ function collectionReveal(){
 CUI.openDeck=function(){
   if(Chance.stage()<4)return CUI.openCollection();
   let deck=Chance.deck().slice(),f='all';const u=ui();
-  const el=layer('cu-deck',`<div class="cu-panel"><header class="cu-phead"><span class="ev-badge"><img src="${IC}crate.png" alt=""></span><h2>Колода</h2><button class="cu-x" aria-label="Закрыть">✕</button></header>
+  const el=layer('cu-deck',`<div class="cu-panel"><header class="cu-phead"><span class="ev-badge"><img src="${IC}crate.webp" alt=""></span><h2>Колода</h2><button class="cu-x" aria-label="Закрыть">✕</button></header>
     <div class="cu-slots"></div><p class="cu-deckmsg"></p><div class="cu-fwrap"></div><div class="cu-grid"></div>
     <footer class="cu-pfoot two"><button class="sec" id="cuRec">Рекомендованная</button><button class="ok" id="cuSave">Сохранить</button></footer></div>`);
   ['cuRec','cuSave'].forEach(id=>enamelButton($(id)));
@@ -239,7 +244,7 @@ CUI.openDeck=function(){
 };
 
 // ---------- экран 4: значки активных эффектов в шапке ----------
-const FXICON={buy:img(IC+'percent.png'),sell:SVG.up,freeze:SVG.freeze,alibi:SVG.star,sure:SVG.star,double:SVG.x2};
+const FXICON={buy:img(IC+'percent.webp'),sell:SVG.up,freeze:SVG.freeze,alibi:SVG.star,sure:SVG.star,double:SVG.x2};
 function renderFx(){
   const top=document.getElementById('top');if(!top||!S)return;
   let box=document.getElementById('chanceFx');
@@ -253,10 +258,11 @@ function renderFx(){
 const baseRender=render;render=function(){const r=baseRender.apply(this,arguments);try{renderFx();}catch(e){}return r;};
 
 // После карты этапа 3 — раскрытие коллекции; отметка «увидел» для новой карты.
-const basePlay=Chance.play;
-Chance.play=async function(){const r=await basePlay.apply(this,arguments);try{if(r&&r.card)ui().seen[r.card.id]=ui().seen[r.card.id]||false;collectionReveal();}catch(e){}return r;};
-// chancePlay вызывается напрямую из map1.js — оборачиваем и его, если доступно.
-if(typeof chancePlay==='function'){const bp=chancePlay;chancePlay=async function(){const r=await bp.apply(this,arguments);try{collectionReveal();}catch(e){}return r;};}
+// Reveal belongs to the end of L3, never to a random Chance landing.
+if(typeof mapEndFlow==='function'){const end=mapEndFlow;mapEndFlow=async function(mapNo){
+  const result=await end.apply(this,arguments);if(mapNo===3)collectionReveal();return result;
+};}
+CUI.revealCollection=collectionReveal;
 
 // Вход в коллекцию и колоду: значок-карта в шапке с этапа 3.
 function renderEntry(){

@@ -1,0 +1,39 @@
+/* Thick printed stock, low-sheen varnish and blind-embossed frame. */
+.cu-matte{--tx:0deg;--ty:0deg;--lx:45%;--py:40%;--shade:.05;perspective:1100px;isolation:auto;touch-action:pan-y}
+.cu-tilt{height:100%;width:100%;position:relative;transform-style:preserve-3d;transform:rotateX(var(--tx)) rotateY(var(--ty))}
+.cu-matte .cu-spin{transform-style:preserve-3d}
+.cu-matte .cu-core{position:absolute;inset:0;border-radius:calc(var(--w)*.055);transform:translateZ(var(--z));background:#bea477;border:1px solid #796348;box-shadow:inset 0 0 0 1px #f0d7a1;pointer-events:none}
+.cu-matte .cu-core:nth-child(even){background:#e6cea2;border-color:#b89a6b}
+.cu-matte .cu-edge{position:absolute;top:4%;bottom:4%;width:8px;background:repeating-linear-gradient(90deg,#d8bd8b 0 1px,#89714c 1px 1.5px);transform:rotateY(90deg);pointer-events:none}
+.cu-matte .edge-l{left:-4px}.cu-matte .edge-r{right:-4px}
+.cu-matte .cu-face{transform:translateZ(4px);padding:calc(var(--w)*.08) calc(var(--w)*.075) calc(var(--w)*.09);border:2px solid #4a3523;border-radius:calc(var(--w)*.055);background:#eeddb4 url(interface/assets/paper.svg) center/100% 100%;box-shadow:inset 0 0 0 2px #dfc692,inset 0 0 0 calc(var(--w)*.032) var(--rc),inset 0 0 0 calc(var(--w)*.037) #624b30,inset 0 0 0 calc(var(--w)*.045) #f5dfae;color:#362c20}
+.cu-matte .cu-back{transform:rotateY(180deg) translateZ(4px)}
+.cu-matte .cu-face::before{content:'';position:absolute;inset:calc(var(--w)*.048);border:1px solid #8b6b414d;border-radius:calc(var(--w)*.025);box-shadow:0 1px 0 #fff3cd,inset 0 1px 2px #65482b29;pointer-events:none}
+.cu-matte .cu-face::after{content:'';position:absolute;inset:0;border:2px solid transparent;border-top-color:#ffedbc99;border-left-color:#ffedbc44;border-bottom-color:#3b291b80;border-radius:inherit;background:none;animation:none;pointer-events:none}
+.cu-matte .cu-stamp{top:calc(var(--w)*.078);right:calc(var(--w)*.08);border:1px solid #856b424d;border-radius:2px;background:none;color:#775937;font:700 calc(var(--w)*.036)/1.4 var(--txt,Golos,sans-serif);padding:2px 5px;letter-spacing:.09em;rotate:0deg;box-shadow:0 1px #fff0cc77}
+.cu-matte .cu-side{width:calc(var(--w)*.16);top:calc(var(--w)*.075);left:calc(var(--w)*.075);font-size:calc(var(--w)*.094);border:1.5px solid #493925;border-radius:50%;background:#47664e;box-shadow:inset 0 0 0 2px #f1dca7,inset 0 0 0 3px #3e503c,0 2px 1px #5c442445;color:#fce9bc}
+.cu-matte .cu-side.meh{background:#71624a}.cu-matte .cu-side.bad{background:#a4382e}
+.cu-matte .cu-title{font-size:calc(var(--w)*.092);line-height:1.08;margin-top:calc(var(--w)*.195);min-height:2.16em;display:flex;align-items:center;justify-content:center;text-shadow:0 1px #fff0ce;text-transform:none;letter-spacing:-.02em;width:96%}
+.cu-matte .cu-art{width:100%;margin:0;flex:1;min-height:0;isolation:isolate}
+.cu-matte .cu-art::before{border:0;opacity:.4;background:radial-gradient(ellipse,#b88f43 0,transparent 70%);width:100%;height:95%;border-radius:0}
+.cu-matte .cu-art img{filter:drop-shadow(0 2px 0 #6f512433);width:68%;height:100%;max-height:calc(var(--w)*.52);position:relative}
+.cu-matte .cu-vignette{background-image:url(assets/chance/vignettes.webp);background-size:200% 200%;background-repeat:no-repeat;flex:none;height:calc(var(--w)*.53);width:calc(var(--w)*.80);mix-blend-mode:multiply;mask-image:radial-gradient(ellipse at center,#000 52%,#000c 67%,transparent 78%)}
+.cu-matte .cu-vignette::before{display:none}.art-cash{background-position:0 0}.art-taxi{background-position:100% 0}.art-cargo{background-position:0 100%}.art-coffee{background-position:100% 100%}
+.cu-matte .cu-cap{margin-top:auto;font-size:calc(var(--w)*.064);line-height:1.2;min-height:2.6em;width:94%;padding:calc(var(--w)*.025) calc(var(--w)*.015) 0;justify-content:center;border-top:1px solid #8a6b454d;color:#3d4831}
+.cu-matte .cu-cap.bad{color:#913e2f}.cu-matte .cu-cap.empty{color:#786443}
+.cu-matte .cu-edition{font:700 calc(var(--w)*.027)/1 var(--txt,Golos,sans-serif);letter-spacing:.20em;margin-top:calc(var(--w)*.032);color:#9b7950;display:flex;align-items:center;gap:calc(var(--w)*.05)}
+.cu-matte .cu-edition i{font-style:normal;color:var(--rc)}
+.cu-matte .cu-diffuse{position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(ellipse at var(--lx) var(--py),#fff7d328,transparent 70%),linear-gradient(100deg,transparent,rgba(46,32,17,var(--shade)));box-shadow:inset 0 1px 0 #fff7d330}
+.cu-matte .cu-back .cu-diffuse{background:radial-gradient(ellipse at calc(100% - var(--lx)) var(--py),#fff7d328,transparent 70%),linear-gradient(260deg,transparent,rgba(46,32,17,var(--shade)))}
+.cu-matte.r-gold .cu-face{box-shadow:inset 0 0 0 2px #e3c782,inset 0 0 0 calc(var(--w)*.032) #a77e35,inset 0 0 0 calc(var(--w)*.038) #70542f,inset 0 0 0 calc(var(--w)*.047) #e6cb89}
+.cu-matte.r-gold .cu-face::after{border-top-color:#fff4bd;border-left-color:#f5dca880}
+.cu-matte.cu-mini .cu-core,.cu-matte.cu-mini .cu-edge{display:none}.cu-matte.cu-mini .cu-face{transform:none}.cu-matte.cu-mini .cu-title{font-size:calc(var(--w)*.098);margin-top:calc(var(--w)*.18)}.cu-matte.cu-mini .cu-cap{font-size:calc(var(--w)*.074)}.cu-matte.cu-mini .cu-edition{display:none}
+.cu-play{background:radial-gradient(ellipse at 50% 40%,#39433bef,#182622f5);overflow-y:auto;overscroll-behavior:contain}
+.cu-play .cu-stage .cu-rays{opacity:.07;animation:none;background:radial-gradient(ellipse,#e5c978,transparent 65%)}
+.cu-play .cu-big{--w:min(238px,56vw,31vh)}
+.cu-play .cu-shadow{height:18px;width:170px;background:#080e0cb3;filter:blur(9px);bottom:3px}
+.cu-play .cu-head h2{background:none;border:0;box-shadow:none;color:#f1dfbb;rotate:0deg;font-size:30px;letter-spacing:.02em;text-transform:none}
+.cu-play .cu-chip{border:0;border-bottom:1px solid #a89065;background:none;border-radius:0;color:#c8b98d;font-size:10px;letter-spacing:.2em;padding-bottom:5px}
+.cu-play .cu-hint{font-size:12px;color:#c7bc9d;min-height:30px}.cu-play .cu-opt{border-radius:4px;border-width:1px;font-size:12px;min-height:56px;box-shadow:0 3px #111e17}.cu-play .cu-opt.hit{box-shadow:0 3px #111e17,0 0 0 2px #c5a566;transform:translateY(-2px)}
+.cu-detail .cu-matte{--w:min(250px,65vw,38vh)}
+@media(prefers-reduced-motion:reduce){.cu-tilt{transform:none!important}}

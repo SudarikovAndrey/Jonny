@@ -43,7 +43,7 @@ var CHANCE_LIB=[
     apply:(s,k)=>{if(s==='B')return 'Фура заблудилась. Пусто';let n=0;for(const t of chanceMine()){n+=Math.max(0,cap(t)-t.goods);t.goods=cap(t);}return `Все точки заполнены даром: +${n} шт.`;}},
   {id:'grant',r:'blue',title:'Грант',A:'бесплатная прокачка точки',B:'пусто',
     apply:(s,k)=>{if(s==='B')return 'Грант ушёл другому. Пусто';let done=0;for(let j=0;j<k;j++){const c=chanceMine().filter(t=>kioskNextStat(t)).sort((a,b)=>kioskLvl(a)-kioskLvl(b))[0];
-      if(!c)break;if(kioskNextStat(c)==='cap')c.capLvl++;else c.salesLvl++;done++;}return done?`Грант: точка прокачана даром${done>1?' ×'+done:''}`:'Все точки на пределе';}},
+      if(!c)break;if(kioskNextStat(c)==='cap')c.capLvl++;else{c.salesLvl++;c.capLvl=c.salesLvl;}done++;}return done?`Грант: точка прокачана даром${done>1?' ×'+done:''}`:'Все точки на пределе';}},
   {id:'supplier',r:'blue',title:'Скидка поставщика',A:'закупка −30% на 2 круга',B:'пусто',
     apply:(s,k)=>{if(s==='B')return 'Поставщик передумал. Пусто';chanceFx().buy={mult:Math.max(.2,1-.3*k),laps:2};return `Закупка −${Math.round(30*k)}% на 2 круга`;}},
   {id:'collector',r:'blue',title:'Инкассатор',A:'инкассатор снова раскидает находки',B:'пусто',
@@ -51,9 +51,9 @@ var CHANCE_LIB=[
   {id:'sellout',r:'purple',title:'Sell Out',A:'продать 75% товара ×1,5',B:'50% товара заморожено на круг',
     apply:(s,k)=>{if(s==='A'){const r=chanceSell(Math.min(1,.75*Math.min(k,1.33)),1.5*(k>1?1.25:1));return `Sell Out: ${r.units} шт. за $${r.cash}`;}
       let n=0;for(const t of chanceMine()){const f=Math.floor(t.goods*Math.min(1,.5*k));t.goods-=f;t.frozen=(t.frozen||0)+f;n+=f;}chanceFx().freezeLaps=1;return `Заморожено ${n} шт. до следующего круга`;}},
-  {id:'reprice',r:'purple',title:'Ажиотаж',A:'маржа товара ×2 на 2 круга',B:'маржа ×0,5 на 2 круга',
+  {id:'reprice',r:'purple',title:'Ажиотаж',A:'маржа категории ×2 на 2 круга',B:'маржа ×0,5 на 2 круга',
     apply:(s,k)=>{const own=[...new Set(chanceMine().map(t=>t.good))];if(!own.length)return 'Торговать пока нечем';const g=own[Math.floor(Math.random()*own.length)];
-      chanceFx().sell={good:g,mult:s==='A'?1+k:Math.pow(.5,k),laps:2};return s==='A'?`Ажиотаж: ${good(g).name} продаётся с наценкой на 2 круга`:`Затоварка: ${good(g).name} дешевеет на 2 круга`;}},
+      chanceFx().sell={good:g,category:good(g).cat||g,mult:s==='A'?1+k:Math.pow(.5,k),laps:2};return s==='A'?`Ажиотаж: ${good(g).name} продаётся с наценкой на 2 круга`:`Затоварка: ${good(g).name} дешевеет на 2 круга`;}},
   {id:'alibi',r:'purple',title:'Отмазка',A:'следующая полиция без наказания',B:'сразу в участок',
     apply:async(s,k)=>{if(s==='A'){chanceFx().alibi=(chanceFx().alibi||0)+k;return 'Отмазка в кармане: полиция отпустит';}for(let j=0;j<k;j++)await police();return 'Попался — в участок';}},
   {id:'sure',r:'purple',title:'Верняк',A:'следующая карта — только сторона A',B:'пусто',combo:true,
@@ -61,7 +61,7 @@ var CHANCE_LIB=[
   {id:'double',r:'purple',title:'Двойная',A:'следующая карта ×2 — плюс и минус',B:'пусто',combo:true,
     apply:(s,k)=>{if(s==='B')return 'Пусто';chanceFx().nextDouble=true;return 'Следующий «Шанс» — ×2';}},
   {id:'jackpot',r:'gold',title:'Джекпот',A:'+5 кругов денег',B:'в участок и двойной штраф',
-    apply:async(s,k)=>{if(s==='A'){const m=chanceCash(chanceL()*5*k);return `ДЖЕКПОТ: +$${m}`;}const f=pay(chanceL()*k);await police();return `Попался с поличным: штраф $${f} и участок`;}},
+    apply:async(s,k)=>{if(s==='A'){const m=chanceCash(chanceL()*5*k);return `ДЖЕКПОТ: +$${m}`;}await police(2*k);return 'Попался с поличным: в участок и двойной штраф';}},
   {id:'investor',r:'gold',title:'Инвестор',A:'самая дорогая свободная точка — даром',B:'теряешь самую дешёвую точку',
     apply:(s,k)=>{const free=S.tiles.filter(t=>t.type==='kiosk'&&!t.owner&&unlocked(t)).sort((a,b)=>b.price-a.price);const mine=chanceMine().sort((a,b)=>a.price-b.price);let out=[];
       for(let j=0;j<k;j++){if(s==='A'){const t=free.shift();if(!t)break;t.owner='you';t.goods=0;t.capLvl=1;t.salesLvl=1;out.push(pointName(t));}
@@ -78,7 +78,7 @@ var CHANCE_STAGES={
   2:{own:['stash','coffee','wholesale','cab','freegoods','grant','supplier','collector'],copies:1,manual:false},
   3:{own:['stash','coffee','wholesale','cab','freegoods','grant','supplier','collector'],copies:1,manual:false,reveal:true},
   4:{own:['stash','coffee','wholesale','cab','freegoods','grant','supplier','collector','sellout','reprice','alibi','sure','double'],copies:1,manual:true},
-  5:{own:CHANCE_LIB.map(c=>c.id),copies:1,manual:true},
+  5:{own:CHANCE_LIB.filter(c=>c.r!=='gold').map(c=>c.id),copies:1,manual:true},
 };
 const CHANCE_DECK_SIZE=8,CHANCE_MAX_COPIES=2,CHANCE_MAX_GOLD=2;
 const CHANCE_EV={stash:.68,coffee:.60,wholesale:.55,cab:.55,freegoods:1,grant:.9,supplier:.8,collector:.75,sellout:1.15,reprice:.75,alibi:.6,sure:.7,double:.5,jackpot:1.75,investor:1,credit:.8};
@@ -93,8 +93,10 @@ function chanceState(){
   return c;
 }
 function chanceRecommended(){
-  const st=CHANCE_STAGES[chanceStage()],c=chanceState();
-  const pool=Object.keys(c.collection).filter(id=>st.own.includes(id)&&chanceCard(id)&&!(chanceCard(id).bankOnly&&!S.tiles.some(t=>t.type==='bank')));
+  const stage=chanceStage(),st=CHANCE_STAGES[stage],c=chanceState();
+  if(stage===1)return st.own.flatMap(id=>[id,id]);
+  if(!st.manual)return st.own.slice();
+  const pool=Object.keys(c.collection).filter(id=>chanceCard(id)&&!(chanceCard(id).bankOnly&&!S.tiles.some(t=>t.type==='bank')));
   // Рекомендованная колода — надёжная: без фиолетовых и золотых, по ценности «наугад».
   const safe=pool.filter(id=>['grey','blue'].includes(chanceCard(id).r)).sort((a,b)=>CHANCE_EV[b]-CHANCE_EV[a]);
   const deck=[];for(const id of safe)for(let k=0;k<Math.min(CHANCE_MAX_COPIES,c.collection[id]);k++)deck.push(id);
@@ -106,22 +108,43 @@ function chanceDeckCheck(ids){
   const c=chanceState(),n={};
   for(const id of ids){const card=chanceCard(id);if(!card)return `Нет карты ${id}`;n[id]=(n[id]||0)+1;
     if(n[id]>CHANCE_MAX_COPIES)return `Не больше ${CHANCE_MAX_COPIES} копий одной карты`;
-    if(!c.collection[id])return `Карты «${card.title}» нет в коллекции`;}
+    if(!c.collection[id])return `Карты «${card.title}» нет в коллекции`;
+    if(n[id]>c.collection[id])return `Не хватает копий «${card.title}»`;
+    if(card.bankOnly&&(chanceStage()<5||!S.tiles.some(t=>t.type==='bank')))return 'Кредит доступен только на карте с банком';
+    if((card.r==='purple'&&chanceStage()<4)||(card.r==='gold'&&chanceStage()<5))return 'Эта редкость ещё не открыта';}
   if(ids.filter(id=>chanceCard(id).r==='gold').length>CHANCE_MAX_GOLD)return `Золотых — не больше ${CHANCE_MAX_GOLD}`;
   return null;
 }
 function chanceDeck(){const c=chanceState(),st=CHANCE_STAGES[chanceStage()];return st.manual&&c.deck&&!chanceDeckCheck(c.deck)?c.deck:chanceRecommended();}
 // «Мешок»: каждая карта выходит один раз за цикл, потом колода перемешивается.
 function chanceDraw(){
-  const c=chanceState();
+  const c=chanceState(),deck=chanceDeck(),key=chanceStage()+':'+deck.join(',');
+  if(c.bagKey!==key){c.bag=[];c.bagKey=key;}
   if(!c.bag.length){c.bag=chanceDeck().slice();for(let i=c.bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c.bag[i],c.bag[j]]=[c.bag[j],c.bag[i]];}}
   const id=c.bag.pop();return chanceCard(id);
 }
 function chanceSpinParams(card){const r=CHANCE_RARITY[card.r],fx=chanceFx();
   return {deg:r.deg,stopDeg:270,jitter:r.jitter,autoMs:6000,forced:fx.nextSure?'A':null,double:!!fx.nextDouble};}
+function chanceRotor(p,random=Math.random){
+  let angle=0,speed=p.deg,braking=false,elapsed=0,start=0,distance=0,duration=0;
+  const side=()=>{const a=((angle%360)+360)%360;return a<90||a>=270?'A':'B';};
+  return {
+    get angle(){return angle;},get stopped(){return braking&&elapsed>=duration;},side,
+    brake(){if(braking)return;distance=p.stopDeg*(1-p.jitter+random()*2*p.jitter);
+      const end=((angle+distance)%360+360)%360;
+      if(p.forced&&end>=90&&end<270)distance+=180;
+      start=angle;duration=2*distance/speed;elapsed=0;braking=true;},
+    advance(dt){if(!braking){angle+=speed*dt;return angle;}
+      elapsed=Math.min(duration,elapsed+dt);const t=elapsed/duration;
+      angle=start+distance*(2*t-t*t);return angle;}
+  };
+}
 async function chanceResolve(card,side){
-  const fx=chanceFx(),k=fx.nextDouble&&!card.combo?2:1;
-  if(!card.combo){fx.nextDouble=false;fx.nextSure=false;}
+  card=chanceCard(card.id);
+  if(!card||!['A','B'].includes(side))throw new Error('Invalid Chance result');
+  const fx=chanceFx(),k=fx.nextDouble?2:1;
+  // Consume the previous combo before applying this card, which can grant a new one.
+  fx.nextDouble=false;fx.nextSure=false;
   const c=chanceState();c.seen[card.id]=(c.seen[card.id]||0)+1;
   const text=await card.apply(side,k);
   track('chance',{id:card.id,r:card.r,side,k,stage:chanceStage()});log(`🎴 ${card.title}: ${text}.`);save();render();
@@ -139,11 +162,13 @@ function chanceActive(){const fx=chanceFx(),out=[];
 // Эффекты в экономике: цены закупки и продажи, заморозка, отмазка, счёт кругов.
 (function(){
   const bBuy=buyPrice;buyPrice=function(g){const p=bBuy.apply(this,arguments),fx=S&&S.chance&&S.chance.fx;return fx&&fx.buy&&fx.buy.laps>0?Math.max(1,Math.round(p*fx.buy.mult)):p;};
-  const bSell=sellPrice;sellPrice=function(g){const p=bSell.apply(this,arguments),fx=S&&S.chance&&S.chance.fx;return fx&&fx.sell&&fx.sell.laps>0&&fx.sell.good===g?Math.max(1,Math.round(p*fx.sell.mult)):p;};
+  const bSell=sellPrice;sellPrice=function(g){const p=bSell.apply(this,arguments),fx=S&&S.chance&&S.chance.fx;if(!fx||!fx.sell||fx.sell.laps<=0)return p;const effect=fx.sell;
+    if((effect.category||good(effect.good).cat||effect.good)!==(good(g).cat||g))return p;
+    const cost=bBuy.call(this,g);return Math.max(1,Math.round(cost+(p-cost)*effect.mult));};
   const bLap=lapDone;lapDone=async function(){const r=await bLap.apply(this,arguments);const fx=S.chance&&S.chance.fx;if(!fx)return r;
     if(fx.buy&&fx.buy.laps>0)fx.buy.laps--;if(fx.sell&&fx.sell.laps>0)fx.sell.laps--;
     if(fx.freezeLaps>0&&--fx.freezeLaps===0){for(const t of myKiosks()){if(t.frozen){t.goods=Math.min(cap(t),t.goods+t.frozen);t.frozen=0;}}toast('Замороженный товар вернулся на полки');}
-    return r;};
+    save();render();return r;};
   const bPolice=police;police=async function(){const fx=S.chance&&S.chance.fx;if(fx&&fx.alibi>0){fx.alibi--;toast('Отмазка сработала — полиция отпустила');log('🎴 Отмазка: полиция отпустила без штрафа.');save();render();return;}return bPolice.apply(this,arguments);};
 })();
 
@@ -155,25 +180,32 @@ async function chancePresentBasic(card){
     <p class="t" id="chHint" style="text-align:center">Выпадет сторона, что смотрит на тебя, когда карта остановится.</p><button class="ok m1-stop" id="chStop">Стоп!</button>`,
     [{t:'Забрать',v:1,cls:'ok',dis:true}],{},()=>setTimeout(()=>{
       const cardEl=$('chCard'),take=[...$('card').querySelectorAll('.mbtns button')].pop();if(!cardEl)return;
-      let ang=0,w=p.deg,last=performance.now(),stopping=false,decel=0;const t0=last;
-      const stop=()=>{if(stopping)return;stopping=true;let dist=p.stopDeg*(1-p.jitter+Math.random()*2*p.jitter);
-        if(p.forced){const a=((ang+dist)%360+360)%360;if(!(a<90||a>=270))dist+=180;} // «Верняк» объявлен заранее — докручиваем до A честно
-        decel=w*w/(2*dist);const sb=$('chStop');if(sb)sb.disabled=true;};
+      let ang=0,last=performance.now(),stopping=false;const t0=last,rotor=chanceRotor(p);
+      const stop=()=>{if(stopping)return;stopping=true;rotor.brake();const sb=$('chStop');if(sb)sb.disabled=true;};
       $('chSpin').onclick=stop;$('chStop').onclick=stop;
-      const tick=now=>{if(!cardEl.isConnected)return;const dt=Math.min(.05,(now-last)/1000);last=now;
-        if(!stopping&&now-t0>p.autoMs)stop();if(stopping)w=Math.max(0,w-decel*dt);
-        ang+=w*dt;cardEl.style.transform=`rotateY(${ang}deg)`;
-        if(stopping&&w===0){const a=((ang%360)+360)%360;side=(a<90||a>=270)?'A':'B';cardEl.classList.add('stopped');
+      const tick=now=>{if(!cardEl.isConnected)return;const dt=Math.max(0,(now-last)/1000);last=now;
+        if(!stopping&&now-t0>p.autoMs)stop();
+        ang=rotor.advance(dt);cardEl.style.transform=`rotateY(${ang}deg)`;
+        if(rotor.stopped){side=rotor.side();cardEl.classList.add('stopped');
           $('chHint').textContent=`Сторона ${side}: ${card[side]}`;$('chStop')?.remove();if(take)take.disabled=false;return;}
         requestAnimationFrame(tick);};
       requestAnimationFrame(tick);
     },30));
   return side||(p.forced||'A');
 }
-async function chancePlay(){
-  const card=chanceDraw(),side=await Chance.present(card),text=await chanceResolve(card,side);
-  toast(`🎴 ${text}`,2600);return {card,side,text};
+let chancePending=null;
+function chancePlay(){
+  if(chancePending)return chancePending;
+  const wasMoving=moving;moving=true;
+  chancePending=(async()=>{const card=chanceDraw(),side=await Chance.present(card),text=await chanceResolve(card,side);
+    toast(`🎴 ${text}`,2600);return {card,side,text};
+  })().finally(()=>{chancePending=null;moving=wasMoving;render();});
+  return chancePending;
 }
+// All maps use the same deck and presentation. M1 keeps its own landing hook.
+const chanceBaseLand=land;land=function(t){if(t.type==='chance'&&unlocked(t))return (async()=>{
+  S.landN=(S.landN||0)+1;if(t.drop)await collectDrop(t);return chancePlay();
+})();return chanceBaseLand.apply(this,arguments);};
 
 // Хук для интерфейса: карта впервые попала в коллекцию (этап ввода, позже — награды и сундуки).
 // Событие 'chance:card-added' на window, detail {ids, stage}; подписка — Chance.onCardAdded(cb).
@@ -189,7 +221,7 @@ window.Chance={
   stage:chanceStage,collection:()=>({...chanceState().collection}),
   deck:chanceDeck,recommendedDeck:chanceRecommended,
   setDeck:ids=>{const e=chanceDeckCheck(ids);if(e)return e;chanceState().deck=ids.slice();chanceState().bag=[];save();return null;},
-  draw:chanceDraw,spinParams:chanceSpinParams,resolve:chanceResolve,active:chanceActive,
+  draw:chanceDraw,spinParams:chanceSpinParams,rotor:chanceRotor,resolve:chanceResolve,active:chanceActive,
   present:chancePresentBasic, // интерфейс переопределяет: (card) => Promise<'A'|'B'>
   play:chancePlay,
   onCardAdded:cb=>{chanceAddedCbs.push(cb);return ()=>{const i=chanceAddedCbs.indexOf(cb);if(i>=0)chanceAddedCbs.splice(i,1);};},

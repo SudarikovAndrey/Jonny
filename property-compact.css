@@ -1,0 +1,59 @@
+/* Property cards fit as one sheet. Illustration yields space before readable controls do. */
+#modal:has(#card.print-property){padding:14px 12px 116px}
+#card.bare.illustrated-property.print-property{max-width:380px;height:min(560px,calc(100dvh - 144px));max-height:calc(100dvh - 144px)!important;overflow:visible}
+#card.print-property .shop{overflow:visible}
+#card.print-property .property-body{overflow:visible;overscroll-behavior:auto;padding:10px 12px 4px;gap:0;min-height:0}
+#card.print-property .property-picture{flex:1 1 180px;height:0;min-height:76px;max-height:200px;aspect-ratio:auto;margin:2px 0 6px;overflow:visible}
+#card.print-property .property-illustration{object-fit:contain;width:100%;height:100%}
+#card.print-property .srow{flex:none;min-height:40px;padding:0 32px 2px 0;margin:0 0 3px;gap:7px}
+#card.print-property .srow .ico{width:34px;height:36px}
+#card.print-property .srow .nm{font-size:23px;line-height:1.12}
+#card.print-property .srow .lvl{font-size:18px;min-width:52px;padding:5px 8px}
+#card.print-property .srow .qm{width:34px;min-width:34px;height:34px;min-height:34px;font-size:21px;line-height:30px}
+#card.print-property .shop .box{min-height:42px;padding:7px 10px;margin:0 0 6px;gap:8px;font-size:17px;line-height:1.2}
+#card.print-property .shop .box b{font-size:21px;line-height:1.1}
+#card.print-property .shop .box small{font-size:15px;line-height:1.2}
+#card.print-property .shop .bar{height:7px}
+#card.print-property .shop .uup{padding:6px;margin:0}
+#card.print-property .shop .uup-stats{gap:4px;margin:0}
+#card.print-property .shop .uup-stat{padding:3px 6px;gap:3px}
+#card.print-property .shop .uup-stat small{font-size:15px;line-height:1.2;margin:0 0 2px}
+#card.print-property .shop .uup-stat b{font-size:21px;line-height:1.1}
+#card.print-property .shop .uup-stat i{font-size:17px}
+#card.print-property .shop .uup-max{font-size:15px;line-height:1.2;margin:0;padding:0}
+#card.print-property .shop .uup:has(.uup-max){border:0;background:none;padding:3px 2px}
+#card.print-property .property-actions{gap:6px;padding:6px 12px 12px;flex:none;background:none}
+#card.print-property .shop .buy,#card.print-property .shop button.uup-btn{min-height:52px;padding:8px 12px;font-size:21px;margin:0}
+#card.print-property .shop button.uup-btn>b{font-size:23px;padding-left:8px}
+#card.print-property .shop button.uup-btn>span:not(.enamel-skin) small{font-size:14px;line-height:1.2;margin-top:3px}
+#card.print-property .property-actions .wide{gap:8px;padding:6px 8px;min-height:64px}
+#card.print-property .property-actions .wide .n{font-size:15px;line-height:1.18;min-width:0}
+#card.print-property .property-actions .wide small{font-size:14px;line-height:1.2}
+#card.print-property .property-actions .wide button{font-size:20px;min-height:44px;padding:8px 10px}
+#card.print-property .shop .need,#card.print-property .shop .hintline{padding:4px 0;margin:0;font-size:15px;line-height:1.2}
+#card.print-property .xclose{width:44px;height:44px}
+/* Business upgrades use the same compact rows and keep their original handlers. */
+#card.business-property .srow .nm{font-size:20px;line-height:1.12}
+#card.business-property .m1-bizlock{font-size:15px;line-height:1.3;padding:8px 0;margin:0}
+#card.business-property .shop .two{gap:6px;margin:0 0 5px}
+#card.business-property .shop .two .up{position:relative;padding:8px;gap:4px}
+#card.business-property .shop .two .uic{display:none}
+#card.business-property .shop .two .lab{font-size:16px;line-height:1.2}
+#card.business-property .shop .two .nums{font-size:21px;line-height:1.2}
+#card.business-property .shop .two .pb{font-size:14px;line-height:1.2;margin:3px 0}
+#card.business-property .shop .two button:not(.qm){min-height:44px;padding:7px 10px;font-size:18px}
+#card.business-property .shop .two .up:only-child{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px}
+#card.business-property .shop .two .up:only-child .lab{grid-column:1;padding-right:20px}
+#card.business-property .shop .two .up:only-child .nums{grid-column:1;grid-row:2}
+#card.business-property .shop .two .up:only-child button:not(.qm){grid-column:2;grid-row:1/3;margin:0}
+#card.business-property .shop .two .up .qm{top:0;right:5px;width:25px;height:25px;font-size:17px;line-height:23px;transform:translateY(-70%)}
+@media(max-height:700px){
+ #card.print-property .property-picture{flex-basis:130px;max-height:150px;min-height:64px}
+ #card.print-property .property-body{padding-top:9px}
+ #card.print-property .srow .nm{font-size:22px}
+ #card.print-property .shop .box{min-height:39px;padding:6px 9px;margin-bottom:5px;font-size:16px}
+ #card.print-property .shop .box b{font-size:20px}
+ #card.print-property .property-actions{padding-bottom:10px}
+ #card.business-property .srow .nm{font-size:19px}
+}
+@media(max-width:360px){#card.print-property .property-body{padding-inline:10px}#card.print-property .property-actions{padding-inline:10px}#card.print-property .shop .uup-stat small{font-size:14px}}
