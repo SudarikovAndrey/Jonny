@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=34a1811c"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=e6300978"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="inspector.css?v=038cf59f"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=34a1811c"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=e6300978"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=10b21a46"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -347,16 +347,16 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'96198260'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'a6b62596'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
     <div id="dock">
-      <button class="dk" id="bTaxi"><span>🚕</span><small id="tTaxi">💎 1</small></button>
-      <button class="dk" id="bShip"><span>📦</span><small id="tShip">собрать</small></button>
+      <button class="dk" id="bTaxi" aria-label="Такси" title="Такси"><span>🚕</span><small id="tTaxi">💎 1</small></button>
+      <button class="dk" id="bShip" aria-label="Поставка" title="Поставка"><span>📦</span><small id="tShip">собрать</small></button>
       <div class="diebox"><button class="dice" id="bRoll"><span class="die">🎲</span></button><div class="pill" id="sRolls">30</div><div class="pill dark" id="sRollsCap">/30</div><small id="starterInfo" hidden></small></div>
-      <button class="dk" id="bJohnny"><span>🧢</span><small>Джонни</small></button>
-      <button class="dk" id="bShop"><span>🛒</span><small>Магазин</small></button>
+      <button class="dk" id="bJohnny" aria-label="Билет Джонни" title="Билет Джонни"><span aria-hidden="true"></span><small>Билет Джонни</small></button>
+      <button class="dk" id="bShop" aria-label="Магазин" title="Магазин"><span>🛒</span><small>Магазин</small></button>
     </div>
   </div>
 </div>
@@ -1229,7 +1229,7 @@ async function prototypeRoll(){
     const t=S.tiles[S.pos];
     if(S.pos===0) await lapDone(dbl);
     if(t.type==='bank'&&(S.loans||[]).length){const neg=loanCharge();if(neg){await bankThreat();if(!last)break;}} // прошёл банк — заплатил процент; ушёл в минус — коллекторы тормозят и предупреждают
-    if((t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t)){
+    if((t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t)&&!t.insp){
       const biz=t.type==='biz', f=Math.round(fee(t)*(biz&&last?CFG.BIZ.landMult:1)*useBoost(t));
       S.cash+=f;S.stat.earned+=f;S.dstat.earned+=f;qProg('earn',f);
       fly('💵',AT.tile(t.i),AT.cash(),biz?flyN(f):1,{pulse:'sCash'});
@@ -1259,7 +1259,7 @@ function loop(now){
 async function lapDone(dbl){
   const guidedFinish=firstLapActive(),keepForTrial=guidedFinish&&S.training&&!S.training.shipped&&!S.training.skipped;
   S.laps++;if(guidedFinish)S.firstRoute.done=true;let income=0,units=0,reserve=keepForTrial?1:0;S.pot+=CFG.POT_PER_LAP*S.day*S.day;
-  for(const t of myKiosks()){let available=t.goods;if(reserve&&available>0){available--;reserve=0;}const n=Math.min(sales(t),available);if(n<=0)continue;t.goods-=n;units+=n;income+=Math.round(n*sellPrice(t.good)*useBoost(t));fly(good(t.good).icon,AT.tile(t.i),AT.home(),Math.min(n,3));}
+  for(const t of myKiosks()){if(t.insp)continue;let available=t.goods;if(reserve&&available>0){available--;reserve=0;}const n=Math.min(sales(t),available);if(n<=0)continue;t.goods-=n;units+=n;income+=Math.round(n*sellPrice(t.good)*useBoost(t));fly(good(t.good).icon,AT.tile(t.i),AT.home(),Math.min(n,3));}
   if(dbl&&perk().dbl)income*=2;
   if(income>0){S.cash+=income;S.stat.earned+=income;S.stat.sold+=units;S.dstat.earned+=income;S.dstat.sold+=units;qProg('sell',units);qProg('earn',income);fly('💵',AT.home(),AT.cash(),flyN(income),{delay:450,pulse:'sCash'});float(0,'+$'+income+' продажи','#8bc34a');log(`Круг ${S.laps}: продано ${units} шт на $${income}.`);}
   else{log(`Круг ${S.laps}: точки пустые, продавать нечего.`);if(myKiosks().length&&!keepForTrial)hint('empty',`Точки пустые — продавать нечего. Остановись на Costco${S.day>=CFG.TAXI_FROM_DAY?' или вызови 🚕 такси до склада':''}.`);}
@@ -2063,7 +2063,7 @@ function render(){
   draw();if(!$('tip').hidden)positionTip();
 }
 $('tip').onclick=hideTip;$('modal').addEventListener('click',e=>{if(e.target===$('modal')&&!modalSticky)closeModal();});$('toast').onclick=()=>{clearTimeout(toastT);$('toast').style.opacity=0;$('toast').style.pointerEvents='none';};$('bHub').onclick=()=>{if(!moving)eventHub('ticket');};$('sTimer').onclick=()=>{if(!moving)eventInfo();};[0,1].forEach(i=>{$('q'+i).onclick=()=>{if(moving)return;const q=S.q[i];if(q&&q.done&&!q.claimed){const r=q.reward;if(r.rolls){fly('🎲',AT.el('q'+i),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.el('q'+i),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;track('quest_claim',{id:q.id,goal:q.goal,reward:r});toast('🎯 Награда получена');save();render();}else if(q)toast(`🎯 ${q.text} · ${Math.min(q.prog,q.goal)}/${q.goal} · ${rwText(q.reward)}`);};});
-$('bJohnnyTop').onclick=()=>{if(!moving)johnny();};$('sDayPill').onclick=()=>{if(!moving)dayCard();};$('bJohnny').onclick=()=>{if(!moving)johnny();}; /* Кнопки Джонни открывают персонажа; прогресс в шапке — награды. */ $('bShip').onclick=()=>{if(!moving)shipClick();};$('tilebar').onclick=()=>{const t=S.tiles[S.pos];if(!canUseTile(t)||$('tilebar').disabled||!$('modal').hidden)return;if(t.type==='kiosk')kioskWindow(t);else if(t.type==='biz')bizWindow(t);else if(t.type==='wh')shop();else if(t.type==='bank')bank();};$('bShop').onclick=()=>{if(!moving){S.tips.shopOpened=true;shopHard();}};
+$('bJohnnyTop').onclick=()=>{if(!moving)johnny();};$('sDayPill').onclick=()=>{if(!moving)dayCard();};$('bJohnny').onclick=()=>{if(!moving)eventHub('ticket');}; /* Портрет — персонаж; нижний билет и прогресс — награды. */ $('bShip').onclick=()=>{if(!moving)shipClick();};$('tilebar').onclick=()=>{const t=S.tiles[S.pos];if(!canUseTile(t)||$('tilebar').disabled||!$('modal').hidden)return;if(t.type==='kiosk')kioskWindow(t);else if(t.type==='biz')bizWindow(t);else if(t.type==='wh')shop();else if(t.type==='bank')bank();};$('bShop').onclick=()=>{if(!moving){S.tips.shopOpened=true;shopHard();}};
 $('bRoll').onclick=roll;$('bTaxi').onclick=taxi;$('bSettings').onclick=settings;$('invBtn').onclick=()=>{invOpen=!invOpen;render();};
 window.addEventListener('resize',()=>{fit();draw();if(!$('tip').hidden)positionTip();if(!$('modal').hidden)fitCard();});
 if(window.ResizeObserver)new ResizeObserver(()=>{fit();draw();}).observe(cv);
@@ -2073,10 +2073,10 @@ function mobileSync(){
   if(!S||!MobileHost.ready)return;
   mobileCheckCash();
   const snapshot={action:'state',pos:S.pos,moving,day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||null,
+    i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
-    label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
-      t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':''
+    label:!unlocked(t)?'':t.insp?'Проверка':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
+      t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
   }))};
   const json=JSON.stringify(snapshot);
   if(json!==mobileLastState){mobileLastState=json;MobileHost.send(snapshot);}
@@ -3028,7 +3028,7 @@ decorateWindows();
 // var, а не const: decorateWindows() вызывается выше по файлу, до этих строк.
 var EVENT_BADGES = [
   [/Копилка/, 'board/assets/symbols/piggy.svg'], [/Шанс/, 'board/assets/symbols/chance.svg'],
-  [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.webp'],
+  [/Инспектор/, 'board/assets/symbols/inspector.svg'], [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.webp'],
   [/Не хватает/, 'assets/icons/soft.webp'], [/Ходы (кончились|вышли)/, 'assets/icons/die.webp'],
   [/Итоги дня|День \d+ из/, 'assets/icons/calendar.webp'], [/Задания/, 'assets/icons/crown.webp'],
   [/Бандл|груза/, 'assets/icons/crate.webp'], [/Yellow Cab|Такси/, 'assets/icons/taxi.webp'],
@@ -3814,6 +3814,102 @@ function tutorialLockButtons(){
 }
 new MutationObserver(()=>tutorialLockButtons()).observe($('card'),{childList:true,subtree:true});
 window.TutorialGuard={reserve:tutorialReserve,locked:tutorialLocked,canSpend:tutorialCanSpend,left:tutorialLeft};
+
+// ===== Инспектор: клетка 5 рассылает проверки на точки и бизнесы игрока =====
+// Правила: черновики/америкэн-бой-инспектор.md. Решение продюсера 27.09.2026:
+// из клетки вылетают 1–3 проверки, садятся на клетки; пока проверка висит —
+// точка не работает на игрока (нет продаж за круг, нет сбора за проход).
+// Остановился на клетке — попап как в ментовке: заплатить или ловить дубль.
+// На поле не больше трёх проверок за раз. Карта 1 клетки инспектора не имеет.
+CFG.INSP={min:1,max:3,limit:3,attempts:3,fineShare:0.5}; // штраф = доля полицейского штрафа
+
+function inspActive(){return S.tiles.filter(t=>t.insp);}
+function inspFine(){return Math.max(10,Math.round(policeFine()*CFG.INSP.fineShare/10)*10);}
+function inspWorks(t){return !t.insp;} // точка работает на игрока
+function inspLabel(t){return t.type==='biz'?'бизнес не платит':'точка не торгует';}
+
+// Клетка 🌪 стала инспектором: вместо неприятностей — проверки.
+hazard=async function(){
+  const free=CFG.INSP.limit-inspActive().length;
+  if(free<=0){toast('📋 Инспектор: все три проверки уже идут');log('📋 Инспектор приходил, но проверок и так три — ушёл.');return;}
+  const fit=t=>(t.type==='kiosk'||t.type==='biz')&&unlocked(t)&&!t.insp&&t.i!==S.pos;
+  let spots=S.tiles.filter(t=>fit(t)&&t.owner);
+  if(!spots.length)spots=S.tiles.filter(t=>fit(t)&&!t.owner&&!t.drop);
+  if(!spots.length){toast('📋 Инспектору некого проверять');return;}
+  spots.sort(()=>Math.random()-0.5);
+  const n=Math.min(free,spots.length,CFG.INSP.min+Math.floor(Math.random()*(CFG.INSP.max-CFG.INSP.min+1)));
+  const plan=spots.slice(0,n).map(t=>({t,drop:{insp:1},icon:'📋'}));
+  toast(`📋 Инспектор разослал ${n} ${n===1?'проверку':'проверки'}`);
+  track('inspector',{n,tiles:plan.map(p=>p.t.i)});
+  await flyDrops(plan);
+  // Полёт отыгран через drop; сама проверка живёт во флаге клетки, чтобы её не «подобрали» как находку.
+  plan.forEach(p=>{if(p.t.drop&&p.t.drop.insp){delete p.t.drop.insp;if(!Object.keys(p.t.drop).length)p.t.drop=null;}p.t.insp=true;});
+  log(`📋 Инспектор: проверки на ${plan.map(p=>name(p.t)).join(', ')}. Пока не снял — ${n===1?'точка не работает':'точки не работают'}.`);
+  save();render();
+};
+
+function inspClear(t,how){
+  t.insp=false;if(S.insp&&S.insp.i===t.i)S.insp=null;
+  float(t.i,'✅ проверка снята','#8bc34a',1.2);
+  log(`📋 ${name(t)}: ${how}, проверка снята — ${t.type==='biz'?'бизнес снова платит':'точка снова торгует'}.`);
+}
+
+// Попап на клетке с проверкой — ровно как в участке: заплатить, откупиться или дубль.
+async function inspectorPopup(t){
+  const fine=inspFine();
+  const v=await modal(`<h2>📋 Инспектор <small>${name(t)}</small></h2><p class="t">«Санитарная книжка, кассовый аппарат, лицензия… всё покажем?» Пока проверка идёт, ${inspLabel(t)}. Заплати — или выбрось дубль: ${CFG.INSP.attempts} попытки, промахнёшься все — штраф спишется сам.</p>
+    <div class="row"><span class="n">Штраф<small>половина полицейского · уходит в копилку 🎰</small></span><span class="v">$${fine}</span></div>`,
+    [{t:(S.cash>=fine?'Заплатить · $':'Заплатить в минус · $')+fine,v:1,cls:'ok'},{t:`Откупиться · 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Попробовать дубль',v:0,cls:'bad'}],{sticky:true});
+  track('inspection',{tile:t.i,choice:v===3?'bail':v===1?'pay':'roll',fine});
+  if(v===3){spendHard(CFG.HARD.bail,AT.tile(t.i));inspClear(t,`откупился за 💎 ${CFG.HARD.bail}`);}
+  else if(v===1){payFine(fine);inspClear(t,`заплатил $${fine}`);}
+  else{S.insp={i:t.i,left:CFG.INSP.attempts,fine};log(`📋 ${name(t)}: споришь с инспектором — ${CFG.INSP.attempts} попытки на дубль.`);hint('insp','Кнопка «Бросить» ловит дубль. Три промаха — штраф спишется сам.');}
+  save();render();
+}
+
+// Остановка на клетке с проверкой: сначала инспектор, потом обычная остановка.
+(function(){const base=land;land=async function(t){
+  if(t&&t.insp&&unlocked(t)&&!S.insp){await inspectorPopup(t);}
+  return base.apply(this,arguments);
+};})();
+
+// Спор с инспектором: бросок ловит дубль, фишка стоит на месте.
+(function(){const base=roll;roll=async function(){
+  if(!S.insp)return base.apply(this,arguments);
+  const t=S.tiles[S.insp.i];
+  if(!t||!t.insp){S.insp=null;return base.apply(this,arguments);}
+  if(moving||S.finished)return;
+  refillStarter();if(S.rolls<=0)return overtimeOffer();
+  S.rolls--;moving=true;render();
+  const {a,b}=openingDice(),dbl=a===b;
+  if(dbl){toast(`🎲 ${a} + ${b} — дубль! Инспектор ушёл ни с чем.`);inspClear(t,'выбросил дубль');}
+  else{S.insp.left--;
+    if(S.insp.left>0){toast(`🎲 ${a} + ${b} — не дубль. Осталось попыток: ${S.insp.left}`);log(`📋 Спор с инспектором: не дубль, ход потерян. Попыток: ${S.insp.left}.`);}
+    else{const before=S.cash;payFine(S.insp.fine);const m=before-S.cash;toast(`🎲 ${a} + ${b} — инспектор выписал штраф $${m}`+(S.cash<0?', ты в минусе':''));inspClear(t,`штраф $${m} после трёх промахов`);}}
+  await wait(400);moving=false;refillStarter();save();render();
+  if(S.rolls<=0&&!S.finished)setTimeout(()=>{if(!moving)overtimeOffer();},400);
+};})();
+
+// Кнопка броска в режиме спора выглядит как в участке; карточка точки говорит, что она стоит.
+(function(){const base=render;render=function(){
+  const r=base.apply(this,arguments);
+  try{
+    const b=$('bRoll');if(b)b.classList.toggle('jail',S.jail>0||!!S.insp);
+  }catch(e){}
+  inspCardNote();
+  return r;
+};})();
+// Подпись в карточке точки: встаёт после строки с названием (.srow) или заголовка.
+function inspCardNote(){
+  const card=$('card'),t=S&&S.tiles[S.pos];
+  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-note'))return;
+  const anchor=card.querySelector('.srow')||card.querySelector('h2');if(!anchor)return;
+  const n=document.createElement('p');n.className='insp-note';
+  n.innerHTML=`<i class="insp-ic" aria-hidden="true"></i><span><b>Идёт проверка</b> — ${inspLabel(t)}.<small>Снять: дубль на клетке или штраф $${inspFine()}</small></span>`;
+  anchor.after(n);
+}
+new MutationObserver(()=>inspCardNote()).observe($('card'),{childList:true,subtree:true});
+window.Inspector={active:inspActive,fine:inspFine,works:inspWorks};
 
 // ===== Бруклин (карта 5) на новой лестнице =====
 // Спек: черновики/америкэн-бой-карты-и-дерево.md §2, §3, §6; решение 25.09 — перевести.
