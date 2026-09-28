@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=786b1943"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=03e15d2d"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=fd60f92b"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f2e9d5c"><link rel="stylesheet" href="number-drum.css?v=0e5f6a71"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=9ce5ef61"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=72222503"><link rel="stylesheet" href="shipment-event.css?v=960fbb8c"><link rel="stylesheet" href="help-print.css?v=f7e02872"><link rel="stylesheet" href="spot-varnish.css?v=c29b1bb8"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=ff341a32"><link rel="stylesheet" href="mobile-windows.css?v=637a737d"><link rel="stylesheet" href="battlepass.css?v=786b1943"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=03e15d2d"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=fd60f92b"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f2e9d5c"><link rel="stylesheet" href="number-drum.css?v=0e5f6a71"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=9ce5ef61"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=72222503"><link rel="stylesheet" href="shipment-event.css?v=960fbb8c"><link rel="stylesheet" href="help-print.css?v=f7e02872"><link rel="stylesheet" href="spot-varnish.css?v=c29b1bb8"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -2224,8 +2224,13 @@ settings=function(){
   const mapSel=document.createElement('select');mapSel.className='sec map-select';mapSel.setAttribute('aria-label','Карта поля');
   mapSel.innerHTML=BOARD_MAPS.map(([id,name])=>`<option value="${id}"${id===boardMap()?' selected':''}>Карта: ${name}</option>`).join('');
   mapSel.onchange=()=>{setBoardMap(mapSel.value);closeModal();};
-  row.append(mapSel);
   $('card').append(row);
+  // Выбор карты — первым пунктом, сразу под заголовком: внизу длинного меню его не находили.
+  const mapRow=document.createElement('div');mapRow.className='row map-row';
+  mapRow.innerHTML='<span class="n">Карта<small>для проверки</small></span>';
+  mapRow.append(mapSel);
+  const first=$('card').querySelector(':scope > .row');
+  if(first)first.before(mapRow);else $('card').append(mapRow);
   const cameras=document.createElement('div');cameras.className='mbtns';
   for(const [label,action] of [['Обзор поля','overview'],['К Джонни','home']]){
     const button=document.createElement('button');button.className='sec';button.textContent=label;
@@ -3944,6 +3949,33 @@ function inspCardUnlock(){
 }
 new MutationObserver(()=>inspCardNote()).observe($('card'),{childList:true,subtree:true});
 window.Inspector={active:inspActive,fine:inspFine,works:inspWorks,resolve:inspectorResolve};
+
+// ===== Инкассатор: мешок лопается всегда, даже когда свободных клеток нет =====
+// Решение продюсера 28.09.2026: раньше при полностью выкупленном поле клетка 🚚 вместо
+// разлёта вешала ×1,5 на точки (boostRain). Теперь монеты разлетаются в любом случае —
+// сначала на закрытые клетки, если их мало — на любые точки и бизнесы, включая свои и чужие.
+scatter=async function(){
+  const c=CFG.SCATTER,sc=S.day;
+  const ok=t=>t.i!==S.pos&&t.i!==0&&!t.drop;
+  let spots=S.tiles.filter(t=>!unlocked(t)&&ok(t));
+  if(spots.length<c.drops){
+    const more=S.tiles.filter(t=>unlocked(t)&&ok(t)&&(t.type==='kiosk'||t.type==='biz'));
+    more.sort(()=>Math.random()-0.5);
+    spots=spots.concat(more.slice(0,c.drops-spots.length));
+  }
+  spots.sort(()=>Math.random()-0.5);
+  let money=0,n=0,rollsN=0,hardN=0;const plan=[];
+  spots.slice(0,c.drops).forEach(t=>{const r=Math.random();
+    if(r<c.hardChance){plan.push({t,drop:{hard:1},icon:'💎'});hardN++;}
+    else if(r<c.hardChance+c.rollsChance){plan.push({t,drop:{rolls:2},icon:'🎲'});rollsN++;}
+    else{const m=(c.min+Math.floor(Math.random()*(c.max-c.min)))*sc;plan.push({t,drop:{cash:m},icon:'🪙'});money+=m;}
+    n++;});
+  if(!plan.length){toast('🚚 Инкассатор проехал мимо — кидать некуда');return;}
+  toast(`🚚 Мешок лопнул! $${money} разлетелось по району`);
+  track('scatter',{n,money,rolls:rollsN,hard:hardN});
+  await flyDrops(plan);
+  log(`🚚 Инкассатор растерял мешок: $${money}${rollsN?', '+rollsN+'×🎲':''}${hardN?', '+hardN+'×💎':''} разлетелось по ${n} клеткам. Забираешь, когда останавливаешься.`);render();
+};
 
 // ===== Бруклин (карта 5) на новой лестнице =====
 // Спек: черновики/америкэн-бой-карты-и-дерево.md §2, §3, §6; решение 25.09 — перевести.

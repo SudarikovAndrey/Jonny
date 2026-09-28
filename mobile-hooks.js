@@ -163,8 +163,13 @@ settings=function(){
   const mapSel=document.createElement('select');mapSel.className='sec map-select';mapSel.setAttribute('aria-label','Карта поля');
   mapSel.innerHTML=BOARD_MAPS.map(([id,name])=>`<option value="${id}"${id===boardMap()?' selected':''}>Карта: ${name}</option>`).join('');
   mapSel.onchange=()=>{setBoardMap(mapSel.value);closeModal();};
-  row.append(mapSel);
   $('card').append(row);
+  // Выбор карты — первым пунктом, сразу под заголовком: внизу длинного меню его не находили.
+  const mapRow=document.createElement('div');mapRow.className='row map-row';
+  mapRow.innerHTML='<span class="n">Карта<small>для проверки</small></span>';
+  mapRow.append(mapSel);
+  const first=$('card').querySelector(':scope > .row');
+  if(first)first.before(mapRow);else $('card').append(mapRow);
   const cameras=document.createElement('div');cameras.className='mbtns';
   for(const [label,action] of [['Обзор поля','overview'],['К Джонни','home']]){
     const button=document.createElement('button');button.className='sec';button.textContent=label;

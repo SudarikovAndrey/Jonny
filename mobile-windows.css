@@ -320,3 +320,10 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 #card.pc-card .pc-row.on::before{content:'';position:absolute;left:-2px;top:10px;bottom:10px;width:7px;border-radius:0 4px 4px 0;background:#c43a2d;border:2px solid #2a2118;border-left:0}
 #card.pc-card .pc-row.on .pc-name small{color:#3c2f1f}
 #card.pc-card .pc-row.on .pc-qty b{font-size:26px}
+/* Настройки длиннее экрана: карточка прокручивается (notice-card ставит overflow:hidden). */
+#card.settings-card{overflow-y:auto!important;overscroll-behavior:contain}
+#card.settings-card .map-row{align-items:center;gap:10px}
+#card.settings-card .map-row .map-select{flex:none;width:auto;min-width:150px;min-height:44px;padding:0 10px;border:2px solid #25221c;border-radius:9px;
+  background:#3f5f6c;color:#fff1cc;font:700 15px Bitter,Georgia,serif;box-shadow:0 3px 0 #25221c}
+#card.settings-card .map-row .n{flex:1;min-width:0}
+#card.settings-card .map-row .map-select{min-width:0;width:62%;max-width:230px}

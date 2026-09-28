@@ -28,7 +28,7 @@ button{touch-action:manipulation}
 .map-controls{position:absolute;top:calc(var(--world-top) + 9px);right:9px;display:flex;gap:5px;z-index:3}
 .map-controls button{font-size:11px;min-height:33px;padding:5px 9px;background:#efe0c2ed;color:#29231c;border:1px solid #493923;border-radius:8px;box-shadow:0 2px #2c241a66}
 #inv{bottom:calc(var(--world-bottom) + 10px);left:8px}
-#invBtn{width:56px;padding:4px;border:1px solid #483b27;background:#f4e4c4}#invBtn em{font-size:21px}#invBtn i{width:42px}#invBtn small{font-size:11px}
+#invBtn{width:auto;min-width:56px;padding:4px 6px;border:1px solid #483b27;background:#f4e4c4}#invBtn em{font-size:21px}#invBtn i{width:100%;min-width:42px}#invBtn small{font-size:11px;white-space:nowrap;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 #panel{padding:7px 8px calc(env(safe-area-inset-bottom,0px) + 8px);gap:6px;background:#302d27 url(assets/paper-grain.svg);border-top:2px solid #201b14}
 #guide{border:0;border-radius:13px;background:#f4e4c4 url(assets/paper-grain.svg);color:#282219;box-shadow:inset 0 0 0 2px #302820,inset 0 0 0 5px #dbc8a1,0 2px #0006;padding:10px;gap:8px;min-height:74px;align-items:center}
 #guide img{width:48px;height:48px;object-fit:cover;border-radius:6px}
