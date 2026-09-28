@@ -35,8 +35,8 @@
 #card.warehouse-card .warehouse-footer{flex:none;padding:10px 14px 12px;border-top:2px solid #a28a5b;box-shadow:none}
 #card.warehouse-card .warehouse-buys{display:grid;grid-template-columns:1.15fr 1fr;gap:9px}
 #card.warehouse-card .warehouse-buys:has(>button:only-child){grid-template-columns:1fr}
-#card.warehouse-card .warehouse-buys button.warehouse-bulk{width:100%;min-width:0;min-height:56px;padding:6px 7px;gap:5px;justify-content:center;border-radius:9px 7px 9px 7px}
-#card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font:800 14px/1.15 Bitter,Georgia,serif!important;min-height:0;white-space:normal;display:block}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk{width:100%;min-width:0;min-height:52px;padding:6px 7px;gap:1px;justify-content:center;border-radius:9px 7px 9px 7px}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font:800 14px/1.05 Bitter,Georgia,serif!important;min-height:0;white-space:normal;display:block}
 #card.warehouse-card .warehouse-buys button.warehouse-bulk>b{display:flex;justify-content:center;align-items:center;gap:3px;border:0;padding:0;font:900 20px/1 Bitter,Georgia,serif}
 #card.warehouse-card .warehouse-buys button.warehouse-bulk>b small{font:600 12px/1 Bitter,Georgia,serif}
 #card.warehouse-card .warehouse-buys .cash-glyph{width:23px;height:23px;margin:0}

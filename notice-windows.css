@@ -1,0 +1,45 @@
+/* Short messages share one paper sheet and a stable action footer. */
+#card.notice-card{display:flex;flex-direction:column;gap:0;padding:0;max-width:410px;overflow:hidden;background:#edddb7 url(assets/print/card-stock.webp) center/400px 600px!important}
+#card.notice-card .ev-head{display:flex;align-items:center;gap:13px;flex:none;min-height:0;padding:20px 22px 17px;border-bottom:1.5px solid #9a8056;background:none;overflow:visible}
+#card.notice-card .ev-badge{width:51px;height:55px;flex:none;min-width:0;border:0;border-radius:0;background:none;box-shadow:none;padding:0;transform:none}
+#card.notice-card .ev-badge img{width:100%;height:100%;object-fit:contain}
+#card.notice-card .ev-titles{min-width:0;flex:1}
+#card.notice-card h2.ev-title{display:block;width:auto;font:900 25px/1.15 Bitter,Georgia,serif;margin:0;padding:0;border:0;box-shadow:none;background:none;transform:none;text-transform:none;overflow-wrap:anywhere}
+#card.notice-card .ev-sub{font:700 14px/1.3 Bitter,Georgia,serif;margin-top:5px}
+#card.notice-card .ev-body,#card.notice-card .notice-content{flex:1 1 auto;min-height:0;overflow:auto;padding:20px 22px;background:none;gap:14px}
+#card.notice-card .ev-body::before,#card.notice-card .ev-body::after{display:none}
+#card.notice-card .ev-plate{padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+#card.notice-card p{font:600 16px/1.45 Bitter,Georgia,serif;margin:0 0 12px}
+#card.notice-card p:last-child{margin-bottom:0}
+#card.notice-card .row{padding:12px 0;border:0;border-bottom:1px solid #a38b5c66;border-radius:0;background:none;gap:12px;box-shadow:none}
+#card.notice-card .row .n{font-size:16px;line-height:1.3;min-width:0}
+#card.notice-card .row .n small{font-size:14px;line-height:1.4;margin-top:4px}
+#card.notice-card .row .v{font-size:20px;flex:none}
+#card.notice-card .ev-foot{padding:14px 22px 20px;border-top:1.5px solid #a68b5b;background:none;flex:none;box-shadow:none}
+#card.notice-card .mbtns{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0}
+#card.notice-card .mbtns button{flex:1 1 140px;min-width:0;min-height:48px;margin:0;padding:12px 15px;font:800 18px/1.2 Bitter,Georgia,serif;white-space:normal}
+#card.notice-card .mbtns button:focus-visible{outline:3px solid #ae392b;outline-offset:3px}
+#card.notice-level .ev-head{padding:22px 24px 18px;gap:20px}
+#card.notice-level .notice-portrait{position:relative;width:98px;height:105px;flex:none}
+#card.notice-level .notice-portrait img{width:100%;height:100%;object-fit:contain}
+#card.notice-level .notice-portrait>b{position:absolute;bottom:-2px;left:15px;right:9px;text-align:center;background:#f0deaf;border:2px solid #3d3020;border-radius:6px 4px 6px 4px;padding:3px 4px;font-size:16px;box-shadow:0 2px #6f593d}
+#card.notice-level .notice-heading{min-width:0}
+#card.notice-level .notice-heading>span{font:800 14px/1.2 Bitter,Georgia,serif;color:#a83d2c}
+#card.notice-level .notice-heading h2{font:900 29px/1.12 Bitter,Georgia,serif;margin:6px 0 4px}
+#card.notice-level .notice-heading p{font:800 20px/1.2 Bitter,Georgia,serif;margin:0}
+#card.notice-level .notice-benefit{display:flex;align-items:center;justify-content:center;gap:18px;padding:7px 0 12px}
+#card.notice-level .notice-benefit>img{width:60px;height:67px;object-fit:contain;flex:none}
+#card.notice-level .notice-benefit>div{display:flex;flex-direction:column;gap:3px}
+#card.notice-level .notice-benefit strong{font:900 45px/1 Bitter,Georgia,serif;color:#41643b}
+#card.notice-level .notice-benefit b{font:800 18px/1.3 Bitter,Georgia,serif}
+#card.notice-level .notice-benefit:has(>small){flex-direction:column;align-items:flex-start;gap:8px}
+#card.notice-level .notice-benefit small{font-size:13px;color:#796240}
+#card.notice-level .notice-explanation{font-size:14px;color:#6b593a;text-align:center;margin:4px 0 0}
+@media(max-width:360px){#card.notice-card .ev-head,#card.notice-card .ev-body,#card.notice-card .notice-content{padding:16px}#card.notice-card .ev-foot{padding:12px 16px 16px}#card.notice-card h2.ev-title{font-size:22px}#card.notice-level .notice-portrait{width:78px;height:89px}#card.notice-level .ev-head{gap:14px}#card.notice-level .notice-heading h2{font-size:25px}#card.notice-level .notice-benefit strong{font-size:39px}#card.notice-level .notice-benefit b{font-size:16px}#card.notice-card .mbtns button{flex-basis:120px;font-size:16px}}
+
+#card.notice-card .ms3{display:flex;flex-direction:column;gap:0;margin:6px 0 12px}
+#card.notice-card .ms3 .msc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:12px 0;border:0;border-bottom:1px solid #a38b5c66;border-radius:0;background:none;box-shadow:none;outline:0;transform:none;color:#332b20;text-align:left}
+#card.notice-card .ms3 .msi{display:none}
+#card.notice-card .ms3 .msc>b{font-size:14px;color:#78623e;order:0}
+#card.notice-card .ms3 .msn{font:800 17px/1.25 Bitter,Georgia,serif}
+#card.notice-card .ms3 .msc small{font:600 14px/1.4 Bitter,Georgia,serif;text-align:left}

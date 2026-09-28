@@ -42,7 +42,9 @@
       nodes.forEach((el,i)=>{const q=ts[i];el.dataset.kind=q.id;el.style.setProperty('--mission-ratio',q.v/q.goal);el.setAttribute('aria-label',`${q.text(q.goal)}: ${q.v} из ${q.goal}`);});
       $('q2').hidden=true;$('qrow').dataset.count=String(ts.length);return;
     }
-    $('qrow').dataset.count=String((S.q||[]).slice(0,3).filter(q=>!q.claimed).length);
+    const quests=(S.q||[]).slice(0,3);
+    $('qrow').style.setProperty('--mission-slots',Math.max(2,quests.length));
+    $('qrow').dataset.count=String(quests.filter(q=>!q.claimed).length);
     [0,1,2].forEach(i=>{
       const el=$('q'+i),q=S.q?.[i];el.hidden=!q||!!q.claimed;
       if(!q)return;

@@ -21,7 +21,13 @@
    document.documentElement.style.setProperty('--host-safe-top',safe+'px');
    if(!MAP1){S.q=[{id:'earn',goal:2000,text:QTEXT.earn(2000),prog:280,done:false,claimed:false,reward:{cash:100}},{id:'buy',goal:2,text:QTEXT.buy(2),prog:0,done:false,claimed:false,reward:{rolls:5}},{id:'sell',goal:12,text:QTEXT.sell(12),prog:0,done:false,claimed:false,reward:{rolls:10}}];S.pts=22;S.cash=params.has('large')?12345678:85;S.hard=params.has('large')?987654:4;S.day=4;}
   }
-  if(name==='coins'){S.pos=3;[4,36,225,900].forEach((cash,k)=>{S.tiles[[1,2,4,5][k]].drop={cash};});}
+  if(name==='hud'&&!MAP1){
+   const count=Math.max(1,Math.min(3,Number(params.get('missions'))||3));
+   S.q=S.q.slice(0,count);
+   const claimed=Math.max(0,Math.min(count,Number(params.get('claimed'))||0));
+   S.q.forEach((q,i)=>{q.claimed=i<claimed;});
+  }
+  if(name==='coins'){S.pos=3;[4,36,225,900].forEach((cash,k)=>{S.tiles[[1,2,4,5][k]].drop={cash};});S.tiles[6].drop={rolls:2};S.pot=77;}
   if(name==='warehouse'||name==='shipping'){
    if(name==='shipping'&&params.has('day'))S.day=Math.max(1,Math.min(CFG.DAYS,Number(params.get('day'))||1));
    const allGoods=MAP1?['cola','gum']:CFG.GOODS.map(g=>g.id);
@@ -57,6 +63,11 @@
   save();render();
  }
  const open={
+  'level-up':()=>modal(`<h2>🧢 Джонни — уровень 2!</h2><p class="t">Новое улучшение: <b>${CFG.PERKS[2]}</b></p>`,[{t:'Красава',v:1,cls:'ok'}]),
+  'notice-reward':()=>milestoneModal(CFG.MILESTONES[0]),
+  'notice-confirm':()=>{S.day=1;return offerOpen(1);},
+  'notice-street':()=>modal('<h2>Улица 2 открыта!</h2><p>Теперь здесь можно покупать новые точки и бизнесы.</p>',[{t:'Поехали',v:1,cls:'ok'}]),
+
   onboarding:async()=>{await window.GameStart.whenEntered;showOnboarding();},
   coins:async()=>{
    if(!UI_REVIEW)return;
