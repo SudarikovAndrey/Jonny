@@ -32,3 +32,13 @@ body #dock>button.dk.guide-target{animation:dockReady 1.15s ease-in-out infinite
 @media(prefers-reduced-motion:reduce){
  body #dock>button.dk.guide-target,body #dock>button.dk.ok{animation:none!important;filter:drop-shadow(0 0 6px #ffd76a)}
 }
+
+/* The roll control is always a centred square, including the three-button map dock. */
+body #dock{--roll-size:clamp(64px,19vw,82px);grid-template-columns:repeat(2,minmax(0,1fr)) var(--roll-size) repeat(2,minmax(0,1fr))}
+body #dock .diebox{width:var(--roll-size);min-width:var(--roll-size);justify-self:center;align-items:center}
+body #dock #bRoll{box-sizing:border-box;width:var(--roll-size);height:var(--roll-size);min-width:var(--roll-size);min-height:var(--roll-size);max-width:var(--roll-size);max-height:var(--roll-size);aspect-ratio:1;padding:0;flex:none;gap:0}
+body #dock #bRoll .roll-label{display:none}
+body.map-mode #dock{grid-template-columns:minmax(0,1fr) var(--roll-size) minmax(0,1fr)}
+body.map-mode #dock>button.dk{width:clamp(58px,18vw,73px)}
+body.map-mode #dock #bJohnny{justify-self:start}
+body.map-mode #dock #bShop{justify-self:end}
