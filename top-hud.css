@@ -55,3 +55,4 @@
 
 /* On narrow banners the decorative engraving yields to the map name and score. */
 @container(max-width:210px){#top .hud-map-heading{grid-template-columns:minmax(0,1fr) max-content}#top .hud-map-city{display:none}}
+#card .hud-map select{width:100%;box-sizing:border-box;padding:12px;font:600 20px Bitter,Georgia,serif;color:#30281e;background:#f4e6c4;border:2px solid #655137;border-radius:7px}

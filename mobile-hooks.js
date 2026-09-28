@@ -828,6 +828,22 @@ function streetPassCoin(tile){
   if(MobileHost.ready)MobileHost.send({action:'street_coin',tile});
 }
 
+// Выбор карты поля — в «Настройках аккаунта» (окно — web/top-hud.js), над «Сохранить»:
+// для просмотра всех подложек без меню тестирования.
+(function(){
+  const add=card=>{
+    if(card.querySelector('#hudMap')||typeof BOARD_MAPS==='undefined')return;
+    const save=card.querySelector('#hudSave');if(!save)return;
+    const wrap=document.createElement('label');wrap.id='hudMap';wrap.className='hud-name hud-map';wrap.textContent='Карта';
+    const sel=document.createElement('select');sel.setAttribute('aria-label','Карта поля');
+    sel.innerHTML=BOARD_MAPS.map(([id,name])=>`<option value="${id}"${id===boardMap()?' selected':''}>${name}</option>`).join('');
+    sel.onchange=()=>{setBoardMap(sel.value);closeModal();};
+    wrap.append(sel);save.before(wrap);
+  };
+  new MutationObserver(()=>{const card=$('card');if(card.classList.contains('hud-account'))add(card);})
+    .observe($('card'),{childList:true});
+})();
+
 // Меню тестирования без ?playtest=1: 5 быстрых тапов по заголовку «Настройки аккаунта»
 // (окно — web/top-hud.js). Сохранение и телеметрия не меняются, в отличие от PLAYTEST:
 // тот переключает партию на отдельный ключ. Флаг помнится в этом браузере; ещё 5 тапов — выключить.
