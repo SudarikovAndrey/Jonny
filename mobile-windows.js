@@ -178,7 +178,7 @@ var EVENT_BADGES = [
   [/Сегодня|День \d/, 'assets/icons/clock.webp'], [/Джонни/, 'assets/icons/cap.webp', 'full'],
   [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.webp'], [/Кто играет/, 'assets/icons/cap.webp', 'full'], [/Магазин/, 'assets/icons/shop.webp'],
 ];
-var EVENT_SKIP = ['pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
+var EVENT_SKIP = ['authority-card','pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
 function decorateEvent(card){
   if(!EVENT_SKIP)return;
   if(EVENT_SKIP.some(c=>card.classList.contains(c)))return;

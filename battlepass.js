@@ -162,14 +162,9 @@ function hubLoot(r){
  return `${r.rolls?`<span>${passIcon('dice')}<b>+${r.rolls}</b></span>`:''}${r.hard?`<span>${passIcon('gem')}<b>+${r.hard}</b></span>`:''}${r.cash?`<span><b>+$${r.cash}</b></span>`:''}`;
 }
 function hubTicket(tabs){
- const nm=nextMilestone(), prev=reachedMilestones().slice(-1)[0], from=prev?prev.pts:0, to=nm?nm.pts:from, nz=nextZone();
- const goals=CFG.MILESTONES.map((m,i)=>{const done=S.pts>=m.pts,next=nm&&nm.pts===m.pts;
-  return `<div class="hub-plate hub-goal ${done?'claimed':next?'available':'locked'}"><span class="pass-level hub-pts">${m.pts}</span><span class="hub-text"><b>${m.name}</b><small>${m.reward}</small></span><span class="pass-state"></span></div>`;}).reverse().join('');
- const quests=S.q.map((q,i)=>`<div class="hub-plate hub-quest ${q.claimed?'claimed':q.done?'available':'locked'}"><span class="hub-text"><b>${q.text}</b></span><span class="pass-loot">${hubLoot(q.reward)}</span>${q.claimed?'<span class="pass-state"></span>':q.done?`<button class="ok hub-claim" data-claim="${i}">Забрать</button>`:`<span class="hub-prog">${Math.min(q.prog,q.goal)}/${q.goal}</span>`}</div>`).join('');
- const zone=nz>0?`<div class="hub-plate hub-zone"><span class="hub-text"><b>${CFG.ZONES[nz].name}</b><small>откроется в день ${CFG.ZONES[nz].day}</small></span>${zonePrice(nz)>0?`<button class="hard" id="hZone" ${S.hard<zonePrice(nz)?'disabled':''}>${passIcon('gem')}<b>${zonePrice(nz)}</b></button>`:`<button class="ok" id="hZone">Открыть</button>`}</div>`:'';
- return hubHead('Билет Джонни',S.pts,nm?`до ${nm.pts} ещё ${nm.pts-S.pts}`:'Все рубежи взяты',nm?(S.pts-from)/(to-from):1,`До конца<br><b>${lbTimeLeft()}</b>`)
-  +`<div class="pass-scroll hub-scroll"><div class="hub-list">${goals}<h3 class="hub-sub">Задания дня</h3>${quests}${zone}</div></div><footer class="pass-footer">${tabs}</footer>`;
+ return MapProgress.render(tabs);
 }
+
 function hubTop(tabs){
  const rows=lbRows(), me=rows.findIndex(r=>r.you), above=me>0?rows[me-1]:null;
  const row=(r,i)=>`<div class="hub-plate hub-rank ${r.you?'me':''} ${i<3?'top'+(i+1):''}"><span class="pass-level">${i+1}</span><span class="hub-ava">${r.you?'🧢':LB_AVA[LB_NAMES.indexOf(r.n)]||'🙂'}</span><span class="hub-text"><b>${r.you?'Ты':r.n}</b><small>${r.pts} очк.</small></span><span class="pass-loot"><span>${passIcon('gem')}<b>${LB_REWARD[i]||0}</b></span></span></div>`;
@@ -181,16 +176,18 @@ eventHub=async function(tab){
  if(hubTab==='pass'&&!(S.bp&&S.bp.paid))offerShow('pass',{level:bpLevel(),pts:S.pts,day:S.day});
  const draw=()=>{
   const bc=bpClaimable(),place=lbPlace(),card=$('card');
-  const tabs=`<div class="segbar"><button class="${hubTab==='ticket'?'on':''}" data-tab="ticket">Билет</button><button class="${hubTab==='pass'?'on':''}" data-tab="pass">Пропуск${bc?' <i class="dot"></i>':''}</button><button class="${hubTab==='lb'?'on':''}" data-tab="lb">Топ #${place}</button></div>`;
+  const tabs=`<div class="segbar"><button class="${hubTab==='ticket'?'on':''}" data-tab="ticket">Прогресс</button><button class="${hubTab==='pass'?'on':''}" data-tab="pass">Пропуск${bc?' <i class="dot"></i>':''}</button><button class="${hubTab==='lb'?'on':''}" data-tab="lb">Топ #${place}</button></div>`;
   if(hubTab==='pass'){card.classList.remove('hub-card');renderBattlePass(draw,tabs);}
   else{
-   card.className='card battlepass-card hub-card';
+   card.className='card battlepass-card hub-card'+(hubTab==='ticket'?' map-progress-card':'');
    card.innerHTML=hubTab==='lb'?hubTop(tabs):hubTicket(tabs);
+   if(hubTab==='ticket')MapProgress.mount(card);
    paintedClose($('hNo'));card.querySelectorAll('.hub-claim,#hZone').forEach(enamelButton);
    if(hubTab==='lb')setTimeout(()=>card.querySelector('.hub-rank.me')?.scrollIntoView({block:'nearest'}),30);
   }
   card.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{hubTab=b.dataset.tab;track('hub_tab',{tab:hubTab});draw();});
   card.querySelectorAll('button[data-claim]').forEach(b=>b.onclick=()=>{const q=S.q[+b.dataset.claim],r=q.reward;track('quest_claim',{id:q.id,goal:q.goal,reward:r});if(r.rolls){fly('🎲',AT.card(),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.card(),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;log(`🎯 Награда за «${q.text}»: ${rwText(r)}.`);toast('Награда получена');save();render();draw();});
+  const shipment=$('mpShip');if(shipment)shipment.onclick=()=>{closeModal();setTimeout(()=>shipClick(),170);};
   const hz=$('hZone');if(hz)hz.onclick=async()=>{closeModal();await offerOpen(nextZone());};
   $('hNo').onclick=()=>closeModal();
  };

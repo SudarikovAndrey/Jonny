@@ -27,8 +27,12 @@
    const claimed=Math.max(0,Math.min(count,Number(params.get('claimed'))||0));
    S.q.forEach((q,i)=>{q.claimed=i<claimed;});
   }
+  if(name==='police'){S.pos=S.tiles.findIndex(t=>t.type==='police');S.jail=0;delete S.policePoseTile;}
   if(name==='coins'){S.pos=3;[4,36,225,900].forEach((cash,k)=>{S.tiles[[1,2,4,5][k]].drop={cash};});S.tiles[6].drop={rolls:2};S.pot=77;}
-  if(name==='warehouse'||name==='shipping'){
+  if(name==='progress'){if(params.has('day'))S.day=Math.max(1,Math.min(CFG.DAYS,Number(params.get('day'))||1));S.pts=Math.max(0,Number(params.get('points'))||0);S.parcelSent=params.has('sent');S.stat.parcels=S.parcelSent&&!params.has('catchup')?S.day:0;}
+  if(name==='inspector'){S.pos=1;S.tiles[1].insp=true;}
+  if(name==='board-marks'){S.pos=2;S.tiles[1].insp=true;S.tiles[1].drop=null;}
+  if(name==='warehouse'||name==='shipping'||name==='progress'&&params.has('goods')){
    if(name==='shipping'&&params.has('day'))S.day=Math.max(1,Math.min(CFG.DAYS,Number(params.get('day'))||1));
    const allGoods=MAP1?['cola','gum']:CFG.GOODS.map(g=>g.id);
    const goods=allGoods.slice(0,params.has('goods')?Math.max(0,Number(params.get('goods'))||0):allGoods.length);
@@ -87,6 +91,7 @@
   'tip-point':()=>showTip('Ты попал на точку, которую можно купить. Жми на строку для открытия карточки точки.','tilebar'),
   tip:()=>showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.'),
   'tip-attached':()=>{shop();showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.');},
+  progress:()=>eventHub('ticket'),inspector:()=>inspectorPopup(S.tiles[S.pos]),
   warehouse:()=>shop(),shipping:()=>shipClick(),police:()=>police(),chance:()=>Chance.play(),johnny:()=>johnny(),shop:()=>shopHard()
  }[name];
  if(!open)return;

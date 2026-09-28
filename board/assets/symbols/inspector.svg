@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><mask id="ink"><rect width="128" height="128" fill="black"/><g transform="translate(-5 -7) scale(1.08)" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M47 41c0-15 7-23 17-23s17 8 17 23z"/><path d="M38 42h52" stroke-width="8"/><circle cx="64" cy="58" r="13" fill="none" stroke-width="6"/><path d="M56 63q8 5 16 0" fill="none" stroke-width="4"/><rect x="38" y="78" width="52" height="42" rx="5" fill="none" stroke-width="7"/><rect x="53" y="72" width="22" height="10" rx="3" stroke="none"/><path d="M50 99l9 9 18-18" fill="none" stroke-width="7"/></g></mask></defs><rect width="128" height="128" fill="#352b22" mask="url(#ink)"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 128 128">
+  <!-- Round magnifying glasses, hooked nose and a clipboard: the field inspector. -->
+  <g fill="none" stroke="#352b22" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M31 41C28 9 85 4 94 36M51 16 49 8m10 6 2-8M26 37l15 5m49-5 12-5"/>
+    <circle cx="42" cy="51" r="18"/><circle cx="86" cy="49" r="18"/>
+    <path d="m60 48 8-1M30 43l21 6m25-5 22-5M58 58l13 19 6-16M44 73l11 12 15 1m12-13-6 12M51 88l-12 18 21-5 9 16 8-29M42 112l-18 6"/>
+    <path d="m83 88 27-4 5 33-29 5Z" fill="#352b22"/>
+  </g>
+  <g fill="#352b22"><ellipse cx="44" cy="53" rx="3.5" ry="5"/><ellipse cx="87" cy="50" rx="3.5" ry="5"/></g>
+  <path d="m93 91 9-1m-9 10 11-2m-10 10 10-2" stroke="#f2e3bd" stroke-width="3"/>
+</svg>

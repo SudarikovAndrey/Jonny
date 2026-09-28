@@ -4,6 +4,7 @@
  modal=function(html,buttons,opt,onShow){
   const card=$('card');card.className='card';card.style.removeProperty('--cs');
   const result=original.call(this,html,buttons,opt,onShow);
+  if(window.AuthorityWindows?.mount(card))return result;
   decorateEvent(card);
   // Bespoke police, chance, banking and daily-summary screens retain their art.
   const title=card.querySelector('.ev-title')||card.querySelector('h2');

@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=af283ccf"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=af283ccf"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=2b9c79e0"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'2afb827e'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'34b49109'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -1498,11 +1498,7 @@ async function police(fineMultiplier=1){
   const pts=S.tiles.filter(t=>(t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t));
   const fine=Math.round(policeFine()*fineMultiplier);
   const take=fineTake(fine),short=take<fine,minus=Math.max(0,take-Math.max(0,S.cash));
-  const v=await modal(`<h2>🚔 NYPD <small>участок</small></h2><p class="t">«А лицензия есть, приятель?»</p>
-    <div class="row"><span class="n">Штраф<small>растёт с твоей прибылью</small></span><span class="v">$${fine}</span></div>
-    ${short?`<div class="row"><span class="n">Заберут только<small>${S.cash>0?'в кармане $'+S.cash+', ':'в кармане пусто, '}${minus?'и ты уйдёшь в минус на $'+minus:''}</small></span><span class="v">$${take}</span></div>`:''}
-    <p>Штраф ляжет в копилку — встанешь на неё, вернёшь.</p>
-    <p>Или лови дубль: ${CFG.POLICE.attempts} попытки, каждая — ход. Выпал дубль — свободен даром.</p>`,
+  const v=await modal(AuthorityWindows.html('police',{fine,take}),
     [{t:`<span>Заплатить</span><span class="action-price">$${take}</span>`,v:1,cls:'ok stacked-price'},{t:`<span>Откупиться</span><span class="action-price">💎 ${CFG.HARD.bail}</span>`,v:3,cls:'hard stacked-price',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
   track('police',{choice:v===3?'bail':v===1?'pay':'sit',fine});
   if(v===3){spendHard(CFG.HARD.bail,AT.tile(15));log(`Откупился от полиции за 💎 ${CFG.HARD.bail}.`);}
@@ -2072,7 +2068,8 @@ let mobileLastState='', mobileFitScheduled=false, mobileLastLayout='';
 function mobileSync(){
   if(!S||!MobileHost.ready)return;
   mobileCheckCash();
-  const snapshot={action:'state',pos:S.pos,moving,day:S.day,tiles:S.tiles.map(t=>({
+  if(S.policePoseTile!==S.pos)delete S.policePoseTile;
+  const snapshot={action:'state',pos:S.pos,moving,police_bound:S.policePoseTile===S.pos||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
     i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
@@ -2390,14 +2387,14 @@ police=function(...args){
   if(mobilePolicePromise)return mobilePolicePromise;
   mobilePolicePromise=(async()=>{
     const wasMoving=moving;
-    mobilePoliceActive=true;moving=true;hideTip();
+    mobilePoliceActive=true;S.policePoseTile=S.pos;moving=true;hideTip();
     mobileJoyPending=false;mobileNegativePending=false;
     clearTimeout(mobileJoyTimer);mobileJoyTimer=0;
     clearTimeout(mobileNegativeTimer);mobileNegativeTimer=0;
     $('diceResult').hidden=true;render();
     try{
-      if(MobileHost.ready&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-        try{await MobileHost.request('react_police',{},6000);}
+      if(MobileHost.ready){
+        try{await MobileHost.request('react_police',{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches},6000);}
         catch(error){MobileHost.send({action:'cancel_reaction'});console.warn('Police reaction unavailable:',error.message);}
       }
       return await mobileOriginalPolice(...args);
@@ -3053,7 +3050,7 @@ var EVENT_BADGES = [
   [/Сегодня|День \d/, 'assets/icons/clock.webp'], [/Джонни/, 'assets/icons/cap.webp', 'full'],
   [/Рывок|Билет|Смена|Легенда/, 'assets/icons/crown.webp'], [/Кто играет/, 'assets/icons/cap.webp', 'full'], [/Магазин/, 'assets/icons/shop.webp'],
 ];
-var EVENT_SKIP = ['pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
+var EVENT_SKIP = ['authority-card','pc-card','training-card','warehouse-card','shipping-window','settings-card','battlepass-card','hub-card','illustrated-property','bare'];
 function decorateEvent(card){
   if(!EVENT_SKIP)return;
   if(EVENT_SKIP.some(c=>card.classList.contains(c)))return;
@@ -3256,14 +3253,9 @@ function hubLoot(r){
  return `${r.rolls?`<span>${passIcon('dice')}<b>+${r.rolls}</b></span>`:''}${r.hard?`<span>${passIcon('gem')}<b>+${r.hard}</b></span>`:''}${r.cash?`<span><b>+$${r.cash}</b></span>`:''}`;
 }
 function hubTicket(tabs){
- const nm=nextMilestone(), prev=reachedMilestones().slice(-1)[0], from=prev?prev.pts:0, to=nm?nm.pts:from, nz=nextZone();
- const goals=CFG.MILESTONES.map((m,i)=>{const done=S.pts>=m.pts,next=nm&&nm.pts===m.pts;
-  return `<div class="hub-plate hub-goal ${done?'claimed':next?'available':'locked'}"><span class="pass-level hub-pts">${m.pts}</span><span class="hub-text"><b>${m.name}</b><small>${m.reward}</small></span><span class="pass-state"></span></div>`;}).reverse().join('');
- const quests=S.q.map((q,i)=>`<div class="hub-plate hub-quest ${q.claimed?'claimed':q.done?'available':'locked'}"><span class="hub-text"><b>${q.text}</b></span><span class="pass-loot">${hubLoot(q.reward)}</span>${q.claimed?'<span class="pass-state"></span>':q.done?`<button class="ok hub-claim" data-claim="${i}">Забрать</button>`:`<span class="hub-prog">${Math.min(q.prog,q.goal)}/${q.goal}</span>`}</div>`).join('');
- const zone=nz>0?`<div class="hub-plate hub-zone"><span class="hub-text"><b>${CFG.ZONES[nz].name}</b><small>откроется в день ${CFG.ZONES[nz].day}</small></span>${zonePrice(nz)>0?`<button class="hard" id="hZone" ${S.hard<zonePrice(nz)?'disabled':''}>${passIcon('gem')}<b>${zonePrice(nz)}</b></button>`:`<button class="ok" id="hZone">Открыть</button>`}</div>`:'';
- return hubHead('Билет Джонни',S.pts,nm?`до ${nm.pts} ещё ${nm.pts-S.pts}`:'Все рубежи взяты',nm?(S.pts-from)/(to-from):1,`До конца<br><b>${lbTimeLeft()}</b>`)
-  +`<div class="pass-scroll hub-scroll"><div class="hub-list">${goals}<h3 class="hub-sub">Задания дня</h3>${quests}${zone}</div></div><footer class="pass-footer">${tabs}</footer>`;
+ return MapProgress.render(tabs);
 }
+
 function hubTop(tabs){
  const rows=lbRows(), me=rows.findIndex(r=>r.you), above=me>0?rows[me-1]:null;
  const row=(r,i)=>`<div class="hub-plate hub-rank ${r.you?'me':''} ${i<3?'top'+(i+1):''}"><span class="pass-level">${i+1}</span><span class="hub-ava">${r.you?'🧢':LB_AVA[LB_NAMES.indexOf(r.n)]||'🙂'}</span><span class="hub-text"><b>${r.you?'Ты':r.n}</b><small>${r.pts} очк.</small></span><span class="pass-loot"><span>${passIcon('gem')}<b>${LB_REWARD[i]||0}</b></span></span></div>`;
@@ -3275,16 +3267,18 @@ eventHub=async function(tab){
  if(hubTab==='pass'&&!(S.bp&&S.bp.paid))offerShow('pass',{level:bpLevel(),pts:S.pts,day:S.day});
  const draw=()=>{
   const bc=bpClaimable(),place=lbPlace(),card=$('card');
-  const tabs=`<div class="segbar"><button class="${hubTab==='ticket'?'on':''}" data-tab="ticket">Билет</button><button class="${hubTab==='pass'?'on':''}" data-tab="pass">Пропуск${bc?' <i class="dot"></i>':''}</button><button class="${hubTab==='lb'?'on':''}" data-tab="lb">Топ #${place}</button></div>`;
+  const tabs=`<div class="segbar"><button class="${hubTab==='ticket'?'on':''}" data-tab="ticket">Прогресс</button><button class="${hubTab==='pass'?'on':''}" data-tab="pass">Пропуск${bc?' <i class="dot"></i>':''}</button><button class="${hubTab==='lb'?'on':''}" data-tab="lb">Топ #${place}</button></div>`;
   if(hubTab==='pass'){card.classList.remove('hub-card');renderBattlePass(draw,tabs);}
   else{
-   card.className='card battlepass-card hub-card';
+   card.className='card battlepass-card hub-card'+(hubTab==='ticket'?' map-progress-card':'');
    card.innerHTML=hubTab==='lb'?hubTop(tabs):hubTicket(tabs);
+   if(hubTab==='ticket')MapProgress.mount(card);
    paintedClose($('hNo'));card.querySelectorAll('.hub-claim,#hZone').forEach(enamelButton);
    if(hubTab==='lb')setTimeout(()=>card.querySelector('.hub-rank.me')?.scrollIntoView({block:'nearest'}),30);
   }
   card.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{hubTab=b.dataset.tab;track('hub_tab',{tab:hubTab});draw();});
   card.querySelectorAll('button[data-claim]').forEach(b=>b.onclick=()=>{const q=S.q[+b.dataset.claim],r=q.reward;track('quest_claim',{id:q.id,goal:q.goal,reward:r});if(r.rolls){fly('🎲',AT.card(),AT.dice(),3);S.rolls+=r.rolls;}if(r.cash){fly('💵',AT.card(),AT.cash(),flyN(r.cash),{pulse:'sCash'});S.cash+=r.cash;}q.claimed=true;log(`🎯 Награда за «${q.text}»: ${rwText(r)}.`);toast('Награда получена');save();render();draw();});
+  const shipment=$('mpShip');if(shipment)shipment.onclick=()=>{closeModal();setTimeout(()=>shipClick(),170);};
   const hz=$('hZone');if(hz)hz.onclick=async()=>{closeModal();await offerOpen(nextZone());};
   $('hNo').onclick=()=>closeModal();
  };
@@ -3879,11 +3873,9 @@ function inspClear(t,how){
 
 // Попап на клетке с проверкой — ровно как в участке: заплатить, откупиться или дубль.
 async function inspectorPopup(t){
-  const fine=inspFine();
-  const v=await modal(`<h2>📋 Инспектор <small>${name(t)}</small></h2><p class="t insp-quote">«Санитарная книжка, лицензия… всё покажем?»</p>
-    <p class="t">Пока идёт проверка, ${inspLabel(t)}. Заплати или лови дубль — ${CFG.INSP.attempts} попытки. Не выпадет — штраф спишется сам.</p>
-    <div class="row"><span class="n">Штраф<small>уйдёт в копилку</small></span><span class="v">$${fine}</span></div>`,
-    [{t:(S.cash>=fine?'Заплатить $':'В минус $')+fine,v:1,cls:'ok'},{t:`Откупиться 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
+  const fine=inspFine(),take=fineTake(fine);
+  const v=await modal(AuthorityWindows.html('inspector',{fine,take,label:t.type==='biz'?'Бизнес':'Проверка торговой точки'}),
+    [{t:`<span>${S.cash>=take?'Заплатить':'В минус'}</span><span class="action-price">$${take}</span>`,v:1,cls:'ok'},{t:`<span>Откупиться</span><span class="action-price">💎 ${CFG.HARD.bail}</span>`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
   inspectorResolve(t,v,fine);
 }
 // Выбор игрока — один и тот же из попапа и из карточки точки: 1 — заплатить, 3 — 💎, 0 — дубль.
@@ -3931,7 +3923,7 @@ function inspectorResolve(t,v,fine){
 // Подпись в карточке точки: встаёт после строки с названием (.srow) или заголовка.
 function inspCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
-  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-quote'))return; // в самом попапе плашка не нужна
+  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-quote,[data-authority]'))return; // в самом попапе плашка не нужна
   inspCardLock(card,t);
   if(card.querySelector('.insp-note'))return;
   const body=card.querySelector('.property-body')||card.querySelector('.shop');if(!body)return;
@@ -5377,5 +5369,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="top-hud.js?v=67ebbb09"></script><script src="notice-windows.js?v=319d72ad"></script><script src="interface-review.js?v=c61bb173"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
+<script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=6adea179"></script><script src="top-hud.js?v=7b0f653b"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=37a9084a"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
 </html>

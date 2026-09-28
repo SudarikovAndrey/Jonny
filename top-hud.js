@@ -23,9 +23,7 @@
     if(MAP1&&typeof m1Tasks==='function'){
       const tasks=m1Tasks();return {name:'Мейн-стрит',value:tasks.filter(q=>q.ok).length,goal:tasks.length,percent:tasks.reduce((a,q)=>a+q.v/q.goal,0)/tasks.length*100,unit:'задач'};
     }
-    const names={brooklyn:'Бруклин',mainstreet:'Мейн-стрит',capital:'Столица',mainstreet2:'Мейн-стрит Б'};
-    const next=nextMilestone(),goal=next?next.pts:CFG.MILESTONES.at(-1).pts;
-    return {name:names[boardMap()]||META.maps[(S.meta?.map||5)-1]||'Бруклин',value:S.pts,goal,percent:Math.min(100,S.pts/goal*100),unit:'очков'};
+    return MapProgress.current();
   }
   renderHubGoal=function(){
     if(!S)return;

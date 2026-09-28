@@ -3,7 +3,8 @@ let mobileLastState='', mobileFitScheduled=false, mobileLastLayout='';
 function mobileSync(){
   if(!S||!MobileHost.ready)return;
   mobileCheckCash();
-  const snapshot={action:'state',pos:S.pos,moving,day:S.day,tiles:S.tiles.map(t=>({
+  if(S.policePoseTile!==S.pos)delete S.policePoseTile;
+  const snapshot={action:'state',pos:S.pos,moving,police_bound:S.policePoseTile===S.pos||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
     i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
@@ -321,14 +322,14 @@ police=function(...args){
   if(mobilePolicePromise)return mobilePolicePromise;
   mobilePolicePromise=(async()=>{
     const wasMoving=moving;
-    mobilePoliceActive=true;moving=true;hideTip();
+    mobilePoliceActive=true;S.policePoseTile=S.pos;moving=true;hideTip();
     mobileJoyPending=false;mobileNegativePending=false;
     clearTimeout(mobileJoyTimer);mobileJoyTimer=0;
     clearTimeout(mobileNegativeTimer);mobileNegativeTimer=0;
     $('diceResult').hidden=true;render();
     try{
-      if(MobileHost.ready&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-        try{await MobileHost.request('react_police',{},6000);}
+      if(MobileHost.ready){
+        try{await MobileHost.request('react_police',{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches},6000);}
         catch(error){MobileHost.send({action:'cancel_reaction'});console.warn('Police reaction unavailable:',error.message);}
       }
       return await mobileOriginalPolice(...args);

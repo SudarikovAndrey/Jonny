@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 128 128">
+  <!-- A broad directional print, not a floating reward. Arrow points to tile 1. -->
+  <g fill="#f2e3bd" stroke="#f2e3bd" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M9 47 46 15 46 32 92 31 93 61 46 62 46 79Z" stroke-width="3"/>
+    <path d="m103 32 0 28m12-29 0 29" fill="none" stroke-width="6"/>
+    <!-- Hand-lettered СТАРТ, paths keep the mark independent of font loading. -->
+    <g fill="none" stroke-width="6">
+      <path d="M28 91H17v21h12M36 91h17m-8 1v20M61 112l7-21 8 21m-12-7h9M85 112V91h12v12H86M105 91h16m-8 1v20"/>
+    </g>
+  </g>
+</svg>

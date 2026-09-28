@@ -40,11 +40,9 @@ function inspClear(t,how){
 
 // Попап на клетке с проверкой — ровно как в участке: заплатить, откупиться или дубль.
 async function inspectorPopup(t){
-  const fine=inspFine();
-  const v=await modal(`<h2>📋 Инспектор <small>${name(t)}</small></h2><p class="t insp-quote">«Санитарная книжка, лицензия… всё покажем?»</p>
-    <p class="t">Пока идёт проверка, ${inspLabel(t)}. Заплати или лови дубль — ${CFG.INSP.attempts} попытки. Не выпадет — штраф спишется сам.</p>
-    <div class="row"><span class="n">Штраф<small>уйдёт в копилку</small></span><span class="v">$${fine}</span></div>`,
-    [{t:(S.cash>=fine?'Заплатить $':'В минус $')+fine,v:1,cls:'ok'},{t:`Откупиться 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
+  const fine=inspFine(),take=fineTake(fine);
+  const v=await modal(AuthorityWindows.html('inspector',{fine,take,label:t.type==='biz'?'Бизнес':'Проверка торговой точки'}),
+    [{t:`<span>${S.cash>=take?'Заплатить':'В минус'}</span><span class="action-price">$${take}</span>`,v:1,cls:'ok'},{t:`<span>Откупиться</span><span class="action-price">💎 ${CFG.HARD.bail}</span>`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
   inspectorResolve(t,v,fine);
 }
 // Выбор игрока — один и тот же из попапа и из карточки точки: 1 — заплатить, 3 — 💎, 0 — дубль.
@@ -92,7 +90,7 @@ function inspectorResolve(t,v,fine){
 // Подпись в карточке точки: встаёт после строки с названием (.srow) или заголовка.
 function inspCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
-  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-quote'))return; // в самом попапе плашка не нужна
+  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-quote,[data-authority]'))return; // в самом попапе плашка не нужна
   inspCardLock(card,t);
   if(card.querySelector('.insp-note'))return;
   const body=card.querySelector('.property-body')||card.querySelector('.shop');if(!body)return;
