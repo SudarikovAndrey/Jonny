@@ -1,6 +1,7 @@
 (async()=>{'use strict';
 const E=window.Dice21Engine,$=id=>document.getElementById(id),bank=n=>Math.round(n).toLocaleString('ru-RU'),money=n=>'$'+bank(n);
 const embedded=new URLSearchParams(location.search).has('embedded');
+document.documentElement.classList.toggle('embedded',embedded);
 const host=embedded?parent.Dice21?.connect(window,decodeURIComponent(location.hash.slice(1))):null;
 $('exit').onclick=()=>{if(host)host.exit();else location.href='../?map=1&playtest=1';};
 if(embedded&&!host){$('status').textContent='Открой игру заново из меню.';return;}
@@ -17,7 +18,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,reduced()?Math.min(ms,70):ms));
 FX.configure(()=>host?.soundEnabled?.()!==false);
 const sound=(name='button',volume=.6)=>FX.sound(name,volume);
 window.addEventListener('dice21-impact',()=>sound('impact',.34));
-function fit(){const scale=Math.min(innerWidth/941,Math.max(innerHeight,540)/1672);$('table').style.transform=`scale(${scale})`;$('viewport').style.width=941*scale+'px';$('viewport').style.height=1672*scale+'px';}
+function fit(){const scale=Math.min(innerWidth/941,Math.max(1,innerHeight)/1672);$('table').style.transform=`scale(${scale})`;$('viewport').style.width=941*scale+'px';$('viewport').style.height=1672*scale+'px';}
 addEventListener('resize',fit);fit();
 const crop=(href,x,y,w,h,clip='')=>`<svg viewBox="${x} ${y} ${w} ${h}" aria-hidden="true">${clip}<image href="${href}" width="941" height="1672" ${clip?'clip-path="url(#clip'+uid+')"':''}/></svg>`;
 function chip(value){const index=E.CHIPS.indexOf(value),x=[72,237,400,565,729][index],y=1257;uid++;
@@ -84,7 +85,7 @@ async function act(action,from){if(busy)return;if(action.type==='add'){await add
 E.CHIPS.forEach(v=>{const b=document.createElement('button');b.className='chip';b.dataset.value=v;b.setAttribute('aria-label',`Поставить ${v}`);b.innerHTML=chip(v);b.onclick=()=>act({type:'add',value:v},b);$('tray').append(b);});
 $('primary').onclick=()=>act({type:state.phase==='betting'?'start':state.phase==='player'?'hit':'next'});
 $('secondary').onclick=()=>act({type:state.phase==='player'?'stand':'clear'});
-const closeGame=$('exit').onclick;$('exit').onclick=()=>{sound('close');setTimeout(closeGame,110);};
+const closeGame=$('exit').onclick;$('exit').onclick=()=>{sound('close');if(host)closeGame();else setTimeout(closeGame,110);};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();$('exit').click();}});
 render();host?.ready?.();
 })();

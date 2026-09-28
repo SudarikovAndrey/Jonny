@@ -1,50 +1,51 @@
-/* A compact printed ledger; only a long goods list needs to scroll. */
-#modal:has(#card.warehouse-card){flex-direction:column;gap:12px;padding:18px 15px 22px}
+/* Warehouse: short lists fit naturally; only the goods scroll in a long list. */
+#modal:has(#card.warehouse-card){flex-direction:column;gap:11px;padding: max(18px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
 .warehouse-cash{display:none}
-#modal:has(#card.warehouse-card)>.warehouse-cash{display:flex;align-items:center;gap:6px;flex:none;padding:6px 16px;color:#fff0c9;background:#343c2d;border:2px solid #dfc997;border-radius:9px 7px 8px 6px;box-shadow:0 3px #211c17;font:800 24px/1.15 Bitter,Georgia,serif}
-.warehouse-cash .cash-glyph{margin:0;width:27px;height:27px}
-#card.warehouse-card{height:auto;flex:none;max-height:calc(100dvh - 104px)!important}
-#card.warehouse-card .warehouse-shell{height:auto;max-height:calc(100dvh - 112px)}
-#card.warehouse-card .warehouse-head{display:flex;align-items:center;gap:8px;padding:8px 48px 8px 10px}
-#card.warehouse-card .costco-sign{width:120px;flex:none;height:44px;max-height:44px}
-#card.warehouse-card .warehouse-heading{padding:0;gap:8px;flex:1}
-#card.warehouse-card .warehouse-heading h2{font-size:22px;line-height:1.2;padding-right:0}
-#card.warehouse-card .warehouse-help .qm{width:32px;height:32px;min-height:32px;line-height:28px;font-size:21px}
-#card.warehouse-card .warehouse-list{padding:8px 10px;flex:0 1 auto}
-#card.warehouse-card .warehouse-list .wr{position:relative;grid-template-columns:30px minmax(0,1fr) auto 72px;grid-template-rows:auto auto;gap:3px 6px;min-height:70px;padding:8px 8px 12px;margin-bottom:6px;border-width:2px;border-radius:9px 7px 8px 6px;box-shadow:none}
-#card.warehouse-card .warehouse-list .ring{grid-column:1;grid-row:1/3;width:30px;height:36px}
-#card.warehouse-card .warehouse-list .ring .atlas-art{width:30px;height:34px}
-#card.warehouse-card .warehouse-list .wn{grid-column:2;grid-row:1;align-self:center;font-size:18px;line-height:1.15;overflow-wrap:normal}
-#card.warehouse-card .warehouse-list .wq{grid-column:3;grid-row:1;align-self:center;font-size:16px;line-height:1.15;text-align:right}
-#card.warehouse-card .warehouse-meta{grid-column:2/4;grid-row:2;align-self:start;font:600 14px/1.2 Bitter,Georgia,serif;color:#68583b;white-space:normal!important}
-#card.warehouse-card .warehouse-list button.enamel-button{grid-column:4;grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:72px;height:auto;min-height:50px;padding:6px;font-size:17px;line-height:1.1;border-radius:9px 7px 8px 6px}
-#card.warehouse-card .warehouse-unit-price{display:flex;align-items:center;justify-content:center;gap:2px;white-space:nowrap}
-#card.warehouse-card .warehouse-unit-price .cash-glyph{margin:0;flex:none;width:1.1em;height:1.1em}
-#card.warehouse-card .wh-stock-track{position:absolute;left:8px;right:8px;bottom:4px;height:4px}
-#card.warehouse-card .warehouse-footer{padding:6px 10px 10px}
-#card.warehouse-card .warehouse-johnny{min-height:54px;gap:6px;margin-bottom:6px}
-#card.warehouse-card .warehouse-portrait{width:36px;height:43px}
-#card.warehouse-card .warehouse-bubble{font-size:14px;line-height:1.2;padding:6px;border-radius:9px 7px 8px 6px}
-#card.warehouse-card .warehouse-wallet{font-size:13px}
-#card.warehouse-card .warehouse-wallet b{font-size:19px}
-#card.warehouse-card .warehouse-buys{gap:8px}
-#card.warehouse-card .warehouse-buys button.warehouse-bulk{min-height:60px;padding:5px 7px;gap:2px;justify-content:center}
-#card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){display:flex;align-items:center;justify-content:center;min-height:28px;font-size:14px;line-height:1}
-#card.warehouse-card .warehouse-buys button.warehouse-bulk>b{display:flex;align-items:center;justify-content:center;gap:3px;font-size:21px;line-height:1}
-#card.warehouse-card .warehouse-buys .cash-glyph{margin:0;flex:none}
-#card.warehouse-card .wh-verb{display:inline}
-#card.warehouse-card .wh-short{display:none}
+#modal:has(#card.warehouse-card)>.warehouse-cash{display:flex;align-items:center;gap:12px;flex:none;padding:5px 14px;color:#fff0c9;background:#35392c;border:2px solid #dcc695;border-radius:9px 7px 9px 7px;box-shadow:0 3px #211c17;font:800 22px/1.2 Bitter,Georgia,serif}
+.warehouse-cash>span{font:700 13px/1.1 Bitter,Georgia,serif;color:#e6d6af}.warehouse-cash>b{display:flex;align-items:center;gap:5px}.warehouse-cash .cash-glyph{margin:0;width:25px;height:25px}
+#card.warehouse-card{height:auto;flex:0 1 auto;width:100%;max-width:450px;max-height:calc(100dvh - 112px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;overflow:hidden}
+#card.warehouse-card .warehouse-shell{height:auto;max-height:inherit;min-height:0;display:flex;flex-direction:column}
+#card.warehouse-card .warehouse-head{position:relative;display:flex;align-items:center;gap:10px;flex:none;padding:15px 95px 14px 17px;border-bottom:2px solid #a28a5b}
+#card.warehouse-card .warehouse-head-icon{width:38px;height:42px;object-fit:contain;flex:none}
+#card.warehouse-card .warehouse-heading{display:block;padding:0;min-width:0}
+#card.warehouse-card .warehouse-heading h2{font:900 26px/1.05 Bitter,Georgia,serif;margin:0;padding:0}
+#card.warehouse-card .warehouse-head p{display:block;font:600 13px/1.25 Bitter,Georgia,serif;color:#715d3c;margin:5px 0 0;white-space:normal}
+#card.warehouse-card .warehouse-help{position:absolute;right:57px;top:17px}
+#card.warehouse-card .warehouse-help .qm{width:30px;height:30px;min-height:30px;padding:0;line-height:26px;font-size:20px}
+#card.warehouse-card .painted-close{right:6px;top:7px;width:45px;height:45px;min-height:45px}
+#card.warehouse-card .warehouse-list-caption{display:flex;align-items:center;justify-content:space-between;flex:none;padding:9px 16px 4px;color:#796343;font:700 12px/1.2 Bitter,Georgia,serif}
+#card.warehouse-card .warehouse-list{padding:0 13px 8px;flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;mask-image:none;-webkit-mask-image:none;scrollbar-gutter:stable;scrollbar-width:thin}
+#card.warehouse-card .warehouse-list:focus-visible{outline:2px solid #c99836;outline-offset:-2px}
+#card.warehouse-card .warehouse-list .wr{position:relative;display:grid;grid-template-columns:32px minmax(0,1fr) 84px;grid-template-rows:auto auto auto;gap:3px 8px;min-height:86px;padding:10px 4px 14px;margin:0;border:0;border-bottom:1.5px solid #aa916044;border-radius:0;background:none;box-shadow:none}
+#card.warehouse-card .warehouse-list .wr:last-child{border-bottom:0}
+#card.warehouse-card .warehouse-list .wr.trend{background:#e6be5530;outline:0}
+#card.warehouse-card .warehouse-list .ring{grid-column:1;grid-row:1/4;width:32px;height:40px;padding:0;background:none;box-shadow:none}
+#card.warehouse-card .warehouse-list .ring i{background:none;border-radius:0}
+#card.warehouse-card .warehouse-good-art{display:block;width:36px;height:40px;object-fit:contain}
+#card.warehouse-card .warehouse-list .wn{grid-column:2;grid-row:1;align-self:center;font:900 18px/1.12 Bitter,Georgia,serif;overflow-wrap:normal;min-width:0}
+#card.warehouse-card .warehouse-list .wq{grid-column:2;grid-row:2;align-self:center;text-align:left;font:800 16px/1.15 Bitter,Georgia,serif;white-space:normal}
+#card.warehouse-card .wq>span{font:600 12px/1.2 Bitter,Georgia,serif;color:#786344}.warehouse-card .wq b small{font:700 13px/1.1 Bitter,Georgia,serif;color:#85724e}
+#card.warehouse-card .warehouse-meta{grid-column:2;grid-row:3;align-self:start;font:600 12px/1.25 Bitter,Georgia,serif;color:#786344;white-space:normal!important;margin:0;min-width:0}
+#card.warehouse-card .warehouse-meta .cash-glyph{width:13px;height:13px;margin:0 1px;vertical-align:-2px}
+#card.warehouse-card .warehouse-list button.enamel-button{grid-column:3;grid-row:1/4;align-self:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:84px;height:auto;min-height:52px;padding:6px 5px;font:800 14px/1.1 Bitter,Georgia,serif!important;border-radius:9px 7px 9px 7px}
+#card.warehouse-card .warehouse-list button.enamel-button:not(:disabled){background:#3c5c3b!important}
+#card.warehouse-card .warehouse-unit-price{display:flex;align-items:center;justify-content:center;gap:3px;font:900 19px/1 Bitter,Georgia,serif;white-space:nowrap}
+#card.warehouse-card .warehouse-unit-price .cash-glyph{margin:0;width:22px;height:22px;flex:none}
+#card.warehouse-card .wh-stock-track{position:absolute;left:44px;right:98px;bottom:5px;height:4px;background:#9e8d6540}
+#card.warehouse-card .warehouse-footer{flex:none;padding:10px 14px 12px;border-top:2px solid #a28a5b;box-shadow:none}
+#card.warehouse-card .warehouse-buys{display:grid;grid-template-columns:1.15fr 1fr;gap:9px}
+#card.warehouse-card .warehouse-buys:has(>button:only-child){grid-template-columns:1fr}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk{width:100%;min-width:0;min-height:56px;padding:6px 7px;gap:5px;justify-content:center;border-radius:9px 7px 9px 7px}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font:800 14px/1.15 Bitter,Georgia,serif!important;min-height:0;white-space:normal;display:block}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk>b{display:flex;justify-content:center;align-items:center;gap:3px;border:0;padding:0;font:900 20px/1 Bitter,Georgia,serif}
+#card.warehouse-card .warehouse-buys button.warehouse-bulk>b small{font:600 12px/1 Bitter,Georgia,serif}
+#card.warehouse-card .warehouse-buys .cash-glyph{width:23px;height:23px;margin:0}
+#card.warehouse-card .warehouse-half{background:#dfcca0!important;color:#43341e!important;text-shadow:none}
+#card.warehouse-card .warehouse-half::before{opacity:.5}
+#card.warehouse-card .warehouse-buy-note{display:block;margin:9px 0 0;font:600 11px/1.3 Bitter,Georgia,serif;color:#77603e;text-align:center}
+#card.warehouse-card .warehouse-empty{padding:22px 14px 26px;font:600 15px/1.4 Bitter,Georgia,serif}#card.warehouse-card .warehouse-empty b{font-size:19px}#card.warehouse-card .warehouse-empty p{margin:8px 0 0}
+@media(max-width:360px){#card.warehouse-card .warehouse-head{padding:12px 84px 12px 12px;gap:7px}#card.warehouse-card .warehouse-head-icon{width:28px;height:35px}#card.warehouse-card .warehouse-heading h2{font-size:23px}#card.warehouse-card .warehouse-head p{font-size:12px}#card.warehouse-card .warehouse-help{right:49px;top:15px}#card.warehouse-card .painted-close{width:39px;height:39px;min-height:39px}#card.warehouse-card .warehouse-list{padding:0 9px 6px}#card.warehouse-card .warehouse-list .wr{grid-template-columns:25px minmax(0,1fr) 73px;gap:3px 6px}#card.warehouse-card .warehouse-list .ring{width:25px}#card.warehouse-card .warehouse-good-art{width:28px;height:34px}#card.warehouse-card .warehouse-list .wn{font-size:16px}#card.warehouse-card .warehouse-list button.enamel-button{width:73px;font-size:12px!important}#card.warehouse-card .warehouse-list .wq{font-size:14px}#card.warehouse-card .wq>span{font-size:11px}#card.warehouse-card .warehouse-meta{font-size:11px}#card.warehouse-card .wh-stock-track{left:35px;right:83px}#card.warehouse-card .warehouse-footer{padding:9px 10px 10px}#card.warehouse-card .warehouse-buys{gap:7px}#card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:12px!important}}
 /* Help uses the same printed button instead of the stretched old bitmap. */
 #helpDialog button.enamel-button{position:relative;background:#3e4237!important;color:#fff0c9!important;border:0!important;border-radius:12px 9px 11px 8px;box-shadow:1px 3px #30291f;isolation:isolate;overflow:hidden;font:800 19px/1.2 Bitter,Georgia,serif;font-family:Bitter,Georgia,serif!important;min-height:50px;text-shadow:1px 1px #25211780}
 #helpDialog button.enamel-button::before{content:'';position:absolute;inset:0;z-index:-1;border:0!important;border-image:none!important;border-radius:inherit;background:url(assets/print/button-frame.svg) center/100% 100% no-repeat,url(assets/print/ink-wear.svg) center/280px 180px!important;pointer-events:none}
 #helpDialog button.enamel-button .enamel-skin{display:none!important}
-@media(max-width:370px){
- #card.warehouse-card .warehouse-list .wr{grid-template-columns:26px minmax(0,1fr) auto 64px;gap:3px 5px;padding-inline:6px}
- #card.warehouse-card .warehouse-list .ring{width:26px}
- #card.warehouse-card .warehouse-list .wn{font-size:17px}
- #card.warehouse-card .warehouse-list .wq{font-size:15px}
- #card.warehouse-card .warehouse-list button.enamel-button{width:64px;font-size:16px}
- #card.warehouse-card .costco-sign{width:104px}
- #card.warehouse-card .warehouse-heading h2{font-size:21px}
- #card.warehouse-card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:14px}
-}

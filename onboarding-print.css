@@ -1,0 +1,70 @@
+/* Five printed visual lessons. Real game art and UI, no placeholder START label. */
+#onboard{padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+#onboard .ob-card{width:min(100%,420px);max-height:calc(100dvh - 28px);padding:17px 18px 16px;border:3px solid #302719;border-radius:21px 18px 22px 19px;background:#efdfb7 url(assets/print/card-stock.webp) center/420px;box-shadow:inset 0 0 0 3px #faedc9,inset 0 0 0 4.5px #655438,0 6px #302719}
+#onboard .ob-track{height:auto;flex:none}
+#onboard .ob-slide{gap:10px;font-family:Bitter,Georgia,serif}
+#onboard .ob-step{align-self:flex-start;font:700 12px/1 Bitter,Georgia,serif;margin:3px 0 8px;color:#7c6b48}
+#onboard .ob-skip{font:700 12px/1 Bitter,Georgia,serif!important;top:13px;right:18px;color:#655438}
+#onboard .ob-art{height:270px;min-height:0;padding:0;gap:7px;background:none;border:0;border-radius:0;overflow:visible;flex:none}
+#onboard .ob-title{font:900 24px/1.15 Bitter,Georgia,serif;margin:4px 0 0;color:#302719}
+#onboard .ob-text{font:600 16px/1.4 Bitter,Georgia,serif!important;min-height:4.2em;max-width:345px;margin:0;color:#5a4931}
+#onboard .ob-slide:last-child .ob-text{min-height:4.2em}
+#onboard .ob-banner{border:0;background:none;box-shadow:none;height:215px;display:grid;place-items:center}
+#onboard .ob-banner img{width:100%;height:100%;object-fit:contain}
+#onboard .ob-chip{font:800 17px/1 Bitter,Georgia,serif}
+#onboard .ob-dots{margin:10px 0;gap:7px}
+#onboard .ob-next{min-height:46px;padding:9px;font:900 20px/1 Bitter,Georgia,serif!important;background:#b63828 url(assets/print/ink-wear.svg)!important;border:2px solid #322719;border-radius:10px 7px 10px 8px;box-shadow:inset 0 0 0 1px #eed8a5,0 3px #302719}
+#onboard .ob-next .enamel-skin{display:none}
+#onboard .ob-next::before{display:none}
+#onboard .ob-supply{width:100%;height:100%;display:grid;grid-template-rows:67px 22px 53px 22px 94px;justify-items:center;align-items:center}
+#onboard .ob-supply-warehouse{display:flex;align-items:center;gap:9px}
+#onboard .costco-sign{width:175px;height:60px;aspect-ratio:auto;max-height:none}
+#onboard .ob-supply b{font:900 16px/1.2 Bitter,Georgia,serif;color:#392d1f}
+#onboard .ob-route-arrow{font:900 26px/1 Bitter,Georgia,serif;color:#b83c2b}
+#onboard .ob-supply>.ob-route-arrow{rotate:90deg}
+#onboard .ob-supply-goods{display:flex;align-items:center;justify-content:center;gap:10px}
+#onboard .ob-supply-goods img{width:48px;height:48px;object-fit:contain}
+#onboard .ob-supply-points{display:grid;grid-template-columns:105px 105px;justify-content:center;align-items:center;gap:0 10px}
+#onboard .ob-supply-points img{width:105px;height:72px;object-fit:contain}
+#onboard .ob-supply-points b{grid-column:1/3}
+#onboard .ob-field-fragment{position:relative;width:100%;aspect-ratio:440/225;flex:none;border:2px solid #473620;border-radius:12px 9px 12px 10px;overflow:hidden;background:#bdad83 url(assets/icons/onboard-start-field.webp) center 49.5%/290.91% auto no-repeat;box-shadow:0 3px #766344}
+#onboard .ob-start-ring{position:absolute;left:48%;top:58%;width:16%;height:20%;border:3px solid #f4d475;transform:rotate(-31deg) skew(15deg);border-radius:7px;box-shadow:0 0 0 2px #983a26;opacity:.9}
+#onboard .ob-start-coin{position:absolute;left:50%;top:46%;width:36px;height:36px;object-fit:contain;opacity:0}
+#onboard .ob-slide.on .ob-start-coin{animation:obEarn 2.4s steps(18,end) infinite}
+@keyframes obEarn{0%,20%{opacity:0;translate:0 22px;scale:.7}27%{opacity:1;translate:0 12px;scale:1.05}48%{opacity:1;translate:5px -38px;scale:1}64%,100%{opacity:0;translate:8px -54px;scale:.9}}
+#onboard .ob-sale{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:6px;font:800 15px/1.1 Bitter,Georgia,serif}
+#onboard .ob-sale img{width:35px;height:35px;object-fit:contain}#onboard .ob-sale>span{font-size:25px;color:#ac3225}#onboard .ob-sale b{max-width:110px;text-align:left}
+#onboard .ob-property{width:min(100%,285px);height:100%;padding:10px 12px 12px;border:2px solid #493921;border-radius:14px 12px 15px 11px;background:#efdfb7 url(assets/print/card-stock.webp) center/330px;box-shadow:inset 0 0 0 2px #fff0c9,0 4px #5b482d;display:flex;flex-direction:column;gap:5px;text-align:left}
+#onboard .ob-property-head{display:flex;align-items:center;gap:7px;font:900 20px/1 Bitter,Georgia,serif}
+#onboard .ob-property-head>img{width:27px;height:27px;object-fit:contain}#onboard .ob-property-head>span{margin-left:auto;color:#f5eacb;background:#466b42;padding:4px 7px;border-radius:6px;font-size:15px;white-space:nowrap}
+#onboard .ob-demo-level{font-style:normal}
+#onboard .ob-property-picture{position:relative;min-height:0;flex:1}
+#onboard .ob-property-picture>img{width:100%;height:100%;object-fit:contain}
+#onboard .ob-property-stats{border:1.5px solid #958158;border-radius:7px;padding:5px 7px;flex:none}
+#onboard .ob-property-stat{display:flex;align-items:center;gap:5px;font:700 12px/1.5 Bitter,Georgia,serif}
+#onboard .ob-property-stat>span{margin-right:auto}#onboard .ob-property-stat b,#onboard .ob-property-stat strong{font-size:17px;line-height:1.25}
+#onboard .ob-property-stat strong,#onboard .ob-property-stat i{color:#416944;font-style:normal}
+#onboard .ob-demo-upgrade{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:35px;flex:none;padding:5px 9px;background:#37603c url(assets/print/ink-wear.svg);border:2px solid #302719;border-radius:7px;box-shadow:inset 0 0 0 1px #e4cfa0,0 2px #302719;color:#fbebc4;font:900 16px/1 Bitter,Georgia,serif!important}
+#onboard .ob-demo-upgrade>span{display:flex;align-items:center;gap:3px}#onboard .ob-demo-upgrade .cash-glyph{width:23px;height:23px;margin:0}
+#onboard .ob-upgrade-burst{position:absolute;left:50%;top:40%;translate:-50% -50%;font:900 105px/1 Georgia;color:#edc464;text-shadow:2px 2px #6f3b21;-webkit-text-stroke:1px #5c3622;opacity:0;pointer-events:none}
+#onboard .upgrading .ob-property-picture{animation:obAnticipate .28s ease-out}#onboard .upgraded .ob-upgrade-burst{animation:obUpgradeFlash .5s steps(8,end) both}
+#onboard .upgraded .changes{background:#c7d29c80;border-radius:3px}#onboard .upgraded .changes>strong,#onboard .upgraded .changes>i{display:none}#onboard .upgraded .changes>b{color:#386338;animation:obValue .38s ease-out}#onboard .upgraded .ob-demo-level{display:inline-block;animation:obValue .38s ease-out}
+@keyframes obAnticipate{0%{transform:scale(1)}35%{transform:scale(.96) rotate(-1deg)}75%{transform:scale(1.045) rotate(.7deg)}100%{transform:scale(1)}}
+@keyframes obUpgradeFlash{0%{opacity:1;scale:.4;rotate:-9deg}45%{opacity:.95;scale:1;rotate:9deg}100%{opacity:0;scale:1.25;rotate:16deg}}
+@keyframes obValue{0%{transform:scale(1.25)}70%{transform:scale(.97)}100%{transform:scale(1)}}
+#onboard .ob-goal-journey{width:100%;height:100%;display:grid;grid-template-columns:1fr 25px 1.4fr;grid-template-rows:105px 26px 125px;align-items:center;justify-items:center;gap:0 4px}
+#onboard .ob-parcel-goal,#onboard .ob-ticket-goal{display:flex;flex-direction:column;align-items:center;gap:4px;font:900 16px/1.2 Bitter,Georgia,serif}
+#onboard .ob-parcel-goal img{width:65px;height:65px;object-fit:contain}
+#onboard .ob-goal-score{display:flex;flex-direction:column;gap:4px;width:100%;font:700 15px/1.2 Bitter,Georgia,serif}
+#onboard .ob-goal-score>b{font:900 43px/1 Bitter,Georgia,serif}#onboard .ob-goal-score>span{color:#786443}
+#onboard .ob-goal-meter{height:12px;border:2px solid #514027;border-radius:8px;overflow:hidden;background:#c9bd96}#onboard .ob-goal-meter i{display:block;width:100%;height:100%;background:#b23728 url(assets/print/ink-wear.svg)}
+#onboard .ob-goal-journey>.ob-route-arrow:nth-child(4){grid-column:2;grid-row:2;rotate:90deg}
+#onboard .ob-ticket-goal{grid-column:1/4;grid-row:3;flex-direction:row;gap:12px;text-align:left;font-size:20px}
+#onboard .ob-ticket-goal img{width:120px;height:100px;object-fit:contain}
+#onboard .ob-goal-journey>img{width:95px;height:100px;object-fit:contain}#onboard .ob-goal-journey>img:last-child{grid-row:3;grid-column:1/4}#onboard .ob-goal-journey>.ob-route-arrow:nth-child(3){grid-row:2;grid-column:2;rotate:90deg}
+@media(max-height:700px){#onboard .ob-card{padding:12px 14px}#onboard .ob-art{height:218px}#onboard .ob-slide{gap:7px}#onboard .ob-title{font-size:22px}#onboard .ob-text{font-size:14px!important;min-height:4.2em}#onboard .ob-banner{height:169px}#onboard .ob-supply{grid-template-rows:49px 17px 44px 17px 85px}#onboard .costco-sign{width:138px;height:47px}#onboard .ob-supply-goods img{width:42px;height:42px}#onboard .ob-supply-points img{height:61px}#onboard .ob-property{padding:7px 10px 10px}#onboard .ob-property-head{font-size:18px}#onboard .ob-property-stat{font-size:11px}#onboard .ob-property-stat b,#onboard .ob-property-stat strong{font-size:15px}#onboard .ob-goal-journey{grid-template-rows:87px 22px 102px}#onboard .ob-ticket-goal img{width:100px;height:80px}#onboard .ob-field-fragment{width:90%}#onboard .ob-dots{margin:8px 0}}
+@media(prefers-reduced-motion:reduce){#onboard *,#onboard *::before,#onboard *::after{animation:none!important;transition:none!important}#onboard .ob-start-coin{opacity:1;translate:0 -15px}}
+
+#onboard .ob-map-goal .ob-goal-score{grid-column:2/4}
+
+#onboard .ob-next-map{grid-row:3;grid-column:1/4;width:90%;height:100%;position:relative;overflow:hidden;border:2px solid #655438;border-radius:9px}#onboard .ob-next-map img{width:100%;height:100%;object-fit:cover}#onboard .ob-next-map b{position:absolute;bottom:0;left:0;right:0;background:#efdfb7e8;padding:5px;font:900 15px/1.1 Bitter,Georgia,serif}

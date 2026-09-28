@@ -1,0 +1,34 @@
+/* Four paper navigation tiles, one red roll action. Art is independent of the old atlas. */
+body #dock{gap:7px;align-items:end}
+body #dock>button.dk,
+body #dock>button.dk.ok{
+ position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;
+ width:100%;min-width:0;height:clamp(58px,18vw,73px);padding:0;
+ border:2px solid #3b3021;border-radius:13px 11px 14px 10px;
+ background:#f0dfb7 url(assets/print/card-stock.webp) center/300px 450px!important;
+ box-shadow:inset 0 0 0 2px #faedcd,inset 0 0 0 3px #b79e6c,0 4px 0 #382d1f;
+ filter:none;color:#352a1c;touch-action:manipulation;
+}
+body #dock>button.dk::before{
+ content:'';display:block;position:absolute;inset:12%;pointer-events:none;
+ background:var(--dock-art) center/contain no-repeat;
+}
+body #dock #bTaxi{--dock-art:url(assets/icons/taxi.webp)}
+body #dock #bShip{--dock-art:url(assets/icons/crate.webp)}
+body #dock #bJohnny{--dock-art:url(assets/icons/nav-ticket-v2.webp)}
+body #dock #bShop{--dock-art:url(assets/icons/nav-cart.webp)}
+body #dock #bJohnny::before{inset:8%}
+body #dock #bShop::before{inset:8%}
+body #dock>button.dk>span,body #dock>button.dk>small{display:none}
+body #dock>button.dk:disabled{opacity:.65;filter:saturate(.45)}
+body #dock>button.dk:active:not(:disabled){translate:0 3px;box-shadow:inset 0 0 0 2px #faedcd,inset 0 0 0 3px #b79e6c,0 1px #382d1f}
+body #dock>button.dk:focus-visible{outline:3px solid #f8edcc;outline-offset:3px}
+body #dock #bShip.ship-done::after{inset:6px 3px;border-radius:7px;font-size:12px;background:#f0dfb7ee}
+@media(max-height:720px){body #dock>button.dk{height:62px}}
+@media(max-width:360px){body #dock{gap:5px}body #dock>button.dk{height:58px}}
+
+/* Tutorial focus uses the same gold readiness cue, not the legacy blue coach ring. */
+body #dock>button.dk.guide-target{animation:dockReady 1.15s ease-in-out infinite!important}
+@media(prefers-reduced-motion:reduce){
+ body #dock>button.dk.guide-target,body #dock>button.dk.ok{animation:none!important;filter:drop-shadow(0 0 6px #ffd76a)}
+}

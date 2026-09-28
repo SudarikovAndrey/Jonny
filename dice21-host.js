@@ -20,13 +20,13 @@ function open(){
 
  const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=__DICE21_VERSION__#'+token;
 
- const cancel=document.createElement('button');paintedClose(cancel);Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
+ const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
  layer.append(frame,cancel);const dispose=MinigameShell.attach(layer,frame);app.inert=true;document.body.append(layer);
- const exit=()=>{if(!current)return;current=null;dispose();layer.remove();app.inert=wasInert;render();if(prior?.isConnected)prior.focus({preventScroll:true});resolve();};
- cancel.onclick=exit;current={frame,token,service:makeService(),exit,cancel,promise};
+ const exit=()=>{if(!current||current.closing)return;current.closing=true;dispose.close().then(()=>{dispose();layer.remove();current=null;app.inert=wasInert;render();if(prior?.isConnected)prior.focus({preventScroll:true});resolve();});};
+ cancel.onclick=exit;current={frame,token,service:makeService(),exit,cancel,promise,dispose,closing:false};
  return promise;
 }
-window.Dice21={open,connect(child,token){const c=current;if(!c||c.token!==token||c.frame.contentWindow!==child)return null;return{resources:()=>({cash:S.cash,hard:S.hard}),snapshot:()=>c.service.snapshot(),dispatch:a=>c.service.dispatch(a),soundEnabled:()=>!GameFeedback.muted,ready:()=>c.cancel.remove(),exit:c.exit};}};
+window.Dice21={open,connect(child,token){const c=current;if(!c||c.token!==token||c.frame.contentWindow!==child)return null;return{resources:()=>({cash:S.cash,hard:S.hard}),snapshot:()=>c.service.snapshot(),dispatch:a=>c.closing?{ok:false,error:'Игра закрывается',snapshot:c.service.snapshot()}:c.service.dispatch(a),soundEnabled:()=>!c.closing&&!GameFeedback.muted,ready:()=>c.dispose.ready(),exit:c.exit};}};
 new MutationObserver(()=>{
  const card=$('card');if(!card.querySelector('#iRolls')||card.querySelector('#dice21Test'))return;
  const button=document.createElement('button');button.id='dice21Test';button.className='sec';button.textContent='🎲 21 в кости';

@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="inspector.css?v=038cf59f"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=34a1811c"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=e6300978"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=10b21a46"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=ec78e00c"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=2a7b2a90"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=1125f78d"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'bde85d3c'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'378ce90c'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -1236,7 +1236,7 @@ async function prototypeRoll(){
       if(biz&&last){float(t.i,'💰 +$'+f+' касса!','#ffd54f',1.6);log(`${bizName(t)}: остановка — снял кассу $${f} (×${CFG.BIZ.landMult}).`);}
       else float(t.i,'+$'+f,biz?'#ffd54f':'#b7ad98',biz?1.15:0.8);
       render();}
-    else if(!unlocked(t)&&!last){const m=CFG.STREET_PASS_PER_LEVEL*level();if(m>0){S.cash+=m;S.stat.earned+=m;S.dstat.earned+=m;float(t.i,'стройка +$'+m,'#9aa3b8');render();streetPassTip();}} // стройка: мелочь за проход, растёт с уровнем Джонни
+    else if(!unlocked(t)&&!last){const m=CFG.STREET_PASS_PER_LEVEL*level();if(m>0){S.cash+=m;S.stat.earned+=m;S.dstat.earned+=m;streetPassCoin(t.i);render();streetPassTip();}} // стройка: мелочь за проход, растёт с уровнем Джонни
   }
   await land(S.tiles[S.pos]);
   moving=false;refillStarter();save();render();
@@ -1685,7 +1685,7 @@ async function parcel(forced,catchUp){
       </div>
       <footer class="pc-foot">${forced?'<button class="sec" id="mNo">Без отправки</button>':''}<button class="sec" id="mAuto" ${total<=0?'disabled':''}>Заполнить</button><button class="ok" id="mSend" ${n<=0?'disabled':''}>Отправить · +${p}</button></footer>`;
     $('card').querySelectorAll('button[data-g][data-d]').forEach(b=>b.onclick=()=>{const g=b.dataset.g;box[g]=Math.max(0,box[g]+ +b.dataset.d);draw();});
-    $('mAuto').onclick=()=>{autofill();draw();};
+    $('mAuto').onclick=()=>ParcelFill.run({card:$('card'),current:box,target:parcelAutoBox(1,k),render:next=>{box=next;draw();}});
     const mh=$('mSlotH'); if(mh)mh.onclick=()=>{if(spendHard(hp)){track('slot_buy',{cost:hp,cur:'hard',buys:(S.slotBuys||0)+1});S.extraSlots++;S.slotBuys=(S.slotBuys||0)+1;log(`Докупил место в фуре за 💎 ${hp}.`);draw();render();}};
     $('mSend').onclick=()=>{const L0=level(),pBefore=S.pts,units=n*k;CFG.GOODS.forEach(g=>{if(box[g.id])fly(g.icon,AT.card(),AT.hub(),Math.min(box[g.id],4),{pulse:'bHub'});});CFG.GOODS.forEach(g=>takeGoods(g.id,box[g.id]*k));S.pts+=p;S.xp+=p;if(catchUp){S.catchups=(S.catchups||0)+1;}else S.parcelSent=true;S.stat.parcels++;S.dstat.pts+=p;qProg('parcel',p,true);earnStarter('shipment');
       track('parcel',{units,slotsUsed:n,pts:p,max:R,slots:N,k,extra:S.extraSlots,forced:!!forced,catchUp:!!catchUp,box});log(`📦 Поставка ушла: ${units} шт, +${p} очков.`);closeModal(1);if(!catchUp&&p<R*0.6&&S.day<=3)setTimeout(()=>hint('fillTruck',`Поставка дала ${p} очков. Закупи больше товара — в следующий раз будет больше.`),1200);if(S.day>=CFG.DAYS)setTimeout(()=>toast('🏁 Последняя поставка ушла! Жми «Итоги» — деньги и точки тоже дадут очки.',6000),900);
@@ -2075,7 +2075,7 @@ function mobileSync(){
   const snapshot={action:'state',pos:S.pos,moving,day:S.day,tiles:S.tiles.map(t=>({
     i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
-    label:!unlocked(t)?'':t.insp?'Проверка':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
+    label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
   }))};
   const json=JSON.stringify(snapshot);
@@ -2576,36 +2576,32 @@ function tilebarAffordable(){
 // Порядок повторяет главный цикл игры: точка → товар → касса на старте →
 // прокачка → больше продаж. Картинки собраны из ассетов игры: точка на трёх
 // уровнях сама рассказывает прокачку (Candy Stand → Smoke Shop → Cigar Club).
-const ONBOARD_SLIDES = [
-  { title:'Покупай точку',
-    text:'Встал на свободную клетку — бери её. Своя точка — свой бизнес.',
-    art:`<div class="ob-banner"><img src="assets/points/pt_gum_1.webp" alt=""></div>
-         <div class="ob-chip ob-pop">Купить · <i class="cash-glyph"></i>60</div>` },
-  { title:'Покупай товар',
-    text:'На Costco закупай товар. Он сам разложится по твоим точкам.',
-    art:`<div class="ob-shelf"><span class="ob-sign">COSTCO</span>
-         <img class="ob-good g1" src="assets/goods/gum.webp" alt="">
-         <img class="ob-good g2" src="assets/goods/cola.webp" alt="">
-         <img class="ob-good g3" src="assets/goods/tape.webp" alt=""></div>
-         <div class="ob-arrow">➜</div>
-         <div class="ob-mini"><img src="assets/points/pt_gum_1.webp" alt=""></div>` },
-  { title:'Прошёл старт — касса!',
-    text:'Каждый раз на старте товар продаётся сам. С наценкой.',
-    art:`<div class="ob-start"><span>СТАРТ</span></div>
-         <div class="ob-flow"><img class="ob-fly-good" src="assets/goods/gum.webp" alt="">
-         <div class="ob-arrow">➜</div>
-         <img class="ob-fly-cash" src="assets/icons/soft.webp" alt=""></div>
-         <div class="ob-chip ob-pop ob-plus">+<i class="cash-glyph"></i>48</div>` },
-  { title:'Прокачивай точку',
-    text:'Больше места — больше товара. Больше продаж — быстрее уходит.',
-    art:`<div class="ob-banner"><img src="assets/points/pt_gum_2-v2.webp" alt=""><span class="ob-up">↑</span></div>
-         <div class="ob-row"><span class="ob-chip">Вместимость ↑</span><span class="ob-chip">Продажи ↑</span></div>` },
-  { title:'Продавай ещё больше',
-    text:'Прокачанная точка растёт в магазин. Товар дороже — навар толще.',
-    art:`<div class="ob-banner"><img src="assets/points/pt_gum_4.webp" alt=""></div>
-         <div class="ob-row ob-stack"><img src="assets/icons/soft.webp" alt=""><img src="assets/icons/soft.webp" alt=""><img src="assets/icons/soft.webp" alt=""></div>`,
-    goal:true },
-];
+// Demonstration reads a copy; no purchase, quest or save is touched.
+function onboardUpgradeModel(){
+  const original=S.tiles.find(t=>t.type==='kiosk'&&t.good==='gum')||S.tiles.find(t=>t.type==='kiosk');
+  const t={...original,owner:'you',salesLvl:1,capLvl:1,goods:0};
+  const after=kioskAfter(t),margin=Math.max(0,sellPrice(t.good)-buyPrice(t.good));
+  const capNow=cap(t),profitNow=sales(t)*margin;
+  const capChanges=after&&after.cap!==capNow,salesChanges=after&&after.sales!==sales(t);
+  const focus=capChanges&&salesChanges?'sales':capChanges?'cap':'sales';
+  return {name:good(t.good).name,good:t.good,art:PropertyArt.tile(t,MAP1?'mainstreet':'brooklyn',!!CFG.L5_LADDER),level:kioskLvl(t),max:kioskMaxLvl(t),cost:kioskUpCost(t),cap:capNow,nextCap:focus==='cap'?after.cap:capNow,profit:profitNow,nextProfit:focus==='sales'?after.sales*margin:profitNow};
+}
+function onboardUpgradeArt(m){
+ const row=(key,label,value,next)=>`<div class="ob-property-stat${value!==next?' changes':''}" data-stat="${key}"><span>${label}</span><b data-before="${value}" data-after="${next}">${value}</b>${value!==next?`<i>→</i><strong>${next}</strong>`:''}</div>`;
+ return `<div class="ob-property" aria-label="Пример улучшения точки"><div class="ob-property-head"><img src="assets/goods/${m.good}.webp" alt=""><b>${m.name}</b><span><i class="ob-demo-level" data-before="${m.level}" data-after="${m.level+1}">${m.level}</i>/${m.max}</span></div><div class="ob-property-picture"><img src="${m.art}" alt="Торговая точка"><span class="ob-upgrade-burst" aria-hidden="true">✦</span></div><div class="ob-property-stats">${row('cap','Запас',m.cap,m.nextCap)}${row('profit','Прибыль за круг',m.profit,m.nextProfit)}</div><button class="ob-demo-upgrade" type="button" aria-label="Показать пример улучшения"><span>Улучшить</span><span><i class="cash-glyph"></i>${m.cost}</span></button></div>`;
+}
+function onboardingSlides(){
+ const m=onboardUpgradeModel();
+ const goal=MAP1?3:CFG.TICKET_PTS;
+ return [
+  {title:'Покупай точку',text:'Встал на свободную клетку — открой карточку и купи точку.',art:`<div class="ob-banner"><img src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"></div><div class="ob-chip">Купить · <i class="cash-glyph"></i>60</div>`},
+  {title:'Покупай товар',text:'Закупай на складе. Товар сам разложится по твоим точкам.',art:`<div class="ob-supply"><div class="ob-supply-warehouse"><div class="costco-sign" role="img" aria-label="Склад Costco">${costcoArt(19,10,781,267)}</div><b>Склад</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-goods"><img src="assets/goods/gum.webp" alt="Жвачка"><img src="assets/goods/cola.webp" alt="Кола"><b>Товары</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-points"><img src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"><img src="assets/points/pt_cola_1.webp" alt="Тележка колы"><b>Твои точки</b></div></div>`},
+  {title:'Прошёл старт — касса!',text:'Проходишь клетку с флажком — товар продаётся. Монеты твои!',art:`<div class="ob-field-fragment" role="img" aria-label="Фрагмент настоящей карты: Джонни рядом с красной стартовой клеткой и клетчатым флажком"><i class="ob-start-ring"></i><img class="ob-start-coin" src="assets/icons/soft.webp" alt=""></div><div class="ob-sale"><img src="assets/goods/gum.webp" alt="Товар"><span aria-hidden="true">➜</span><img src="assets/icons/soft.webp" alt="Монеты"><b>Продажи за круг</b></div>`},
+  {title:'Прокачивай точку',text:'Нажми «Улучшить». Следующий уровень увеличит выделенный параметр.',art:onboardUpgradeArt(m),upgrade:true},
+  MAP1?{title:'Открой следующую карту',text:'Купи точки, прокачай их и продавай товар. Выполни все три задания карты.',art:`<div class="ob-goal-journey ob-map-goal"><img src="assets/icons/hud-johnny.webp" alt="Джонни"><div class="ob-goal-score"><b>3 из 3</b><span>задания карты</span><div class="ob-goal-meter"><i></i></div></div><span class="ob-route-arrow">➜</span><div class="ob-next-map"><img src="assets/start/city-landscape.webp" alt="Новый район"><b>Следующий район</b></div></div>`}:
+  {title:'Заработай билет Джонни',text:'Отправляй товар в поставках — получай очки. Набери нужную сумму за неделю.',art:`<div class="ob-goal-journey"><div class="ob-parcel-goal"><img src="assets/icons/crate.webp" alt="Поставка"><b>Поставки</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-goal-score"><b>${goal}</b><span>очков за ${CFG.DAYS} дней</span><div class="ob-goal-meter"><i></i></div></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-ticket-goal"><img src="assets/icons/nav-ticket-v2.webp" alt="Билет Джонни"><b>Джонни<br>в твоей банде</b></div></div>`}
+ ];
+}
 
 function showOnboarding(){
   return new Promise(resolve => {
@@ -2613,31 +2609,48 @@ function showOnboarding(){
     const root = document.createElement('div');
     root.id = 'onboard'; root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true');
     root.setAttribute('aria-label','Как играть');
-    const goal = (typeof CFG!=='undefined') ? `Цель — 🎫 ${CFG.TICKET_PTS} очков за ${CFG.DAYS} дней. Набрал — билет в Россию твой.` : '';
+    const lesson=onboardingSlides();
     root.innerHTML = `<div class="ob-card">
       <button class="ob-skip" type="button">Пропустить</button>
-      <div class="ob-track">${ONBOARD_SLIDES.map((s,i)=>`
+      <div class="ob-track">${lesson.map((s,i)=>`
         <section class="ob-slide" data-i="${i}" aria-hidden="${i?'true':'false'}">
-          <div class="ob-step">Шаг ${i+1} из ${ONBOARD_SLIDES.length}</div>
+          <div class="ob-step">Шаг ${i+1} из ${lesson.length}</div>
           <div class="ob-art">${s.art}</div>
           <h2 class="ob-title">${s.title}</h2>
           <p class="ob-text">${s.text}</p>
-          ${s.goal?`<p class="ob-goal">${goal}</p>`:''}
+
         </section>`).join('')}</div>
-      <div class="ob-dots">${ONBOARD_SLIDES.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
+      <div class="ob-dots">${lesson.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
       <button class="ob-next bad" type="button">Дальше</button>
     </div>`;
     document.body.append(root);
     const slides=[...root.querySelectorAll('.ob-slide')], dots=[...root.querySelectorAll('.ob-dots i')];
     const next=root.querySelector('.ob-next');
-    let at=0;
+    let at=0,upgradeTimers=[];
+    const stopDemo=()=>{upgradeTimers.forEach(clearTimeout);upgradeTimers=[];};
+    const runUpgrade=section=>{
+      stopDemo();const card=section.querySelector('.ob-property');if(!card)return;
+      card.classList.remove('upgrading','upgraded');
+      card.querySelectorAll('[data-before]').forEach(el=>el.textContent=el.dataset.before);
+      const button=card.querySelector('button');button.disabled=true;
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.classList.add('upgrading');
+      upgradeTimers.push(setTimeout(()=>{
+        card.querySelectorAll('[data-after]').forEach(el=>el.textContent=el.dataset.after);
+        card.classList.add('upgraded');card.classList.remove('upgrading');button.disabled=false;
+      },reduced?0:280));
+    };
     const show=i=>{
       at=Math.max(0,Math.min(slides.length-1,i));
       slides.forEach((s,k)=>{s.classList.toggle('on',k===at);s.setAttribute('aria-hidden',String(k!==at));});
       dots.forEach((d,k)=>d.classList.toggle('on',k===at));
       next.textContent = at===slides.length-1 ? 'Поехали!' : 'Дальше';
+      stopDemo();
+      const demo=slides[at].querySelector('.ob-property');
+      if(demo){demo.classList.remove('upgrading','upgraded');demo.querySelectorAll('[data-before]').forEach(el=>el.textContent=el.dataset.before);const button=demo.querySelector('button');button.disabled=false;button.onclick=()=>runUpgrade(slides[at]);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)upgradeTimers.push(setTimeout(()=>runUpgrade(slides[at]),1300));}
+
     };
-    const finish=()=>{ root.classList.add('out'); setTimeout(()=>{root.remove();resolve();},220); };
+    const finish=()=>{ stopDemo();root.classList.add('out'); setTimeout(()=>{root.remove();resolve();},220); };
     next.onclick=()=> at===slides.length-1 ? finish() : show(at+1);
     root.querySelector('.ob-skip').onclick=finish;
     dots.forEach(d=>d.onclick=()=>show(+d.dataset.i));
@@ -2854,6 +2867,11 @@ function streetPassTip(){
   const mount=()=>{document.body.append(btn);paint();};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
+
+// Income amount is still credited by the rules; this is one visual coin per passed cell.
+function streetPassCoin(tile){
+  if(MobileHost.ready)MobileHost.send({action:'street_coin',tile});
+}
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.webp',sw=1536,sh=1024){
@@ -3322,19 +3340,19 @@ function decorateWarehouse(card){
  card.className='card warehouse-card';
  const old=card.querySelector('.shop'),close=$('wNo');
  const head=document.createElement('header');head.className='warehouse-head';
- head.innerHTML=`<div class="costco-sign" role="img" aria-label="Costco. Товары для всех!">${costcoArt(19,10,781,267)}</div><div class="warehouse-heading"><h2>Склад</h2><span class="warehouse-help"></span></div><p>Один запас: продать на старте или отправить пацанам.</p>`;
+ head.innerHTML=`<img class="warehouse-head-icon" src="assets/icons/crate.webp" alt=""><div class="warehouse-heading"><h2>Склад</h2><p>Товары для твоих точек</p></div><span class="warehouse-help"></span>`;
  const help=old.querySelector('.whead .qm');if(help)head.querySelector('.warehouse-help').append(help);
- const list=document.createElement('div');list.className='warehouse-list';list.setAttribute('aria-label','Товары на складе');
+ const list=document.createElement('div');list.className='warehouse-list';list.setAttribute('aria-label','Товары на складе');list.tabIndex=0;
  const rows=[...old.querySelectorAll('.wr')];
  for(const row of rows){
   const button=row.querySelector('[data-g]'),id=button.dataset.g,g=good(id),stockNow=stock(id),capacity=goodCap(id);
-  const icon=row.querySelector('.ring i');if(COSTCO_ICONS[id])icon.innerHTML=costcoArt(...COSTCO_ICONS[id]);
-  const quantity=row.querySelector('.wq');quantity.setAttribute('aria-label',`Запас: ${stockNow} из ${capacity}`);
+  const icon=row.querySelector('.ring i');icon.innerHTML=`<img class="warehouse-good-art" src="assets/goods/${GOODS_ICON[g.name]||id}.webp" alt="">`;
+  const quantity=row.querySelector('.wq');quantity.innerHTML=`<span>На точках</span> <b>${stockNow}<small> / ${capacity}</small></b>`;quantity.setAttribute('aria-label',`Запас: ${stockNow} из ${capacity}`);
   const ring=row.querySelector('.ring');ring.setAttribute('role','meter');ring.setAttribute('aria-label',`Запас: ${g.name}`);ring.setAttribute('aria-valuemin','0');ring.setAttribute('aria-valuemax',String(capacity));ring.setAttribute('aria-valuenow',String(stockNow));
-  const meta=row.querySelector('.wn small');meta.textContent=`${goodSales(id)} за круг · по $${sellPrice(id)}`;meta.style.whiteSpace='nowrap';
+  const meta=row.querySelector('.wn small');meta.textContent=`Продажа: ${goodSales(id)} шт./круг · $${sellPrice(id)} за шт.`;meta.style.whiteSpace='nowrap';
   meta.title=[...new Set(goodKiosks(id).map(pointName))].join(', ');
   meta.classList.add('warehouse-meta');row.append(meta);
-  if(stockNow<capacity)button.innerHTML=`<span>+1</span><span class="warehouse-unit-price">$${buyPrice(id)}</span>`;
+  if(stockNow<capacity)button.innerHTML=`<span>Купить 1</span><span class="warehouse-unit-price">$${buyPrice(id)}</span>`;
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
   // Native keyboard activation shares the same purchase path as a tap.
@@ -3346,14 +3364,14 @@ function decorateWarehouse(card){
  const footer=document.createElement('footer');footer.className='warehouse-footer';
  let wallet=document.querySelector('#modal > .warehouse-cash');
  if(!wallet){wallet=document.createElement('output');wallet.className='warehouse-cash';wallet.setAttribute('aria-label','В кармане');card.before(wallet);}
- wallet.textContent='$'+S.cash;cashGlyph(wallet);
+ wallet.innerHTML=`<span>В кармане</span><b>$${S.cash}</b>`;cashGlyph(wallet);
  const all=old.querySelector('#wAll');
  if(all){
-  // Закупка, а не «заполнение»: две зелёные кнопки в одну строку — на все
-  // наличные и на половину, цена справа. Пачка денег слева убрана: цена и так
-  // идёт со значком, а в той вырезке из атласа была впечатана подпись «Иконка».
+  // Primary action states whether the budget can fill every point.
   const text=all.querySelector('span');
-  if(text&&text.textContent!=='Всё заполнено')text.innerHTML='<em class="wh-verb">Закупить на всё</em><em class="wh-short">На всё</em>';
+  const need=myKiosks().reduce((sum,t)=>sum+(cap(t)-t.goods)*buyPrice(t.good),0);
+  if(text)text.textContent=need<=0?'Точки заполнены':S.cash>=need?'Пополнить всё':'Купить максимум';
+  if(need>0&&S.cash<need)all.querySelector('b').prepend('до ');
   all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
   const buys=document.createElement('div');buys.className='warehouse-buys';
   buys.append(all);footer.append(buys);enamelButton(all);
@@ -3362,10 +3380,11 @@ function decorateWarehouse(card){
   const allPrice=+(all.querySelector('b')?.textContent||'').replace(/\D/g,'')||0;
   if(!all.disabled){
     const half=document.createElement('button');
-    half.className='ok warehouse-bulk warehouse-half';
+    half.className='sec warehouse-bulk warehouse-half';
     const budget=Math.floor(allPrice/2);
-    half.innerHTML=`<span><em class="wh-verb">Закупить на половину</em><em class="wh-short">На половину</em></span><b>$${budget}</b>`;
-    half.disabled=budget<Math.min(...CFG.GOODS.map(g=>buyPrice(g.id)));
+    half.innerHTML=`<span>Половина суммы</span><b><small>до</small> $${budget}</b>`;
+    half.disabled=!myKiosks().some(t=>t.goods<cap(t)&&buyPrice(t.good)<=budget);
+    half.title='Бюджет — половина суммы полной закупки. Товар распределится по точкам.';
     half.onclick=()=>{
       let left=budget, spent=0;
       const order=myKiosks().slice().sort((a,b)=>
@@ -3388,11 +3407,14 @@ function decorateWarehouse(card){
     buys.append(half); enamelButton(half);
   }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
-  const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Тап: +1 товар. Удерживай, чтобы покупать быстрее.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
+  const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
  }else{
   const done=document.createElement('button');done.className='sec';done.textContent='На карту';done.onclick=()=>closeModal();footer.append(done);enamelButton(done);
  }
- const shell=document.createElement('div');shell.className='warehouse-shell';shell.append(head,list,footer);card.replaceChildren(shell,close);paintedClose(close);
+ const shell=document.createElement('div');shell.className='warehouse-shell';
+ const caption=document.createElement('div');caption.className='warehouse-list-caption';caption.innerHTML=`<b>Товары · ${rows.length}</b><span>Закупка за 1 шт.</span>`;
+ shell.append(head);if(rows.length)shell.append(caption);shell.append(list,footer);
+ card.dataset.goodsCount=String(rows.length);card.replaceChildren(shell,close);paintedClose(close);
  rows.forEach(r=>enamelButton(r.querySelector('button')));
  list.scrollTop=warehouseScroll;list.addEventListener('scroll',()=>warehouseScroll=list.scrollTop,{passive:true});
 }
@@ -3850,6 +3872,7 @@ hazard=async function(){
 
 function inspClear(t,how){
   t.insp=false;if(S.insp&&S.insp.i===t.i)S.insp=null;
+  if(typeof inspCardUnlock==='function')inspCardUnlock(); // карточка возвращается в обычный вид, откуда бы ни сняли проверку
   float(t.i,'✅ проверка снята','#8bc34a',1.2);
   log(`📋 ${name(t)}: ${how}, проверка снята — ${t.type==='biz'?'бизнес снова платит':'точка снова торгует'}.`);
 }
@@ -3857,14 +3880,20 @@ function inspClear(t,how){
 // Попап на клетке с проверкой — ровно как в участке: заплатить, откупиться или дубль.
 async function inspectorPopup(t){
   const fine=inspFine();
-  const v=await modal(`<h2>📋 Инспектор <small>${name(t)}</small></h2><p class="t">«Санитарная книжка, кассовый аппарат, лицензия… всё покажем?» Пока проверка идёт, ${inspLabel(t)}. Заплати — или выбрось дубль: ${CFG.INSP.attempts} попытки, промахнёшься все — штраф спишется сам.</p>
-    <div class="row"><span class="n">Штраф<small>половина полицейского · уходит в копилку 🎰</small></span><span class="v">$${fine}</span></div>`,
-    [{t:(S.cash>=fine?'Заплатить · $':'Заплатить в минус · $')+fine,v:1,cls:'ok'},{t:`Откупиться · 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Попробовать дубль',v:0,cls:'bad'}],{sticky:true});
+  const v=await modal(`<h2>📋 Инспектор <small>${name(t)}</small></h2><p class="t insp-quote">«Санитарная книжка, лицензия… всё покажем?»</p>
+    <p class="t">Пока идёт проверка, ${inspLabel(t)}. Заплати или лови дубль — ${CFG.INSP.attempts} попытки. Не выпадет — штраф спишется сам.</p>
+    <div class="row"><span class="n">Штраф<small>уйдёт в копилку</small></span><span class="v">$${fine}</span></div>`,
+    [{t:(S.cash>=fine?'Заплатить $':'В минус $')+fine,v:1,cls:'ok'},{t:`Откупиться 💎 ${CFG.HARD.bail}`,v:3,cls:'hard',dis:S.hard<CFG.HARD.bail},{t:'Ловить дубль',v:0,cls:'bad'}],{sticky:true});
+  inspectorResolve(t,v,fine);
+}
+// Выбор игрока — один и тот же из попапа и из карточки точки: 1 — заплатить, 3 — 💎, 0 — дубль.
+function inspectorResolve(t,v,fine){
+  fine=fine||inspFine();
   track('inspection',{tile:t.i,choice:v===3?'bail':v===1?'pay':'roll',fine});
-  if(v===3){spendHard(CFG.HARD.bail,AT.tile(t.i));inspClear(t,`откупился за 💎 ${CFG.HARD.bail}`);}
+  if(v===3){if(!spendHard(CFG.HARD.bail,AT.tile(t.i)))return;inspClear(t,`откупился за 💎 ${CFG.HARD.bail}`);}
   else if(v===1){payFine(fine);inspClear(t,`заплатил $${fine}`);}
-  else{S.insp={i:t.i,left:CFG.INSP.attempts,fine};log(`📋 ${name(t)}: споришь с инспектором — ${CFG.INSP.attempts} попытки на дубль.`);hint('insp','Кнопка «Бросить» ловит дубль. Три промаха — штраф спишется сам.');}
-  save();render();
+  else if(!S.insp){S.insp={i:t.i,left:CFG.INSP.attempts,fine};log(`📋 ${name(t)}: споришь с инспектором — ${CFG.INSP.attempts} попытки на дубль.`);hint('insp','Кнопка «Бросить» ловит дубль. Три промаха — штраф спишется сам.');}
+  inspCardUnlock();save();render();
 }
 
 // Остановка на клетке с проверкой: сначала инспектор, потом обычная остановка.
@@ -3902,14 +3931,51 @@ async function inspectorPopup(t){
 // Подпись в карточке точки: встаёт после строки с названием (.srow) или заголовка.
 function inspCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
-  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-note'))return;
-  const anchor=card.querySelector('.srow')||card.querySelector('h2');if(!anchor)return;
-  const n=document.createElement('p');n.className='insp-note';
-  n.innerHTML=`<i class="insp-ic" aria-hidden="true"></i><span><b>Идёт проверка</b> — ${inspLabel(t)}.<small>Снять: дубль на клетке или штраф $${inspFine()}</small></span>`;
-  anchor.after(n);
+  if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-quote'))return; // в самом попапе плашка не нужна
+  inspCardLock(card,t);
+  if(card.querySelector('.insp-note'))return;
+  const body=card.querySelector('.property-body')||card.querySelector('.shop');if(!body)return;
+  const fine=inspFine(),arguing=S.insp&&S.insp.i===t.i;
+  const n=document.createElement('div');n.className='insp-note';
+  n.innerHTML=`<p class="insp-head"><i class="insp-ic" aria-hidden="true"></i><span><b>Идёт проверка</b> — ${inspLabel(t)}.<small>${arguing?`Споришь: осталось попыток на дубль — ${S.insp.left}`:'Откупись или лови дубль — как в участке'}</small></span></p>
+    <div class="insp-actions">
+      <button class="ok insp-btn" data-v="1">${S.cash>=fine?'Заплатить':'В минус'} $${fine}</button>
+      <button class="hard insp-btn" data-v="3" ${S.hard<CFG.HARD.bail?'disabled':''}>Откупиться 💎 ${CFG.HARD.bail}</button>
+      ${arguing?'':'<button class="bad insp-btn" data-v="0">Ловить дубль</button>'}
+    </div>`;
+  n.querySelectorAll('.insp-btn').forEach(b=>{b.onclick=()=>{if(!t.insp)return;inspectorResolve(t,+b.dataset.v,fine);};});
+  if(typeof enamelButton==='function')n.querySelectorAll('.insp-btn').forEach(b=>enamelButton(b)); // печатные кнопки игры
+  if(typeof cashGlyph==='function')cashGlyph(n);
+  body.append(n);
+}
+// Пока идёт проверка: инспектор перекрывает половину картинки, все кнопки карточки заперты,
+// кроме крестика и действий инспектора — как в участке.
+let inspArtMissing=false;
+function inspCardLock(card,t){
+  const pic=card.querySelector('.property-picture');
+  // Картинка в карточке тянется на свободное место (flex: 1 1 180px; height: 0). Без блоков
+  // товара она бы выросла или схлопнулась — фиксируем высоту обычного вида до скрытия блоков.
+  const h=pic&&!pic.dataset.inspH?pic.offsetHeight:0;
+  if(h>0){pic.style.setProperty('--insp-pic-h',h+'px');pic.dataset.inspH=h;}
+  if(pic&&!inspArtMissing&&!pic.querySelector('.insp-overlay')){
+    const o=document.createElement('div');o.className='insp-overlay';o.setAttribute('aria-hidden','true');
+    // Обработчик в JS: атрибут onerror в этой разметке не срабатывал — оставался значок битой картинки.
+    // Нет картинки — запоминаем: иначе удаление оверлея будит наблюдатель карточки и запрос идёт по кругу.
+    const img=new Image();img.alt='';img.onerror=()=>{inspArtMissing=true;o.remove();};img.src='assets/ui/inspector-angry.webp';o.append(img);
+    pic.append(o);
+  }
+  card.querySelectorAll('.property-body > .box, .property-body > .uup, .property-body > .rows, .property-actions').forEach(e=>{if(e.classList.contains('insp-note'))return;e.classList.add('insp-hidden');});
+  card.querySelectorAll('button:not(.xclose):not(#xNo):not(.insp-btn)').forEach(b=>{if(b.dataset.inspLocked)return;b.dataset.inspLocked=b.disabled?'was':'1';b.disabled=true;b.setAttribute('aria-disabled','true');});
+}
+function inspCardUnlock(){
+  const card=$('card');if(!card)return;
+  card.querySelectorAll('[data-insp-locked]').forEach(b=>{if(b.dataset.inspLocked==='1'){b.disabled=false;b.removeAttribute('aria-disabled');}delete b.dataset.inspLocked;});
+  card.querySelectorAll('.insp-hidden').forEach(e=>e.classList.remove('insp-hidden'));
+  card.querySelectorAll('.insp-overlay,.insp-note').forEach(e=>e.remove());
+  card.querySelectorAll('.property-picture[data-insp-h]').forEach(p=>{delete p.dataset.inspH;p.style.removeProperty('--insp-pic-h');});
 }
 new MutationObserver(()=>inspCardNote()).observe($('card'),{childList:true,subtree:true});
-window.Inspector={active:inspActive,fine:inspFine,works:inspWorks};
+window.Inspector={active:inspActive,fine:inspFine,works:inspWorks,resolve:inspectorResolve};
 
 // ===== Бруклин (карта 5) на новой лестнице =====
 // Спек: черновики/америкэн-бой-карты-и-дерево.md §2, §3, §6; решение 25.09 — перевести.
@@ -4969,15 +5035,14 @@ function open(opts={}){
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Однорукий бандит');
  const loading=document.createElement('div');loading.className='sl-loading';loading.textContent='Открываем автомат…';
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
- const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=9f893394c1b3#'+encodeURIComponent(token);
+ const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=1b400e587635#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
  current={promise,session,frame,token,layer,closing:false,resolve};
  const finish=()=>{
   if(!current||current.token!==token||current.closing||session.busy)return;
   current.closing=true;session.close();
   const end=()=>{current?.unfit?.();layer.remove();app.inert=wasInert;current=null;render();if(priorFocus?.isConnected)priorFocus.focus({preventScroll:true});resolve();};
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches)end();
-  else{layer.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'}).finished.then(end,end);}
+  current.unfit.close().then(end,end);
  };
  current.finish=finish;cancel.onclick=finish;
  current.unfit=MinigameShell.attach(layer,frame);
@@ -4993,7 +5058,7 @@ function connect(child,token){
   begin:()=>session.begin(),buyPack:()=>session.buyPack(),settle:()=>session.settle(),close:()=>session.close(),save:()=>session.save(),
   soundEnabled:()=>!GameFeedback.muted,
   paintClose(button){paintedClose(button);button.querySelector('image').setAttribute('href',new URL('assets/modal-atlas.webp',location.href).href);},
-  ready(){entry.layer.querySelector('.sl-loading')?.remove();entry.layer.querySelector('.sl-loading-close')?.remove();},
+  ready(){entry.unfit.ready();},
   exit:()=>entry.finish(),
  };
 }
@@ -5177,9 +5242,46 @@ window.MinigameShell={
   const sync=()=>bar.querySelectorAll('[data-mirror]').forEach(n=>{const source=$(n.dataset.mirror);if(source&&n.innerHTML!==source.innerHTML)n.innerHTML=source.innerHTML;});
   const observer=new MutationObserver(sync);sources.forEach(s=>observer.observe(s,{subtree:true,childList:true,characterData:true}));
   layer.classList.add('minigame-layer');frame.classList.add('minigame-frame');layer.prepend(bar);
-  const fit=()=>{const r=app.getBoundingClientRect();Object.assign(layer.style,{left:Math.round(r.left)+'px',right:'auto',width:Math.round(r.width)+'px'});};
-  fit();addEventListener('resize',fit);sync();
-  return ()=>{observer.disconnect();removeEventListener('resize',fit);};
+  const fit=()=>{const r=app.getBoundingClientRect();Object.assign(layer.style,{left:Math.round(r.left)+'px',right:'auto',width:Math.round(r.width)+'px'});const root=frame.contentDocument?.documentElement;if(root)root.style.setProperty('--room-height',(layer.getBoundingClientRect().height||innerHeight)+'px');};
+  let loaded=false,requested=false,revealed=false,closing=false,disposed=false,subject=null,exitPromise;
+  const animations=new Set(),reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const play=(node,keys,options)=>{
+   const animation=node.animate(keys,options);animations.add(animation);
+   animation.finished.catch(()=>{}).finally(()=>animations.delete(animation));return animation;
+  };
+  const reveal=()=>{
+   if(!loaded||!requested||revealed||closing||disposed)return;
+   revealed=true;fit();
+   // Animate the fitted artwork, not its painted room or the shared resource bar.
+   subject=frame.contentDocument?.querySelector('.stage, #viewport');
+   if(subject){
+    subject.style.willChange='transform, opacity';
+    const keys=reduced()?[{opacity:0},{opacity:1}]:[
+     {opacity:0,transform:'translateY(30px) scale(.965)',offset:0},
+     {opacity:1,transform:'translateY(-3px) scale(1.004)',offset:.76},
+     {opacity:1,transform:'none',offset:1}
+    ];
+    play(subject,keys,{duration:reduced()?80:240,easing:'cubic-bezier(.2,.8,.2,1)'}).finished.catch(()=>{}).finally(()=>{subject.style.willChange='';});
+   }
+   layer.classList.add('minigame-ready');
+   layer.querySelector('.sl-loading')?.remove();layer.querySelector('.sl-loading-close')?.remove();
+  };
+  const onLoad=()=>{loaded=true;fit();reveal();};
+  fit();frame.addEventListener('load',onLoad);addEventListener('resize',fit);sync();
+  const dispose=()=>{disposed=true;animations.forEach(a=>a.cancel());animations.clear();frame.removeEventListener('load',onLoad);observer.disconnect();removeEventListener('resize',fit);};
+  dispose.ready=()=>{requested=true;reveal();};
+  dispose.close=()=>{
+   if(exitPromise)return exitPromise;
+   closing=true;frame.inert=true;layer.classList.add('minigame-closing');
+   const pose=subject?getComputedStyle(subject):null;
+   const from=pose?{opacity:pose.opacity,transform:pose.transform}:null;
+   animations.forEach(a=>a.cancel());animations.clear();
+   const duration=reduced()?80:160;
+   if(subject&&from)play(subject,[from,reduced()?{opacity:0}:{opacity:0,transform:'translateY(24px) scale(.975)'}],{duration,easing:'cubic-bezier(.4,0,.8,.2)',fill:'forwards'});
+   exitPromise=play(layer,[{opacity:getComputedStyle(layer).opacity},{opacity:0}],{duration:reduced()?80:110,delay:reduced()?0:50,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{});
+   return exitPromise;
+  };
+  return dispose;
  }
 };
 
@@ -5250,15 +5352,15 @@ function open(){
  const app=$('app'),prior=document.activeElement,wasInert=app.inert,token=crypto.randomUUID();
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','21 в кости');
 
- const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=96c4a8cb9f3e#'+token;
+ const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=decf535cf610#'+token;
 
- const cancel=document.createElement('button');paintedClose(cancel);Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
+ const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
  layer.append(frame,cancel);const dispose=MinigameShell.attach(layer,frame);app.inert=true;document.body.append(layer);
- const exit=()=>{if(!current)return;current=null;dispose();layer.remove();app.inert=wasInert;render();if(prior?.isConnected)prior.focus({preventScroll:true});resolve();};
- cancel.onclick=exit;current={frame,token,service:makeService(),exit,cancel,promise};
+ const exit=()=>{if(!current||current.closing)return;current.closing=true;dispose.close().then(()=>{dispose();layer.remove();current=null;app.inert=wasInert;render();if(prior?.isConnected)prior.focus({preventScroll:true});resolve();});};
+ cancel.onclick=exit;current={frame,token,service:makeService(),exit,cancel,promise,dispose,closing:false};
  return promise;
 }
-window.Dice21={open,connect(child,token){const c=current;if(!c||c.token!==token||c.frame.contentWindow!==child)return null;return{resources:()=>({cash:S.cash,hard:S.hard}),snapshot:()=>c.service.snapshot(),dispatch:a=>c.service.dispatch(a),soundEnabled:()=>!GameFeedback.muted,ready:()=>c.cancel.remove(),exit:c.exit};}};
+window.Dice21={open,connect(child,token){const c=current;if(!c||c.token!==token||c.frame.contentWindow!==child)return null;return{resources:()=>({cash:S.cash,hard:S.hard}),snapshot:()=>c.service.snapshot(),dispatch:a=>c.closing?{ok:false,error:'Игра закрывается',snapshot:c.service.snapshot()}:c.service.dispatch(a),soundEnabled:()=>!c.closing&&!GameFeedback.muted,ready:()=>c.dispose.ready(),exit:c.exit};}};
 new MutationObserver(()=>{
  const card=$('card');if(!card.querySelector('#iRolls')||card.querySelector('#dice21Test'))return;
  const button=document.createElement('button');button.id='dice21Test';button.className='sec';button.textContent='🎲 21 в кости';
@@ -5275,5 +5377,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=710c976d"></script><script src="interface-review.js?v=944b63f4"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
+<script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="top-hud.js?v=ba8ff793"></script><script src="interface-review.js?v=3f2967ed"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
 </html>

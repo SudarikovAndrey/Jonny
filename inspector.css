@@ -1,0 +1,41 @@
+/* Инспектор — плашка в карточке точки (Style Bible: бумага, тушь, приглушённый красный).
+   Выглядит как штамп-предписание, приколотый к карточке: без градиентов и стекла. */
+#card .insp-note{display:block;margin:6px 0 10px;padding:7px 11px 8px 8px;
+  border:2px solid #25221c;border-radius:7px 9px 6px 8px;background:#f2e3bd url(assets/paper-grain.svg);
+  box-shadow:0 2px 0 #25221c,inset 0 0 0 2px #f2e3bd,inset 0 0 0 3.5px #a9272055;
+  color:#25221c;font-size:13px;line-height:1.25;text-align:left;rotate:-.6deg}
+#card .insp-note .insp-head{display:flex;align-items:center;gap:9px;margin:0}
+#card .insp-note .insp-ic{flex:none;width:34px;height:34px;border:2px solid #25221c;border-radius:50%;
+  background:#c43a2d url(board/assets/symbols/inspector.svg) center/78% no-repeat;filter:none;box-shadow:0 2px 0 #25221c}
+#card .insp-note b{color:#a92720;font-weight:800}
+#card .insp-note small{display:block;margin-top:1px;font-size:12px;color:#5b4c35}
+
+/* Спор (участок и инспектор): кнопка броска ловит дубль — сине-серая печать с ярлыком. */
+#bRoll.jail{background-color:#3f5f6c!important;box-shadow:0 5px 0 #243f4b,0 5px 0 2.5px #25221c!important}
+#bRoll.jail::after{content:'дубль?';position:absolute;left:50%;top:-11px;translate:-50% 0;z-index:3;padding:1px 8px 2px;
+  border:2px solid #25221c;border-radius:6px;background:#f2e3bd;color:#a92720;font:800 12px/1.2 Bitter,Georgia,serif;
+  letter-spacing:.02em;white-space:nowrap;box-shadow:0 2px 0 #25221c;pointer-events:none}
+#card .insp-quote{font-style:italic;color:#5b4c35}
+/* кнопки попапа: цена в одну строку с глаголом */
+#card.event-card:has(.insp-quote) .ev-foot button{font-size:16px;padding-inline:8px;white-space:nowrap;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:4px}
+
+/* ===== Карточка точки в режиме проверки =====
+   Картинка точки — того же размера и там же (высоту замеряет inspCardLock до скрытия блоков),
+   справа поверх — инспектор. Блоки товара, прибыли, запаса и «Улучшить» скрыты, внизу — плашка
+   с кнопками: «Заплатить» и «Откупиться» в ряд, «Ловить дубль» на всю ширину. */
+#card .insp-hidden{display:none!important}
+#card.print-property .property-picture[data-insp-h]{flex:none;height:var(--insp-pic-h);min-height:0;max-height:none}
+#card .property-picture{position:relative}
+#card .insp-overlay{position:absolute;right:-4px;bottom:0;width:52%;height:100%;z-index:2;pointer-events:none;display:flex;align-items:flex-end;justify-content:flex-end}
+#card .insp-overlay img{width:100%;height:100%;object-fit:contain;object-position:right bottom;filter:drop-shadow(0 3px 0 #25221c88)}
+/* пока нет картинки Графики — жетон инспектора в правом верхнем углу картинки */
+#card .insp-overlay img.fallback{position:absolute;right:6px;top:4px;width:30%;height:auto;max-width:92px;aspect-ratio:1;box-sizing:border-box;
+  background:#c43a2d;border:3px solid #25221c;border-radius:50%;padding:7%;box-shadow:0 3px 0 #25221c;filter:none;rotate:6deg}
+#card .property-body:has(.insp-note){display:flex;flex-direction:column}
+#card .insp-note{margin-top:auto;margin-bottom:2px}
+#card .insp-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+#card .insp-actions .insp-btn{min-height:50px;padding:6px 8px;font-size:16px;white-space:nowrap;
+  display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px}
+#card .insp-actions .insp-btn.bad{grid-column:1/-1}
+#card .insp-actions .insp-btn[disabled]{opacity:.5}
+#card button[data-insp-locked]{opacity:.45;filter:grayscale(.6);pointer-events:none}

@@ -171,7 +171,7 @@ decorateWindows();
 // var, а не const: decorateWindows() вызывается выше по файлу, до этих строк.
 var EVENT_BADGES = [
   [/Копилка/, 'board/assets/symbols/piggy.svg'], [/Шанс/, 'board/assets/symbols/chance.svg'],
-  [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.webp'],
+  [/Инспектор/, 'board/assets/symbols/inspector.svg'], [/NYPD|Участок/, 'board/assets/symbols/police.svg'], [/Chase|коллектор|Банк/, 'assets/icons/soft.webp'],
   [/Не хватает/, 'assets/icons/soft.webp'], [/Ходы (кончились|вышли)/, 'assets/icons/die.webp'],
   [/Итоги дня|День \d+ из/, 'assets/icons/calendar.webp'], [/Задания/, 'assets/icons/crown.webp'],
   [/Бандл|груза/, 'assets/icons/crate.webp'], [/Yellow Cab|Такси/, 'assets/icons/taxi.webp'],

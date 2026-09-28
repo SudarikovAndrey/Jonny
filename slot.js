@@ -50,8 +50,7 @@ function open(opts={}){
   if(!current||current.token!==token||current.closing||session.busy)return;
   current.closing=true;session.close();
   const end=()=>{current?.unfit?.();layer.remove();app.inert=wasInert;current=null;render();if(priorFocus?.isConnected)priorFocus.focus({preventScroll:true});resolve();};
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches)end();
-  else{layer.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'}).finished.then(end,end);}
+  current.unfit.close().then(end,end);
  };
  current.finish=finish;cancel.onclick=finish;
  current.unfit=MinigameShell.attach(layer,frame);
@@ -67,7 +66,7 @@ function connect(child,token){
   begin:()=>session.begin(),buyPack:()=>session.buyPack(),settle:()=>session.settle(),close:()=>session.close(),save:()=>session.save(),
   soundEnabled:()=>!GameFeedback.muted,
   paintClose(button){paintedClose(button);button.querySelector('image').setAttribute('href',new URL('assets/modal-atlas.webp',location.href).href);},
-  ready(){entry.layer.querySelector('.sl-loading')?.remove();entry.layer.querySelector('.sl-loading-close')?.remove();},
+  ready(){entry.unfit.ready();},
   exit:()=>entry.finish(),
  };
 }

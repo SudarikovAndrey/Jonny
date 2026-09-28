@@ -4,10 +4,10 @@ function mobileSync(){
   if(!S||!MobileHost.ready)return;
   mobileCheckCash();
   const snapshot={action:'state',pos:S.pos,moving,day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||null,
+    i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
-      t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':''
+      t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
   }))};
   const json=JSON.stringify(snapshot);
   if(json!==mobileLastState){mobileLastState=json;MobileHost.send(snapshot);}
@@ -507,36 +507,32 @@ function tilebarAffordable(){
 // Порядок повторяет главный цикл игры: точка → товар → касса на старте →
 // прокачка → больше продаж. Картинки собраны из ассетов игры: точка на трёх
 // уровнях сама рассказывает прокачку (Candy Stand → Smoke Shop → Cigar Club).
-const ONBOARD_SLIDES = [
-  { title:'Покупай точку',
-    text:'Встал на свободную клетку — бери её. Своя точка — свой бизнес.',
-    art:`<div class="ob-banner"><img src="assets/points/pt_gum_1.webp" alt=""></div>
-         <div class="ob-chip ob-pop">Купить · <i class="cash-glyph"></i>60</div>` },
-  { title:'Покупай товар',
-    text:'На Costco закупай товар. Он сам разложится по твоим точкам.',
-    art:`<div class="ob-shelf"><span class="ob-sign">COSTCO</span>
-         <img class="ob-good g1" src="assets/goods/gum.webp" alt="">
-         <img class="ob-good g2" src="assets/goods/cola.webp" alt="">
-         <img class="ob-good g3" src="assets/goods/tape.webp" alt=""></div>
-         <div class="ob-arrow">➜</div>
-         <div class="ob-mini"><img src="assets/points/pt_gum_1.webp" alt=""></div>` },
-  { title:'Прошёл старт — касса!',
-    text:'Каждый раз на старте товар продаётся сам. С наценкой.',
-    art:`<div class="ob-start"><span>СТАРТ</span></div>
-         <div class="ob-flow"><img class="ob-fly-good" src="assets/goods/gum.webp" alt="">
-         <div class="ob-arrow">➜</div>
-         <img class="ob-fly-cash" src="assets/icons/soft.webp" alt=""></div>
-         <div class="ob-chip ob-pop ob-plus">+<i class="cash-glyph"></i>48</div>` },
-  { title:'Прокачивай точку',
-    text:'Больше места — больше товара. Больше продаж — быстрее уходит.',
-    art:`<div class="ob-banner"><img src="assets/points/pt_gum_2-v2.webp" alt=""><span class="ob-up">↑</span></div>
-         <div class="ob-row"><span class="ob-chip">Вместимость ↑</span><span class="ob-chip">Продажи ↑</span></div>` },
-  { title:'Продавай ещё больше',
-    text:'Прокачанная точка растёт в магазин. Товар дороже — навар толще.',
-    art:`<div class="ob-banner"><img src="assets/points/pt_gum_4.webp" alt=""></div>
-         <div class="ob-row ob-stack"><img src="assets/icons/soft.webp" alt=""><img src="assets/icons/soft.webp" alt=""><img src="assets/icons/soft.webp" alt=""></div>`,
-    goal:true },
-];
+// Demonstration reads a copy; no purchase, quest or save is touched.
+function onboardUpgradeModel(){
+  const original=S.tiles.find(t=>t.type==='kiosk'&&t.good==='gum')||S.tiles.find(t=>t.type==='kiosk');
+  const t={...original,owner:'you',salesLvl:1,capLvl:1,goods:0};
+  const after=kioskAfter(t),margin=Math.max(0,sellPrice(t.good)-buyPrice(t.good));
+  const capNow=cap(t),profitNow=sales(t)*margin;
+  const capChanges=after&&after.cap!==capNow,salesChanges=after&&after.sales!==sales(t);
+  const focus=capChanges&&salesChanges?'sales':capChanges?'cap':'sales';
+  return {name:good(t.good).name,good:t.good,art:PropertyArt.tile(t,MAP1?'mainstreet':'brooklyn',!!CFG.L5_LADDER),level:kioskLvl(t),max:kioskMaxLvl(t),cost:kioskUpCost(t),cap:capNow,nextCap:focus==='cap'?after.cap:capNow,profit:profitNow,nextProfit:focus==='sales'?after.sales*margin:profitNow};
+}
+function onboardUpgradeArt(m){
+ const row=(key,label,value,next)=>`<div class="ob-property-stat${value!==next?' changes':''}" data-stat="${key}"><span>${label}</span><b data-before="${value}" data-after="${next}">${value}</b>${value!==next?`<i>→</i><strong>${next}</strong>`:''}</div>`;
+ return `<div class="ob-property" aria-label="Пример улучшения точки"><div class="ob-property-head"><img src="assets/goods/${m.good}.webp" alt=""><b>${m.name}</b><span><i class="ob-demo-level" data-before="${m.level}" data-after="${m.level+1}">${m.level}</i>/${m.max}</span></div><div class="ob-property-picture"><img src="${m.art}" alt="Торговая точка"><span class="ob-upgrade-burst" aria-hidden="true">✦</span></div><div class="ob-property-stats">${row('cap','Запас',m.cap,m.nextCap)}${row('profit','Прибыль за круг',m.profit,m.nextProfit)}</div><button class="ob-demo-upgrade" type="button" aria-label="Показать пример улучшения"><span>Улучшить</span><span><i class="cash-glyph"></i>${m.cost}</span></button></div>`;
+}
+function onboardingSlides(){
+ const m=onboardUpgradeModel();
+ const goal=MAP1?3:CFG.TICKET_PTS;
+ return [
+  {title:'Покупай точку',text:'Встал на свободную клетку — открой карточку и купи точку.',art:`<div class="ob-banner"><img src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"></div><div class="ob-chip">Купить · <i class="cash-glyph"></i>60</div>`},
+  {title:'Покупай товар',text:'Закупай на складе. Товар сам разложится по твоим точкам.',art:`<div class="ob-supply"><div class="ob-supply-warehouse"><div class="costco-sign" role="img" aria-label="Склад Costco">${costcoArt(19,10,781,267)}</div><b>Склад</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-goods"><img src="assets/goods/gum.webp" alt="Жвачка"><img src="assets/goods/cola.webp" alt="Кола"><b>Товары</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-points"><img src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"><img src="assets/points/pt_cola_1.webp" alt="Тележка колы"><b>Твои точки</b></div></div>`},
+  {title:'Прошёл старт — касса!',text:'Проходишь клетку с флажком — товар продаётся. Монеты твои!',art:`<div class="ob-field-fragment" role="img" aria-label="Фрагмент настоящей карты: Джонни рядом с красной стартовой клеткой и клетчатым флажком"><i class="ob-start-ring"></i><img class="ob-start-coin" src="assets/icons/soft.webp" alt=""></div><div class="ob-sale"><img src="assets/goods/gum.webp" alt="Товар"><span aria-hidden="true">➜</span><img src="assets/icons/soft.webp" alt="Монеты"><b>Продажи за круг</b></div>`},
+  {title:'Прокачивай точку',text:'Нажми «Улучшить». Следующий уровень увеличит выделенный параметр.',art:onboardUpgradeArt(m),upgrade:true},
+  MAP1?{title:'Открой следующую карту',text:'Купи точки, прокачай их и продавай товар. Выполни все три задания карты.',art:`<div class="ob-goal-journey ob-map-goal"><img src="assets/icons/hud-johnny.webp" alt="Джонни"><div class="ob-goal-score"><b>3 из 3</b><span>задания карты</span><div class="ob-goal-meter"><i></i></div></div><span class="ob-route-arrow">➜</span><div class="ob-next-map"><img src="assets/start/city-landscape.webp" alt="Новый район"><b>Следующий район</b></div></div>`}:
+  {title:'Заработай билет Джонни',text:'Отправляй товар в поставках — получай очки. Набери нужную сумму за неделю.',art:`<div class="ob-goal-journey"><div class="ob-parcel-goal"><img src="assets/icons/crate.webp" alt="Поставка"><b>Поставки</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-goal-score"><b>${goal}</b><span>очков за ${CFG.DAYS} дней</span><div class="ob-goal-meter"><i></i></div></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-ticket-goal"><img src="assets/icons/nav-ticket-v2.webp" alt="Билет Джонни"><b>Джонни<br>в твоей банде</b></div></div>`}
+ ];
+}
 
 function showOnboarding(){
   return new Promise(resolve => {
@@ -544,31 +540,48 @@ function showOnboarding(){
     const root = document.createElement('div');
     root.id = 'onboard'; root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true');
     root.setAttribute('aria-label','Как играть');
-    const goal = (typeof CFG!=='undefined') ? `Цель — 🎫 ${CFG.TICKET_PTS} очков за ${CFG.DAYS} дней. Набрал — билет в Россию твой.` : '';
+    const lesson=onboardingSlides();
     root.innerHTML = `<div class="ob-card">
       <button class="ob-skip" type="button">Пропустить</button>
-      <div class="ob-track">${ONBOARD_SLIDES.map((s,i)=>`
+      <div class="ob-track">${lesson.map((s,i)=>`
         <section class="ob-slide" data-i="${i}" aria-hidden="${i?'true':'false'}">
-          <div class="ob-step">Шаг ${i+1} из ${ONBOARD_SLIDES.length}</div>
+          <div class="ob-step">Шаг ${i+1} из ${lesson.length}</div>
           <div class="ob-art">${s.art}</div>
           <h2 class="ob-title">${s.title}</h2>
           <p class="ob-text">${s.text}</p>
-          ${s.goal?`<p class="ob-goal">${goal}</p>`:''}
+
         </section>`).join('')}</div>
-      <div class="ob-dots">${ONBOARD_SLIDES.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
+      <div class="ob-dots">${lesson.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
       <button class="ob-next bad" type="button">Дальше</button>
     </div>`;
     document.body.append(root);
     const slides=[...root.querySelectorAll('.ob-slide')], dots=[...root.querySelectorAll('.ob-dots i')];
     const next=root.querySelector('.ob-next');
-    let at=0;
+    let at=0,upgradeTimers=[];
+    const stopDemo=()=>{upgradeTimers.forEach(clearTimeout);upgradeTimers=[];};
+    const runUpgrade=section=>{
+      stopDemo();const card=section.querySelector('.ob-property');if(!card)return;
+      card.classList.remove('upgrading','upgraded');
+      card.querySelectorAll('[data-before]').forEach(el=>el.textContent=el.dataset.before);
+      const button=card.querySelector('button');button.disabled=true;
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.classList.add('upgrading');
+      upgradeTimers.push(setTimeout(()=>{
+        card.querySelectorAll('[data-after]').forEach(el=>el.textContent=el.dataset.after);
+        card.classList.add('upgraded');card.classList.remove('upgrading');button.disabled=false;
+      },reduced?0:280));
+    };
     const show=i=>{
       at=Math.max(0,Math.min(slides.length-1,i));
       slides.forEach((s,k)=>{s.classList.toggle('on',k===at);s.setAttribute('aria-hidden',String(k!==at));});
       dots.forEach((d,k)=>d.classList.toggle('on',k===at));
       next.textContent = at===slides.length-1 ? 'Поехали!' : 'Дальше';
+      stopDemo();
+      const demo=slides[at].querySelector('.ob-property');
+      if(demo){demo.classList.remove('upgrading','upgraded');demo.querySelectorAll('[data-before]').forEach(el=>el.textContent=el.dataset.before);const button=demo.querySelector('button');button.disabled=false;button.onclick=()=>runUpgrade(slides[at]);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)upgradeTimers.push(setTimeout(()=>runUpgrade(slides[at]),1300));}
+
     };
-    const finish=()=>{ root.classList.add('out'); setTimeout(()=>{root.remove();resolve();},220); };
+    const finish=()=>{ stopDemo();root.classList.add('out'); setTimeout(()=>{root.remove();resolve();},220); };
     next.onclick=()=> at===slides.length-1 ? finish() : show(at+1);
     root.querySelector('.ob-skip').onclick=finish;
     dots.forEach(d=>d.onclick=()=>show(+d.dataset.i));
@@ -785,3 +798,8 @@ function streetPassTip(){
   const mount=()=>{document.body.append(btn);paint();};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
+
+// Income amount is still credited by the rules; this is one visual coin per passed cell.
+function streetPassCoin(tile){
+  if(MobileHost.ready)MobileHost.send({action:'street_coin',tile});
+}

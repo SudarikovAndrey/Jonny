@@ -57,5 +57,15 @@
 .exit{position:absolute;right:28px;top:18px;width:94px;height:94px;border:0;padding:0;background:none;filter:drop-shadow(0 5px 1px #17100b)}.exit:active{transform:translateY(4px)}
 #status{right:38px;top:1592px;font-size:27px}
 
-/* Host owns the resource header; keep the artwork close to it. */
-body{place-items:start center}#viewport{margin:0 auto}
+/* Center the table in the space below the shared resource header. */
+body{place-items:center}#viewport{margin:0 auto}
+
+/* The host backdrop fills spare height; only the illustration scales, uniformly. */
+html,body{background:#191713;overflow:hidden}.embedded,.embedded body{background:transparent}
+#table{background:none}
+#table::before{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;background:url('assets/table.webp') 0 0/100% 100%;mask-image:linear-gradient(to bottom,transparent,#000 80px,#000 calc(100% - 80px),transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 80px,#000 calc(100% - 80px),transparent)}
+
+html.embedded{background:linear-gradient(to bottom,#070605b3,transparent 22%,transparent 75%,#0b07044d),url('../assets/minigames/dark-wood-v1.webp');background-size:100% var(--room-height,100dvh);background-position:center bottom;background-repeat:no-repeat;background-color:#130c07}
+html.embedded body{background:transparent}
+
+#croupier-canvas{mask-image:linear-gradient(to bottom,transparent,#000 80px);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 80px)}
