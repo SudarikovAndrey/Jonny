@@ -160,11 +160,10 @@ settings=function(){
   windBtn.onclick=()=>{mobileWindMap=!mobileWindMap;MobileHost.send({action:'windmap',on:mobileWindMap});closeModal();};
   row.append(windBtn);
   // Отладка: переключить карту поля для просмотра; выбор помнится в этом браузере.
-  const maps=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['mainstreet2','Мейн-стрит Б'],['capital','Столица']];
-  const nextMap=maps[(maps.findIndex(m=>m[0]===boardMap())+1)%maps.length];
-  const mapBtn=document.createElement('button');mapBtn.className='sec';mapBtn.textContent='Карта: '+nextMap[1];
-  mapBtn.onclick=()=>{setBoardMap(nextMap[0]);closeModal();};
-  row.append(mapBtn);
+  const mapSel=document.createElement('select');mapSel.className='sec map-select';mapSel.setAttribute('aria-label','Карта поля');
+  mapSel.innerHTML=BOARD_MAPS.map(([id,name])=>`<option value="${id}"${id===boardMap()?' selected':''}>Карта: ${name}</option>`).join('');
+  mapSel.onchange=()=>{setBoardMap(mapSel.value);closeModal();};
+  row.append(mapSel);
   $('card').append(row);
   const cameras=document.createElement('div');cameras.className='mbtns';
   for(const [label,action] of [['Обзор поля','overview'],['К Джонни','home']]){
@@ -419,6 +418,8 @@ function placeDiceResult(el){
 }
 
 // Карта поля (board.html?map=…): Бруклин по умолчанию, остальные — для просмотра.
+// Список синхронен с src/board/sites.js.
+const BOARD_MAPS=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['kansas','Канзас'],['vegas','Лас-Вегас'],['paloalto','Пало-Альто'],['sanfrancisco','Сан-Франциско'],['losangeles','Лос-Анджелес'],['manhattan','Манхэттен'],['liberty','Остров Свободы']];
 function boardMap(){try{return localStorage.getItem('americanboy_board_map')||'brooklyn';}catch(e){return 'brooklyn';}}
 function setBoardMap(id){
   try{localStorage.setItem('americanboy_board_map',id);}catch(e){}

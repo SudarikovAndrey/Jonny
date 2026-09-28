@@ -7,7 +7,7 @@
  if(typeof module!=='undefined'&&module.exports)module.exports={progressModel};
  if(typeof document==='undefined')return;
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const names={brooklyn:'Бруклин',mainstreet:'Мейн-стрит',capital:'Столица',mainstreet2:'Мейн-стрит Б'};
+ const names=Object.fromEntries(typeof BOARD_MAPS!=='undefined'?BOARD_MAPS:[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит']]);
  const mapName=()=>MAP1?'Мейн-стрит':names[boardMap()]||META.maps[(S.meta?.map||5)-1]||'Бруклин';
  function current(){return {...progressModel(S.pts,CFG.MILESTONES),name:mapName(),unit:'очков'};}
  function render(tabs){
