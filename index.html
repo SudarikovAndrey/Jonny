@@ -765,7 +765,7 @@ function positionTip(){
   $('modal').classList.toggle('has-tip',modalOpen);
   document.documentElement.style.setProperty('--tip-space',modalOpen?h+16+'px':'0px');
 }
-function showTip(text){if($('helpDialog').open)return;const toastEl=$('toast');clearTimeout(toastT);toastEl.style.opacity=0;toastEl.style.pointerEvents='none';const el=$('tip');el.textContent='💡 '+text;el.hidden=false;document.body.classList.add('coach-tip-open');positionTip();fitCard();clearTimeout(tipT);tipT=setTimeout(hideTip,15000);}
+function showTip(text){if($('helpDialog').open)return;if(window.PropertyUpgradeFx?.busy){clearTimeout(tipT);tipT=setTimeout(()=>showTip(text),220);return;}const toastEl=$('toast');clearTimeout(toastT);toastEl.style.opacity=0;toastEl.style.pointerEvents='none';const el=$('tip');el.textContent='💡 '+text;el.hidden=false;document.body.classList.add('coach-tip-open');positionTip();fitCard();clearTimeout(tipT);tipT=setTimeout(hideTip,15000);}
 function hideTip(){$('tip').hidden=true;document.body.classList.remove('coach-tip-open');clearTimeout(tipT);$('modal').classList.remove('has-tip');document.documentElement.style.setProperty('--tip-space','0px');}
 function helpBtn(text){return `<button class="qm" data-h="${text.replace(/"/g,'&quot;')}" aria-label="Объяснить" aria-haspopup="dialog" onclick="openHelp('start',false,this.dataset.h)">?</button>`;}
 function hintHtml(id,text){if(S.tips[id])return '';S.tips[id]=true;save();setTimeout(()=>showTip(text),30);return '';}
@@ -3465,7 +3465,8 @@ showTip=function(...args){
  paperOriginalTip(...args);PaperMotion.enter($('tip'),'small');
 };
 hideTip=function(){
- const el=$('tip');if(el.hidden||paperTipClosing)return;
+ const el=$('tip');
+ if(el.hidden||paperTipClosing){document.body.classList.remove('coach-tip-open');paperOriginalHideTip();return;}
  clearTimeout(tipT);paperTipClosing=true;el.style.pointerEvents='none';
  // Free the world immediately; only the departing paper remains for 130 ms.
  document.body.classList.remove('coach-tip-open');
@@ -5343,5 +5344,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=49c304a9";</script><script src="shipment-event.js?v=7e9b88cf"></script><script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=c12485a7"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=ec574a88"></script><script src="top-hud.js?v=57eead6b"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=2aad3806"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
+<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=49c304a9";</script><script src="shipment-event.js?v=7e9b88cf"></script><script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=ec574a88"></script><script src="top-hud.js?v=57eead6b"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=2aad3806"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
 </html>

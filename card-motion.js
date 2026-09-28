@@ -75,7 +75,8 @@ showTip=function(...args){
  paperOriginalTip(...args);PaperMotion.enter($('tip'),'small');
 };
 hideTip=function(){
- const el=$('tip');if(el.hidden||paperTipClosing)return;
+ const el=$('tip');
+ if(el.hidden||paperTipClosing){document.body.classList.remove('coach-tip-open');paperOriginalHideTip();return;}
  clearTimeout(tipT);paperTipClosing=true;el.style.pointerEvents='none';
  // Free the world immediately; only the departing paper remains for 130 ms.
  document.body.classList.remove('coach-tip-open');

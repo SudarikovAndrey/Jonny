@@ -93,7 +93,10 @@ window.PropertyUpgradeFx=(()=>{
   };
   // Keep the old face visible while the incoming art decodes; never flash the new sheet early.
   const incoming=after.node.querySelector('.property-illustration');
-  Promise.resolve(incoming?.decode?.()).catch(()=>{}).then(()=>{frame=requestAnimationFrame(begin);});
+  // A decoded image is nice to have, but it is not allowed to hold the sheet
+  // turn forever when a browser keeps an image decode promise pending.
+  const decode=Promise.resolve(incoming?.decode?.()).catch(()=>{});
+  Promise.race([decode,new Promise(resolve=>setTimeout(resolve,420))]).then(()=>{frame=requestAnimationFrame(begin);});
  }
  card.addEventListener('click',event=>{
   const button=event.target.closest('button');
