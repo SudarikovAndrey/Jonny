@@ -153,7 +153,11 @@ window.ShipmentEvent=(()=>{
   const images=[ART+'container-open.webp',ART+'door.webp',ART+'cargo-crate.webp',...new Set(plan.map(p=>`assets/goods/${p.id}.webp`))];
   // Decode before the first flight; a failed asset must never lock the result.
   const ready3d=import(window.SHIPMENT_STAGE_URL||'./shipment-stage.js').then(m=>m.create(dialog.querySelector('.shipment-stage'),{plan,units:data.units})).then(stage=>{if(disposed){stage.dispose();return;}stage3d=stage;dialog.querySelector('.shipment-stage>svg').style.display='none';paint(time);}).catch(e=>console.warn('Shipment 3D unavailable, using painted fallback',e));
-  Promise.all([ready3d,Promise.race([Promise.all(images.map(src=>{const im=new Image();im.src=src;return im.decode().catch(()=>{});})),new Promise(r=>setTimeout(r,1600))])]).then(()=>{
+  // The painted fallback is the authoritative animation.  A WebGL import or
+  // scene creation can be delayed by a cold mobile tab; it must never hold the
+  // whole dialog (and its body blur) open indefinitely.
+  const ready3dOrTimeout=Promise.race([ready3d,new Promise(r=>setTimeout(r,900))]);
+  Promise.all([ready3dOrTimeout,Promise.race([Promise.all(images.map(src=>{const im=new Image();im.src=src;return im.decode().catch(()=>{});})),new Promise(r=>setTimeout(r,1600))])]).then(()=>{
    if(disposed||finished)return;if(input.previewAt!==undefined){time=Number(input.previewAt)||0;paint(time);return;}lastStamp=performance.now();if(reduced.matches||input.reduceMotion||CFG.SPEED>=100)skip();else frame=requestAnimationFrame(tick);
   });
   return promise;
