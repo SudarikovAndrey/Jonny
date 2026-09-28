@@ -3,14 +3,14 @@
 // здесь только раскладка. Карточки по две в ряд, у каждой — картинка, объём,
 // короткая подпись и цена снизу во всю ширину.
 
+// Each pack is a single painted transparent asset, not a pile of UI icons.
 var SHOP_ART={
-  rolls:['assets/icons/die.webp','assets/icons/die.webp'],
-  soft:[['assets/icons/soft.webp'],['assets/icons/coins.webp'],['assets/icons/coins.webp','assets/icons/money.webp']],
-  hard:[['gem'],['gem','gem'],['gem','gem','gem'],['gem','gem','gem','gem']],
+  rolls:'rolls',
+  soft:['coins-small','coins-medium','coins-large'],
+  hard:['gems-small','gems-medium','gems-large','gems-max'],
 };
-function shopPile(srcs){
-  const list=srcs.map(s=>s==='gem'?'assets/icons/gem-clean.webp':s);
-  return `<span class="shop-pile n${list.length}" aria-hidden="true">${list.map((s,i)=>`<img src="${s}" alt="" style="--i:${i}">`).join('')}</span>`;
+function shopProduct(name){
+  return `<img class="shop-product" src="assets/shop/${name}.webp" alt="" decoding="async" draggable="false">`;
 }
 const shopGem='<img class="shop-gem" src="assets/icons/gem-clean.webp" alt="">';
 // Выгода крупного пакета против самого малого в той же линейке.
@@ -30,18 +30,18 @@ shopHard=async function(){ track('window',{w:'hard_shop',hard:S.hard,day:S.day})
     const card=$('card');
     const price=CFG.HARD.overtime*Math.pow(2,S.overtime);
     const soft=CFG.SHOP_SOFT, hard=CFG.SHOP_HARD;
-    const rolls=shopCard({kind:'rolls',art:shopPile(SHOP_ART.rolls),amount:'+'+CFG.OVERTIME_ROLLS,unit:'ходов',
+    const rolls=shopCard({kind:'rolls',art:shopProduct(SHOP_ART.rolls),amount:'+'+CFG.OVERTIME_ROLLS,unit:'ходов',
       note:S.overtime?`потом ${shopGem}${price*2}`:'дорожает с каждой покупкой',
       off:S.hard<price,button:`<button class="hard shop-buy" id="shRolls" ${S.hard<price?'disabled':''}>${shopGem}${price}</button>`});
     const cash=soft.map((pk,i)=>{const amt=softPackAmount(pk.mult);
-      return shopCard({kind:'cash',art:shopPile(SHOP_ART.soft[i]||SHOP_ART.soft[2]),amount:amt.toLocaleString('ru-RU'),unit:'денег',
+      return shopCard({kind:'cash',art:shopProduct(SHOP_ART.soft[i]||SHOP_ART.soft[2]),amount:amt.toLocaleString('ru-RU'),unit:'денег',
         ribbon:i?shopBonus(amt,pk.hard,softPackAmount(soft[0].mult),soft[0].hard):'',off:S.hard<pk.hard,
         button:`<button class="hard shop-buy" data-soft="${i}" ${S.hard<pk.hard?'disabled':''}>${shopGem}${pk.hard}</button>`});}).join('');
-    const gems=hard.map((pk,i)=>shopCard({kind:'gems',art:shopPile(SHOP_ART.hard[i]||SHOP_ART.hard[3]),amount:pk.hard,unit:'кристаллов',
+    const gems=hard.map((pk,i)=>shopCard({kind:'gems',art:shopProduct(SHOP_ART.hard[i]||SHOP_ART.hard[3]),amount:pk.hard,unit:'кристаллов',
       ribbon:i?shopBonus(pk.hard,pk.rub,hard[0].hard,hard[0].rub):'',
       button:`<button class="shop-buy rub" data-pk="${i}">${pk.price}</button>`})).join('');
     card.className='card event-card shop-card';
-    card.innerHTML=`<header class="ev-head"><span class="ev-badge"><img src="assets/icons/shop.webp" alt=""></span>
+    card.innerHTML=`<header class="ev-head"><span class="ev-badge"><img src="assets/icons/nav-cart.webp" alt=""></span>
         <div class="ev-titles"><h2 class="ev-title">Магазин</h2><span class="ev-sub shop-wallet">у тебя ${shopGem}<b>${S.hard}</b></span></div>
         ${helpBtn('Кристаллы покупают ходы и наличные. Каждая покупка ходов за день удваивает цену следующей; в полночь цена сбрасывается.')}</header>
       <div class="ev-body shop-body">

@@ -1,0 +1,12 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Чайки — движение</title>
+<style>body{margin:0;background:#243f4b;color:#f2e3bd;font:16px Georgia}header{padding:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}button,select{font:inherit;padding:6px}canvas{display:block;width:100%;background:#abb6ac}input{width:220px}p{margin:12px}</style>
+<header><b>Чайки · полёт и планирование</b><button id="play">Пауза</button><select id="speed"><option value="1">Обычная скорость</option><option value=".25">×0.25</option></select><input id="time" type="range" min="0" max="96" step=".041667" value="6"><output id="label"></output></header><canvas id="study"></canvas><p>Два–три пролёта с разным ритмом. Внизу — девять фаз взмаха крупно.</p>
+<script type="module">
+import {createGullSprites,drawGulls} from './gulls-study.js';
+const sprites=createGullSprites(),canvas=document.querySelector('canvas'),c=canvas.getContext('2d'),range=document.querySelector('#time'),button=document.querySelector('#play');let t=6,playing=true,last=performance.now();
+button.onclick=()=>{playing=!playing;button.textContent=playing?'Пауза':'Продолжить'};
+range.oninput=()=>{t=+range.value;playing=false;button.textContent='Продолжить'};
+function tick(now){const w=canvas.clientWidth,h=Math.min(600,w*.65),d=devicePixelRatio;canvas.width=w*d;canvas.height=h*d;canvas.style.height=h+'px';c.setTransform(d,0,0,d,0,0);if(playing)t=(t+Math.min(.1,(now-last)/1000)*document.querySelector('#speed').value)%96;last=now;range.value=t;document.querySelector('#label').value=t.toFixed(1)+' с';
+c.fillStyle='#617c83';c.fillRect(0,0,w,h-95);drawGulls(c,t,(x,y)=>({x:x/1536*w,y:y/1024*(h-95)}),1.8,null,sprites);
+for(let i=0;i<9;i++){const size=Math.min(w/9,78);c.drawImage(sprites[i],(i+.5)*w/9-size/2,h-90,size,size*216/192)}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+</script></html>

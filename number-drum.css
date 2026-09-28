@@ -1,0 +1,8 @@
+/* The badge itself never moves. Only changed digits travel inside this aperture. */
+#card .lvl.number-drum{overflow:hidden;position:relative}
+.number-drum-face{display:inline-flex;align-items:center;vertical-align:middle;line-height:1.08;font-variant-numeric:tabular-nums;white-space:pre}
+.number-drum-cell{display:inline-block;position:relative;width:.68em;height:1.08em;line-height:1.08;overflow:hidden;vertical-align:middle;contain:paint}
+.number-drum-strip{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;will-change:transform}
+.number-drum-strip>span{display:block;height:1.08em;line-height:1.08;flex:none;text-align:center}
+.number-drum-readable{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.number-drum-strip{animation:none!important}}

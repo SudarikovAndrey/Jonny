@@ -27,10 +27,14 @@ function shopFrame(t,inner){
   const path=isPoint?PropertyArt.point(t.good||t.base,format):PropertyArt.business(t.i,stage,MAP1?'mainstreet':'brooklyn');
   const illustration=`<img class="property-illustration" src="${path}" alt="${title}" decoding="async">`;
   const c=$('card');
+  const previousLevel=!$('modal').hidden&&c.dataset.propertyId===String(t.i)?window.NumberDrum?.read(c.querySelector('.lvl')):'';
   $('modal').classList.add('mid');c.className='card bare illustrated-property print-property'+(!isPoint?' business-property':'');
   c.dataset.propertyId=String(t.i);c.dataset.propertyOwned=t.owner?'true':'false';
   c.innerHTML=`<div class="shop"><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;
   if(!isPoint){const level=c.querySelector('.lvl');if(level){level.textContent=MAP1?'1/1':`${t.level}/${CFG.BIZ.maxLevel}`;level.setAttribute('aria-label',MAP1?'Уровень 1 из 1':`Уровень ${t.level} из ${CFG.BIZ.maxLevel}`);}}
+  const levelBadge=c.querySelector('.lvl');
+  // The unified-upgrade observer writes the final display level before paint.
+  requestAnimationFrame(()=>{if(levelBadge?.isConnected&&c.contains(levelBadge))window.NumberDrum?.update(levelBadge,previousLevel);});
   $('xNo').onclick=()=>closeModal();paperSurface($('card').querySelector('.shop'));paintedClose($('xNo'));upgradeIcons($('card'));fitCard();
 }
 // Readable scrolling replaces automatic shrinking between the top and bottom HUD.
@@ -129,6 +133,28 @@ function decorateHelp(){
   const body=$('helpBody');
   if(body.querySelector('.help-steps')&&!body.querySelector('.help-scene'))body.insertAdjacentHTML('afterbegin',windowScene('help'));
   body.querySelectorAll('.help-action').forEach(enamelButton);
+  const steps=body.querySelector('.help-steps');
+  if(!steps)return;
+  const intro=body.querySelector('.help-scene')?.nextElementSibling;
+  if(intro?.tagName==='P')intro.classList.add('help-intro');
+  const icons=['shop','box','crate'];
+  steps.querySelectorAll('li').forEach((li,i)=>{
+    if(li.querySelector('.help-step-icon'))return;
+    const copy=li.querySelector('span');if(copy)copy.textContent=copy.textContent.replace('📦 ','');
+    const img=document.createElement('img');img.className='help-step-icon';img.alt='';img.src=`assets/icons/${icons[i]||'crate'}.webp`;li.prepend(img);
+  });
+  const sections={parcel:['crate','Поставка и очки'],money:['shop','Точки и улучшения'],time:['die','Ходы и новый день'],rewards:['nav-ticket-v2','Джонни и награды'],shop:['gem','Покупки и цены'],bank:['police','Полиция и банк']};
+  body.querySelectorAll('details').forEach(details=>{
+    const summary=details.querySelector('summary');if(!summary||summary.dataset.printed)return;
+    const key=details.id.replace('help-',''),entry=sections[key];
+    const title=entry?.[1]||summary.textContent.replace(/^[^А-Яа-яA-Za-z0-9]+/u,'');
+    const img=document.createElement('img');img.alt='';img.className='help-section-icon';
+    img.src=key==='bank'?'board/assets/symbols/police.svg':`assets/icons/${entry?.[0]||'crate'}.webp`;
+    const label=document.createElement('span');label.textContent=title;
+    summary.replaceChildren(img,label);summary.dataset.printed='1';
+  });
+  const note=body.querySelector(':scope > .parcel-note');
+  if(note)body.querySelector('#help-parcel')?.append(note);
 }
 function decorateWindows(){
   const card=$('card');

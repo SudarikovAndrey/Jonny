@@ -57,7 +57,7 @@ function passPremiumOffer(redraw,tabs){
  // Окно по навыку game-ui-designer: одно решение — купить или нет. Шапка-шильда,
  // корона на лучах, три выгоды плашками, цена на главной кнопке.
  layer.innerHTML=`<div class="pass-offer-paper">
-   <div class="po-hero"><span class="po-sun"></span><span class="po-crown">${passIcon('crown')}</span></div>
+   <div class="po-hero"><span class="po-sun"></span><span class="po-crown"><img src="assets/icons/nav-ticket-v2.webp" alt=""></span></div>
    <h2 class="po-title">Премиум</h2><p class="po-sub">награды на каждой ступени</p>
    <div class="po-list">
      <div class="po-row"><span class="po-ic">${passIcon('dice')}</span><span class="po-t"><b>+${rolls} ходов</b><small>за все ${BP.max} уровней</small></span></div>
@@ -79,69 +79,11 @@ function passPremiumOffer(redraw,tabs){
  $('passConfirm').focus();
 }
 
-// ===== Сцена покупки премиума (навык cartoon-animation) =====
-// 1) кнопка «вдавливается» — упреждение; 2) окно «выстреливает» короной вверх и
-// схлопывается; 3) корона по дуге вылетает в центр, раздувается с перелётом,
-// за ней крутятся лучи, из-под неё — конфетти и звёзды «на двойках»;
-// 4) шильда «ПРЕМИУМ ОТКРЫТ!» падает сверху штампом со сжатием;
-// 5) всё улетает в шапку пропуска, премиум-дорожка переворачивается плашками.
-function premiumCelebration(layer,after,waiting){
- const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- layer.inert=true;
- const paper=layer.querySelector('.pass-offer-paper'),btn=$('passConfirm'),crownEl=layer.querySelector('.po-crown');
- const from=crownEl.getBoundingClientRect();
- const stage=document.createElement('div');stage.className='prem-stage';
- stage.innerHTML=`<canvas class="prem-confetti"></canvas><span class="prem-rays"></span><span class="prem-crown">${passIcon('crown')}</span>
-  <div class="prem-plate"><b>Премиум открыт!</b>${waiting?`<small>+${waiting} ${waiting===1?'награда ждёт':waiting<5?'награды ждут':'наград ждут'}</small>`:''}</div>`;
- document.body.append(stage);
- GameFeedback?.sound?.('dance');
- if(reduced){stage.classList.add('reduced');setTimeout(()=>{stage.remove();layer.remove();after();},900);return;}
- const crown=stage.querySelector('.prem-crown'),rays=stage.querySelector('.prem-rays'),plate=stage.querySelector('.prem-plate');
- const W=innerWidth,H=innerHeight,cx=W/2,cy=H*0.42,size=Math.min(W*0.46,220);
- crown.style.width=crown.style.height=size+'px';rays.style.width=rays.style.height=size*2.4+'px';
- // 1. упреждение кнопки и окна
- btn.animate([{scale:1},{scale:.9,translate:'0 3px'},{scale:1.04},{scale:1}],{duration:260,easing:'ease-out'});
- paper.animate([{scale:1,rotate:'0deg'},{scale:.97,rotate:'-1deg',offset:.3},{scale:1.03,offset:.55},{scale:0,rotate:'8deg',opacity:0}],{duration:520,delay:160,easing:'cubic-bezier(.5,0,.6,1)',fill:'forwards'});
- crownEl.style.visibility='hidden';
- // 2. корона по дуге в центр: старт у маленькой короны окна
- const sx=from.left+from.width/2,sy=from.top+from.height/2,s0=from.width/size;
- crown.animate([
-   {transform:`translate(${sx-cx}px,${sy-cy}px) scale(${s0}) rotate(-8deg)`},
-   {transform:`translate(${(sx-cx)*.4}px,${(sy-cy)*.4-H*.16}px) scale(${s0*1.6}) rotate(14deg)`,offset:.45},
-   {transform:'translate(0,0) scale(1.18,.82) rotate(0deg)',offset:.8},
-   {transform:'translate(0,0) scale(.94,1.08)',offset:.9},
-   {transform:'translate(0,0) scale(1)'}],{duration:760,delay:260,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'});
- rays.animate([{opacity:0,transform:'scale(.2) rotate(0deg)'},{opacity:1,transform:'scale(1.08) rotate(40deg)',offset:.35},{opacity:1,transform:'scale(1) rotate(160deg)'}],{duration:2400,delay:760,easing:'ease-out',fill:'forwards'});
- // 4. шильда штампом
- plate.animate([{opacity:0,transform:'translate(-50%,-160px) rotate(-10deg) scale(1.3)'},{opacity:1,transform:'translate(-50%,6px) rotate(-3deg) scale(1.12,.84)',offset:.55},{transform:'translate(-50%,-4px) rotate(-3deg) scale(.96,1.05)',offset:.78},{opacity:1,transform:'translate(-50%,0) rotate(-3deg) scale(1)'}],{duration:520,delay:1080,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
- setTimeout(()=>GameFeedback?.sound?.('joy'),1100);
- // 3. конфетти и звёзды на холсте, время квантуется по 1/12 с — «на двойках»
- const cv=stage.querySelector('.prem-confetti'),dpr=Math.min(devicePixelRatio||1,2);cv.width=W*dpr;cv.height=H*dpr;
- const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
- const cols=['#c43a2d','#f0c44e','#243f4b','#e9d8ae','#5c8f47'],bits=[];
- const burst=(n,spd)=>{for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=spd*(0.5+Math.random());bits.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-spd*0.6,r:5+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*14,c:cols[i%cols.length],star:i%5===0,life:1.6+Math.random()*.8});}};
- setTimeout(()=>burst(70,560),980);setTimeout(()=>burst(40,420),1250);
- let last=performance.now(),acc=0,alive=true;
- const tick=now=>{if(!alive)return;const dt=Math.min(.05,(now-last)/1000);last=now;acc+=dt;
-  if(acc>=1/12){const step=acc;acc=0;ctx.clearRect(0,0,W,H);
-   for(const b of bits){b.vy+=900*step;b.vx*=.985;b.x+=b.vx*step;b.y+=b.vy*step;b.rot+=b.vr*step;b.life-=step;if(b.life<=0)continue;
-    ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot);ctx.globalAlpha=Math.min(1,b.life*2);ctx.fillStyle=b.c;ctx.strokeStyle='#2a2118';ctx.lineWidth=2;
-    if(b.star){ctx.beginPath();for(let k=0;k<10;k++){const rr=k%2?b.r*.45:b.r*1.2,aa=k*Math.PI/5;ctx.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr);}ctx.closePath();ctx.fill();ctx.stroke();}
-    else{const w=b.r*2,h=b.r*1.1*Math.abs(Math.cos(b.rot*1.7))+1;ctx.fillRect(-w/2,-h/2,w,h);ctx.strokeRect(-w/2,-h/2,w,h);}
-    ctx.restore();}}
-  requestAnimationFrame(tick);};
- requestAnimationFrame(tick);
- // 5. уход: корона улетает в шапку пропуска, сцена гаснет, дорожка переворачивается
- setTimeout(()=>{
-  layer.remove();after();
-  const head=$('card').querySelector('.pass-header')?.getBoundingClientRect();
-  const tx=head?head.left+head.width*0.5-cx:0,ty=head?head.top+30-cy:-H*.4;
-  crown.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${tx*.3}px,${ty*.3+40}px) scale(1.1,.9)`,offset:.25},{transform:`translate(${tx}px,${ty}px) scale(.18)`,opacity:.9}],{duration:520,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'});
-  plate.animate([{opacity:1},{opacity:0,transform:'translate(-50%,-20px) rotate(-3deg) scale(.9)'}],{duration:260,fill:'forwards'});
-  rays.animate([{opacity:1},{opacity:0}],{duration:420,fill:'forwards'});
-  stage.animate([{background:'rgba(24,18,12,.62)'},{background:'rgba(24,18,12,0)'}],{duration:520,fill:'forwards'});
-  setTimeout(()=>{alive=false;stage.remove();queueMobileJoy('dance');},600);
- },2900);
+// The same illustrated marquee as a jackpot / map milestone.
+async function premiumCelebration(layer,after,waiting){
+ layer.inert=true;layer.remove();
+ await ShipmentEvent.celebrate({name:'Премиум открыт!',pts:0},{premium:true,waiting});
+ after();queueMobileJoy('dance');
 }
 // Премиум-плашки переворачиваются по очереди снизу вверх — видно, что открылось.
 function revealPremiumLane(){

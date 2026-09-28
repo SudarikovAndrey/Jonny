@@ -5,7 +5,7 @@ function mobileSync(){
   mobileCheckCash();
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:S.policePoseTile===S.pos||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
+    i:t.i,type:t.type,pot:t.type==='pot'?S.pot:0,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -739,6 +739,16 @@ function streetPassTip(){
       tip.style.bottom='auto';
       // offsetHeight excludes the entrance animation's scale and rotation.
       tip.style.top=Math.round(offset+Math.max(20,(height-tip.offsetHeight)/2))+'px';
+      return;
+    }
+    // Advice floats outside the card and never changes its centre or height.
+    if(card?.classList.contains('illustrated-property')){
+      modal.classList.remove('has-tip');modal.style.paddingTop='';
+      document.documentElement.style.setProperty('--tip-space','0px');
+      if(window.PropertyUpgradeFx?.busy){tip.hidden=true;return;}
+      const box=card.getBoundingClientRect(),h=tip.offsetHeight;
+      if(box.top<h+16){tip.hidden=true;return;}
+      tip.style.top=Math.max(8,box.top-h-8)+'px';tip.style.bottom='auto';
       return;
     }
     base.apply(this,arguments);

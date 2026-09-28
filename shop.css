@@ -1,7 +1,7 @@
 /* ===== Магазин карточками (shop.js) =====
    Каркас окна — событийный (ev-head / ev-body / ev-foot), внутри — сетка
    2 в ряд. Карточка — отпечатанный ценник: бумага, неровный чернильный
-   контур, печатный «солнечный» фон под картинкой, цена эмалевой кнопкой. */
+   контур, рисованный набор на бумаге, цена эмалевой кнопкой. */
 #card.shop-card{max-width:430px}
 #card.shop-card .ev-body{padding:12px 12px 70px}
 #card.shop-card .shop-wallet{display:flex;align-items:center;gap:4px;font-size:13px}
@@ -23,24 +23,11 @@
 .shop-item:nth-child(3n){rotate:.4deg}
 .shop-item:nth-child(4n){rotate:-.4deg}
 
-/* Картинка на печатном лучистом фоне. */
-.shop-art{position:relative;width:100%;height:74px;display:grid;place-items:center;margin-bottom:6px;
-  border-radius:9px 7px 10px 8px;border:1.5px solid #2a211899;overflow:hidden;
-  background:repeating-conic-gradient(from -4deg at 50% 62%,#f6d98a 0 7deg,#f0cb6c 7deg 14deg);
-  box-shadow:inset 0 -9px 0 #c99a3230}
-.shop-item.gems .shop-art{background:repeating-conic-gradient(from -4deg at 50% 62%,#bcd3db 0 7deg,#a8c2cc 7deg 14deg);box-shadow:inset 0 -9px 0 #243f4b26}
-.shop-item.rolls .shop-art{background:repeating-conic-gradient(from -4deg at 50% 62%,#f0c9b2 0 7deg,#e8b69b 7deg 14deg);box-shadow:inset 0 -9px 0 #a9272026}
-
-.shop-pile{position:relative;display:block;width:86px;height:62px}
-.shop-pile img{position:absolute;width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 0 #2a211855)}
-.shop-pile.n1 img{left:17px;top:5px;width:54px;height:54px}
-.shop-pile.n2 img:nth-child(1){left:6px;top:10px}.shop-pile.n2 img:nth-child(2){left:30px;top:2px}
-.shop-item.rolls .shop-pile.n2 img:nth-child(1){rotate:-12deg}.shop-item.rolls .shop-pile.n2 img:nth-child(2){rotate:9deg;left:32px;top:6px}
-.shop-pile.n3 img{width:44px;height:44px}
-.shop-pile.n3 img:nth-child(1){left:2px;top:16px}.shop-pile.n3 img:nth-child(2){left:40px;top:16px}.shop-pile.n3 img:nth-child(3){left:21px;top:1px}
-.shop-pile.n4 img{width:42px;height:42px}
-.shop-pile.n4 img:nth-child(1){left:-2px;top:19px}.shop-pile.n4 img:nth-child(2){left:44px;top:19px}
-.shop-pile.n4 img:nth-child(3){left:12px;top:2px}.shop-pile.n4 img:nth-child(4){left:32px;top:0}
+/* Painted products sit directly on the printed card stock. */
+#card.shop-card .shop-art{position:relative;width:100%;height:96px;display:grid;place-items:center;margin-bottom:6px;
+  border:0;border-radius:0;overflow:visible;background:none;box-shadow:none;filter:none}
+#card.shop-card .shop-product{position:absolute;inset:0;display:block;width:100%;height:100%;max-height:100%;object-fit:contain;
+  filter:drop-shadow(0 2px 1px #51371030);pointer-events:none;user-select:none}
 
 .shop-amount{font-family:var(--num);font-weight:800;font-size:25px;line-height:1;color:#2a2118;white-space:nowrap}
 .shop-unit{font-size:12.5px;line-height:1.2;color:#4b4132;margin-top:2px}
@@ -56,7 +43,7 @@
 #card .shop-item .shop-unit:has(+.shop-note){margin-bottom:0}
 #card .shop-item button.shop-buy .shop-gem{width:20px;height:18px}
 #card .shop-item button.shop-buy.rub{font-size:17px}
-.shop-item.off .shop-art{filter:saturate(.55)}
+
 
 /* Выгода — красная бирка, как наклейка на ценнике. */
 .shop-ribbon{position:absolute;z-index:2;top:-8px;right:-6px;padding:3px 7px 4px;rotate:5deg;
@@ -66,7 +53,7 @@
 #card .shop-proto{position:relative;z-index:1;margin:12px 4px 0;font-size:12px;line-height:1.35;color:#3c3325;text-align:center}
 
 @media (max-width:350px){
-  .shop-grid{gap:8px}.shop-art{height:64px}.shop-pile{transform:scale(.86)}
+  .shop-grid{gap:8px}#card.shop-card .shop-art{height:82px}
   .shop-amount{font-size:21px}#card .shop-item button.shop-buy{font-size:16px}
   .shop-ribbon{font-size:10px;padding:3px 5px}
 }

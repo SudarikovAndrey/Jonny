@@ -1,0 +1,12 @@
+/* Clear varnish reflects a warm white strip; no glow on the surrounding paper. */
+.spot-varnish{display:none;position:absolute;pointer-events:none!important;overflow:hidden;opacity:0;z-index:4;isolation:isolate}
+.varnish-study-on .spot-varnish{display:block}
+.spot-varnish-art{mask-size:contain;mask-position:center;mask-repeat:no-repeat;mask-mode:alpha;-webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat}
+.spot-varnish>i{display:block;position:absolute;inset:-50% -70%;background:linear-gradient(112deg,transparent 36%,#fff4cf14 43%,#fff9e572 48%,#fffff5 50%,#fff9e575 52%,#fff4d51a 57%,transparent 64%);transform:translateX(-65%);pointer-events:none}
+.varnish-button{position:relative}
+.spot-varnish-button{inset:4px;border-radius:inherit;z-index:3}
+.varnish-button:disabled .spot-varnish{display:none}
+.varnish-review-controls{position:fixed;left:12px;bottom:12px;display:flex;gap:6px;z-index:96;padding:5px;background:#29261fe8;border:1px solid #c3ad7f;border-radius:9px;box-shadow:0 4px 14px #0005}
+.varnish-review-controls button{padding:8px 11px;min-height:36px;border:1px solid #8c7957;border-radius:5px;box-shadow:none;background:#eee0ba;color:#30271e;font:700 12px/1.1 Bitter,Georgia,serif}
+.varnish-review-controls button[aria-pressed=true]{background:#48633d;color:#fff0cd}
+@media(prefers-reduced-motion:reduce){.spot-varnish{display:none!important}}

@@ -29,7 +29,7 @@
     if(!S)return;
     const p=mapProgress(),el=$('bHub');
     el.className='chip hud-map';
-    el.innerHTML=`<span class="hud-map-heading"><strong>${esc(p.name)}</strong><b>${compactResource(p.value)}<small>/${compactResource(p.goal)}</small></b></span><span class="hud-map-track" role="progressbar" aria-label="Прогресс карты ${esc(p.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p.percent)}"><i style="width:${p.percent}%"></i></span>`;
+    el.innerHTML=`<span class="hud-map-heading"><strong>${esc(p.name)}</strong><svg class="hud-map-city" viewBox="1090 262 525 210" aria-hidden="true" focusable="false"><image href="assets/icons/hud-map-paper.webp" width="1997" height="788"/></svg><b>${compactResource(p.value)}<small>/${compactResource(p.goal)}</small></b></span><span class="hud-map-track" role="progressbar" aria-label="Прогресс карты ${esc(p.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p.percent)}"><i style="width:${p.percent}%"></i></span>`;
     el.setAttribute('aria-label',`${p.name}: ${p.value} из ${p.goal} ${p.unit}`);
   };
   const openTicket=()=>{if(!moving)eventHub('ticket');};

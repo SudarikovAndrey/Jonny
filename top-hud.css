@@ -9,11 +9,12 @@
 .hud-gear svg{display:block;width:100%;height:100%}
 #top #bJohnnyTop::after{display:none}
 #top #bHelp{width:36px;height:37px;min-height:37px;padding:0;border:1.5px solid #30281e;border-radius:50% 46% 49% 48%;background:#f0dfb5 url(assets/print/card-stock.webp) center/250px;box-shadow:inset 0 0 0 2px #faedce,inset 0 0 0 2.5px #9e8558,0 2px #30281e;color:#252019;font:900 26px/1 Bitter,Georgia,serif}
-#top #bHub.hud-map{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;gap:5px;width:100%;min-width:0;height:50px;min-height:50px;padding:7px 16px 8px;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;color:var(--hud-ink);text-align:left;filter:none}
-#top #bHub.hud-map::before{content:'';display:block;position:absolute;inset:-1px -4px -3px;z-index:-1;pointer-events:none;background:url(assets/icons/hud-map-paper.webp) center 51%/100% 245% no-repeat;border:0;transform:none;opacity:1;clip-path:none}
+#top #bHub.hud-map{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;gap:5px;width:100%;min-width:0;height:50px;min-height:50px;padding:7px 16px 8px;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;color:var(--hud-ink);text-align:left;filter:none;container-type:inline-size}
+#top #bHub.hud-map::before{content:'';display:block;position:absolute;inset:-1px -4px -3px;z-index:-1;pointer-events:none;background:url(assets/icons/hud-map-paper-clean.webp) center 51%/100% 245% no-repeat;border:0;transform:none;opacity:1;clip-path:none}
 #top #bHub.hud-map::after{display:none}
-#top .hud-map-heading{display:flex;align-items:baseline;justify-content:space-between;gap:5px;width:100%;min-width:0}
-#top .hud-map-heading strong{font:900 21px/1.1 Bitter,Georgia,serif;text-transform:uppercase;white-space:nowrap;letter-spacing:-.5px;text-shadow:.2px .2px currentColor}
+#top .hud-map-heading{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr) max-content;align-items:center;gap:6px;width:100%;min-width:0}
+#top .hud-map-city{display:block;justify-self:center;width:100%;max-width:76px;height:30px;min-width:0;overflow:hidden;mix-blend-mode:multiply;filter:grayscale(1) contrast(2) brightness(1.05);opacity:.65;mask-image:radial-gradient(ellipse at center,#000 35%,transparent 74%)}
+#top .hud-map-heading strong{font:900 21px/1.1 Bitter,Georgia,serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.5px;text-shadow:.2px .2px currentColor}
 #top #bHub .hud-map-heading b{font:900 27px/.95 Bitter,Georgia,serif;white-space:nowrap;flex:none;letter-spacing:-.8px}
 #top #bHub .hud-map-heading small{font:900 20px/1 Bitter,Georgia,serif;color:#82714c;opacity:1;letter-spacing:-.6px}
 #top .hud-map-track{height:9px;width:100%;display:block;overflow:hidden;border:1.5px solid #392e20;border-radius:10px;background:#d7cba7;box-shadow:inset 0 1px #8c785647;flex:none}
@@ -47,5 +48,10 @@
 @media(max-width:360px){#top .bar0{padding-left:64px;grid-template-columns:minmax(0,1fr) 30px;gap:3px}#top #bJohnnyTop{width:58px}#top #bJohnnyTop .hud-portrait{width:62px}#top #bJohnnyTop small{font-size:12px;left:2px;right:0}#top .hud-map-heading strong{font-size:14px;letter-spacing:-.4px}#top #bHub .hud-map-heading b{font-size:21px}#top #bHub .hud-map-heading small{font-size:15px}#top .cur{min-width:60px;gap:3px;padding:0 3px}#top .cur b{font-size:19px}#top .cur .ic{width:22px!important}#top #qrow .qchip{font-size:11px;gap:2px;padding-left:5px;padding-right:4px}#top #qrow .qchip::before{width:19px;height:22px}#top .bar1.hud-wide-balances{margin-left:0;padding-top:23px}}
 @media(orientation:landscape) and (max-height:500px){#top{padding-top:calc(var(--hud-safe-top) + 5px)}}
 
-/* Alpha-shaped shadows hug the HUD pieces, never the full desktop viewport. */
-#top .bar0,#top .bar1,#top #qrow,#top #m1Tasks{filter:drop-shadow(0 2px 7px #14120d80) drop-shadow(0 0 2px #14120d47)}
+/* A close contact shadow and a soft halo follow each individual paper cutout.
+   Keep row wrappers clear: no continuous dark strip behind the desktop HUD. */
+#top{--hud-piece-shadow:drop-shadow(0 1px 2px #14110db3) drop-shadow(0 3px 5px #14110d80) drop-shadow(0 0 9px #14110d45)}
+#top #bJohnnyTop,#top #bHub.hud-map,#top #bHelp,#top .cur,#top #qrow .qchip,#top #m1Tasks .qchip{filter:var(--hud-piece-shadow)}
+
+/* On narrow banners the decorative engraving yields to the map name and score. */
+@container(max-width:210px){#top .hud-map-heading{grid-template-columns:minmax(0,1fr) max-content}#top .hud-map-city{display:none}}

@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=8bb41ecd"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=bd4861bb"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=24c32559"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f45ad18"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=af283ccf"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=2b9c79e0"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=7a54b214"><link rel="stylesheet" href="mobile-windows.css?v=010fad2f"><link rel="stylesheet" href="battlepass.css?v=786b1943"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=03e15d2d"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=fd60f92b"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f2e9d5c"><link rel="stylesheet" href="number-drum.css?v=0e5f6a71"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=9ce5ef61"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=72222503"><link rel="stylesheet" href="shipment-event.css?v=960fbb8c"><link rel="stylesheet" href="help-print.css?v=f7e02872"><link rel="stylesheet" href="spot-varnish.css?v=c29b1bb8"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'34b49109'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var m=new URLSearchParams(location.search).get("map")==="1"?"mainstreet":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'e30b09ae'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -677,7 +677,7 @@ function openHelp(topic='start',welcome=false,context=''){
   else $('helpDone').onclick=closeHelp;
   if($('helpReplay'))$('helpReplay').onclick=()=>{closeHelp();openHelp('start',true);};
   if($('helpGuide'))$('helpGuide').onclick=()=>{S.tips.guideDismissed=false;S.tips.guideActive=true;save();closeHelp();render();};
-  dlg.showModal();dlg.scrollTop=0;
+  dlg.showModal();dlg.scrollTop=0;$('helpBody').scrollTop=0;
   track('help_open',{topic:context?'context':topic,welcome});
   if(!context&&topic!=='start'){const target=$('help-'+topic);if(target)target.scrollIntoView({block:'start'});}
   return new Promise(resolve=>{helpResolve=resolve;});
@@ -852,11 +852,7 @@ function payFine(m){m=Math.round(m);const take=fineTake(m);
   return take;}
 function openTo(){let m=13;CFG.ZONES.forEach(z=>{if(z.day<=S.day)m=z.to;});return m;}
 function lapLen(){return openTo()+1;}
-async function milestoneModal(m){ /* награда рубежа уходит в основную игру — так задумана связка ивента и кора */const i=CFG.MILESTONES.indexOf(m),rest=CFG.MILESTONES.slice(i+1);
-  const story=i===0?`«Уговор есть уговор. Бери билет, Джонни!» В конце недели он вступит в банду.`:i===1?`«С таким напарником можно расширяться!» Джонни получает редкий ранг.`:`«Теперь в Бруклине знают, кто тут главный!» Все награды твои — бейся за место в топе.`;
-  const cards=rest.length?`<p class="dim" style="margin:10px 0 4px">Следующая награда:</p><div class="ms3">${rest.map((r,k)=>`<div class="msc next"><span class="msi">${['🎫','🎖','🏆'][i+1+k]}</span><b>${r.pts}</b><span class="msn">${r.name}</span><small>${r.reward}</small></div>`).join('')}</div><p class="dim">Те же очки идут в пропуск и в топ.</p>`:'<p class="dim">Все награды взяты. Дальше — только топ.</p>';
-  track('milestone',{pts:m.pts,name:m.name});
-  await modal(`<h2>${['🎫','🎖','🏆'][i]} ${m.name}!</h2><p class="t">${story}</p><div class="row"><span class="n">Награда<small>${m.reward}</small></span></div>${cards}`,[{t:rest.length?'Погнали дальше':'Красава',v:1,cls:'ok'}]);}
+async function milestoneModal(m){track('milestone',{pts:m.pts,name:m.name});await ShipmentEvent.celebrate(m);}
 function nextMilestone(){return CFG.MILESTONES.find(m=>S.pts<m.pts)||null;}
 function reachedMilestones(){return CFG.MILESTONES.filter(m=>S.pts>=m.pts);}
 function slots(){return CFG.PARCEL_SLOTS+perk().slots+(S.extraSlots||0)+(S.bp&&S.bp.paid?BP.paidSlot:0);}
@@ -1683,8 +1679,8 @@ async function parcel(forced,catchUp){
     $('card').querySelectorAll('button[data-g][data-d]').forEach(b=>b.onclick=()=>{const g=b.dataset.g;box[g]=Math.max(0,box[g]+ +b.dataset.d);draw();});
     $('mAuto').onclick=()=>ParcelFill.run({card:$('card'),current:box,target:parcelAutoBox(1,k),render:next=>{box=next;draw();}});
     const mh=$('mSlotH'); if(mh)mh.onclick=()=>{if(spendHard(hp)){track('slot_buy',{cost:hp,cur:'hard',buys:(S.slotBuys||0)+1});S.extraSlots++;S.slotBuys=(S.slotBuys||0)+1;log(`Докупил место в фуре за 💎 ${hp}.`);draw();render();}};
-    $('mSend').onclick=()=>{const L0=level(),pBefore=S.pts,units=n*k;CFG.GOODS.forEach(g=>{if(box[g.id])fly(g.icon,AT.card(),AT.hub(),Math.min(box[g.id],4),{pulse:'bHub'});});CFG.GOODS.forEach(g=>takeGoods(g.id,box[g.id]*k));S.pts+=p;S.xp+=p;if(catchUp){S.catchups=(S.catchups||0)+1;}else S.parcelSent=true;S.stat.parcels++;S.dstat.pts+=p;qProg('parcel',p,true);earnStarter('shipment');
-      track('parcel',{units,slotsUsed:n,pts:p,max:R,slots:N,k,extra:S.extraSlots,forced:!!forced,catchUp:!!catchUp,box});log(`📦 Поставка ушла: ${units} шт, +${p} очков.`);closeModal(1);if(!catchUp&&p<R*0.6&&S.day<=3)setTimeout(()=>hint('fillTruck',`Поставка дала ${p} очков. Закупи больше товара — в следующий раз будет больше.`),1200);if(S.day>=CFG.DAYS)setTimeout(()=>toast('🏁 Последняя поставка ушла! Жми «Итоги» — деньги и точки тоже дадут очки.',6000),900);
+    $('mSend').onclick=async()=>{if(ShipmentEvent.busy)return;$('mSend').disabled=true;const L0=level(),pBefore=S.pts,units=n*k;CFG.GOODS.forEach(g=>takeGoods(g.id,box[g.id]*k));S.pts+=p;S.xp+=p;if(catchUp){S.catchups=(S.catchups||0)+1;}else S.parcelSent=true;S.stat.parcels++;S.dstat.pts+=p;qProg('parcel',p,true);earnStarter('shipment');
+      track('parcel',{units,slotsUsed:n,pts:p,max:R,slots:N,k,extra:S.extraSlots,forced:!!forced,catchUp:!!catchUp,box});log(`📦 Поставка ушла: ${units} шт, +${p} очков.`);save();render();await ShipmentEvent.play({box:{...box},k,units,points:p,before:pBefore,day:S.day,catchUp});closeModal(1);if(!catchUp&&p<R*0.6&&S.day<=3)setTimeout(()=>hint('fillTruck',`Поставка дала ${p} очков. Закупи больше товара — в следующий раз будет больше.`),1200);if(S.day>=CFG.DAYS)setTimeout(()=>toast('🏁 Последняя поставка ушла! Жми «Итоги» — деньги и точки тоже дадут очки.',6000),900);
       const L=level();
       {const b0=bpLevelAt(pBefore),b1=bpLevel();if(b1>b0)toast(`🎟 Пропуск Джонни: уровень ${b1} — есть что забрать`,3500);}
       (async()=>{const before=CFG.MILESTONES.filter(m=>pBefore>=m.pts).length;for(const m of CFG.MILESTONES.slice(before).filter(m=>S.pts>=m.pts))await milestoneModal(m);
@@ -2070,7 +2066,7 @@ function mobileSync(){
   mobileCheckCash();
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:S.policePoseTile===S.pos||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
+    i:t.i,type:t.type,pot:t.type==='pot'?S.pot:0,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?'$'+((S.slot&&S.slot.pot)||0):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -2806,6 +2802,16 @@ function streetPassTip(){
       tip.style.top=Math.round(offset+Math.max(20,(height-tip.offsetHeight)/2))+'px';
       return;
     }
+    // Advice floats outside the card and never changes its centre or height.
+    if(card?.classList.contains('illustrated-property')){
+      modal.classList.remove('has-tip');modal.style.paddingTop='';
+      document.documentElement.style.setProperty('--tip-space','0px');
+      if(window.PropertyUpgradeFx?.busy){tip.hidden=true;return;}
+      const box=card.getBoundingClientRect(),h=tip.offsetHeight;
+      if(box.top<h+16){tip.hidden=true;return;}
+      tip.style.top=Math.max(8,box.top-h-8)+'px';tip.style.bottom='auto';
+      return;
+    }
     base.apply(this,arguments);
     if(!card)return;
     const h=tip.offsetHeight;
@@ -2899,10 +2905,14 @@ function shopFrame(t,inner){
   const path=isPoint?PropertyArt.point(t.good||t.base,format):PropertyArt.business(t.i,stage,MAP1?'mainstreet':'brooklyn');
   const illustration=`<img class="property-illustration" src="${path}" alt="${title}" decoding="async">`;
   const c=$('card');
+  const previousLevel=!$('modal').hidden&&c.dataset.propertyId===String(t.i)?window.NumberDrum?.read(c.querySelector('.lvl')):'';
   $('modal').classList.add('mid');c.className='card bare illustrated-property print-property'+(!isPoint?' business-property':'');
   c.dataset.propertyId=String(t.i);c.dataset.propertyOwned=t.owner?'true':'false';
   c.innerHTML=`<div class="shop"><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;
   if(!isPoint){const level=c.querySelector('.lvl');if(level){level.textContent=MAP1?'1/1':`${t.level}/${CFG.BIZ.maxLevel}`;level.setAttribute('aria-label',MAP1?'Уровень 1 из 1':`Уровень ${t.level} из ${CFG.BIZ.maxLevel}`);}}
+  const levelBadge=c.querySelector('.lvl');
+  // The unified-upgrade observer writes the final display level before paint.
+  requestAnimationFrame(()=>{if(levelBadge?.isConnected&&c.contains(levelBadge))window.NumberDrum?.update(levelBadge,previousLevel);});
   $('xNo').onclick=()=>closeModal();paperSurface($('card').querySelector('.shop'));paintedClose($('xNo'));upgradeIcons($('card'));fitCard();
 }
 // Readable scrolling replaces automatic shrinking between the top and bottom HUD.
@@ -3001,6 +3011,28 @@ function decorateHelp(){
   const body=$('helpBody');
   if(body.querySelector('.help-steps')&&!body.querySelector('.help-scene'))body.insertAdjacentHTML('afterbegin',windowScene('help'));
   body.querySelectorAll('.help-action').forEach(enamelButton);
+  const steps=body.querySelector('.help-steps');
+  if(!steps)return;
+  const intro=body.querySelector('.help-scene')?.nextElementSibling;
+  if(intro?.tagName==='P')intro.classList.add('help-intro');
+  const icons=['shop','box','crate'];
+  steps.querySelectorAll('li').forEach((li,i)=>{
+    if(li.querySelector('.help-step-icon'))return;
+    const copy=li.querySelector('span');if(copy)copy.textContent=copy.textContent.replace('📦 ','');
+    const img=document.createElement('img');img.className='help-step-icon';img.alt='';img.src=`assets/icons/${icons[i]||'crate'}.webp`;li.prepend(img);
+  });
+  const sections={parcel:['crate','Поставка и очки'],money:['shop','Точки и улучшения'],time:['die','Ходы и новый день'],rewards:['nav-ticket-v2','Джонни и награды'],shop:['gem','Покупки и цены'],bank:['police','Полиция и банк']};
+  body.querySelectorAll('details').forEach(details=>{
+    const summary=details.querySelector('summary');if(!summary||summary.dataset.printed)return;
+    const key=details.id.replace('help-',''),entry=sections[key];
+    const title=entry?.[1]||summary.textContent.replace(/^[^А-Яа-яA-Za-z0-9]+/u,'');
+    const img=document.createElement('img');img.alt='';img.className='help-section-icon';
+    img.src=key==='bank'?'board/assets/symbols/police.svg':`assets/icons/${entry?.[0]||'crate'}.webp`;
+    const label=document.createElement('span');label.textContent=title;
+    summary.replaceChildren(img,label);summary.dataset.printed='1';
+  });
+  const note=body.querySelector(':scope > .parcel-note');
+  if(note)body.querySelector('#help-parcel')?.append(note);
 }
 function decorateWindows(){
   const card=$('card');
@@ -3148,7 +3180,7 @@ function passPremiumOffer(redraw,tabs){
  // Окно по навыку game-ui-designer: одно решение — купить или нет. Шапка-шильда,
  // корона на лучах, три выгоды плашками, цена на главной кнопке.
  layer.innerHTML=`<div class="pass-offer-paper">
-   <div class="po-hero"><span class="po-sun"></span><span class="po-crown">${passIcon('crown')}</span></div>
+   <div class="po-hero"><span class="po-sun"></span><span class="po-crown"><img src="assets/icons/nav-ticket-v2.webp" alt=""></span></div>
    <h2 class="po-title">Премиум</h2><p class="po-sub">награды на каждой ступени</p>
    <div class="po-list">
      <div class="po-row"><span class="po-ic">${passIcon('dice')}</span><span class="po-t"><b>+${rolls} ходов</b><small>за все ${BP.max} уровней</small></span></div>
@@ -3170,69 +3202,11 @@ function passPremiumOffer(redraw,tabs){
  $('passConfirm').focus();
 }
 
-// ===== Сцена покупки премиума (навык cartoon-animation) =====
-// 1) кнопка «вдавливается» — упреждение; 2) окно «выстреливает» короной вверх и
-// схлопывается; 3) корона по дуге вылетает в центр, раздувается с перелётом,
-// за ней крутятся лучи, из-под неё — конфетти и звёзды «на двойках»;
-// 4) шильда «ПРЕМИУМ ОТКРЫТ!» падает сверху штампом со сжатием;
-// 5) всё улетает в шапку пропуска, премиум-дорожка переворачивается плашками.
-function premiumCelebration(layer,after,waiting){
- const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- layer.inert=true;
- const paper=layer.querySelector('.pass-offer-paper'),btn=$('passConfirm'),crownEl=layer.querySelector('.po-crown');
- const from=crownEl.getBoundingClientRect();
- const stage=document.createElement('div');stage.className='prem-stage';
- stage.innerHTML=`<canvas class="prem-confetti"></canvas><span class="prem-rays"></span><span class="prem-crown">${passIcon('crown')}</span>
-  <div class="prem-plate"><b>Премиум открыт!</b>${waiting?`<small>+${waiting} ${waiting===1?'награда ждёт':waiting<5?'награды ждут':'наград ждут'}</small>`:''}</div>`;
- document.body.append(stage);
- GameFeedback?.sound?.('dance');
- if(reduced){stage.classList.add('reduced');setTimeout(()=>{stage.remove();layer.remove();after();},900);return;}
- const crown=stage.querySelector('.prem-crown'),rays=stage.querySelector('.prem-rays'),plate=stage.querySelector('.prem-plate');
- const W=innerWidth,H=innerHeight,cx=W/2,cy=H*0.42,size=Math.min(W*0.46,220);
- crown.style.width=crown.style.height=size+'px';rays.style.width=rays.style.height=size*2.4+'px';
- // 1. упреждение кнопки и окна
- btn.animate([{scale:1},{scale:.9,translate:'0 3px'},{scale:1.04},{scale:1}],{duration:260,easing:'ease-out'});
- paper.animate([{scale:1,rotate:'0deg'},{scale:.97,rotate:'-1deg',offset:.3},{scale:1.03,offset:.55},{scale:0,rotate:'8deg',opacity:0}],{duration:520,delay:160,easing:'cubic-bezier(.5,0,.6,1)',fill:'forwards'});
- crownEl.style.visibility='hidden';
- // 2. корона по дуге в центр: старт у маленькой короны окна
- const sx=from.left+from.width/2,sy=from.top+from.height/2,s0=from.width/size;
- crown.animate([
-   {transform:`translate(${sx-cx}px,${sy-cy}px) scale(${s0}) rotate(-8deg)`},
-   {transform:`translate(${(sx-cx)*.4}px,${(sy-cy)*.4-H*.16}px) scale(${s0*1.6}) rotate(14deg)`,offset:.45},
-   {transform:'translate(0,0) scale(1.18,.82) rotate(0deg)',offset:.8},
-   {transform:'translate(0,0) scale(.94,1.08)',offset:.9},
-   {transform:'translate(0,0) scale(1)'}],{duration:760,delay:260,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'});
- rays.animate([{opacity:0,transform:'scale(.2) rotate(0deg)'},{opacity:1,transform:'scale(1.08) rotate(40deg)',offset:.35},{opacity:1,transform:'scale(1) rotate(160deg)'}],{duration:2400,delay:760,easing:'ease-out',fill:'forwards'});
- // 4. шильда штампом
- plate.animate([{opacity:0,transform:'translate(-50%,-160px) rotate(-10deg) scale(1.3)'},{opacity:1,transform:'translate(-50%,6px) rotate(-3deg) scale(1.12,.84)',offset:.55},{transform:'translate(-50%,-4px) rotate(-3deg) scale(.96,1.05)',offset:.78},{opacity:1,transform:'translate(-50%,0) rotate(-3deg) scale(1)'}],{duration:520,delay:1080,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
- setTimeout(()=>GameFeedback?.sound?.('joy'),1100);
- // 3. конфетти и звёзды на холсте, время квантуется по 1/12 с — «на двойках»
- const cv=stage.querySelector('.prem-confetti'),dpr=Math.min(devicePixelRatio||1,2);cv.width=W*dpr;cv.height=H*dpr;
- const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
- const cols=['#c43a2d','#f0c44e','#243f4b','#e9d8ae','#5c8f47'],bits=[];
- const burst=(n,spd)=>{for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=spd*(0.5+Math.random());bits.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-spd*0.6,r:5+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*14,c:cols[i%cols.length],star:i%5===0,life:1.6+Math.random()*.8});}};
- setTimeout(()=>burst(70,560),980);setTimeout(()=>burst(40,420),1250);
- let last=performance.now(),acc=0,alive=true;
- const tick=now=>{if(!alive)return;const dt=Math.min(.05,(now-last)/1000);last=now;acc+=dt;
-  if(acc>=1/12){const step=acc;acc=0;ctx.clearRect(0,0,W,H);
-   for(const b of bits){b.vy+=900*step;b.vx*=.985;b.x+=b.vx*step;b.y+=b.vy*step;b.rot+=b.vr*step;b.life-=step;if(b.life<=0)continue;
-    ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot);ctx.globalAlpha=Math.min(1,b.life*2);ctx.fillStyle=b.c;ctx.strokeStyle='#2a2118';ctx.lineWidth=2;
-    if(b.star){ctx.beginPath();for(let k=0;k<10;k++){const rr=k%2?b.r*.45:b.r*1.2,aa=k*Math.PI/5;ctx.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr);}ctx.closePath();ctx.fill();ctx.stroke();}
-    else{const w=b.r*2,h=b.r*1.1*Math.abs(Math.cos(b.rot*1.7))+1;ctx.fillRect(-w/2,-h/2,w,h);ctx.strokeRect(-w/2,-h/2,w,h);}
-    ctx.restore();}}
-  requestAnimationFrame(tick);};
- requestAnimationFrame(tick);
- // 5. уход: корона улетает в шапку пропуска, сцена гаснет, дорожка переворачивается
- setTimeout(()=>{
-  layer.remove();after();
-  const head=$('card').querySelector('.pass-header')?.getBoundingClientRect();
-  const tx=head?head.left+head.width*0.5-cx:0,ty=head?head.top+30-cy:-H*.4;
-  crown.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${tx*.3}px,${ty*.3+40}px) scale(1.1,.9)`,offset:.25},{transform:`translate(${tx}px,${ty}px) scale(.18)`,opacity:.9}],{duration:520,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'});
-  plate.animate([{opacity:1},{opacity:0,transform:'translate(-50%,-20px) rotate(-3deg) scale(.9)'}],{duration:260,fill:'forwards'});
-  rays.animate([{opacity:1},{opacity:0}],{duration:420,fill:'forwards'});
-  stage.animate([{background:'rgba(24,18,12,.62)'},{background:'rgba(24,18,12,0)'}],{duration:520,fill:'forwards'});
-  setTimeout(()=>{alive=false;stage.remove();queueMobileJoy('dance');},600);
- },2900);
+// The same illustrated marquee as a jackpot / map milestone.
+async function premiumCelebration(layer,after,waiting){
+ layer.inert=true;layer.remove();
+ await ShipmentEvent.celebrate({name:'Премиум открыт!',pts:0},{premium:true,waiting});
+ after();queueMobileJoy('dance');
 }
 // Премиум-плашки переворачиваются по очереди снизу вверх — видно, что открылось.
 function revealPremiumLane(){
@@ -3523,14 +3497,14 @@ function dismissPaperOffer(layer,after){
 // здесь только раскладка. Карточки по две в ряд, у каждой — картинка, объём,
 // короткая подпись и цена снизу во всю ширину.
 
+// Each pack is a single painted transparent asset, not a pile of UI icons.
 var SHOP_ART={
-  rolls:['assets/icons/die.webp','assets/icons/die.webp'],
-  soft:[['assets/icons/soft.webp'],['assets/icons/coins.webp'],['assets/icons/coins.webp','assets/icons/money.webp']],
-  hard:[['gem'],['gem','gem'],['gem','gem','gem'],['gem','gem','gem','gem']],
+  rolls:'rolls',
+  soft:['coins-small','coins-medium','coins-large'],
+  hard:['gems-small','gems-medium','gems-large','gems-max'],
 };
-function shopPile(srcs){
-  const list=srcs.map(s=>s==='gem'?'assets/icons/gem-clean.webp':s);
-  return `<span class="shop-pile n${list.length}" aria-hidden="true">${list.map((s,i)=>`<img src="${s}" alt="" style="--i:${i}">`).join('')}</span>`;
+function shopProduct(name){
+  return `<img class="shop-product" src="assets/shop/${name}.webp" alt="" decoding="async" draggable="false">`;
 }
 const shopGem='<img class="shop-gem" src="assets/icons/gem-clean.webp" alt="">';
 // Выгода крупного пакета против самого малого в той же линейке.
@@ -3550,18 +3524,18 @@ shopHard=async function(){ track('window',{w:'hard_shop',hard:S.hard,day:S.day})
     const card=$('card');
     const price=CFG.HARD.overtime*Math.pow(2,S.overtime);
     const soft=CFG.SHOP_SOFT, hard=CFG.SHOP_HARD;
-    const rolls=shopCard({kind:'rolls',art:shopPile(SHOP_ART.rolls),amount:'+'+CFG.OVERTIME_ROLLS,unit:'ходов',
+    const rolls=shopCard({kind:'rolls',art:shopProduct(SHOP_ART.rolls),amount:'+'+CFG.OVERTIME_ROLLS,unit:'ходов',
       note:S.overtime?`потом ${shopGem}${price*2}`:'дорожает с каждой покупкой',
       off:S.hard<price,button:`<button class="hard shop-buy" id="shRolls" ${S.hard<price?'disabled':''}>${shopGem}${price}</button>`});
     const cash=soft.map((pk,i)=>{const amt=softPackAmount(pk.mult);
-      return shopCard({kind:'cash',art:shopPile(SHOP_ART.soft[i]||SHOP_ART.soft[2]),amount:amt.toLocaleString('ru-RU'),unit:'денег',
+      return shopCard({kind:'cash',art:shopProduct(SHOP_ART.soft[i]||SHOP_ART.soft[2]),amount:amt.toLocaleString('ru-RU'),unit:'денег',
         ribbon:i?shopBonus(amt,pk.hard,softPackAmount(soft[0].mult),soft[0].hard):'',off:S.hard<pk.hard,
         button:`<button class="hard shop-buy" data-soft="${i}" ${S.hard<pk.hard?'disabled':''}>${shopGem}${pk.hard}</button>`});}).join('');
-    const gems=hard.map((pk,i)=>shopCard({kind:'gems',art:shopPile(SHOP_ART.hard[i]||SHOP_ART.hard[3]),amount:pk.hard,unit:'кристаллов',
+    const gems=hard.map((pk,i)=>shopCard({kind:'gems',art:shopProduct(SHOP_ART.hard[i]||SHOP_ART.hard[3]),amount:pk.hard,unit:'кристаллов',
       ribbon:i?shopBonus(pk.hard,pk.rub,hard[0].hard,hard[0].rub):'',
       button:`<button class="shop-buy rub" data-pk="${i}">${pk.price}</button>`})).join('');
     card.className='card event-card shop-card';
-    card.innerHTML=`<header class="ev-head"><span class="ev-badge"><img src="assets/icons/shop.webp" alt=""></span>
+    card.innerHTML=`<header class="ev-head"><span class="ev-badge"><img src="assets/icons/nav-cart.webp" alt=""></span>
         <div class="ev-titles"><h2 class="ev-title">Магазин</h2><span class="ev-sub shop-wallet">у тебя ${shopGem}<b>${S.hard}</b></span></div>
         ${helpBtn('Кристаллы покупают ходы и наличные. Каждая покупка ходов за день удваивает цену следующей; в полночь цена сбрасывается.')}</header>
       <div class="ev-body shop-body">
@@ -5369,5 +5343,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="property-upgrade-fx.js?v=f380c3c3"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=6adea179"></script><script src="top-hud.js?v=7b0f653b"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=37a9084a"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
+<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=49c304a9";</script><script src="shipment-event.js?v=e18fcec1"></script><script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=c12485a7"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=ec574a88"></script><script src="top-hud.js?v=57eead6b"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=2aad3806"></script><script type="module" src="roll-button.js?v=c9d2eda2"></script></body>
 </html>

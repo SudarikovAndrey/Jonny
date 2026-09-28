@@ -1,16 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <!-- Inspection token: no character silhouette. Large glasses and a checked document. -->
-  <path d="M129 13C193 11 241 62 242 126s-46 117-112 117C65 244 15 195 14 130S63 15 129 13Z" fill="#f2e3bd" stroke="#30251c" stroke-width="10"/>
-  <path d="M55 60C93 20 166 21 203 63M46 182c38 47 118 52 165-2" fill="none" stroke="#b73c2c" stroke-width="9" stroke-linecap="round"/>
-  <g transform="rotate(-7 128 139)" stroke="#30251c" stroke-linecap="round" stroke-linejoin="round">
-    <path d="m78 104 103 2-3 107-100-3Z" fill="#c39b5f" stroke-width="7"/>
-    <path d="m88 116 80 2-3 81-78-2Z" fill="#fff0ce" stroke-width="5"/>
-    <path d="m111 105 35 1-1 19-35-1Z" fill="#30251c" stroke-width="5"/>
-    <path d="m105 167 15 15 29-33" fill="none" stroke="#ad3427" stroke-width="11"/>
-  </g>
-  <g fill="#acc2c0" stroke="#30251c" stroke-width="9" stroke-linecap="round">
-    <circle cx="88" cy="84" r="26"/><circle cx="166" cy="84" r="26"/>
-    <path d="M114 80q13-11 26 0M60 78l-12-7m146 7 12-7" fill="none"/>
-    <path d="m77 87 18-16m60 16 18-16" stroke="#fff2d3" stroke-width="6"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 128 128">
+<path d="M64 6C98 5 122 31 122 64s-25 59-59 58S5 97 6 63 31 6 64 6Z" fill="#f2e3bd" stroke="#261f18" stroke-width="8"/>
+<path d="M24 28Q63-5 105 32" fill="none" stroke="#b0392a" stroke-width="8" stroke-linecap="round"/>
+<g transform="translate(20 20) scale(.69)"><g fill="#b56c59" stroke="#682f29" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 20 66-3 5 93-70 5Z" fill="#f2e3bd"/><path d="M37 12h28v17H37Z" fill="#b56c59"/><path d="M31 43h35M31 58h23M31 78l8 8 12-14" fill="none"/><circle cx="86" cy="76" r="25" fill="#f2e3bd"/><circle cx="86" cy="76" r="16" fill="#f2e3bd"/><path d="m104 96 13 17" stroke-width="6"/><path d="m80 73 7-7" stroke="#f2e3bd" stroke-width="3.6"/></g>
+</g></svg>

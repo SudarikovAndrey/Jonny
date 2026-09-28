@@ -31,7 +31,7 @@
   if(name==='coins'){S.pos=3;[4,36,225,900].forEach((cash,k)=>{S.tiles[[1,2,4,5][k]].drop={cash};});S.tiles[6].drop={rolls:2};S.pot=77;}
   if(name==='progress'){if(params.has('day'))S.day=Math.max(1,Math.min(CFG.DAYS,Number(params.get('day'))||1));S.pts=Math.max(0,Number(params.get('points'))||0);S.parcelSent=params.has('sent');S.stat.parcels=S.parcelSent&&!params.has('catchup')?S.day:0;}
   if(name==='inspector'){S.pos=1;S.tiles[1].insp=true;}
-  if(name==='board-marks'){S.pos=2;S.tiles[1].insp=true;S.tiles[1].drop=null;}
+  if(name==='board-marks'){S.pos=params.has('tile')?Math.max(0,Math.min(39,Number(params.get('tile'))||0)):2;S.tiles.forEach(t=>t.drop=null);S.tiles[1].insp=true;S.tiles.filter(t=>t.type==='kiosk').slice(1,4).forEach(t=>t.owner='you');const biz=S.tiles.find(t=>t.type==='biz');if(biz)biz.owner='you';}
   if(name==='warehouse'||name==='shipping'||name==='progress'&&params.has('goods')){
    if(name==='shipping'&&params.has('day'))S.day=Math.max(1,Math.min(CFG.DAYS,Number(params.get('day'))||1));
    const allGoods=MAP1?['cola','gum']:CFG.GOODS.map(g=>g.id);
@@ -92,6 +92,7 @@
   tip:()=>showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.'),
   'tip-attached':()=>{shop();showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.');},
   progress:()=>eventHub('ticket'),inspector:()=>inspectorPopup(S.tiles[S.pos]),
+  shipment:async()=>{if(!UI_REVIEW)return;const before=params.has('points')?Math.max(0,Number(params.get('points'))||0):340;await ShipmentEvent.play({box:{gum:2,cola:2,tape:2},k:1,units:Math.max(1,Number(params.get('units'))||6),points:55,before,day:1,reduceMotion:params.has('reduced'),...(params.has('pose')?{previewAt:Number(params.get('pose'))}: {})});for(const m of CFG.MILESTONES.filter(m=>m.pts>before&&m.pts<=before+55))await ShipmentEvent.celebrate(m,{reduceMotion:params.has('reduced')});},
   warehouse:()=>shop(),shipping:()=>shipClick(),police:()=>police(),chance:()=>Chance.play(),johnny:()=>johnny(),shop:()=>shopHard()
  }[name];
  if(!open)return;

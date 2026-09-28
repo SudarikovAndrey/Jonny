@@ -23,7 +23,7 @@
 #card .shop .uup-dots i{border:2px solid var(--print-ink)}
 #card .shop .uup-dots i.on{background:var(--print-red)}
 #card .shop-ribbon{background:var(--print-red) url(assets/print/ink-wear.svg);border-color:var(--print-ink);text-shadow:none}
-#card .shop-art{filter:saturate(.65);border:2px solid #77613e}
+
 #card .warehouse-list .wr{border:2.5px solid #58462d;border-radius:12px 8px 11px 9px;background:#f0dfb649;box-shadow:1px 2px #90744366}
 #card .warehouse-heading h2{font-size:22px}
 #card .warehouse-bubble{border:2px solid #655034;border-radius:11px 8px 12px 7px;background:#e5cea0}

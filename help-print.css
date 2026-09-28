@@ -1,0 +1,35 @@
+/* Rules are a paper booklet: fixed opaque heading, one contained body scroller. */
+#helpDialog:not(.welcome){width:min(480px,calc(100% - 24px));max-height:calc(100dvh - max(24px,env(safe-area-inset-top)) - env(safe-area-inset-bottom));padding:0;overflow:hidden;background:#efdfb8 url(assets/print/card-stock.webp) center/420px!important;color:#30271b;font-family:Bitter,Georgia,serif;border-radius:22px 19px 21px 18px}
+#helpDialog[open]:not(.welcome){display:flex;flex-direction:column}
+#helpDialog:not(.welcome) .help-head{position:relative;top:auto;z-index:2;flex:0 0 auto;min-height:76px;padding:15px 18px;gap:14px;background:#eddeb6 url(assets/print/card-stock.webp) center/420px;border-bottom:3px solid #51432f;box-shadow:0 3px 0 #bda67670}
+#helpDialog:not(.welcome) #helpTitle{flex:0 1 auto;display:block;max-width:calc(100% - 60px);margin:0 auto 0 0;padding:7px 11px 6px;border:2.5px solid #30271b;border-radius:5px 8px 5px 6px;box-shadow:2px 3px 0 #837250;background:#f5e9ca;font:900 25px/1.05 Bitter,Georgia,serif;transform:rotate(-1deg);letter-spacing:-.5px}
+#helpDialog:not(.welcome) #helpClose{position:relative;inset:auto!important;flex:none;width:44px;min-width:44px;height:46px;margin:0}
+#helpDialog:not(.welcome) .help-body{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a18b60 transparent;scroll-padding:16px;padding:16px 18px 22px;isolation:isolate}
+#helpDialog:not(.welcome) .help-scene{position:relative;display:block;height:auto;max-height:none;aspect-ratio:408/135;margin:0 0 16px;border:2px solid #51432f;border-radius:9px 6px 10px 7px;box-shadow:0 3px #b19b6c;overflow:hidden;flex:none}
+#helpDialog:not(.welcome) .help-body p{font:500 14px/1.5 Bitter,Georgia,serif;margin:12px 0}
+#helpDialog:not(.welcome) .help-body p b{font-weight:800}
+#helpDialog:not(.welcome) .help-intro{margin:0 0 15px;font-size:15px}
+#helpDialog:not(.welcome) .help-intro>b{display:inline-block;margin-bottom:5px;font-size:20px;line-height:1.2;color:#98372a}
+#helpDialog:not(.welcome) .help-facts{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;margin:0 0 18px;padding:12px 0;border:0;border-top:2px solid #ad956b;border-bottom:2px solid #ad956b;border-radius:0;background:none;font:600 13px/1.35 Bitter,Georgia,serif}
+#helpDialog:not(.welcome) .help-facts b{font-size:17px;color:#823023;white-space:nowrap}
+#helpDialog:not(.welcome) .help-steps{margin:0 0 20px;padding:0;border:0;border-radius:0;background:none}
+#helpDialog:not(.welcome) .help-steps li{padding:12px 0 14px 60px;min-height:70px;border-bottom:1px solid #ac926777}
+#helpDialog:not(.welcome) .help-steps li:last-child{border-bottom:0;padding-bottom:0}
+#helpDialog:not(.welcome) .help-steps li::before{left:0;top:12px;width:17px;height:17px;border:1px solid #6b2c23;border-radius:4px 2px 4px 3px;box-shadow:none;background:#a93b2b;color:#fff0cf;font:800 11px/1 Bitter,Georgia,serif;z-index:1}
+#helpDialog:not(.welcome) .help-step-icon{position:absolute;left:6px;top:17px;width:43px;height:43px;object-fit:contain}
+#helpDialog:not(.welcome) .help-steps b{font:900 18px/1.2 Bitter,Georgia,serif;margin:0 0 5px}
+#helpDialog:not(.welcome) .help-steps span{font:500 14px/1.45 Bitter,Georgia,serif;color:#544631;margin:0}
+#helpDialog:not(.welcome) details{padding:0;margin:0;border:0;border-top:1.5px solid #a18a5e;border-radius:0;background:none;scroll-margin-top:14px}
+#helpDialog:not(.welcome) summary{display:flex;align-items:center;gap:10px;list-style:none;min-height:59px;padding:11px 0;font:800 16px/1.2 Bitter,Georgia,serif}
+#helpDialog:not(.welcome) summary::-webkit-details-marker{display:none}
+#helpDialog:not(.welcome) summary::after{content:'+';flex:none;margin-left:auto;width:23px;height:23px;text-align:center;color:#8d3227;font:800 24px/23px Bitter,Georgia,serif}
+#helpDialog:not(.welcome) details[open]>summary::after{content:'−'}
+#helpDialog:not(.welcome) details[open]>summary{color:#98372a}
+#helpDialog:not(.welcome) .help-section-icon{width:29px;height:30px;object-fit:contain;flex:none}
+#helpDialog:not(.welcome) details p{padding:0 2px;margin:0 0 13px}
+#helpDialog:not(.welcome) .parcel-note{padding:10px 12px;border-left:3px solid #ae3c2b;background:#dac9a366;font-size:13px}
+#helpDialog:not(.welcome) .help-replay{display:block;width:100%;padding:11px 4px;margin:7px 0 0;border:0;background:none;box-shadow:none;color:#51422e;text-decoration:underline;text-underline-offset:3px;font:600 13px/1.35 Bitter,Georgia,serif;min-height:40px}
+#helpDialog:not(.welcome) .help-action{margin-top:16px!important;font:800 17px/1.2 Bitter,Georgia,serif!important}
+#helpDialog :is(button,summary):focus-visible{outline:3px solid #ad3d2e;outline-offset:2px}
+@media(max-width:360px){#helpDialog:not(.welcome) .help-head{padding:13px 14px}#helpDialog:not(.welcome) #helpTitle{font-size:22px}#helpDialog:not(.welcome) .help-body{padding:14px}#helpDialog:not(.welcome) summary{font-size:15px}}
+@media(max-height:500px){#helpDialog:not(.welcome) .help-head{min-height:60px;padding:9px 16px}#helpDialog:not(.welcome) #helpTitle{font-size:22px}}
