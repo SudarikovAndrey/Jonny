@@ -804,15 +804,22 @@ function streetPassTip(){
     // поле и HUD пересчитывают раскладку под новую ширину
     requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));mobileLayout();});};
   window.setWideMode=setWide;
+  // Выбор игрока запоминается: «Обычный вид» на компьютере не перекрывается автовключением.
+  const WIDE_KEY='americanboy_wide';
+  const remember=on=>{try{localStorage.setItem(WIDE_KEY,on?'1':'0');}catch(e){}};
   btn.onclick=async()=>{
     const wide=document.body.classList.contains('wide-mode');
-    if(wide){setWide(false);if(FullScreen.active())await FullScreen.toggle();return;}
-    setWide(true);
+    if(wide){setWide(false);remember(false);if(FullScreen.active())await FullScreen.toggle();return;}
+    setWide(true);remember(true);
     if(FullScreen.supported()&&!FullScreen.active())await FullScreen.toggle();
   };
+  // С компьютера — сразу во всю ширину браузера (решение продюсера 28.09.2026).
+  // Настоящий полноэкранный режим браузер даёт только по жесту, его включит кнопка.
+  const autoWide=()=>{let pref=null;try{pref=localStorage.getItem(WIDE_KEY);}catch(e){}
+    if(desktop()&&pref!=='0'&&!document.body.classList.contains('wide-mode'))setWide(true);};
   // Вышли из полноэкранного клавишей Esc — остаёмся в широком виде, кнопка вернёт колонку.
   addEventListener('resize',paint);
-  const mount=()=>{document.body.append(btn);paint();};
+  const mount=()=>{document.body.append(btn);paint();autoWide();};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
 
@@ -820,3 +827,30 @@ function streetPassTip(){
 function streetPassCoin(tile){
   if(MobileHost.ready)MobileHost.send({action:'street_coin',tile});
 }
+
+// Меню тестирования без ?playtest=1: 5 быстрых тапов по заголовку «Настройки аккаунта»
+// (окно — web/top-hud.js). Сохранение и телеметрия не меняются, в отличие от PLAYTEST:
+// тот переключает партию на отдельный ключ. Флаг помнится в этом браузере; ещё 5 тапов — выключить.
+(function(){
+  const KEY='americanboy_testing_menu';
+  const on=()=>{try{return localStorage.getItem(KEY)==='1';}catch(e){return false;}};
+  const set=v=>{try{v?localStorage.setItem(KEY,'1'):localStorage.removeItem(KEY);}catch(e){}};
+  const addBtn=card=>{
+    if(card.querySelector('#hudTesting'))return;
+    const save=card.querySelector('#hudSave');if(!save)return;
+    const b=document.createElement('button');b.id='hudTesting';b.className='sec';b.textContent='Меню тестирования';
+    b.onclick=()=>{card.className='card';settings();};
+    save.before(b);if(typeof enamelButton==='function'&&save.classList.contains('enamel-button'))enamelButton(b);
+  };
+  new MutationObserver(()=>{const card=$('card');if(card.classList.contains('hud-account')&&on())addBtn(card);})
+    .observe($('card'),{childList:true});
+  let taps=0,last=0;
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#card.hud-account h2'))return;
+    const now=Date.now();taps=now-last<1500?taps+1:1;last=now;
+    if(taps<5)return;taps=0;
+    const card=$('card'),next=!on();set(next);
+    if(next){addBtn(card);toast('Меню тестирования включено');}
+    else{if(!PLAYTEST)card.querySelector('#hudTesting')?.remove();toast('Меню тестирования выключено');}
+  });
+})();

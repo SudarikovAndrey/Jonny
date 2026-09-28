@@ -91,9 +91,11 @@ function inspectorResolve(t,v,fine){
 function inspCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
   if(!card||card.hidden||!t||!t.insp||card.querySelector('.insp-quote,[data-authority]'))return; // в самом попапе плашка не нужна
+  // Только карточка точки/бизнеса: иначе замок гасил кнопки любого окна, открытого
+  // на проверяемой клетке (настройки аккаунта, магазин, справка).
+  const body=card.querySelector('.property-body');if(!body)return;
   inspCardLock(card,t);
   if(card.querySelector('.insp-note'))return;
-  const body=card.querySelector('.property-body')||card.querySelector('.shop');if(!body)return;
   const fine=inspFine(),arguing=S.insp&&S.insp.i===t.i;
   const n=document.createElement('div');n.className='insp-note';
   n.innerHTML=`<p class="insp-head"><i class="insp-ic" aria-hidden="true"></i><span><b>Идёт проверка</b> — ${inspLabel(t)}.<small>${arguing?`Споришь: осталось попыток на дубль — ${S.insp.left}`:'Откупись или лови дубль — как в участке'}</small></span></p>
