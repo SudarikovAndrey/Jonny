@@ -1,0 +1,66 @@
+/* ===== Карта «Сан-Франциско» — стройка (sf-builder.js, ?map=sf) ===== */
+#bHub .sf-cats{display:flex;gap:2px;margin:2px 0}
+#bHub .sf-cats i{font-style:normal;font-size:13px;line-height:1;opacity:.28;filter:grayscale(1)}
+#bHub .sf-cats i.on{opacity:1;filter:none}
+#sfTasks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%}
+
+/* Меню стройки: три карточки варианта (Style Bible — бумага, тушь, эмаль только у цены).
+   Карточка целиком нажимается; кнопки выбора в .mbtns остаются для механики и спрятаны. */
+#card:has(.sf-opts) .sf-lead{margin:0 0 8px;font-size:14px}
+#card:has(.sf-opts) .sf-opts{display:flex;flex-direction:column;gap:8px}
+#card:has(.sf-opts) .sf-opt{display:grid;grid-template-columns:86px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;margin:0;padding:8px 10px 8px 8px;
+  border:2.5px solid #25221c;border-radius:10px 12px 9px 11px;background:#f2e3bd url(assets/paper-grain.svg);box-shadow:0 3px 0 #25221c;
+  text-align:left;color:#25221c;font:inherit;cursor:pointer;min-height:0}
+#card:has(.sf-opts) .sf-opt:active{translate:0 2px;box-shadow:0 1px 0 #25221c}
+#card:has(.sf-opts) .sf-art{width:86px;height:64px;border-radius:7px;overflow:hidden;display:grid;place-items:center}
+#card:has(.sf-opts) .sf-art img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 0 #25221c33)}
+#card:has(.sf-opts) .sf-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+#card:has(.sf-opts) .sf-info b{font:800 16px/1.15 Bitter,Georgia,serif}
+#card:has(.sf-opts) .sf-cat{font-size:12px;color:#5b4c35}
+#card:has(.sf-opts) .sf-stats{display:flex;flex-wrap:wrap;gap:0 10px;font:700 13px/1.3 Bitter,Georgia,serif}
+#card:has(.sf-opts) .sf-stats em{font:500 12px Golos,system-ui;font-style:normal;color:#5b4c35;margin-left:3px}
+#card:has(.sf-opts) .sf-stats .cash-glyph,#card:has(.sf-opts) .sf-price .cash-glyph{display:inline-block;vertical-align:-3px;margin-right:2px}
+#card:has(.sf-opts) .sf-nb{align-self:flex-start;margin-top:2px;padding:1px 7px;border:1.5px solid #25221c66;border-radius:999px;font-size:12px;line-height:1.35;color:#5b4c35;background:#e9d8ae}
+#card:has(.sf-opts) .sf-nb.good{border-color:#3f7c3a;background:#dfe8c6;color:#2f5e2b}
+#card:has(.sf-opts) .sf-nb.bad{border-color:#a92720;background:#f3d4c3;color:#8b1f19}
+#card:has(.sf-opts) .sf-price{display:grid;place-items:center;min-width:64px;min-height:44px;padding:4px 9px;border:2.5px solid #25221c;border-radius:9px;
+  background:#4f7c4a;color:#fff6de;font:800 17px/1 Bitter,Georgia,serif;box-shadow:0 3px 0 #25221c,inset 0 0 0 2px #fff3;white-space:nowrap;text-align:center}
+#card:has(.sf-opts) .sf-opt.poor{cursor:default;opacity:.8}
+#card:has(.sf-opts) .sf-opt.poor .sf-price{background:#8f8574;color:#f2e3bd;font-size:15px}
+#card:has(.sf-opts) .sf-opt.poor .sf-price small{display:block;font:600 10.5px Golos,system-ui;margin-bottom:2px}
+#card:has(.sf-opts) .sf-opt.poor .sf-art img{filter:grayscale(.5)}
+/* кнопки выбора остаются в DOM (механика жмёт их по data-i), видна только «Позже» */
+#card:has(.sf-opts) .mbtns button:not(:last-child){display:none}
+#card:has(.sf-opts) .mbtns button:last-child{flex:1}
+@media(max-width:360px){#card:has(.sf-opts) .sf-opt{grid-template-columns:70px minmax(0,1fr) auto;gap:8px}#card:has(.sf-opts) .sf-art{width:70px;height:54px}}
+
+/* Карточка построенной точки: соседство и благосостояние города — две печатные плашки. */
+#card .sf-note{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;padding:0;border:0;background:none}
+#card .sf-chip{display:inline-flex;align-items:baseline;gap:4px;padding:4px 10px;border:2px solid #25221c;border-radius:8px;background:#f2e3bd url(assets/paper-grain.svg);
+  box-shadow:0 2px 0 #25221c;font:800 13px/1.25 Bitter,Georgia,serif;color:#25221c}
+#card .sf-chip small{font:600 12px Golos,system-ui;color:#5b4c35}
+#card .sf-chip.good{background-color:#dfe8c6;color:#2f5e2b}#card .sf-chip.bad{background-color:#f3d4c3;color:#8b1f19}
+#card .sf-chip.city{background-color:#f4d68a}
+/* плотнее: три варианта влезают в окно без прокрутки на 375×812 */
+#card:has(.sf-opts) .sf-lead{font-size:13.5px;line-height:1.3;margin-bottom:6px}
+#card:has(.sf-opts) .sf-opt{grid-template-columns:72px minmax(0,1fr) auto;gap:8px;padding:7px 8px 7px 6px}
+#card:has(.sf-opts) .sf-art{width:72px;height:56px}
+#card:has(.sf-opts) .sf-info b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#card:has(.sf-opts) .sf-stats{font-size:12.5px;white-space:nowrap}
+#card:has(.sf-opts) .sf-stats em{display:none}
+#card:has(.sf-opts) .sf-stats span:first-child::after{content:' / круг';font:500 11.5px Golos,system-ui;color:#5b4c35}
+#card:has(.sf-opts) .sf-price{display:inline-flex;align-items:center;justify-content:center;gap:2px;min-width:62px;padding:4px 8px}
+#card:has(.sf-opts) .sf-price .cash-glyph{margin:0}
+#card:has(.sf-opts) .sf-opt.poor .sf-price{flex-wrap:wrap;max-width:74px}
+#card:has(.sf-opts) .sf-opt.poor .sf-price small{flex-basis:100%;margin:0 0 1px}
+#card:has(.sf-opts) .sf-nb{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#card:has(.sf-opts) .sf-info b{font-size:14.5px;letter-spacing:-.01em}
+#card:has(.sf-opts) .sf-info b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#card .sf-nb small,#card .sf-chip small{font:600 11.5px Golos,system-ui}
+#card .sf-nb,#card .sf-chip{white-space:normal;overflow:visible;text-overflow:clip;align-items:center}
+#card .sf-gis{display:inline-flex;gap:1px;vertical-align:-4px}
+#card .sf-gi{width:18px;height:18px;object-fit:contain}
+#card:has(.sf-opts) .sf-nb{white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;flex-wrap:wrap;gap:0 4px}
+#card:has(.sf-opts) .sf-nb{display:inline-block;white-space:nowrap}
+#card:has(.sf-opts) .sf-nb small{display:block;white-space:normal;margin-top:-1px}
+#card:has(.sf-opts) .sf-gi{width:16px;height:16px}

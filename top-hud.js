@@ -19,7 +19,10 @@
   // Keep legacy nodes available to the core; they are no longer visible HUD controls.
   $('sTimer').hidden=true;$('bSettings').hidden=true;
   if(!$('q2')){const q=document.createElement('button');q.id='q2';q.className='qchip';q.innerHTML='<span></span><i></i>';q.hidden=true;$('qrow').append(q);}
+  // Режимы карт (map1.js, sf-builder.js) отдают прогресс и задачи через window.MapMode.
+  const mode=()=>window.MapMode||null;
   function mapProgress(){
+    if(mode()&&mode().progress)return mode().progress();
     if(MAP1&&typeof m1Tasks==='function'){
       const tasks=m1Tasks();return {name:'Мейн-стрит',value:tasks.filter(q=>q.ok).length,goal:tasks.length,percent:tasks.reduce((a,q)=>a+q.v/q.goal,0)/tasks.length*100,unit:'задач'};
     }
@@ -33,8 +36,13 @@
     el.setAttribute('aria-label',`${p.name}: ${p.value} из ${p.goal} ${p.unit}`);
   };
   const openTicket=()=>{if(!moving)eventHub('ticket');};
-  $('bHub').onclick=openTicket;$('bJohnny').onclick=openTicket;
+  $('bHub').onclick=()=>{if(mode()&&mode().hubClick)return mode().hubClick();openTicket();};$('bJohnny').onclick=openTicket;
   function decorateMissions(){
+    if(mode()&&mode().tasks){
+      const ts=mode().tasks(),nodes=document.querySelectorAll('#m1Tasks .m1-task, #sfTasks .m1-task');
+      nodes.forEach((el,i)=>{const q=ts[i];if(!q)return;el.dataset.kind=q.id;el.style.setProperty('--mission-ratio',q.v/q.goal);el.setAttribute('aria-label',`${q.text(q.goal)}: ${q.v} из ${q.goal}`);});
+      $('q2').hidden=true;$('qrow').dataset.count=String(ts.length);return;
+    }
     if(MAP1){
       const ts=m1Tasks(),nodes=document.querySelectorAll('#m1Tasks .m1-task');
       nodes.forEach((el,i)=>{const q=ts[i];el.dataset.kind=q.id;el.style.setProperty('--mission-ratio',q.v/q.goal);el.setAttribute('aria-label',`${q.text(q.goal)}: ${q.v} из ${q.goal}`);});
