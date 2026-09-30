@@ -4,7 +4,7 @@
 // точка не работает на игрока (нет продаж за круг, нет сбора за проход).
 // Остановился на клетке — попап как в ментовке: заплатить или ловить дубль.
 // На поле не больше трёх проверок за раз. Карта 1 клетки инспектора не имеет.
-CFG.INSP={min:1,max:3,limit:3,attempts:3,fineShare:0.5}; // штраф = доля полицейского штрафа
+CFG.INSP={limit:3,attempts:3,fineShare:0.5,steps:[3,7]}; // штраф = доля полицейского штрафа; steps: до 3 своих клеток — 1 проверка, до 7 — 2, дальше — 3
 
 function inspActive(){return S.tiles.filter(t=>t.insp);}
 function inspFine(){return Math.max(10,Math.round(policeFine()*CFG.INSP.fineShare/10)*10);}
@@ -20,7 +20,11 @@ hazard=async function(){
   if(!spots.length)spots=S.tiles.filter(t=>fit(t)&&!t.owner&&!t.drop);
   if(!spots.length){toast('📋 Инспектору некого проверять');return;}
   spots.sort(()=>Math.random()-0.5);
-  const n=Math.min(free,spots.length,CFG.INSP.min+Math.floor(Math.random()*(CFG.INSP.max-CFG.INSP.min+1)));
+  // Решение продюсера 30.09.2026: проверок столько, сколько «заслужил» размер бизнеса, а не случайно 1–3:
+  // до 3 своих клеток — одна, до 7 — две, дальше — три. Три инспектора в начале карты ломали прохождение.
+  const own=S.tiles.filter(t=>(t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t)).length;
+  const want=1+CFG.INSP.steps.filter(x=>own>x).length;
+  const n=Math.min(free,spots.length,want);
   const plan=spots.slice(0,n).map(t=>({t,drop:{insp:1},icon:'📋'}));
   toast(`📋 Инспектор разослал ${n} ${n===1?'проверку':'проверки'}`);
   track('inspector',{n,tiles:plan.map(p=>p.t.i)});
