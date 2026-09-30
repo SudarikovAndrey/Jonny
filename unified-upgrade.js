@@ -1,31 +1,39 @@
 // ===== Единый апгрейд точки (бэклог §4) =====
-// Дизайн: черновики/америкэн-бой-единый-апгрейд.md. Решение 24.09: одна кнопка,
-// уровни по очереди поднимают продажи и запас. Уровень точки — прежний
+// Дизайн: черновики/америкэн-бой-единый-апгрейд.md. Решение 24.09: одна кнопка;
+// решение 30.09: один шаг поднимает оба стата сразу (см. ниже). Уровень точки — прежний
 // capLvl + salesLvl − 1 (1–7 в тире), шаги и цены те же, что у двух кнопок,
 // поэтому сбор за проход, расширение и баланс не меняются. Игрок решает не
 // «какой стат», а «какую точку».
-// Порядок шагов: продажи → запас → продажи → … (прибыль растёт с первого шага).
-function kioskLvl(t){return t.capLvl+t.salesLvl-1;}
-function kioskMaxLvl(t){return capTab(t).length+salTab(t).length-1;}
-function kioskNextStat(t){
-  if(t.salesLvl<=t.capLvl&&t.salesLvl<salTab(t).length)return 'sales';
-  if(t.capLvl<capTab(t).length)return 'cap';
-  return t.salesLvl<salTab(t).length?'sales':null;
-}
-function kioskUpCost(t){const n=kioskNextStat(t);return n==='sales'?salesCost(t):n==='cap'?capCost(t):0;}
-// Значения после следующей прокачки. Карты с другой лестницей (map1.js) подменяют.
-function kioskAfter(t){const n=kioskNextStat(t);
-  return n==='sales'?{cap:cap(t),sales:salesBoost(salTab(t)[t.salesLvl])}:n==='cap'?{cap:capTab(t)[t.capLvl],sales:sales(t)}:null;}
-// Старые сохранения и «грант» (он поднимает только запас) приводятся к порядку
-// шагов с тем же уровнем точки — сбор за проход не меняется.
+// Решение продюсера 30.09.2026: один шаг поднимает оба стата сразу. Цена шага — сумма прежних
+// цен запаса и продаж на этом уровне (0,5 + 0,7 = 1,2 × цена × ур.), поэтому деньги до максимума
+// те же 7,2 цены точки: шагов вдвое меньше, но каждый вдвое дороже — по деньгам темп не ускорился.
+// Уровень точки на карточке — 1…4; сбор за проход по-прежнему через klevel = capLvl + salesLvl − 1.
+function kioskLvl(t){return Math.max(t.capLvl,t.salesLvl);}
+function kioskMaxLvl(t){return Math.min(capTab(t).length,salTab(t).length);}
+function kioskNextStat(t){return t.capLvl<capTab(t).length||t.salesLvl<salTab(t).length?'both':null;}
+function kioskUpCost(t){return (t.capLvl<capTab(t).length?capCost(t):0)+(t.salesLvl<salTab(t).length?salesCost(t):0);}
+// Значения после следующей прокачки. Карты с другой лестницей (map1.js, sf-builder.js) подменяют.
+function kioskAfter(t){if(!kioskNextStat(t))return null;
+  return {cap:capTab(t)[Math.min(capTab(t).length-1,t.capLvl)],sales:salesBoost(salTab(t)[Math.min(salTab(t).length-1,t.salesLvl)])};}
+// Старые сохранения (чередование статов) и «грант» приводятся к равным статам:
+// отстающий подтягивается к большему — разовый подарок, чтобы никто ничего не потерял.
 function kioskLevelsNormalize(){
   if(!S||!S.tiles)return;
   for(const t of S.tiles){
     if(t.type!=='kiosk'||!t.owner)continue;
-    const k=Math.min(kioskMaxLvl(t),kioskLvl(t));
-    const s=Math.min(salTab(t).length,Math.floor(k/2)+1),c=Math.min(capTab(t).length,k-s+1);
+    const n=Math.max(t.capLvl,t.salesLvl);
+    const c=Math.min(capTab(t).length,n),s=Math.min(salTab(t).length,n);
     if(t.salesLvl!==s||t.capLvl!==c){t.salesLvl=s;t.capLvl=c;}
   }
+}
+// Прокачка обоих статов одним шагом: списывает сумму, засчитывает задание, пишет лог.
+function kioskUpgradeBoth(t){
+  const cost=kioskUpCost(t);if(!kioskNextStat(t)||S.cash<cost)return false;
+  track('upgrade',{tile:t.i,stat:'both',lvl:kioskLvl(t)+1,cost});
+  fly('💵',AT.cash(),AT.card(),flyN(cost));S.cash-=cost;
+  if(t.capLvl<capTab(t).length)t.capLvl++;if(t.salesLvl<salTab(t).length)t.salesLvl++;
+  qProg('upg',1);log(`${name(t)}: точка ур. ${kioskLvl(t)} — запас ${cap(t)} шт, продажи ${sales(t)}/круг.`);
+  render();draw();return true;
 }
 (function(){
   const base=render;
@@ -44,9 +52,9 @@ function decorateUnifiedUpgrade(){
   const after=kioskAfter(t),profitMode=!!CFG.KIOSK.showProfit,margin=Math.max(0,sellPrice(t.good)-buyPrice(t.good));
   // Visual emphasis only: newer ladders raise both values, but the card
   // alternates one preview per step. Prices and upgrade handlers stay unchanged.
+  // Один шаг поднимает оба стата — на карточке обе стрелки.
   const capChanges=!!after&&after.cap!==cap(t),salesChanges=!!after&&after.sales!==sales(t);
-  const focus=capChanges&&salesChanges?(L%2?'sales':'cap'):capChanges?'cap':'sales';
-  const capNext=capChanges&&focus==='cap'?after.cap:null,salNext=salesChanges&&focus==='sales'?after.sales:null;
+  const capNext=capChanges?after.cap:null,salNext=salesChanges?after.sales:null;
   const row=(label,now,nx)=>`<span class="uup-stat${nx!==null?' grows':''}"><small>${label}</small><b>${now}</b>${nx!==null?`<i>→</i><b class="up">${nx}</b>`:''}</span>`;
   const dS=salNext!==null?salNext-sales(t):0,dC=capNext!==null?capNext-cap(t):0;
   const gain=[dC?`+${dC} мест`:'',dS?(profitMode?`+$${dS*margin} за круг`:`+${dS} ${dS===1?'продажа':'продажи'} за круг`):''].filter(Boolean).join(' · ');
@@ -60,7 +68,7 @@ function decorateUnifiedUpgrade(){
   const up=$('kUp');
   // Кнопка вызывает прежний обработчик нужного стата: он списывает цену,
   // засчитывает задание «прокачай», пишет лог и перерисовывает окно.
-  if(up)up.onclick=()=>{const n=kioskNextStat(t);if(!n||S.cash<kioskUpCost(t))return;(n==='sales'?salBtn:capBtn).onclick();};
+  if(up)up.onclick=()=>{if(kioskNextStat(t)==='both')kioskUpgradeBoth(t);else{const n=kioskNextStat(t);if(!n||S.cash<kioskUpCost(t))return;(n==='sales'?salBtn:capBtn).onclick();}};
   if(typeof enamelButton==='function'&&up)enamelButton(up);
   if(typeof cashGlyph==='function')cashGlyph(block);
 }

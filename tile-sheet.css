@@ -1,0 +1,12 @@
+/* Карточка точки из строки клетки (tile-sheet.js) */
+.tile-sheet-plate{position:fixed;z-index:40;box-sizing:border-box;border:2.5px solid #2a221c;border-radius:12px;overflow:hidden;pointer-events:none;
+  background:#f2e3bd url(assets/paper-grain.svg);box-shadow:0 4px 0 #2a221c,0 10px 22px #0005}
+.tile-sheet-row{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding:0 12px;white-space:nowrap;overflow:hidden;
+  font:800 17px/1.1 Bitter,Georgia,serif;color:#2a221c}
+.tile-sheet-row b{margin-left:auto;padding:6px 12px;border-radius:9px;background:#4f7c4a;color:#fff6de;font-size:15px}
+.tile-sheet-row img{width:28px;height:28px;object-fit:contain}
+/* строки нет, пока открыта карточка; место под ней сохраняется, чтобы ничего не прыгало */
+#tilebar.tile-sheet-away{visibility:hidden}
+/* кубик над затемнением: панель поднимается над окном, остальное в ней приглушено */
+body.tile-sheet #panel{z-index:31}
+body.tile-sheet #panel .dk,body.tile-sheet #panel #inv,body.tile-sheet #guide{opacity:.4;filter:saturate(.6);pointer-events:none}

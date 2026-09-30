@@ -8,7 +8,7 @@ var SFMAP=new URLSearchParams(location.search).get('map')==='sf';
 if(SFMAP){
 document.body.classList.add('map-mode','sf-mode');
 boardMap=()=>'sanfrancisco';setBoardMap=()=>{};
-Object.assign(CFG,{START_CASH:600,REAL_DAYS:false,ROLLS_PER_DAY:120});
+Object.assign(CFG,{START_CASH:600,REAL_DAYS:false,ROLLS_PER_DAY:120,BANK_DAY:1}); // банк на углу 20 открыт с первого хода
 CFG.KIOSK.showProfit=true;
 // Пустырь — псевдотовар, чтобы строка точки и карточка не падали на good(null).
 CFG.GOODS.push({id:'lot',name:'Пустырь',buy:1,sell:1,pts:0,zone:0,icon:'🏗'});
@@ -34,7 +34,7 @@ const sfBase=G=>2+(G-1);                                          // прода�
 function sfMargin(cat){return Math.max(1,good(cat).sell-good(cat).buy);}
 function sfPrice(cat){return Math.max(20,Math.round(sfBase(1)*sfMargin(cat)*SF.payback/5)*5);}
 
-// Поле: пустыри вместо готовых точек. Служебные клетки как в Бруклине, «Шанса» нет.
+// Поле: пустыри вместо готовых точек. Служебные клетки как в Бруклине (углы: старт, бандит, банк, копилка на 25), «Шанса» нет.
 buildTiles=function(){
   const biz=new Set([3,8,17,23,32,37]),wh=new Set([6,19,24,30,34]);
   const r10=(a,b)=>Math.round((a+Math.random()*(b-a))/10)*10;let k=0;const t=[];
@@ -45,6 +45,7 @@ buildTiles=function(){
     else if(wh.has(i)){o.type='wh';o.zone=-1;}
     else if(i===5){o.type='hazard';o.zone=-1;}
     else if(i===15){o.type='police';o.zone=-1;}
+    else if(i===20){o.type='bank';o.zone=-1;} // угол — банк, как в Бруклине (решение 30.09)
     else if(i===25){o.type='pot';o.zone=-1;}
     else if(i===35){o.type='scatter';o.zone=-1;}
     else if(biz.has(i)){o.type='biz';o.price=r10(150,250);o.price0=o.price;}
