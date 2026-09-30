@@ -14,6 +14,7 @@ CFG.KIOSK.showProfit=true;
 CFG.GOODS.push({id:'lot',name:'Пустырь',buy:1,sell:1,pts:0,zone:0,icon:'🏗'});
 const SF={
   rolls:120,taskRolls:10,levelCap:5,payback:6,
+  upPayback:20,upGrow:1.15,                                       // прокачка: +1 продажа окупается за 20 кругов, каждый уровень дороже на 15% (30.09: было 6 кругов — качали в макс сразу)
   cats:['gum','cola','jeans','sneak','tape','vcr'],               // порядок карточек в меню пустыря: от стартовых к лицензионным
   // v2 (30.09): соседства нет, на любом пустыре строится любая категория, на которую есть лицензия.
   // Лицензии покупаются прямо из меню пустыря, только за деньги, без условий.
@@ -78,7 +79,7 @@ function sfPriceMult(){return 1+SF.prosp*sfCovered();}
 // ---- Лестница точки (как на карте 1) с поправкой соседства на продажи ----
 sales=function(t){return salesBoost(sfBase(t.salesLvl));};
 cap=function(t){return 4*sfBase(t.salesLvl);};
-salesCost=function(t){const m=sfMargin(t.base||t.good);return Math.max(5,Math.round(m*SF.payback*Math.pow(1.03,t.salesLvl-1)/5)*5);};
+salesCost=function(t){const m=sfMargin(t.base||t.good);return Math.max(20,Math.round(m*SF.upPayback*Math.pow(SF.upGrow,t.salesLvl-1)/5)*5);};
 kioskLvl=t=>t.salesLvl;
 kioskMaxLvl=()=>SF.levelCap;
 kioskNextStat=t=>t.salesLvl<SF.levelCap?'sales':null;
@@ -105,8 +106,8 @@ async function sfBuildMenu(t){
   // документ, а не точка (решение продюсера 30.09), и на нём написано, что она открывает.
   const rows=SF.cats.map((cat,i)=>{if(!sfCatOpen(cat))return '';const g=good(cat),p=sfPrice(cat),profit=sfBase(1)*Math.round(sfMargin(cat)*sfPriceMult()),fill=cap({salesLvl:1})*buyPrice(cat);
     const poor=S.cash<p,art=window.PropertyArt?PropertyArt.point(cat,1):`assets/points/pt_${cat}_1.webp`;
-    // Правило продюсера: всегда полная цена; при нехватке — подпись «не хватает» и та же полная цена.
-    const price=poor?`<small>не хватает</small><i class="cash-glyph"></i>${p}`:`<i class="cash-glyph"></i>${p}`;
+    // Правило продюсера: на кнопке — целевое действие и полная цена; можно ли — говорит цвет (зелёная/серая).
+    const price=`<small>Построить</small><i class="cash-glyph"></i>${p}`;
     return `<div role="button" tabindex="${poor?-1:0}" class="sf-opt ${poor?'poor':''}" data-i="${i}" data-cat="${cat}" ${poor?'aria-disabled="true"':''} aria-label="${SF.formats[0]} ${SF.gen[cat]}, $${p}">
       <span class="sf-art"><img src="${art}" alt="" decoding="async"></span>
       <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]}</small>
@@ -117,7 +118,7 @@ async function sfBuildMenu(t){
     return `<div role="button" tabindex="${poor?-1:0}" class="sf-lic-doc ${poor?'poor':''}" data-lic="${l.id}" ${poor?'aria-disabled="true"':''} aria-label="Лицензия «${l.name}», $${l.price}">
       <span class="sf-doc-head"><img class="sf-doc-art" src="assets/ui/license_${l.id}.webp" alt="" decoding="async" onerror="this.remove()"><i class="sf-doc-seal" aria-hidden="true"></i><b>Лицензия «${l.name}»</b></span>
       <span class="sf-doc-body">Открывает: ${l.cats.map(c=>`<span class="sf-doc-good"><img class="sf-gi" src="assets/goods/${c}.webp" alt="">${SF.cat[c]}</span>`).join(' ')}</span>
-      <span class="sf-doc-buy">${poor?`<span class="sf-lic-name">Не хватает</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span>`:`<span class="sf-lic-name">Купить</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span>`}</span></div>`;}).join('');
+      <span class="sf-doc-buy"><span class="sf-lic-name">Купить лицензию</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span></span></div>`;}).join('');
   const licBlock=docs?`<div class="sf-lics"><p class="sf-lics-title">Лицензии мэрии</p>${docs}</div>`:'';
   $('card').classList.add('sf-build');
   const btns=SF.cats.map((cat,i)=>({t:`${good(cat).icon} $${sfPrice(cat)}`,v:i,cls:'ok',dis:!sfCatOpen(cat)||S.cash<sfPrice(cat)})).concat([{t:'Позже',v:-1,cls:'sec'}]);

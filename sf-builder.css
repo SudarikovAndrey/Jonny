@@ -163,3 +163,5 @@
 #card:has(.sf-opts) .sf-lic-doc .sf-doc-buy{background:#4f7c4a;color:#fff6de;text-shadow:none}
 #card:has(.sf-opts) .sf-lic-doc.poor .sf-doc-buy{background:var(--buy-no,#8c8873);color:var(--buy-no-text,#f6eed8);box-shadow:0 3px 0 #25221c}
 #card:has(.sf-opts) .sf-opt.poor .sf-price{background:var(--buy-no,#8c8873);color:var(--buy-no-text,#f6eed8)}
+/* Правило продюсера 30.09: на кнопке всегда целевое действие («Построить», «Купить лицензию»), цвет говорит, можно ли. */
+#card:has(.sf-opts) .sf-price small{display:block;font:600 10.5px Golos,system-ui;margin-bottom:2px;opacity:.9}
