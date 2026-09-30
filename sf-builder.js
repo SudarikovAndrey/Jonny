@@ -57,7 +57,7 @@ buildTiles=function(){
 };
 
 // ---- Соседство: единственное правило района ----
-function sfNeighbors(t){return [S.tiles[(t.i+39)%40],S.tiles[(t.i+1)%40]].filter(n=>n.type==='kiosk'&&n.owner&&n.base);}
+function sfNeighbors(t){return [S.tiles[(t.i+39)%40],S.tiles[(t.i+1)%40]].filter(n=>n.type==='kiosk'&&n.owner&&n.base&&!sfIsLot(n));}
 function sfMod(t,cat){
   cat=cat||t.base;if(!cat)return 1;let m=1,bonus=0;
   for(const n of sfNeighbors(t)){if(n.base===cat)m-=SF.pen[cat];else bonus+=SF.bonus;}
@@ -70,7 +70,7 @@ function sfModText(t,cat){
   if(diff.length)parts.push(`+${Math.round(Math.min(SF.bonusMax,SF.bonus*diff.length)*100)}% ${diff.map(n=>good(n.base).icon).join('')}`);
   return parts.join(' · ');
 }
-function sfCovered(){return new Set(myKiosks().map(t=>t.base).filter(Boolean)).size;}
+function sfCovered(){return new Set(myKiosks().filter(t=>!sfIsLot(t)).map(t=>t.base).filter(Boolean)).size;}
 function sfPriceMult(){return 1+SF.prosp*sfCovered();}
 
 // ---- Лестница точки (как на карте 1) с поправкой соседства на продажи ----
@@ -83,14 +83,15 @@ kioskNextStat=t=>t.salesLvl<SF.levelCap?'sales':null;
 kioskUpCost=t=>kioskNextStat(t)?salesCost(t):0;
 kioskAfter=t=>kioskNextStat(t)?{cap:4*sfBase(t.salesLvl+1),sales:Math.max(1,Math.round(salesBoost(sfBase(t.salesLvl+1))*sfMod(t)))}:null;
 kioskLevelsNormalize=function(){if(!S||!S.tiles)return;for(const t of S.tiles)if(t.type==='kiosk'&&t.owner)t.capLvl=t.salesLvl;};
-pointName=function(t){if(!t.base)return 'Пустырь';const f=SF.formats[Math.min(SF.formats.length-1,Math.floor((t.salesLvl-1)/2))];return `${f} ${SF.gen[t.base]||''}`.trim();};
+function sfIsLot(t){return !!t&&t.type==='kiosk'&&!t.owner&&(t.lot||t.good==='lot');}
+pointName=function(t){if(sfIsLot(t)||!t.base)return 'Пустырь';const f=SF.formats[Math.min(SF.formats.length-1,Math.floor((t.salesLvl-1)/2))];return `${f} ${SF.gen[t.base]||''}`.trim();};
 evolveState=()=>'max';
 // Благосостояние: чем больше категорий у города, тем дороже всё продаётся.
 (function(){const base=sellPrice;sellPrice=function(g){return Math.round(base.apply(this,arguments)*sfPriceMult());};})();
 
 // ---- Меню стройки на пустыре: три варианта, каждый с последствиями ----
 (function(){const base=kioskWindow;kioskWindow=async function(t){
-  if(t.type==='kiosk'&&!t.owner&&t.lot)return sfBuildMenu(t);
+  if(sfIsLot(t))return sfBuildMenu(t);
   return base.apply(this,arguments);
 };})();
 // Плашка соседства: «соседи +20% 🍬🥤». Соседи есть, а итог 0% (штраф и бонус погасили друг
@@ -181,7 +182,17 @@ renderHubGoal=function(){
     <span class="hub-row hub-meta"><em>Город обеспечен</em></span></span>`;
   el.classList.add('hub-goal-chip');el.classList.remove('okc');
 };
-(function(){const base=render;render=function(){const r=base.apply(this,arguments);try{sfRenderTasks();sfProgress();}catch(e){console.error(e);}return r;};})();
+(function(){const base=render;render=function(){const r=base.apply(this,arguments);try{sfRenderTasks();sfProgress();sfLotBar();}catch(e){console.error(e);}return r;};})();
+// Пустырь — место под точку: в строке нет цены, кнопка всегда «открыть»; зелёная, если хватает на самый дешёвый вариант.
+function sfLotBar(){
+  const t=S.tiles[S.pos],tb=$('tilebar');if(!tb||!sfIsLot(t)||moving||S.finished)return;
+  const minPrice=Math.min(...t.opts.map(sfPrice)),can=S.cash>=minPrice;
+  tb.hidden=false;tb.disabled=false;$('tbText').textContent='🏗 Пустырь · место под точку';
+  tb.querySelector('b').textContent='открыть';tb.classList.toggle('off',!can);tb.classList.toggle('poor',!can);
+}
+// Сохранение из общего кода могло подставить пустырю базовый товар — снимаем.
+(function(){const base=newGame;newGame=function(){const r=base.apply(this,arguments);S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});return r;};})();
+(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles)S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});}catch(e){}return r;};})();
 async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks().map(t=>t.base));
   await modal(`<h2>🌉 Благосостояние города</h2><p class="t">Город обеспечен ${sfCovered()}/6 категорий — все товары продаются на <b>+${Math.round((sfPriceMult()-1)*100)}%</b> дороже.</p>
     <div class="row"><span class="n">Есть</span><span class="v">${SF.cats.filter(c=>have.has(c)).map(c=>good(c).icon).join(' ')||'—'}</span></div>

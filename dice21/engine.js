@@ -27,18 +27,18 @@ function transition(saved,action,cash,roll=()=>1+Math.floor(Math.random()*6)){
   s.chips=chips;s.freeBet=total(chips);s.houseChips=chips.length;s.house=0;s.visitGames=0;s.visitLimit=VISIT_GAMES;
  }else if(action.type==='add'&&s.phase==='betting'){
   if(!CHIPS.includes(action.value))return {ok:false,error:'Неизвестная фишка'};
-  if(total(s.chips)-s.freeBet+action.value>cash)return {ok:false,error:'Не хватает денег на эту фишку'};
+  // Своя фишка списывается сразу, как легла на стол (решение продюсера 30.09.2026); снял — вернулась.
+  if(action.value>cash)return {ok:false,error:'Не хватает денег на эту фишку'};
   if(s.chips.length>=24)return {ok:false,error:'На столе уже 24 фишки'};
-  s.chips.push(action.value);
+  s.chips.push(action.value);delta=-action.value;
  }else if(action.type==='remove'&&s.phase==='betting'){
   if(!Number.isInteger(action.index)||action.index<0||action.index>=s.chips.length)return {ok:false};
   if(action.index<s.houseChips)return {ok:false,error:'Фишки заведения не снимаются'};
-  s.chips.splice(action.index,1);
- }else if(action.type==='clear'&&s.phase==='betting')s.chips=s.chips.slice(0,s.houseChips);
+  delta=s.chips[action.index];s.chips.splice(action.index,1);
+ }else if(action.type==='clear'&&s.phase==='betting'){delta=total(s.chips.slice(s.houseChips));s.chips=s.chips.slice(0,s.houseChips);}
  else if(action.type==='start'&&s.phase==='betting'){
   s.stake=total(s.chips);if(s.stake<=0)return {ok:false,error:'Сначала выбери фишки для ставки'};
-  const own=s.stake-s.freeBet;if(own>cash)return {ok:false,error:'Не хватает денег на свою часть ставки'};
-  s.house=s.freeBet;s.freeBet=0;s.houseChips=0;delta=-own; /* списываются только свои фишки */ s.player=[die(),die(),die()];s.dealer=[];s.phase='player';s.result=null;s.round++;
+  s.house=s.freeBet;s.freeBet=0;s.houseChips=0;delta=0; /* свои фишки уже списаны при выкладке */ s.player=[die(),die(),die()];s.dealer=[];s.phase='player';s.result=null;s.round++;
  }else if(action.type==='hit'&&s.phase==='player'){
   s.player.push(die());if(total(s.player)>=21)resolve();
  }else if(action.type==='stand'&&s.phase==='player')resolve();

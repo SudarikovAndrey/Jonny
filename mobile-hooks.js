@@ -1,10 +1,14 @@
 // Inserted into the prototype script before boot so the original rules retain their scope.
 let mobileLastState='', mobileFitScheduled=false, mobileLastLayout='';
+// Цепь держится, пока идёт сцена с полицией и выбор, и пока игрок сидит в участке.
+// Заплатил, выкинул дубль или отсидел — цепь снимается сразу, не дожидаясь хода.
+// Объявление функции поднимается, а let ниже ещё может быть в «мёртвой зоне» — отсюда try.
+function mobilePoliceBusy(){try{return !!mobilePolicePromise;}catch(e){return false;}}
 function mobileSync(){
   if(!S||!MobileHost.ready)return;
   mobileCheckCash();
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
-  const snapshot={action:'state',pos:S.pos,moving,police_bound:S.policePoseTile===S.pos||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
+  const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
     i:t.i,type:t.type,pot:t.type==='pot'?S.pot:0,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
@@ -58,8 +62,22 @@ function float(i,text,color,size){
   el.className='map-float';el.textContent=text;el.style.left=at.x+'px';el.style.top=at.y+'px';el.style.color=color||'#fff1ce';if(typeof cashGlyph==='function')cashGlyph(el);
   document.body.append(el);setTimeout(()=>el.remove(),1400);
 }
+// Штраф в копилку летит по полю, как находки инкассатора: 3D-монеты по параболе
+// из окна интерфейса (последнего закрытого) в стопку на клетке копилки и «тонут» в ней.
+let lastModalAt=null;
+(function(){const base=closeModal;closeModal=function(...a){try{const c=screenOfCard();if(c)lastModalAt={x:c.x,y:c.y,t:Date.now()};}catch(e){}return base.apply(this,a);};})();
+AT.pot=()=>Object.assign(screenOfTile(25),{pot:25});
+function flyCashToPot(from,n,o){
+  const r=$('board-frame').getBoundingClientRect();
+  const src=lastModalAt&&Date.now()-lastModalAt.t<2500?lastModalAt:from;
+  const fx=Math.min(1,Math.max(0,(src.x-r.left)/r.width)),fy=Math.min(1,Math.max(0,(src.y-r.top)/r.height));
+  MobileHost.request('scatter',{from:S.pos,fromScreen:[fx,fy],drops:[{to:25,drop:{cash:1},count:Math.min(4,Math.max(1,n||1)),sink:true}]},8000)
+    .catch(e=>console.warn('Штраф в копилку не отыгран:',e.message))
+    .then(()=>{if(o.pulse)pulse(o.pulse);o.onDone?.();});
+}
 function fly(icon,from,to,n,o={}){
   if(!from||!to){o.onDone?.();return;}
+  if(icon==='💵'&&to.pot!==undefined&&MobileHost.ready&&MobileHost.sceneState?.engine==='web')return flyCashToPot(from,n,o);
   const count=Math.min(3,Math.max(1,n||1));
   for(let i=0;i<count;i++){
     const el=document.createElement('span');el.className='mobile-fly';
@@ -797,9 +815,12 @@ function streetPassTip(){
   btn.id='wideBtn';btn.type='button';
   const ICON_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const ICON_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const paint=()=>{const wide=document.body.classList.contains('wide-mode');
-    btn.innerHTML=(wide?ICON_OFF:ICON_ON)+`<span>${wide?'Обычный вид':'Во весь экран'}</span>`;
-    btn.hidden=!desktop();};
+  // Кнопка управляет настоящим полным экраном браузера (без адресной строки и вкладок).
+  // Широкий вид на компьютере включается сам; раньше кнопка сначала его выключала,
+  // и до полного экрана нужно было нажать дважды.
+  const paint=()=>{const full=FullScreen.active();
+    btn.innerHTML=(full?ICON_OFF:ICON_ON)+`<span>${full?'Выйти из полного экрана':'Во весь экран'}</span>`;
+    btn.hidden=!desktop()||!FullScreen.supported();};
   const setWide=on=>{document.body.classList.toggle('wide-mode',on);paint();
     // поле и HUD пересчитывают раскладку под новую ширину
     requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));mobileLayout();});};
@@ -808,11 +829,10 @@ function streetPassTip(){
   const WIDE_KEY='americanboy_wide';
   const remember=on=>{try{localStorage.setItem(WIDE_KEY,on?'1':'0');}catch(e){}};
   btn.onclick=async()=>{
-    const wide=document.body.classList.contains('wide-mode');
-    if(wide){setWide(false);remember(false);if(FullScreen.active())await FullScreen.toggle();return;}
-    setWide(true);remember(true);
-    if(FullScreen.supported()&&!FullScreen.active())await FullScreen.toggle();
+    if(!FullScreen.active()&&!document.body.classList.contains('wide-mode')){setWide(true);remember(true);}
+    await FullScreen.toggle();paint();
   };
+  document.addEventListener('fullscreenchange',paint);document.addEventListener('webkitfullscreenchange',paint);
   // С компьютера — сразу во всю ширину браузера (решение продюсера 28.09.2026).
   // Настоящий полноэкранный режим браузер даёт только по жесту, его включит кнопка.
   const autoWide=()=>{let pref=null;try{pref=localStorage.getItem(WIDE_KEY);}catch(e){}
@@ -869,4 +889,18 @@ function streetPassCoin(tile){
     if(next){addBtn(card);toast('Меню тестирования включено');}
     else{if(!PLAYTEST)card.querySelector('#hudTesting')?.remove();toast('Меню тестирования выключено');}
   });
+})();
+
+// Полный экран — и в «Настройках аккаунта» (окно из web/top-hud.js), чтобы включать с телефона.
+// На iPhone Safari полноэкранного режима для страниц нет — там кнопки не будет.
+(function(){
+  const label=()=>FullScreen.active()?'Выйти из полного экрана':'Во весь экран';
+  new MutationObserver(()=>{
+    const card=$('card');if(!card.classList.contains('hud-account')||card.querySelector('#hudFull')||!FullScreen.supported())return;
+    const save=card.querySelector('#hudSave');if(!save)return;
+    const b=document.createElement('button');b.id='hudFull';b.className='sec';b.textContent=label();
+    b.onclick=async()=>{if(!FullScreen.active())window.setWideMode?.(true);await FullScreen.toggle();b.textContent=label();};
+    (card.querySelector('#hudTesting')||save).before(b);
+    if(typeof enamelButton==='function'&&save.classList.contains('enamel-button'))enamelButton(b);
+  }).observe($('card'),{childList:true});
 })();

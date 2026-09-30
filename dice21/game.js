@@ -37,8 +37,8 @@ function controls(){const betting=state.phase==='betting',playing=state.phase===
  const count=state.chips.length;$('chip-count').textContent=count+' '+(count%10===1&&count!==11?'фишка':count%10>=2&&count%10<=4&&(count<12||count>14)?'фишки':'фишек');
  $('primary').querySelector('span').textContent=betting?'БРОСИТЬ':playing?'ЕЩЁ КОСТЬ':lastVisitGame?'НА ПОЛЕ':'ЕЩЁ ПАРТИЯ';
  $('secondary').querySelector('span').textContent=playing?'ХВАТИТ':'УБРАТЬ';$('secondary').classList.toggle('hold',playing);
- $('primary').disabled=busy||betting&&(!bet||own>state.cash);$('secondary').disabled=busy||result||betting&&!own;
- document.querySelectorAll('.chip').forEach(b=>b.disabled=busy||!betting||own+Number(b.dataset.value)>state.cash||state.chips.length>=24);
+ $('primary').disabled=busy||betting&&!bet;$('secondary').disabled=busy||result||betting&&!own;
+ document.querySelectorAll('.chip').forEach(b=>b.disabled=busy||!betting||Number(b.dataset.value)>state.cash||state.chips.length>=24);
  document.querySelectorAll('.stake').forEach((b,i)=>b.disabled=busy||!betting||i<(state.houseChips||0));
  $('invitation').hidden=!betting||!!bet;
  $('status').textContent=busy?'Кости на стол…':betting?(house?'Заведение ставит '+money(state.freeBet)+(own?' + твои '+money(own):'')+' — бросай или докинь своих. Вторая партия на свои':bet?'Тап по фишке на столе — убрать':state.cash<25?'Недостаточно денег. Вернись на поле.':'Ближе к 21. Только без перебора!'):playing?'Ещё одну — или хватит?':state.result?.outcome==='lose'?(state.result.free?(state.result.own?'Ставка ушла дилеру · −'+money(state.result.own)+' своих':'Ставка заведения ушла дилеру · своих не потерял'):'Ставка ушла дилеру · −'+money(state.stake)):state.result?.outcome==='push'?(state.result.free?'Ничья · свои вернулись, ставка заведения сгорела':'Ничья · ставка возвращена'):'Выигрыш на балансе. '+(lastVisitGame?'Пора на поле':state.visitLimit?'Вторая партия — на свои':'Ещё партию?');
