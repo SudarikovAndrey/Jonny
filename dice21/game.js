@@ -32,16 +32,16 @@ function stacks(){const area=$('stakes');area.innerHTML='';if(state.phase==='res
   b.setAttribute('aria-label',`Убрать фишку ${v}, столбик ${col+1}, ${level+1}-я снизу`);b.disabled=busy||state.phase!=='betting';b.onclick=()=>act({type:'remove',index:i});area.append(b);
  });
 }
-function controls(){const betting=state.phase==='betting',playing=state.phase==='player',result=state.phase==='result',bet=E.total(state.chips);
+function controls(){const betting=state.phase==='betting',playing=state.phase==='player',result=state.phase==='result',bet=E.total(state.chips),house=betting&&state.freeBet>0,lastVisitGame=result&&state.visitLimit>0&&(state.visitGames||0)+1>=state.visitLimit;
  FX.count($('bet'),bet,{format:money,quiet:true});
  const count=state.chips.length;$('chip-count').textContent=count+' '+(count%10===1&&count!==11?'фишка':count%10>=2&&count%10<=4&&(count<12||count>14)?'фишки':'фишек');
- $('primary').querySelector('span').textContent=betting?'БРОСИТЬ':playing?'ЕЩЁ КОСТЬ':'ЕЩЁ ПАРТИЯ';
+ $('primary').querySelector('span').textContent=betting?'БРОСИТЬ':playing?'ЕЩЁ КОСТЬ':lastVisitGame?'НА ПОЛЕ':'ЕЩЁ ПАРТИЯ';
  $('secondary').querySelector('span').textContent=playing?'ХВАТИТ':'УБРАТЬ';$('secondary').classList.toggle('hold',playing);
- $('primary').disabled=busy||betting&&(!bet||bet>state.cash);$('secondary').disabled=busy||result||betting&&!bet;
- document.querySelectorAll('.chip').forEach(b=>b.disabled=busy||!betting||bet+Number(b.dataset.value)>state.cash||state.chips.length>=24);
- document.querySelectorAll('.stake').forEach(b=>b.disabled=busy||!betting);
+ $('primary').disabled=busy||betting&&(!bet||bet>state.cash&&!house);$('secondary').disabled=busy||result||betting&&(!bet||house);
+ document.querySelectorAll('.chip').forEach(b=>b.disabled=busy||!betting||house||bet+Number(b.dataset.value)>state.cash||state.chips.length>=24);
+ document.querySelectorAll('.stake').forEach(b=>b.disabled=busy||!betting||house);
  $('invitation').hidden=!betting||!!bet;
- $('status').textContent=busy?'Кости на стол…':betting?(bet?'Тап по фишке на столе — убрать':state.cash<25?'Недостаточно денег. Вернись на поле.':'Ближе к 21. Только без перебора!'):playing?'Ещё одну — или хватит?':state.result?.outcome==='lose'?'Ставка ушла дилеру · −'+money(state.stake):state.result?.outcome==='push'?'Ничья · ставка возвращена':'Выигрыш на балансе. Ещё партию?';
+ $('status').textContent=busy?'Кости на стол…':betting?(house?'Ставка заведения '+money(bet)+' — бросай! Вторая партия на свои':bet?'Тап по фишке на столе — убрать':state.cash<25?'Недостаточно денег. Вернись на поле.':'Ближе к 21. Только без перебора!'):playing?'Ещё одну — или хватит?':state.result?.outcome==='lose'?(state.result.free?'Ставка заведения ушла дилеру · своих не потерял':'Ставка ушла дилеру · −'+money(state.stake)):state.result?.outcome==='push'?(state.result.free?'Ничья · ставка заведения сгорела':'Ничья · ставка возвращена'):'Выигрыш на балансе. '+(lastVisitGame?'Пора на поле':state.visitLimit?'Вторая партия — на свои':'Ещё партию?');
 }
 function render(){controls();stacks();dice('player-dice',state.player);dice('dealer-dice',state.dealer);FX.count($('player-score'),E.total(state.player),{instant:true,format:n=>n||'—'});FX.count($('dealer-score'),E.total(state.dealer),{instant:true,format:n=>n||'—'});$('player-score').classList.toggle('bust',E.total(state.player)>21);$('dealer-score').classList.toggle('bust',E.total(state.dealer)>21);$('result').hidden=true;}
 function fly(node,frames,options={}){if(!node||reduced())return Promise.resolve();return node.animate(frames,{duration:420,easing:'cubic-bezier(.2,.8,.3,1)',...options}).finished.catch(()=>{});}

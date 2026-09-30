@@ -3,7 +3,7 @@
   1536,
   1024
  ],
- "note": "Канзас: элеватор, силосы, амбар, склад кормов, трактор, ветряк (tools/map_colliders/kansas.py).",
+ "note": "Канзас: ферма в центре, заборы, деревья по карте (tools/map_colliders/kansas.py).",
  "prisms": [
   {
    "name": "GrainElevator",
@@ -158,31 +158,202 @@
     ]
    ],
    "height": 0.5
+  },
+  {
+   "name": "CratesElevator",
+   "roof": [
+    [
+     733.8,
+     393.2
+    ],
+    [
+     768.0,
+     415.2
+    ],
+    [
+     733.8,
+     437.1
+    ],
+    [
+     699.6,
+     415.2
+    ]
+   ],
+   "height": 0.5
+  },
+  {
+   "name": "Sunflowers",
+   "roof": [
+    [
+     1098.7,
+     457.6
+    ],
+    [
+     1161.4,
+     497.9
+    ],
+    [
+     1110.1,
+     530.9
+    ],
+    [
+     1047.4,
+     490.5
+    ]
+   ],
+   "height": 1.0
+  },
+  {
+   "name": "BarrelsFeed",
+   "roof": [
+    [
+     904.8,
+     645.5
+    ],
+    [
+     933.3,
+     663.8
+    ],
+    [
+     904.8,
+     682.1
+    ],
+    [
+     876.3,
+     663.8
+    ]
+   ],
+   "height": 0.45
   }
  ],
  "hulls": [],
- "beams": [],
  "crowns": [],
+ "beams": [
+  {
+   "name": "FenceRail0",
+   "ends": [
+    [
+     628.3157879810385,
+     389.2296365191985,
+     0.32
+    ],
+    [
+     696.732544888285,
+     433.20708015411253,
+     0.32
+    ]
+   ],
+   "radius": 0.06
+  },
+  {
+   "name": "FenceRail1",
+   "ends": [
+    [
+     853.520946134058,
+     383.7324560648343,
+     0.32
+    ],
+    [
+     876.3265317698068,
+     416.71553879101975,
+     0.32
+    ]
+   ],
+   "radius": 0.06
+  },
+  {
+   "name": "FenceRail2",
+   "ends": [
+    [
+     1035.9656312200486,
+     471.6873433346622,
+     0.32
+    ],
+    [
+     1121.4865773541064,
+     522.9943609087285,
+     0.32
+    ]
+   ],
+   "radius": 0.06
+  },
+  {
+   "name": "FenceRail3",
+   "ends": [
+    [
+     1141.4414647853869,
+     550.4802631805497,
+     0.32
+    ],
+    [
+     1075.875406082609,
+     592.6253133306756,
+     0.32
+    ]
+   ],
+   "radius": 0.06
+  }
+ ],
  "rounds": [
   {
-   "name": "SiloWest",
+   "name": "SiloWestLegs",
    "pixel": [
-    935.1,
-    502.8
+    939.0,
+    499.5
    ],
-   "radius": 0.62,
-   "height": 3.3,
+   "radius": 0.32,
+   "height": 0.85,
    "bottom": 0
   },
   {
-   "name": "SiloEast",
+   "name": "SiloWestBody",
    "pixel": [
-    1017.7,
+    939.0,
+    499.5
+   ],
+   "radius": 0.55,
+   "height": 1.9499999999999997,
+   "bottom": 0.85
+  },
+  {
+   "name": "SiloWestCone",
+   "pixel": [
+    939.0,
+    499.5
+   ],
+   "radius": 0.22,
+   "height": 0.40000000000000036,
+   "bottom": 2.8
+  },
+  {
+   "name": "SiloEastLegs",
+   "pixel": [
+    1013.2,
     567.0
    ],
-   "radius": 0.62,
-   "height": 3.4,
+   "radius": 0.32,
+   "height": 1.0,
    "bottom": 0
+  },
+  {
+   "name": "SiloEastBody",
+   "pixel": [
+    1013.2,
+    567.0
+   ],
+   "radius": 0.55,
+   "height": 1.9,
+   "bottom": 1.0
+  },
+  {
+   "name": "SiloEastCone",
+   "pixel": [
+    1013.2,
+    567.0
+   ],
+   "radius": 0.22,
+   "height": 0.3999999999999999,
+   "bottom": 2.9
   },
   {
    "name": "Windmill",
@@ -195,13 +366,1566 @@
    "bottom": 0
   },
   {
-   "name": "Lamp",
+   "name": "LampEast",
    "pixel": [
     994.9,
     616.8
    ],
    "radius": 0.08,
    "height": 1.3,
+   "bottom": 0
+  },
+  {
+   "name": "LampMid",
+   "pixel": [
+    711.0,
+    552.3
+   ],
+   "radius": 0.06,
+   "height": 1.4,
+   "bottom": 0
+  },
+  {
+   "name": "BarrelSilo",
+   "pixel": [
+    1047.4,
+    618.3
+   ],
+   "radius": 0.16,
+   "height": 0.5,
+   "bottom": 0
+  },
+  {
+   "name": "Tree0",
+   "pixel": [
+    1337,
+    26
+   ],
+   "radius": 0.29,
+   "height": 0.57,
+   "bottom": 0.49,
+   "sphere": true
+  },
+  {
+   "name": "Tree1",
+   "pixel": [
+    324,
+    43
+   ],
+   "radius": 0.33,
+   "height": 0.65,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree2",
+   "pixel": [
+    1305,
+    84
+   ],
+   "radius": 0.19,
+   "height": 0.38,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree3",
+   "pixel": [
+    1152,
+    86
+   ],
+   "radius": 0.42,
+   "height": 0.85,
+   "bottom": 0.56,
+   "sphere": true
+  },
+  {
+   "name": "Tree4",
+   "pixel": [
+    131,
+    91
+   ],
+   "radius": 0.28,
+   "height": 0.56,
+   "bottom": 0.49,
+   "sphere": true
+  },
+  {
+   "name": "Tree5",
+   "pixel": [
+    425,
+    143
+   ],
+   "radius": 0.22,
+   "height": 0.43,
+   "bottom": 0.46,
+   "sphere": true
+  },
+  {
+   "name": "Tree6",
+   "pixel": [
+    250,
+    144
+   ],
+   "radius": 0.36,
+   "height": 0.72,
+   "bottom": 0.53,
+   "sphere": true
+  },
+  {
+   "name": "Tree7",
+   "pixel": [
+    127,
+    179
+   ],
+   "radius": 0.29,
+   "height": 0.57,
+   "bottom": 0.49,
+   "sphere": true
+  },
+  {
+   "name": "Tree8",
+   "pixel": [
+    185,
+    186
+   ],
+   "radius": 0.32,
+   "height": 0.63,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree9",
+   "pixel": [
+    1266,
+    192
+   ],
+   "radius": 0.33,
+   "height": 0.65,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree10",
+   "pixel": [
+    1262,
+    197
+   ],
+   "radius": 0.33,
+   "height": 0.65,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree11",
+   "pixel": [
+    113,
+    207
+   ],
+   "radius": 0.28,
+   "height": 0.56,
+   "bottom": 0.49,
+   "sphere": true
+  },
+  {
+   "name": "Tree12",
+   "pixel": [
+    343,
+    210
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree13",
+   "pixel": [
+    1443,
+    309
+   ],
+   "radius": 0.51,
+   "height": 1.01,
+   "bottom": 0.6,
+   "sphere": true
+  },
+  {
+   "name": "Tree14",
+   "pixel": [
+    352,
+    312
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree15",
+   "pixel": [
+    351,
+    314
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree16",
+   "pixel": [
+    31,
+    319
+   ],
+   "radius": 0.18,
+   "height": 0.37,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree17",
+   "pixel": [
+    1213,
+    320
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree18",
+   "pixel": [
+    620,
+    335
+   ],
+   "radius": 0.4,
+   "height": 0.8,
+   "bottom": 0.55,
+   "sphere": true
+  },
+  {
+   "name": "Tree19",
+   "pixel": [
+    24,
+    357
+   ],
+   "radius": 0.19,
+   "height": 0.39,
+   "bottom": 0.45,
+   "sphere": true
+  },
+  {
+   "name": "Tree20",
+   "pixel": [
+    873,
+    368
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree21",
+   "pixel": [
+    581,
+    374
+   ],
+   "radius": 0.31,
+   "height": 0.62,
+   "bottom": 0.5,
+   "sphere": true
+  },
+  {
+   "name": "Tree22",
+   "pixel": [
+    1366,
+    375
+   ],
+   "radius": 0.28,
+   "height": 0.55,
+   "bottom": 0.49,
+   "sphere": true
+  },
+  {
+   "name": "Tree23",
+   "pixel": [
+    541,
+    381
+   ],
+   "radius": 0.2,
+   "height": 0.4,
+   "bottom": 0.45,
+   "sphere": true
+  },
+  {
+   "name": "Tree24",
+   "pixel": [
+    1499,
+    427
+   ],
+   "radius": 0.26,
+   "height": 0.51,
+   "bottom": 0.48,
+   "sphere": true
+  },
+  {
+   "name": "Tree25",
+   "pixel": [
+    1422,
+    436
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree26",
+   "pixel": [
+    1110,
+    451
+   ],
+   "radius": 0.4,
+   "height": 0.8,
+   "bottom": 0.55,
+   "sphere": true
+  },
+  {
+   "name": "Tree27",
+   "pixel": [
+    1517,
+    478
+   ],
+   "radius": 0.19,
+   "height": 0.37,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree28",
+   "pixel": [
+    340,
+    508
+   ],
+   "radius": 0.22,
+   "height": 0.44,
+   "bottom": 0.46,
+   "sphere": true
+  },
+  {
+   "name": "Tree29",
+   "pixel": [
+    339,
+    509
+   ],
+   "radius": 0.22,
+   "height": 0.44,
+   "bottom": 0.46,
+   "sphere": true
+  },
+  {
+   "name": "Tree30",
+   "pixel": [
+    768,
+    523
+   ],
+   "radius": 0.25,
+   "height": 0.5,
+   "bottom": 0.48,
+   "sphere": true
+  },
+  {
+   "name": "Tree31",
+   "pixel": [
+    765,
+    524
+   ],
+   "radius": 0.25,
+   "height": 0.5,
+   "bottom": 0.48,
+   "sphere": true
+  },
+  {
+   "name": "Tree32",
+   "pixel": [
+    386,
+    534
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree33",
+   "pixel": [
+    750,
+    560
+   ],
+   "radius": 0.23,
+   "height": 0.46,
+   "bottom": 0.46,
+   "sphere": true
+  },
+  {
+   "name": "Tree34",
+   "pixel": [
+    1122,
+    568
+   ],
+   "radius": 0.19,
+   "height": 0.37,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree35",
+   "pixel": [
+    1448,
+    569
+   ],
+   "radius": 0.34,
+   "height": 0.68,
+   "bottom": 0.52,
+   "sphere": true
+  },
+  {
+   "name": "Tree36",
+   "pixel": [
+    1089,
+    584
+   ],
+   "radius": 0.23,
+   "height": 0.46,
+   "bottom": 0.47,
+   "sphere": true
+  },
+  {
+   "name": "Tree37",
+   "pixel": [
+    47,
+    607
+   ],
+   "radius": 0.19,
+   "height": 0.39,
+   "bottom": 0.45,
+   "sphere": true
+  },
+  {
+   "name": "Tree38",
+   "pixel": [
+    46,
+    608
+   ],
+   "radius": 0.19,
+   "height": 0.39,
+   "bottom": 0.45,
+   "sphere": true
+  },
+  {
+   "name": "Tree39",
+   "pixel": [
+    1366,
+    616
+   ],
+   "radius": 0.44,
+   "height": 0.88,
+   "bottom": 0.57,
+   "sphere": true
+  },
+  {
+   "name": "Tree40",
+   "pixel": [
+    90,
+    638
+   ],
+   "radius": 0.21,
+   "height": 0.42,
+   "bottom": 0.46,
+   "sphere": true
+  },
+  {
+   "name": "Tree41",
+   "pixel": [
+    1477,
+    642
+   ],
+   "radius": 0.39,
+   "height": 0.77,
+   "bottom": 0.54,
+   "sphere": true
+  },
+  {
+   "name": "Tree42",
+   "pixel": [
+    37,
+    653
+   ],
+   "radius": 0.34,
+   "height": 0.67,
+   "bottom": 0.52,
+   "sphere": true
+  },
+  {
+   "name": "Tree43",
+   "pixel": [
+    99,
+    681
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree44",
+   "pixel": [
+    213,
+    687
+   ],
+   "radius": 0.3,
+   "height": 0.6,
+   "bottom": 0.5,
+   "sphere": true
+  },
+  {
+   "name": "Tree45",
+   "pixel": [
+    1247,
+    690
+   ],
+   "radius": 0.34,
+   "height": 0.69,
+   "bottom": 0.52,
+   "sphere": true
+  },
+  {
+   "name": "Tree46",
+   "pixel": [
+    74,
+    699
+   ],
+   "radius": 0.19,
+   "height": 0.39,
+   "bottom": 0.45,
+   "sphere": true
+  },
+  {
+   "name": "Tree47",
+   "pixel": [
+    1418,
+    704
+   ],
+   "radius": 0.23,
+   "height": 0.46,
+   "bottom": 0.46,
+   "sphere": true
+  },
+  {
+   "name": "Tree48",
+   "pixel": [
+    170,
+    731
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree49",
+   "pixel": [
+    169,
+    732
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree50",
+   "pixel": [
+    670,
+    732
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree51",
+   "pixel": [
+    733,
+    733
+   ],
+   "radius": 0.27,
+   "height": 0.55,
+   "bottom": 0.49,
+   "sphere": true
+  },
+  {
+   "name": "Tree52",
+   "pixel": [
+    346,
+    736
+   ],
+   "radius": 0.26,
+   "height": 0.53,
+   "bottom": 0.48,
+   "sphere": true
+  },
+  {
+   "name": "Tree53",
+   "pixel": [
+    1116,
+    755
+   ],
+   "radius": 0.24,
+   "height": 0.48,
+   "bottom": 0.47,
+   "sphere": true
+  },
+  {
+   "name": "Tree54",
+   "pixel": [
+    786,
+    791
+   ],
+   "radius": 0.2,
+   "height": 0.4,
+   "bottom": 0.45,
+   "sphere": true
+  },
+  {
+   "name": "Tree55",
+   "pixel": [
+    294,
+    793
+   ],
+   "radius": 0.31,
+   "height": 0.61,
+   "bottom": 0.5,
+   "sphere": true
+  },
+  {
+   "name": "Tree56",
+   "pixel": [
+    149,
+    802
+   ],
+   "radius": 0.32,
+   "height": 0.63,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree57",
+   "pixel": [
+    148,
+    803
+   ],
+   "radius": 0.32,
+   "height": 0.63,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree58",
+   "pixel": [
+    147,
+    804
+   ],
+   "radius": 0.32,
+   "height": 0.63,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree59",
+   "pixel": [
+    90,
+    812
+   ],
+   "radius": 0.47,
+   "height": 0.93,
+   "bottom": 0.58,
+   "sphere": true
+  },
+  {
+   "name": "Tree60",
+   "pixel": [
+    261,
+    844
+   ],
+   "radius": 0.32,
+   "height": 0.65,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree61",
+   "pixel": [
+    399,
+    848
+   ],
+   "radius": 0.47,
+   "height": 0.94,
+   "bottom": 0.58,
+   "sphere": true
+  },
+  {
+   "name": "Tree62",
+   "pixel": [
+    153,
+    878
+   ],
+   "radius": 0.18,
+   "height": 0.36,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Tree63",
+   "pixel": [
+    216,
+    886
+   ],
+   "radius": 0.36,
+   "height": 0.73,
+   "bottom": 0.53,
+   "sphere": true
+  },
+  {
+   "name": "Tree64",
+   "pixel": [
+    582,
+    896
+   ],
+   "radius": 0.33,
+   "height": 0.67,
+   "bottom": 0.52,
+   "sphere": true
+  },
+  {
+   "name": "Tree65",
+   "pixel": [
+    939,
+    905
+   ],
+   "radius": 0.25,
+   "height": 0.49,
+   "bottom": 0.47,
+   "sphere": true
+  },
+  {
+   "name": "Tree66",
+   "pixel": [
+    556,
+    908
+   ],
+   "radius": 0.32,
+   "height": 0.65,
+   "bottom": 0.51,
+   "sphere": true
+  },
+  {
+   "name": "Tree67",
+   "pixel": [
+    915,
+    924
+   ],
+   "radius": 0.26,
+   "height": 0.51,
+   "bottom": 0.48,
+   "sphere": true
+  },
+  {
+   "name": "Tree68",
+   "pixel": [
+    474,
+    987
+   ],
+   "radius": 0.36,
+   "height": 0.71,
+   "bottom": 0.53,
+   "sphere": true
+  },
+  {
+   "name": "Tree69",
+   "pixel": [
+    1049,
+    988
+   ],
+   "radius": 0.4,
+   "height": 0.79,
+   "bottom": 0.55,
+   "sphere": true
+  },
+  {
+   "name": "Tree70",
+   "pixel": [
+    1080,
+    991
+   ],
+   "radius": 0.36,
+   "height": 0.72,
+   "bottom": 0.53,
+   "sphere": true
+  },
+  {
+   "name": "Tree71",
+   "pixel": [
+    60,
+    994
+   ],
+   "radius": 0.31,
+   "height": 0.61,
+   "bottom": 0.5,
+   "sphere": true
+  },
+  {
+   "name": "Tree72",
+   "pixel": [
+    395,
+    1005
+   ],
+   "radius": 0.18,
+   "height": 0.37,
+   "bottom": 0.44,
+   "sphere": true
+  },
+  {
+   "name": "Trunk0",
+   "pixel": [
+    1337,
+    74.04388188976378
+   ],
+   "radius": 0.07,
+   "height": 0.59,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk1",
+   "pixel": [
+    324,
+    94.77676400160234
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk2",
+   "pixel": [
+    1305,
+    123.15560570308611
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk3",
+   "pixel": [
+    1152,
+    146.83466057494687
+   ],
+   "radius": 0.07,
+   "height": 0.66,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk4",
+   "pixel": [
+    131,
+    138.61578402043077
+   ],
+   "radius": 0.07,
+   "height": 0.59,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk5",
+   "pixel": [
+    425,
+    184.68330421662614
+   ],
+   "radius": 0.07,
+   "height": 0.56,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk6",
+   "pixel": [
+    250,
+    199.07626694089703
+   ],
+   "radius": 0.07,
+   "height": 0.63,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk7",
+   "pixel": [
+    127,
+    227.1436067724175
+   ],
+   "radius": 0.07,
+   "height": 0.59,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk8",
+   "pixel": [
+    185,
+    236.86564678676413
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk9",
+   "pixel": [
+    1266,
+    243.77676400160234
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk10",
+   "pixel": [
+    1262,
+    248.77676400160234
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk11",
+   "pixel": [
+    113,
+    254.4374454970904
+   ],
+   "radius": 0.07,
+   "height": 0.59,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk12",
+   "pixel": [
+    343,
+    248.2927622047244
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk13",
+   "pixel": [
+    1443,
+    377.50115073337486
+   ],
+   "radius": 0.07,
+   "height": 0.7,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk14",
+   "pixel": [
+    352,
+    350.2927622047244
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk15",
+   "pixel": [
+    351,
+    352.2927622047244
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk16",
+   "pixel": [
+    31,
+    357.69799488043276
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk17",
+   "pixel": [
+    1213,
+    358.2927622047244
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk18",
+   "pixel": [
+    620,
+    393.9018876293369
+   ],
+   "radius": 0.07,
+   "height": 0.65,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk19",
+   "pixel": [
+    24,
+    396.5648356449973
+   ],
+   "radius": 0.07,
+   "height": 0.55,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk20",
+   "pixel": [
+    873,
+    406.2927622047244
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk21",
+   "pixel": [
+    581,
+    424.15744980632775
+   ],
+   "radius": 0.07,
+   "height": 0.6,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk22",
+   "pixel": [
+    1366,
+    422.30930295123636
+   ],
+   "radius": 0.07,
+   "height": 0.59,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk23",
+   "pixel": [
+    541,
+    421.14395019535385
+   ],
+   "radius": 0.07,
+   "height": 0.55,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk24",
+   "pixel": [
+    1499,
+    472.30412370893725
+   ],
+   "radius": 0.07,
+   "height": 0.58,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk25",
+   "pixel": [
+    1422,
+    474.2927622047244
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk26",
+   "pixel": [
+    1110,
+    509.6710185009439
+   ],
+   "radius": 0.07,
+   "height": 0.65,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk27",
+   "pixel": [
+    1517,
+    516.8518818897638
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk28",
+   "pixel": [
+    340,
+    549.9447669986481
+   ],
+   "radius": 0.07,
+   "height": 0.56,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk29",
+   "pixel": [
+    339,
+    550.9447669986481
+   ],
+   "radius": 0.07,
+   "height": 0.56,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk30",
+   "pixel": [
+    768,
+    567.8823586740465
+   ],
+   "radius": 0.07,
+   "height": 0.58,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk31",
+   "pixel": [
+    765,
+    568.8823586740465
+   ],
+   "radius": 0.07,
+   "height": 0.58,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk32",
+   "pixel": [
+    386,
+    572.2927622047245
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk33",
+   "pixel": [
+    750,
+    602.7409898709307
+   ],
+   "radius": 0.07,
+   "height": 0.56,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk34",
+   "pixel": [
+    1122,
+    606.8901394285142
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk35",
+   "pixel": [
+    1448,
+    621.9784785487351
+   ],
+   "radius": 0.07,
+   "height": 0.62,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk36",
+   "pixel": [
+    1089,
+    627.0819732941814
+   ],
+   "radius": 0.07,
+   "height": 0.57,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk37",
+   "pixel": [
+    47,
+    646.4911271045974
+   ],
+   "radius": 0.07,
+   "height": 0.55,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk38",
+   "pixel": [
+    46,
+    647.4911271045974
+   ],
+   "radius": 0.07,
+   "height": 0.55,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk39",
+   "pixel": [
+    1366,
+    678.5316086760935
+   ],
+   "radius": 0.07,
+   "height": 0.67,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk40",
+   "pixel": [
+    90,
+    679.116058487764
+   ],
+   "radius": 0.07,
+   "height": 0.56,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk41",
+   "pixel": [
+    1477,
+    699.3653723194309
+   ],
+   "radius": 0.07,
+   "height": 0.64,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk42",
+   "pixel": [
+    37,
+    705.8307944609235
+   ],
+   "radius": 0.07,
+   "height": 0.62,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk43",
+   "pixel": [
+    99,
+    719.2927622047245
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk44",
+   "pixel": [
+    213,
+    736.2407154035975
+   ],
+   "radius": 0.07,
+   "height": 0.6,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk45",
+   "pixel": [
+    1247,
+    743.5623881934679
+   ],
+   "radius": 0.07,
+   "height": 0.62,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk46",
+   "pixel": [
+    74,
+    738.4541586157666
+   ],
+   "radius": 0.07,
+   "height": 0.55,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk47",
+   "pixel": [
+    1418,
+    746.8033950526228
+   ],
+   "radius": 0.07,
+   "height": 0.56,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk48",
+   "pixel": [
+    170,
+    769.3465744153305
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk49",
+   "pixel": [
+    169,
+    770.3465744153305
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk50",
+   "pixel": [
+    670,
+    770.2927622047245
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk51",
+   "pixel": [
+    733,
+    779.8948818897638
+   ],
+   "radius": 0.07,
+   "height": 0.59,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk52",
+   "pixel": [
+    346,
+    781.9908526372641
+   ],
+   "radius": 0.07,
+   "height": 0.58,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk53",
+   "pixel": [
+    1116,
+    798.7183381766241
+   ],
+   "radius": 0.07,
+   "height": 0.57,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk54",
+   "pixel": [
+    786,
+    831.0367531433855
+   ],
+   "radius": 0.07,
+   "height": 0.55,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk55",
+   "pixel": [
+    294,
+    843.0415720727719
+   ],
+   "radius": 0.07,
+   "height": 0.6,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk56",
+   "pixel": [
+    149,
+    852.8656467867642
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk57",
+   "pixel": [
+    148,
+    853.8656467867642
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk58",
+   "pixel": [
+    147,
+    854.8656467867642
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk59",
+   "pixel": [
+    90,
+    876.8840174316506
+   ],
+   "radius": 0.07,
+   "height": 0.68,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk60",
+   "pixel": [
+    261,
+    895.5791361440752
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk61",
+   "pixel": [
+    399,
+    913.112261334022
+   ],
+   "radius": 0.07,
+   "height": 0.68,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk62",
+   "pixel": [
+    153,
+    916.2927622047245
+   ],
+   "radius": 0.07,
+   "height": 0.54,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk63",
+   "pixel": [
+    216,
+    941.4295136418176
+   ],
+   "radius": 0.07,
+   "height": 0.63,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk64",
+   "pixel": [
+    582,
+    948.4905781699308
+   ],
+   "radius": 0.07,
+   "height": 0.62,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk65",
+   "pixel": [
+    939,
+    949.5105447028656
+   ],
+   "radius": 0.07,
+   "height": 0.57,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk66",
+   "pixel": [
+    556,
+    959.5791361440752
+   ],
+   "radius": 0.07,
+   "height": 0.61,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk67",
+   "pixel": [
+    915,
+    969.3041237089373
+   ],
+   "radius": 0.07,
+   "height": 0.58,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk68",
+   "pixel": [
+    474,
+    1041.5192346931728
+   ],
+   "radius": 0.07,
+   "height": 0.63,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk69",
+   "pixel": [
+    1049,
+    1046.3848818897638
+   ],
+   "radius": 0.07,
+   "height": 0.65,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk70",
+   "pixel": [
+    1080,
+    1045.9378818897637
+   ],
+   "radius": 0.07,
+   "height": 0.63,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk71",
+   "pixel": [
+    60,
+    1044.0647853801793
+   ],
+   "radius": 0.07,
+   "height": 0.6,
+   "bottom": 0
+  },
+  {
+   "name": "Trunk72",
+   "pixel": [
+    395,
+    1043.6979948804328
+   ],
+   "radius": 0.07,
+   "height": 0.54,
    "bottom": 0
   }
  ]

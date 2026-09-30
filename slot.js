@@ -74,7 +74,7 @@ function connect(child,token){
 function openTile({landing=false}={}){
  if(S.finished||document.querySelector('.minigame-layer'))return Promise.resolve();
  if(landing){S.minigames=MinigameRotation.advance(S.minigames);save();}
- return MinigameRotation.current(S.minigames)==='dice21'?Dice21.open():open({free:landing});
+ return MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing});
 }
 // Every completed lap contributes to the same persistent jackpot.
 if(typeof lapDone==='function'){const base=lapDone;lapDone=async function(){const result=await base.apply(this,arguments);st().pot=(st().pot||0)+10*S.day;save();return result;};}

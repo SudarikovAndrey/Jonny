@@ -9,11 +9,17 @@ function makeService(){return Dice21Engine.createService({read:()=>S.dice21,wall
   track('dice21',{outcome:state.result.outcome,stake:state.stake,net});
   log(`🎲 21 в кости: ${net>0?'+':''}$${net}.`);
  }
+ // Вторая партия остановки сыграна — стол закрывается сам.
+ if(action.type==='next'&&state.visitLimit>0&&state.visitGames>=state.visitLimit){setTimeout(()=>{if(current)current.exit();},350);}
  save();render();
 }});}
-function open(){
+// Ставка заведения привязана к доходу: половина чистой прибыли за круг, от $25 до $1000, кратно фишке.
+function houseStake(){const net=typeof lapNet==='function'?lapNet():0;return Math.max(25,Math.min(1000,Math.round(net*0.5/25)*25));}
+function open({landing=false}={}){
  if(current)return current.promise;
  if(!S||S.finished||document.querySelector('.minigame-layer'))return Promise.resolve();
+ if(landing){const svc=makeService();if(svc.snapshot().phase==='result')svc.dispatch({type:'next'}); // прошлая партия дочитана — стол чистый
+  if(svc.snapshot().phase==='betting'){const r=svc.dispatch({type:'visit',stake:houseStake()});if(r.ok)log(`🎲 21 в кости: заведение ставит $${r.snapshot.freeBet} — первая партия бесплатно, вторая на свои.`);}}
  let resolve;const promise=new Promise(r=>resolve=r);
  const app=$('app'),prior=document.activeElement,wasInert=app.inert,token=crypto.randomUUID();
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','21 в кости');

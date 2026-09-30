@@ -963,12 +963,13 @@ const OUTCOMES=[
 const clone=x=>JSON.parse(JSON.stringify(x));
 const integer=(v,min=0,max=1e9)=>Number.isFinite(Number(v))?Math.min(max,Math.max(min,Math.round(Number(v)))):min;
 const money=n=>'$'+Math.round(n).toLocaleString('ru-RU');
-function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180,paidSpins:0,freeSpin:true,visits:1,pending:null,lastPrize:null,closed:false,sound:true,totalSpins:0,
+const FREE_SPINS=5;
+function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180,paidSpins:0,freeSpin:true,freeSpins:5,visits:1,pending:null,lastPrize:null,closed:false,sound:true,totalSpins:0,
  points:[{n:'Candy Stand',cap:14,q:6,buy:2,profit:28},{n:'Soda Cart',cap:8,q:0,buy:4,profit:48},{n:'Music Stall',cap:22,q:22,buy:10,profit:110}]};}
 function restore(raw){
  const s=initial();if(!raw||raw.version!==2)return s;
  for(const k of ['P','cash','gem','move','pot','paidSpins','visits','totalSpins'])s[k]=integer(raw[k]);
- s.day=integer(raw.day,1,7);s.freeSpin=raw.freeSpin===true;s.closed=raw.closed===true;s.sound=raw.sound===true;
+ s.day=integer(raw.day,1,7);s.freeSpins=integer(raw.freeSpins,0,99);if(!s.freeSpins&&raw.freeSpin===true)s.freeSpins=1;s.freeSpin=s.freeSpins>0;s.closed=raw.closed===true;s.sound=raw.sound===true;
  s.points.forEach((p,i)=>{p.q=integer(raw.points?.[i]?.q,0,p.cap);});
  for(const key of ['pending','lastPrize']){
   const p=raw[key];
@@ -1006,11 +1007,11 @@ function award(s,o,syms){
 function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.move?`+${p.move} ${p.move===3?"хода":"ходов"}`:'',p.restock==='all'?'Затарить все точки':p.restock==='one'?'Затарить лучшую точку':''].filter(Boolean).join(' + ');}
 class Game {
  constructor(raw,rng=Math.random){this.state=restore(raw);this.rng=rng;this.busy=false;}
- available(){return this.state.paidSpins+(this.state.freeSpin?1:0);}
+ available(){return this.state.paidSpins+(this.state.freeSpins||0);}
  buyPack(){const s=this.state;if(this.busy||s.gem<1||this.available()>0)return false;s.gem--;s.paidSpins+=5;return true;}
  begin(forced){
   const s=this.state;if(this.busy||s.pending||s.closed||this.available()<1)return null;
-  this.busy=true;s.lastPrize=null;if(s.freeSpin)s.freeSpin=false;else s.paidSpins--;
+  this.busy=true;s.lastPrize=null;if(s.freeSpins>0)s.freeSpins--;else s.paidSpins--;s.freeSpin=s.freeSpins>0;
   const o=OUTCOMES.find(x=>x.id===forced)||choose(this.rng);
   s.pending=award(s,o,symbols(o,this.rng));s.totalSpins++;return clone(s.pending);
  }
@@ -1031,7 +1032,8 @@ class Game {
   s.lastPrize={...p,cash,refund,stocked};
   return clone(s.lastPrize);
  }
- land(){if(this.busy)return false;this.collect();this.state.freeSpin=true;this.state.visits++;this.state.closed=false;return true;}
+ // Попадание на клетку даёт пять бесплатных круток (решение продюсера 30.09.2026).
+ land(){if(this.busy)return false;this.collect();this.state.freeSpins=FREE_SPINS;this.state.freeSpin=true;this.state.visits++;this.state.closed=false;return true;}
  close(){if(this.busy)return false;this.collect();this.state.closed=true;return true;}
  snapshot(){return clone(this.state);}
 }
@@ -1171,7 +1173,7 @@ function render(){
  for(const [id,key] of [['inP','P'],['inDay','day'],['inCash','cash'],['inGem','gem'],['inMove','move'],['inPot','pot']])$(id).value=S[key];
  $('stage').hidden=S.closed;$('receipt').hidden=!S.closed;
  $('bSound').textContent=S.sound?'Звук вкл.':'Звук выкл.';$('bSound').setAttribute('aria-pressed',String(S.sound));$('bSound').setAttribute('aria-label',S.sound?'Выключить звук':'Включить звук');
- $('visitLabel').textContent=S.freeSpin?'1 бесплатный спин':S.paidSpins?`В запасе: ${S.paidSpins} ${spinWord(S.paidSpins)}`:'Брайтон-Бич · клетка 10';
+ $('visitLabel').textContent=S.freeSpins>0?`Бесплатно: ${S.freeSpins} ${spinWord(S.freeSpins)}`:S.paidSpins?`В запасе: ${S.paidSpins} ${spinWord(S.paidSpins)}`:'Брайтон-Бич · клетка 10';
  renderRows();renderPoints();renderActions();updateNote();idle.refresh();
 }
 function drawSpinCount(){
@@ -1474,7 +1476,7 @@ for(const [id,key] of [['inP','P'],['inDay','day'],['inCash','cash'],['inGem','g
 window.addEventListener('resize',setRadius);
 new ResizeObserver(setRadius).observe($('stage'));
 $('poster').classList.add('ready');render();setRadius();showSymbols(S.pending?.syms||S.lastPrize?.syms||['seven','gem','cherry']);
-if(S.pending)settle(false);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',S.freeSpin?'Первый спин бесплатный':game.available()?'Или нажми «Крутить»':'5 спинов за 1 кристалл');
+if(S.pending)settle(false);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',S.freeSpins>0?`${S.freeSpins} ${spinWord(S.freeSpins)} за счёт заведения`:game.available()?'Или нажми «Крутить»':'5 спинов за 1 кристалл');
 if(S.closed)renderReceipt(null);save();document.fonts?.ready.then(setRadius);
 })();
 </script></body></html>
