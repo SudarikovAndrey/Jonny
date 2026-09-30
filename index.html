@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'c3f14c85'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'e02db69c'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -4939,8 +4939,8 @@ const OUTCOMES=[
 const clone=x=>JSON.parse(JSON.stringify(x));
 const integer=(v,min=0,max=1e9)=>Number.isFinite(Number(v))?Math.min(max,Math.max(min,Math.round(Number(v)))):min;
 const money=n=>'$'+Math.round(n).toLocaleString('ru-RU');
-const FREE_SPINS=5;
-function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180,paidSpins:0,freeSpin:true,freeSpins:5,visits:1,pending:null,lastPrize:null,closed:false,sound:true,totalSpins:0,
+const FREE_SPINS=3;
+function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180,paidSpins:0,freeSpin:true,freeSpins:3,visits:1,pending:null,lastPrize:null,closed:false,sound:true,totalSpins:0,
  points:[{n:'Candy Stand',cap:14,q:6,buy:2,profit:28},{n:'Soda Cart',cap:8,q:0,buy:4,profit:48},{n:'Music Stall',cap:22,q:22,buy:10,profit:110}]};}
 function restore(raw){
  const s=initial();if(!raw||raw.version!==2)return s;
@@ -5008,7 +5008,7 @@ class Game {
   s.lastPrize={...p,cash,refund,stocked};
   return clone(s.lastPrize);
  }
- // Попадание на клетку даёт пять бесплатных круток (решение продюсера 30.09.2026).
+ // Попадание на клетку даёт три бесплатные крутки (решение продюсера 30.09.2026, было пять).
  land(){if(this.busy)return false;this.collect();this.state.freeSpins=FREE_SPINS;this.state.freeSpin=true;this.state.visits++;this.state.closed=false;return true;}
  close(){if(this.busy)return false;this.collect();this.state.closed=true;return true;}
  snapshot(){return clone(this.state);}
@@ -5089,7 +5089,7 @@ function open(opts={}){
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Однорукий бандит');
  const loading=document.createElement('div');loading.className='sl-loading';loading.textContent='Открываем автомат…';
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
- const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=c1e5b0e0a6d8#'+encodeURIComponent(token);
+ const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=e9ea79ca9cbc#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
  current={promise,session,frame,token,layer,closing:false,resolve};
  const finish=()=>{
@@ -5543,9 +5543,10 @@ window.MinigameShell={
 'use strict';
 const CHIPS=[25,50,100,250,500], clone=x=>JSON.parse(JSON.stringify(x));
 const total=dice=>dice.reduce((a,b)=>a+b,0);
-const initial=()=>({phase:'betting',chips:[],player:[],dealer:[],stake:0,result:null,round:0,freeBet:0,freeGame:false,visitGames:0,visitLimit:0});
+const initial=()=>({phase:'betting',chips:[],player:[],dealer:[],stake:0,result:null,round:0,freeBet:0,houseChips:0,house:0,visitGames:0,visitLimit:0});
 // Остановка на клетке: первая партия на ставку заведения (фишки уже на столе, снять нельзя),
-// вторая — на свои деньги, после неё стол закрывается (решение продюсера 30.09.2026).
+// игрок может докинуть своих сверху; вторая — только на свои, после неё стол закрывается
+// (решение продюсера 30.09.2026).
 const VISIT_GAMES=2;
 function chipsFor(amount){const out=[];let left=Math.max(0,Math.round(amount/25)*25);for(const v of [...CHIPS].reverse()){while(left>=v&&out.length<24){out.push(v);left-=v;}}return out;}
 function transition(saved,action,cash,roll=()=>1+Math.floor(Math.random()*6)){
@@ -5555,27 +5556,29 @@ function transition(saved,action,cash,roll=()=>1+Math.floor(Math.random()*6)){
   const p=total(s.player);
   if(p<=21){s.dealer=[die(),die(),die()];while(total(s.dealer)<=p&&total(s.dealer)<21)s.dealer.push(die());}
   const d=total(s.dealer), outcome=p>21?'lose':d>21||p>d?'win':p===d?'push':'lose';
-  // Партия заведения: выигрыш — только чистая прибыль, ничья и проигрыш — ничего, своих денег на столе нет.
-  const returned=s.freeGame?(outcome==='win'?s.stake:0):outcome==='win'?s.stake*2:outcome==='push'?s.stake:0;
-  delta+=returned;s.phase='result';s.result={outcome,returned,net:s.freeGame?returned:returned-s.stake,free:s.freeGame,player:p,dealer:d,reason:p>21?'player-bust':d>21?'dealer-bust':outcome==='push'?'tie':'points'};
+  // Часть заведения: при выигрыше даёт чистую прибыль в свой размер, при ничьей и проигрыше сгорает.
+  // Своя часть — как обычно: выигрыш ×2, ничья возвращается, проигрыш уходит дилеру.
+  const own=s.stake-s.house;
+  const returned=outcome==='win'?own*2+s.house:outcome==='push'?own:0;
+  delta+=returned;s.phase='result';s.result={outcome,returned,net:returned-own,free:s.house>0,house:s.house,own,player:p,dealer:d,reason:p>21?'player-bust':d>21?'dealer-bust':outcome==='push'?'tie':'points'};
  };
  if(action.type==='visit'&&s.phase==='betting'){
   const chips=chipsFor(action.stake);if(!chips.length)return {ok:false,error:'Ставка заведения слишком мала'};
-  s.chips=chips;s.freeBet=total(chips);s.freeGame=false;s.visitGames=0;s.visitLimit=VISIT_GAMES;
- }else if((action.type==='add'||action.type==='remove'||action.type==='clear')&&s.phase==='betting'&&s.freeBet>0){
-  return {ok:false,error:'Ставка заведения — играй как есть'};
+  s.chips=chips;s.freeBet=total(chips);s.houseChips=chips.length;s.house=0;s.visitGames=0;s.visitLimit=VISIT_GAMES;
  }else if(action.type==='add'&&s.phase==='betting'){
   if(!CHIPS.includes(action.value))return {ok:false,error:'Неизвестная фишка'};
-  if(total(s.chips)+action.value>cash)return {ok:false,error:'Не хватает денег на эту фишку'};
+  if(total(s.chips)-s.freeBet+action.value>cash)return {ok:false,error:'Не хватает денег на эту фишку'};
   if(s.chips.length>=24)return {ok:false,error:'На столе уже 24 фишки'};
   s.chips.push(action.value);
  }else if(action.type==='remove'&&s.phase==='betting'){
   if(!Number.isInteger(action.index)||action.index<0||action.index>=s.chips.length)return {ok:false};
+  if(action.index<s.houseChips)return {ok:false,error:'Фишки заведения не снимаются'};
   s.chips.splice(action.index,1);
- }else if(action.type==='clear'&&s.phase==='betting')s.chips=[];
+ }else if(action.type==='clear'&&s.phase==='betting')s.chips=s.chips.slice(0,s.houseChips);
  else if(action.type==='start'&&s.phase==='betting'){
   s.stake=total(s.chips);if(s.stake<=0)return {ok:false,error:'Сначала выбери фишки для ставки'};
-  if(s.freeBet>0){s.freeGame=true;s.freeBet=0;delta=0;}else{if(s.stake>cash)return {ok:false,error:'Сначала выбери фишки для ставки'};s.freeGame=false;delta=-s.stake;}s.player=[die(),die(),die()];s.dealer=[];s.phase='player';s.result=null;s.round++;
+  const own=s.stake-s.freeBet;if(own>cash)return {ok:false,error:'Не хватает денег на свою часть ставки'};
+  s.house=s.freeBet;s.freeBet=0;s.houseChips=0;delta=-own; /* списываются только свои фишки */ s.player=[die(),die(),die()];s.dealer=[];s.phase='player';s.result=null;s.round++;
  }else if(action.type==='hit'&&s.phase==='player'){
   s.player.push(die());if(total(s.player)>=21)resolve();
  }else if(action.type==='stand'&&s.phase==='player')resolve();
@@ -5621,7 +5624,7 @@ function open({landing=false}={}){
  const app=$('app'),prior=document.activeElement,wasInert=app.inert,token=crypto.randomUUID();
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','21 в кости');
 
- const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=b0c5a033a58b#'+token;
+ const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=2e8c7f67f868#'+token;
 
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
  layer.append(frame,cancel);const dispose=MinigameShell.attach(layer,frame);app.inert=true;document.body.append(layer);
@@ -5646,5 +5649,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=49c304a9";</script><script src="shipment-event.js?v=7e9b88cf"></script><script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=2aad3806"></script><script type="module" src="roll-button.js?v=b3ff83ec"></script></body>
+<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=49c304a9";</script><script src="shipment-event.js?v=7e9b88cf"></script><script src="parcel-fill.js?v=28a81fde"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=2aad3806"></script><script type="module" src="roll-button.js?v=1c00d077"></script></body>
 </html>

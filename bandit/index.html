@@ -963,8 +963,8 @@ const OUTCOMES=[
 const clone=x=>JSON.parse(JSON.stringify(x));
 const integer=(v,min=0,max=1e9)=>Number.isFinite(Number(v))?Math.min(max,Math.max(min,Math.round(Number(v)))):min;
 const money=n=>'$'+Math.round(n).toLocaleString('ru-RU');
-const FREE_SPINS=5;
-function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180,paidSpins:0,freeSpin:true,freeSpins:5,visits:1,pending:null,lastPrize:null,closed:false,sound:true,totalSpins:0,
+const FREE_SPINS=3;
+function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180,paidSpins:0,freeSpin:true,freeSpins:3,visits:1,pending:null,lastPrize:null,closed:false,sound:true,totalSpins:0,
  points:[{n:'Candy Stand',cap:14,q:6,buy:2,profit:28},{n:'Soda Cart',cap:8,q:0,buy:4,profit:48},{n:'Music Stall',cap:22,q:22,buy:10,profit:110}]};}
 function restore(raw){
  const s=initial();if(!raw||raw.version!==2)return s;
@@ -1032,7 +1032,7 @@ class Game {
   s.lastPrize={...p,cash,refund,stocked};
   return clone(s.lastPrize);
  }
- // Попадание на клетку даёт пять бесплатных круток (решение продюсера 30.09.2026).
+ // Попадание на клетку даёт три бесплатные крутки (решение продюсера 30.09.2026, было пять).
  land(){if(this.busy)return false;this.collect();this.state.freeSpins=FREE_SPINS;this.state.freeSpin=true;this.state.visits++;this.state.closed=false;return true;}
  close(){if(this.busy)return false;this.collect();this.state.closed=true;return true;}
  snapshot(){return clone(this.state);}
