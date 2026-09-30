@@ -1130,7 +1130,7 @@ root.SlotIdle={createIdle};
   constructor(){this.state=host.snapshot();}
   sync(){Object.assign(this.state,host.snapshot());}
   get busy(){return host.busy;}
-  available(){return this.state.paidSpins+(this.state.freeSpin?1:0);}
+  available(){return this.state.paidSpins+(this.state.freeSpins||0);}
   begin(){const p=host.begin();this.sync();return p;}
   buyPack(){const ok=host.buyPack();this.sync();return ok;}
   settle(){const p=host.settle();this.sync();return p;}
