@@ -550,3 +550,7 @@ body.wide-mode .minigame-layer .sl-res{width:min(460px,calc(100% - 20px));justif
 #diceResult{display:grid;place-items:center;min-width:58px;height:58px;padding:0 10px;box-sizing:border-box;border:2.5px solid #2a221c;border-radius:12px;
   background:#f4e5c4 url(assets/paper-grain.svg);box-shadow:0 3px 0 #2a221c,0 6px 12px #0005;color:#2a221c;text-shadow:none}
 #diceResult b{font:800 36px/1 Bitter,Georgia,serif;letter-spacing:-1px}
+
+/* Кубик не наезжает на счётчик ходов: место под счётчик (28 px) + тень кнопки (5 px) + зазор */
+#dock .diebox{padding-bottom:36px!important}
+#dock .diebox #sRolls{bottom:0}

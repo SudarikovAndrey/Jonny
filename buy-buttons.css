@@ -1,0 +1,14 @@
+/* Кнопки покупки: одна зелёная и одна тёмно-серая на всю игру (buy-buttons.js). */
+:root{--buy-ok:#4f7c4a;--buy-no:#8c8873;--buy-no-text:#f6eed8;--buy-no-shadow:#655d46}
+#card button.buy-btn.buy-ok,.pass-offer button.buy-btn.buy-ok,#card button.enamel-button.buy-btn.buy-ok{--button-ink:var(--buy-ok);background-color:var(--buy-ok)!important;color:#fff6de!important}
+#card button.buy-btn.buy-no,.pass-offer button.buy-btn.buy-no,#card button.enamel-button.buy-btn.buy-no,
+#card button.enamel-button.buy-btn:disabled{--button-ink:var(--buy-no);background-color:var(--buy-no)!important;color:var(--buy-no-text)!important;box-shadow:1px 3px 0 var(--buy-no-shadow)!important;text-shadow:none}
+/* эмаль-атлас под текстом: зелёный и тёмный слой вместо красного и синего */
+#card button.buy-btn .enamel-skin{filter:none}
+#card button.buy-btn.buy-ok .enamel-skin{filter:hue-rotate(0)}
+/* Премиум Билета: вместо красной картинки-кнопки — такая же зелёная печатная кнопка с короной и ценой */
+#card.battlepass-card #bpBuy.buy-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;font:800 19px/1 Bitter,Georgia,serif;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--buy-ok) url(assets/print/ink-wear.svg) center/cover!important;border:2.5px solid #25221c!important;border-radius:12px 9px 11px 8px;
+  box-shadow:0 3px 0 #25221c,inset 0 0 0 2px var(--buy-ok),inset 0 0 0 3.5px #f2e3bd99!important;color:#fff6de!important;text-shadow:1px 1px 0 #1f3a1c}
+#card.battlepass-card #bpBuy.buy-btn svg{display:block;width:30px;height:30px;flex:none}
+#card.battlepass-card #bpBuy.buy-btn b{display:inline;font-size:20px;color:#ffe08a;letter-spacing:0}

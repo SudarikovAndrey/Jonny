@@ -1,23 +1,28 @@
 // ===== Карта «Сан-Франциско» — режим стройки (?map=sf) =====
 // Спек: черновики/америкэн-бой-сан-франциско.md. Решения продюсера 28.09.2026:
 // отдельная карта после Бруклина; поставок нет; игрок сам выбирает, что строить
-// на пустырях; одно правило соседства; общий уровень благосостояния города,
+// на пустырях; лицензии открывают дорогие товары (v2, 30.09); благосостояние города,
 // который растёт, когда город обеспечен разными товарами, и поднимает цены.
 // Плотные полчаса: 120 ходов, без дней. Своё сохранение (americanboy_sf).
 var SFMAP=new URLSearchParams(location.search).get('map')==='sf';
 if(SFMAP){
 document.body.classList.add('map-mode','sf-mode');
 boardMap=()=>'sanfrancisco';setBoardMap=()=>{};
-Object.assign(CFG,{START_CASH:600,REAL_DAYS:false,ROLLS_PER_DAY:120,BANK_DAY:1}); // банк на углу 20 открыт с первого хода
+Object.assign(CFG,{START_CASH:400,REAL_DAYS:false,ROLLS_PER_DAY:120,BANK_DAY:1}); // старт: 2–3 дешёвые точки с запасом, не «застроить всё» // банк на углу 20 открыт с первого хода
 CFG.KIOSK.showProfit=true;
 // Пустырь — псевдотовар, чтобы строка точки и карточка не падали на good(null).
 CFG.GOODS.push({id:'lot',name:'Пустырь',buy:1,sell:1,pts:0,zone:0,icon:'🏗'});
 const SF={
   rolls:120,taskRolls:10,levelCap:5,payback:6,
-  cats:['gum','cola','tape','jeans','sneak','vcr'],
-  tiers:[['gum','cola'],['tape','jeans'],['sneak','vcr']],       // дешёвый · средний · дорогой вариант на пустыре
-  pen:{gum:.10,cola:.15,tape:.20,jeans:.25,sneak:.30,vcr:.40},   // штраф за такого же соседа: дороже — больнее
-  bonus:.10,bonusMax:.20,                                         // премия за соседа другой категории
+  cats:['gum','cola','jeans','sneak','tape','vcr'],               // порядок карточек в меню пустыря: от стартовых к лицензионным
+  // v2 (30.09): соседства нет, на любом пустыре строится любая категория, на которую есть лицензия.
+  // Лицензии покупаются прямо из меню пустыря, только за деньги, без условий.
+  lic:[{id:'clothes',name:'Одежда и обувь',cats:['jeans','sneak'],price:1500},
+       {id:'tech',name:'Техника',cats:['tape','vcr'],price:6000}],
+  techPoints:3,                                                   // финальная задача: точек техники
+  // Цена стройки по категориям (30.09, после пробы: $25/$35 не делали разницы и на старт хватало на всё).
+  // Лестница: сладости $50 · напитки $100 · одежда $400 · обувь $700 · аудио $250 · видео $1500.
+  build:{gum:50,cola:100,jeans:400,sneak:700,tape:250,vcr:1500},
   prosp:.06,                                                      // +6% к ценам за каждую категорию, которой обеспечен город
   cat:{gum:'Сладости',cola:'Напитки',tape:'Аудио',jeans:'Одежда',sneak:'Обувь',vcr:'Видео'},
   gen:{gum:'сладостей',cola:'напитков',tape:'кассет',jeans:'джинсов',sneak:'кроссовок',vcr:'видиков'},
@@ -25,14 +30,24 @@ const SF={
   biz:{3:'Канатный трамвай',8:'Рыбный причал',17:'Кофейня «Норт-Бич»',23:'Прачечная Чайнатауна',32:'Сёрф-прокат',37:'Пекарня «Сауэрдоу»'},
 };
 const SF_TASKS=[
-  {id:'build',text:n=>`Построй ${n} точек`,goal:16,val:()=>myKiosks().length},
-  {id:'city',text:n=>`${n} категорий в городе`,goal:6,val:()=>sfCovered()},
-  {id:'earn',text:n=>`Заработай $${n}`,goal:4000,val:()=>S.stat.earned||0},
+  {id:'lvl',text:()=>'Лицензия «Одежда и обувь»',goal:1,val:()=>sfHasLic('clothes')?1:0},
+  {id:'city',text:()=>'Лицензия «Техника»',goal:1,val:()=>sfHasLic('tech')?1:0},
+  {id:'build',text:n=>`${n} точки техники`,goal:SF.techPoints,val:()=>myKiosks().filter(t=>!sfIsLot(t)&&SF.lic[1].cats.includes(t.base)).length},
 ];
+function sfLicOf(cat){return SF.lic.find(l=>l.cats.includes(cat))||null;}
+function sfHasLic(id){return !!(S.sf&&S.sf.lic&&S.sf.lic[id]);}
+function sfCatOpen(cat){const l=sfLicOf(cat);return !l||sfHasLic(l.id);}
+function sfBuyLicense(l){
+  if(sfHasLic(l.id)||S.cash<l.price)return false;
+  S.sf.lic=S.sf.lic||{};S.cash-=l.price;S.sf.lic[l.id]=true;
+  track('sf_license',{id:l.id,price:l.price});fly('💵',AT.cash(),AT.card(),flyN(l.price));
+  toast(`📜 Лицензия «${l.name}» куплена — строй ${l.cats.map(c=>SF.cat[c].toLowerCase()).join(' и ')}`,3200);
+  log(`📜 Купил лицензию «${l.name}» за $${l.price}.`);save();render();return true;
+}
 CFG.BIZ_NAMES=SF.biz;
 const sfBase=G=>2+(G-1);                                          // продажи за круг по уровню, как на карте 1
 function sfMargin(cat){return Math.max(1,good(cat).sell-good(cat).buy);}
-function sfPrice(cat){return Math.max(20,Math.round(sfBase(1)*sfMargin(cat)*SF.payback/5)*5);}
+function sfPrice(cat){return SF.build[cat]||Math.max(20,Math.round(sfBase(1)*sfMargin(cat)*SF.payback/5)*5);}
 
 // Поле: пустыри вместо готовых точек. Служебные клетки как в Бруклине (углы: старт, бандит, банк, копилка на 25), «Шанса» нет.
 buildTiles=function(){
@@ -49,40 +64,26 @@ buildTiles=function(){
     else if(i===25){o.type='pot';o.zone=-1;}
     else if(i===35){o.type='scatter';o.zone=-1;}
     else if(biz.has(i)){o.type='biz';o.price=r10(150,250);o.price0=o.price;}
-    else{const n=k++;o.good='lot';o.base=null;o.lot=true;
-      o.opts=[SF.tiers[0][n%2],SF.tiers[1][(n+1)%2],SF.tiers[2][n%2]];
-      o.price=sfPrice(o.opts[0]);o.price0=o.price;}
+    else{k++;o.good='lot';o.base=null;o.lot=true;o.price=sfPrice('gum');o.price0=o.price;}
     t.push(o);
   }
   return t;
 };
 
-// ---- Соседство: единственное правило района ----
-function sfNeighbors(t){return [S.tiles[(t.i+39)%40],S.tiles[(t.i+1)%40]].filter(n=>n.type==='kiosk'&&n.owner&&n.base&&!sfIsLot(n));}
-function sfMod(t,cat){
-  cat=cat||t.base;if(!cat)return 1;let m=1,bonus=0;
-  for(const n of sfNeighbors(t)){if(n.base===cat)m-=SF.pen[cat];else bonus+=SF.bonus;}
-  return Math.max(.3,m+Math.min(SF.bonusMax,bonus));
-}
-function sfModText(t,cat){
-  cat=cat||t.base;const ns=sfNeighbors(t);if(!cat||!ns.length)return 'нет';
-  const same=ns.filter(n=>n.base===cat),diff=ns.filter(n=>n.base!==cat);
-  const parts=[];if(same.length)parts.push(`−${Math.round(SF.pen[cat]*100*same.length)}% такие же рядом`);
-  if(diff.length)parts.push(`+${Math.round(Math.min(SF.bonusMax,SF.bonus*diff.length)*100)}% ${diff.map(n=>good(n.base).icon).join('')}`);
-  return parts.join(' · ');
-}
+// v2: соседства нет (правило не читалось игроком — решение 30.09). sfMod оставлен как 1 для совместимости.
+function sfMod(){return 1;}
 function sfCovered(){return new Set(myKiosks().filter(t=>!sfIsLot(t)).map(t=>t.base).filter(Boolean)).size;}
 function sfPriceMult(){return 1+SF.prosp*sfCovered();}
 
 // ---- Лестница точки (как на карте 1) с поправкой соседства на продажи ----
-sales=function(t){const base=salesBoost(sfBase(t.salesLvl));return t.owner?Math.max(1,Math.round(base*sfMod(t))):base;};
+sales=function(t){return salesBoost(sfBase(t.salesLvl));};
 cap=function(t){return 4*sfBase(t.salesLvl);};
 salesCost=function(t){const m=sfMargin(t.base||t.good);return Math.max(5,Math.round(m*SF.payback*Math.pow(1.03,t.salesLvl-1)/5)*5);};
 kioskLvl=t=>t.salesLvl;
 kioskMaxLvl=()=>SF.levelCap;
 kioskNextStat=t=>t.salesLvl<SF.levelCap?'sales':null;
 kioskUpCost=t=>kioskNextStat(t)?salesCost(t):0;
-kioskAfter=t=>kioskNextStat(t)?{cap:4*sfBase(t.salesLvl+1),sales:Math.max(1,Math.round(salesBoost(sfBase(t.salesLvl+1))*sfMod(t)))}:null;
+kioskAfter=t=>kioskNextStat(t)?{cap:4*sfBase(t.salesLvl+1),sales:salesBoost(sfBase(t.salesLvl+1))}:null;
 kioskLevelsNormalize=function(){if(!S||!S.tiles)return;for(const t of S.tiles)if(t.type==='kiosk'&&t.owner)t.capLvl=t.salesLvl;};
 function sfIsLot(t){return !!t&&t.type==='kiosk'&&!t.owner&&(t.lot||t.good==='lot');}
 pointName=function(t){if(sfIsLot(t)||!t.base)return 'Пустырь';const f=SF.formats[Math.min(SF.formats.length-1,Math.floor((t.salesLvl-1)/2))];return `${f} ${SF.gen[t.base]||''}`.trim();};
@@ -97,40 +98,48 @@ evolveState=()=>'max';
 };})();
 // Плашка соседства: «соседи +20% 🍬🥤». Соседи есть, а итог 0% (штраф и бонус погасили друг
 // друга) — всё равно показываем их, иначе читается как «соседей нет».
-function sfNbChip(t,cat,cls){
-  const ns=sfNeighbors(t);if(!ns.length)return `<span class="${cls}">соседей нет</span>`;
-  const pct=Math.round((sfMod(t,cat)-1)*100),same=ns.some(n=>n.base===(cat||t.base));
-  return `<span class="${cls} ${pct>0?'good':pct<0?'bad':''}">соседи ${pct>0?'+':pct<0?'−':'±'}${Math.abs(pct)}% <span class="sf-gis">${ns.map(n=>`<img class="sf-gi" src="assets/goods/${n.base}.webp" alt="${good(n.base).name}">`).join('')}</span>${same?'<small> такой же рядом</small>':''}</span>`;
-}
+// ---- Меню пустыря v2: шесть категорий, закрытые — с замком и покупкой лицензии на месте ----
 async function sfBuildMenu(t){
   track('window',{w:'lot',tile:t.i,cash:S.cash});
-  // Три карточки варианта: картинка точки, цена, прибыль, подсказка соседства.
-  // Тап по карточке жмёт её кнопку в .mbtns (data-i) — выбор идёт тем же путём, что и раньше.
-  const rows=t.opts.map((cat,i)=>{const g=good(cat),p=sfPrice(cat),mod=sfMod(t,cat),profit=Math.max(1,Math.round(sfBase(1)*mod))*Math.round(sfMargin(cat)*sfPriceMult()),fill=cap({salesLvl:1})*buyPrice(cat);
-    const pct=Math.round((mod-1)*100),poor=S.cash<p,art=window.PropertyArt?PropertyArt.point(cat,1):`assets/points/pt_${cat}_1.webp`;
-    const tier=['дёшево','средне','дорого'][i]||'';
-    return `<div role="button" tabindex="${poor?-1:0}" class="sf-opt ${poor?'poor':''}" data-i="${i}" ${poor?'aria-disabled="true"':''} aria-label="${SF.formats[0]} ${SF.gen[cat]}, $${p}">
+  // Открытые категории — карточки точек. Закрытые категориями не показываем: лицензия — это
+  // документ, а не точка (решение продюсера 30.09), и на нём написано, что она открывает.
+  const rows=SF.cats.map((cat,i)=>{if(!sfCatOpen(cat))return '';const g=good(cat),p=sfPrice(cat),profit=sfBase(1)*Math.round(sfMargin(cat)*sfPriceMult()),fill=cap({salesLvl:1})*buyPrice(cat);
+    const poor=S.cash<p,art=window.PropertyArt?PropertyArt.point(cat,1):`assets/points/pt_${cat}_1.webp`;
+    // Правило продюсера: всегда полная цена; при нехватке — подпись «не хватает» и та же полная цена.
+    const price=poor?`<small>не хватает</small><i class="cash-glyph"></i>${p}`:`<i class="cash-glyph"></i>${p}`;
+    return `<div role="button" tabindex="${poor?-1:0}" class="sf-opt ${poor?'poor':''}" data-i="${i}" data-cat="${cat}" ${poor?'aria-disabled="true"':''} aria-label="${SF.formats[0]} ${SF.gen[cat]}, $${p}">
       <span class="sf-art"><img src="${art}" alt="" decoding="async"></span>
-      <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]} · ${tier}</small>
-        <span class="sf-stats"><span>≈ <i class="cash-glyph"></i>${profit}<em>за круг</em></span><span>запас <i class="cash-glyph"></i>${fill}</span></span>
-        ${sfNbChip(t,cat,'sf-nb')}</span>
-      <span class="sf-price">${poor?`<small>не хватает</small><i class="cash-glyph"></i>${p-S.cash}`:`<i class="cash-glyph"></i>${p}`}</span></div>`;}).join('');
+      <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]}</small>
+        <span class="sf-stats"><span>≈ <i class="cash-glyph"></i>${profit}<em>за круг</em></span><span>запас <i class="cash-glyph"></i>${fill}</span><span>стройка <i class="cash-glyph"></i>${p}</span></span></span>
+      <span class="sf-price">${price}</span></div>`;}).join('');
+  // Документы-лицензии: одна карточка на лицензию, с перечнем товаров, которые она открывает.
+  const docs=SF.lic.filter(l=>!sfHasLic(l.id)).map(l=>{const poor=S.cash<l.price;
+    return `<div role="button" tabindex="${poor?-1:0}" class="sf-lic-doc ${poor?'poor':''}" data-lic="${l.id}" ${poor?'aria-disabled="true"':''} aria-label="Лицензия «${l.name}», $${l.price}">
+      <span class="sf-doc-head"><img class="sf-doc-art" src="assets/ui/license_${l.id}.webp" alt="" decoding="async" onerror="this.remove()"><i class="sf-doc-seal" aria-hidden="true"></i><b>Лицензия «${l.name}»</b></span>
+      <span class="sf-doc-body">Открывает: ${l.cats.map(c=>`<span class="sf-doc-good"><img class="sf-gi" src="assets/goods/${c}.webp" alt="">${SF.cat[c]}</span>`).join(' ')}</span>
+      <span class="sf-doc-buy">${poor?`<span class="sf-lic-name">Не хватает</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span>`:`<span class="sf-lic-name">Купить</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span>`}</span></div>`;}).join('');
+  const licBlock=docs?`<div class="sf-lics"><p class="sf-lics-title">Лицензии мэрии</p>${docs}</div>`:'';
   $('card').classList.add('sf-build');
-  const pending=modal(`<h2>🏗 Пустырь <small>клетка ${t.i}</small></h2><p class="t sf-lead">Что построить? Разное рядом продаёт лучше, одинаковое — хуже.</p><div class="sf-opts">${rows}</div>`,
-    t.opts.map((cat,i)=>({t:`${good(cat).icon} $${sfPrice(cat)}`,v:i,cls:S.cash>=sfPrice(cat)?'ok':'sec',dis:S.cash<sfPrice(cat)})).concat([{t:'Позже',v:-1,cls:'sec'}]));
-  $('card').querySelectorAll('.sf-opt').forEach(o=>{const pick=()=>{const b=$('card').querySelector(`.mbtns button[data-i="${o.dataset.i}"]`);if(b&&!b.disabled)b.click();};
+  const btns=SF.cats.map((cat,i)=>({t:`${good(cat).icon} $${sfPrice(cat)}`,v:i,cls:'ok',dis:!sfCatOpen(cat)||S.cash<sfPrice(cat)})).concat([{t:'Позже',v:-1,cls:'sec'}]);
+  const pending=modal(`<h2>🏗 Пустырь <small>клетка ${t.i}</small></h2><p class="t sf-lead">Что построить?${docs?' Дорогие товары открывает лицензия — её продаёт мэрия прямо здесь.':''}</p><div class="sf-opts">${rows}</div>${licBlock}`,btns);
+  $('card').querySelectorAll('.sf-opt').forEach(o=>{
+    const pick=()=>{const b=$('card').querySelector(`.mbtns button[data-i="${o.dataset.i}"]`);if(b&&!b.disabled)b.click();};
+    o.onclick=pick;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};});
+  $('card').querySelectorAll('.sf-lic-doc').forEach(o=>{
+    const pick=()=>{const l=SF.lic.find(x=>x.id===o.dataset.lic);if(!l||S.cash<l.price){toast(`Лицензия «${l?l.name:''}» стоит $${l?l.price:0} — не хватает`);return;}
+      closeModal(-2);setTimeout(()=>{if(sfBuyLicense(l))sfBuildMenu(t);},200);};
     o.onclick=pick;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};});
   const v=await pending;
   if(v===undefined||v<0)return;
-  const cat=t.opts[v],p=sfPrice(cat);if(S.cash<p)return;
-  track('sf_build',{tile:t.i,cat,price:p,mod:sfMod(t,cat)});
+  const cat=SF.cats[v],p=sfPrice(cat);if(!sfCatOpen(cat)||S.cash<p)return;
+  track('sf_build',{tile:t.i,cat,price:p});
   fly('💵',AT.cash(),AT.tile(t.i),flyN(p));S.cash-=p;
   t.owner='you';t.good=cat;t.base=cat;t.lot=false;t.price=p;t.price0=p;t.capLvl=1;t.salesLvl=1;t.goods=0;t.tier=1;
   S.stat.bought++;S.dstat.bought++;qProg('buy',1);
   const cov=sfCovered();
   toast(`🏗 ${pointName(t)} построен${cov>(S.sf.covered||0)?` · город обеспечен: ${cov}/6, цены +${Math.round(SF.prosp*cov*100)}%`:''}`,3000);
   S.sf.covered=cov;
-  log(`🏗 Построил ${pointName(t)} на клетке ${t.i} за $${p}. Соседи: ${sfModText(t)}.`);
+  log(`🏗 Построил ${pointName(t)} на клетке ${t.i} за $${p}.`);
   save();render();
 }
 
@@ -141,9 +150,8 @@ function sfCardNote(){
   // Только карточка точки (.property-body / .srow), не итоговое окно и не другие модалки.
   if(!card.querySelector('.property-body')&&!card.querySelector('.srow'))return;
   const anchor=card.querySelector('.srow');if(!anchor)return;
-  const mod=Math.round((sfMod(t)-1)*100);
   const n=document.createElement('p');n.className='sf-note';
-  n.innerHTML=`${sfNbChip(t,null,'sf-chip')}<span class="sf-chip city">Город +${Math.round((sfPriceMult()-1)*100)}% <small>к ценам</small></span>`;
+  n.innerHTML=`<span class="sf-chip city">Город +${Math.round((sfPriceMult()-1)*100)}% <small>к ценам</small></span>`;
   anchor.after(n);
 }
 new MutationObserver(()=>sfCardNote()).observe($('card'),{childList:true,subtree:true});
@@ -152,12 +160,12 @@ new MutationObserver(()=>sfCardNote()).observe($('card'),{childList:true,subtree
 const sfBaseNew=newGame;
 newGame=function(){const r=sfBaseNew.apply(this,arguments);
   S.firstRoute={variant:0,index:0,done:true};S.training={shipped:true,explained:true,skipped:true};S.starter.closed=true;
-  S.q=[];S.rolls=SF.rolls;S.opened=[true,true,true];S.sf={done:{},ended:false,covered:0};S.tips.intro=true;
+  S.q=[];S.rolls=SF.rolls;S.opened=[true,true,true];S.sf={done:{},ended:false,covered:0,lic:{}};S.tips.intro=true;
   log('Джонни в Сан-Франциско. В кармане $'+S.cash+'. Пустыри ждут — строй, что хочешь.');save();render();return r;};
 intro=async function(){await modal(`<h2>🌉 Сан-Франциско</h2><p class="t">Город на холмах. Здесь Джонни не покупает готовое — он строит.</p>
-  <p>На каждом пустыре три варианта: дешёвый, средний, дорогой. <b>Одинаковое рядом продаёт хуже, разное — лучше.</b></p>
+  <p>На любом пустыре строится что угодно — если есть лицензия. Начинаешь со сладостей и напитков. <b>Лицензии на одежду и технику покупаются прямо в меню пустыря.</b></p>
   <p>Город богатеет, когда обеспечен всем: каждая новая категория товара поднимает цены на всё.</p>
-  <p><b>Задачи:</b> построй 16 точек · обеспечь город 6 категориями · заработай $4000. Ходов — ${SF.rolls}.</p>`,[{t:'Строим',v:1,cls:'ok'}]);};
+  <p><b>Задачи:</b> лицензия «Одежда и обувь» ($${SF.lic[0].price}) · лицензия «Техника» ($${SF.lic[1].price}) · ${SF.techPoints} точки техники. Ходов — ${SF.rolls}.</p>`,[{t:'Строим',v:1,cls:'ok'}]);};
 
 // ---- Задачи, благосостояние в шапке, конец карты ----
 function sfTasks(){return SF_TASKS.map(q=>({...q,v:Math.min(q.goal,q.val()),ok:q.val()>=q.goal}));}
@@ -174,7 +182,7 @@ function sfProgress(){
 async function sfEnd(){
   track('map_end',{map:'sf',cash:S.cash,earned:S.stat.earned,points:myKiosks().length,rollsLeft:S.rolls});
   const v=await modal(`<h2>🌉 Сан-Франциско построен</h2><div class="row"><span class="n">Заработано</span><span class="v">$${S.stat.earned||0}</span></div>
-    <div class="row"><span class="n">Точек</span><span class="v">${myKiosks().length}</span></div><div class="row"><span class="n">Город обеспечен</span><span class="v">${sfCovered()}/6</span></div>
+    <div class="row"><span class="n">Точек</span><span class="v">${myKiosks().length}</span></div><div class="row"><span class="n">Лицензии</span><span class="v">${SF.lic.filter(l=>sfHasLic(l.id)).map(l=>l.name).join(', ')||'—'}</span></div><div class="row"><span class="n">Город обеспечен</span><span class="v">${sfCovered()}/6</span></div>
     <div class="row"><span class="n">Ходов осталось</span><span class="v">${S.rolls}</span></div>`,[{t:'Сыграть заново',v:1,cls:'ok'},{t:'Остаться',v:0,cls:'sec'}]);
   if(v===1){newGame();}
 }
@@ -189,20 +197,20 @@ renderHubGoal=function(){
 // Пустырь — место под точку: в строке нет цены, кнопка всегда «открыть»; зелёная, если хватает на самый дешёвый вариант.
 function sfLotBar(){
   const t=S.tiles[S.pos],tb=$('tilebar');if(!tb||!sfIsLot(t)||moving||S.finished)return;
-  const minPrice=Math.min(...t.opts.map(sfPrice)),can=S.cash>=minPrice;
+  const minPrice=Math.min(...SF.cats.filter(sfCatOpen).map(sfPrice)),can=S.cash>=minPrice;
   tb.hidden=false;tb.disabled=false;$('tbText').textContent='🏗 Пустырь · место под точку';
   tb.querySelector('b').textContent='открыть';tb.classList.toggle('off',!can);tb.classList.toggle('poor',!can);
 }
 // Сохранение из общего кода могло подставить пустырю базовый товар — снимаем.
 (function(){const base=newGame;newGame=function(){const r=base.apply(this,arguments);S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});return r;};})();
-(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles)S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});}catch(e){}return r;};})();
+(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles){S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});S.sf=S.sf||{done:{},ended:false,covered:0};S.sf.lic=S.sf.lic||{};}}catch(e){}return r;};})();
 async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks().map(t=>t.base));
   await modal(`<h2>🌉 Благосостояние города</h2><p class="t">Город обеспечен ${sfCovered()}/6 категорий — все товары продаются на <b>+${Math.round((sfPriceMult()-1)*100)}%</b> дороже.</p>
     <div class="row"><span class="n">Есть</span><span class="v">${SF.cats.filter(c=>have.has(c)).map(c=>good(c).icon).join(' ')||'—'}</span></div>
     <div class="row"><span class="n">Городу не хватает</span><span class="v">${SF.cats.filter(c=>!have.has(c)).map(c=>SF.cat[c]).join(', ')||'ничего'}</span></div>
     <h2 style="margin-top:10px">Задачи</h2>${ts.map(q=>`<div class="row"><span class="n">${q.ok?'✓ ':''}${q.text(q.goal)}</span><span class="v">${q.v}/${q.goal}</span></div>`).join('')}`,[{t:'Ок',v:1,cls:'ok'}]);}
 $('bHub').onclick=sfHub;
-window.SFBuilder={mod:sfMod,covered:sfCovered,priceMult:sfPriceMult,price:sfPrice,tasks:sfTasks};
+window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,price:sfPrice,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense};
 // Шапка (web/top-hud.js) берёт прогресс и задачи режима отсюда.
 window.MapMode={
   progress(){const ts=sfTasks();return {name:'Сан-Франциско',value:sfCovered(),goal:6,percent:ts.reduce((a,q)=>a+q.v/q.goal,0)/ts.length*100,unit:'категорий'};},
