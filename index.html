@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=ff341a32"><link rel="stylesheet" href="mobile-windows.css?v=637a737d"><link rel="stylesheet" href="battlepass.css?v=786b1943"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=03e15d2d"><link rel="stylesheet" href="sf-builder.css?v=216e1789"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=5451fb44"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=fd60f92b"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f2e9d5c"><link rel="stylesheet" href="number-drum.css?v=0e5f6a71"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=3a8636b0"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=72222503"><link rel="stylesheet" href="shipment-event.css?v=960fbb8c"><link rel="stylesheet" href="help-print.css?v=f7e02872"><link rel="stylesheet" href="spot-varnish.css?v=c29b1bb8"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script><link rel="stylesheet" href="tile-sheet.css?v=fb6cd9c0"></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=ff341a32"><link rel="stylesheet" href="mobile-windows.css?v=637a737d"><link rel="stylesheet" href="battlepass.css?v=786b1943"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=03e15d2d"><link rel="stylesheet" href="sf-builder.css?v=216e1789"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=14177f5c"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=fd60f92b"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f2e9d5c"><link rel="stylesheet" href="number-drum.css?v=0e5f6a71"><link rel="stylesheet" href="start-screen.css?v=0567ae1d"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=3a8636b0"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=72222503"><link rel="stylesheet" href="shipment-event.css?v=960fbb8c"><link rel="stylesheet" href="help-print.css?v=f7e02872"><link rel="stylesheet" href="spot-varnish.css?v=c29b1bb8"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script><link rel="stylesheet" href="tile-sheet.css?v=fb6cd9c0"></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -4046,14 +4046,21 @@ function inspectorResolve(t,v,fine){
 };})();
 
 // Спор с инспектором: бросок ловит дубль, фишка стоит на месте.
-(function(){const base=roll;roll=async function(){
+// Оборачиваем prototypeRoll, а не roll: кнопка броска привязана к roll ещё при загрузке
+// ($('bRoll').onclick=roll), и подмена roll до неё не доходила — бросок шёл как обычный,
+// фишка уезжала, а спор и надпись «дубль?» висели навсегда. roll зовёт prototypeRoll
+// по имени на каждом броске, так что эта обёртка срабатывает всегда.
+// Кубики — через mobileDice, как в участке: засчитывается то, что выпало на поле.
+(function(){const base=prototypeRoll;prototypeRoll=async function(){
   if(!S.insp)return base.apply(this,arguments);
   const t=S.tiles[S.insp.i];
-  if(!t||!t.insp){S.insp=null;return base.apply(this,arguments);}
+  // Спор идёт только на своей клетке. Фишка ушла (старые сохранения с этой ошибкой) —
+  // спор снимаем, проверка остаётся висеть на клетке, бросок обычный.
+  if(!t||!t.insp||S.pos!==S.insp.i){S.insp=null;render();return base.apply(this,arguments);}
   if(moving||S.finished)return;
   refillStarter();if(S.rolls<=0)return overtimeOffer();
-  S.rolls--;moving=true;render();
-  const {a,b}=openingDice(),dbl=a===b;
+  S.rolls--;moving=true;hideTip();render();
+  const {a,b}=typeof mobileDice==='function'?await mobileDice(openingDice()):openingDice(),dbl=a===b;
   if(dbl){toast(`🎲 ${a} + ${b} — дубль! Инспектор ушёл ни с чем.`);inspClear(t,'выбросил дубль');}
   else{S.insp.left--;
     if(S.insp.left>0){toast(`🎲 ${a} + ${b} — не дубль. Осталось попыток: ${S.insp.left}`);log(`📋 Спор с инспектором: не дубль, ход потерян. Попыток: ${S.insp.left}.`);}
@@ -5420,7 +5427,7 @@ const SF={
 };
 const SF_TASKS=[
   {id:'build',text:n=>`Построй ${n} точек`,goal:16,val:()=>myKiosks().length},
-  {id:'city',text:n=>`Обеспечь город: ${n} категорий`,goal:6,val:()=>sfCovered()},
+  {id:'city',text:n=>`${n} категорий в городе`,goal:6,val:()=>sfCovered()},
   {id:'earn',text:n=>`Заработай $${n}`,goal:4000,val:()=>S.stat.earned||0},
 ];
 CFG.BIZ_NAMES=SF.biz;
@@ -5532,7 +5539,9 @@ async function sfBuildMenu(t){
 function sfCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
   if(!card||card.hidden||!t||t.type!=='kiosk'||!t.owner||!t.base||card.querySelector('.sf-note'))return;
-  const anchor=card.querySelector('.srow')||card.querySelector('h2');if(!anchor)return;
+  // Только карточка точки (.property-body / .srow), не итоговое окно и не другие модалки.
+  if(!card.querySelector('.property-body')&&!card.querySelector('.srow'))return;
+  const anchor=card.querySelector('.srow');if(!anchor)return;
   const mod=Math.round((sfMod(t)-1)*100);
   const n=document.createElement('p');n.className='sf-note';
   n.innerHTML=`${sfNbChip(t,null,'sf-chip')}<span class="sf-chip city">Город +${Math.round((sfPriceMult()-1)*100)}% <small>к ценам</small></span>`;

@@ -62,14 +62,21 @@ function inspectorResolve(t,v,fine){
 };})();
 
 // Спор с инспектором: бросок ловит дубль, фишка стоит на месте.
-(function(){const base=roll;roll=async function(){
+// Оборачиваем prototypeRoll, а не roll: кнопка броска привязана к roll ещё при загрузке
+// ($('bRoll').onclick=roll), и подмена roll до неё не доходила — бросок шёл как обычный,
+// фишка уезжала, а спор и надпись «дубль?» висели навсегда. roll зовёт prototypeRoll
+// по имени на каждом броске, так что эта обёртка срабатывает всегда.
+// Кубики — через mobileDice, как в участке: засчитывается то, что выпало на поле.
+(function(){const base=prototypeRoll;prototypeRoll=async function(){
   if(!S.insp)return base.apply(this,arguments);
   const t=S.tiles[S.insp.i];
-  if(!t||!t.insp){S.insp=null;return base.apply(this,arguments);}
+  // Спор идёт только на своей клетке. Фишка ушла (старые сохранения с этой ошибкой) —
+  // спор снимаем, проверка остаётся висеть на клетке, бросок обычный.
+  if(!t||!t.insp||S.pos!==S.insp.i){S.insp=null;render();return base.apply(this,arguments);}
   if(moving||S.finished)return;
   refillStarter();if(S.rolls<=0)return overtimeOffer();
-  S.rolls--;moving=true;render();
-  const {a,b}=openingDice(),dbl=a===b;
+  S.rolls--;moving=true;hideTip();render();
+  const {a,b}=typeof mobileDice==='function'?await mobileDice(openingDice()):openingDice(),dbl=a===b;
   if(dbl){toast(`🎲 ${a} + ${b} — дубль! Инспектор ушёл ни с чем.`);inspClear(t,'выбросил дубль');}
   else{S.insp.left--;
     if(S.insp.left>0){toast(`🎲 ${a} + ${b} — не дубль. Осталось попыток: ${S.insp.left}`);log(`📋 Спор с инспектором: не дубль, ход потерян. Попыток: ${S.insp.left}.`);}

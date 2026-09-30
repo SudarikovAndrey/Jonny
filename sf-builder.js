@@ -26,7 +26,7 @@ const SF={
 };
 const SF_TASKS=[
   {id:'build',text:n=>`Построй ${n} точек`,goal:16,val:()=>myKiosks().length},
-  {id:'city',text:n=>`Обеспечь город: ${n} категорий`,goal:6,val:()=>sfCovered()},
+  {id:'city',text:n=>`${n} категорий в городе`,goal:6,val:()=>sfCovered()},
   {id:'earn',text:n=>`Заработай $${n}`,goal:4000,val:()=>S.stat.earned||0},
 ];
 CFG.BIZ_NAMES=SF.biz;
@@ -138,7 +138,9 @@ async function sfBuildMenu(t){
 function sfCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
   if(!card||card.hidden||!t||t.type!=='kiosk'||!t.owner||!t.base||card.querySelector('.sf-note'))return;
-  const anchor=card.querySelector('.srow')||card.querySelector('h2');if(!anchor)return;
+  // Только карточка точки (.property-body / .srow), не итоговое окно и не другие модалки.
+  if(!card.querySelector('.property-body')&&!card.querySelector('.srow'))return;
+  const anchor=card.querySelector('.srow');if(!anchor)return;
   const mod=Math.round((sfMod(t)-1)*100);
   const n=document.createElement('p');n.className='sf-note';
   n.innerHTML=`${sfNbChip(t,null,'sf-chip')}<span class="sf-chip city">Город +${Math.round((sfPriceMult()-1)*100)}% <small>к ценам</small></span>`;
