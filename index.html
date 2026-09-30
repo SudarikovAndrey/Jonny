@@ -544,7 +544,7 @@ async function eventInfo(){
   const rows=[];
   if(S.trend){const g=good(S.trend),ks=goodKiosks(S.trend);rows.push(`<div class="row"><span class="n">🔥 Тренд дня: ${g.icon} ${g.name} ×${CFG.TREND_MULT}<small>сегодня по $${sellPrice(S.trend)} вместо $${g.sell}${ks.length?' · у тебя: '+[...new Set(ks.map(pointName))].join(', '):' · таких точек у тебя нет'}</small></span></div>`);}
   if(S.day===CFG.BLACK_FRIDAY_DAY)rows.push(`<div class="row"><span class="n">🛍 Чёрная пятница ×${CFG.BF_MULT}<small>все продажи сегодня дороже в ${CFG.BF_MULT} раза</small></span></div>`);
-  if((S.loans||[]).length)rows.push(`<div class="row"><span class="n">🏦 Кредиты: −$${loanInterest()} за круг<small>при каждом проходе банка</small></span></div>`);
+  if((S.loans||[]).length)rows.push(`<div class="row"><span class="n">🏦 Кредиты: ${loanInterest()?'−$'+loanInterest()+' за круг':'без процентов'}<small>при каждом проходе банка</small></span></div>`);
   if(parcelsBehind()>(S.parcelSent?0:1))rows.push(`<div class="row"><span class="n">📦 Отстаёшь на ${parcelsBehind()-(S.parcelSent?0:1)} ${parcelsBehind()-(S.parcelSent?0:1)===1?'поставку':'поставки'}<small>догони после сегодняшней поставки: ${(S.catchups||0)<CFG.LATE.catchupFree?'первая — бесплатно':S.catchBundle?'бандл куплен':'бандл «Догон» '+CFG.LATE.bundle.rub+' ₽'}</small></span></div>`);
   if(S.jail>0)rows.push(`<div class="row"><span class="n">🚔 Участок<small>попыток на дубль: ${S.jail}</small></span></div>`);
   const now=new Date(),mid=new Date(now);mid.setHours(24,0,0,0);const h=Math.floor((mid-now)/36e5),m=Math.floor(((mid-now)%36e5)/6e4);
@@ -1729,7 +1729,7 @@ async function bankThreat(){
   const v=await modal(`<h2>🏦 Chase Manhattan <small>коллекторы</small></h2>
     <p class="t">«Процент по кредиту съел $${loanInterest()}. Ты в минусе на $${-S.cash}.»</p><p>Выйди в плюс до полуночи. ${(()=>{const k=seizePlan(worst.principal).length,w=k===1?'лучшую точку':k+' лучшие точки';return left<=1?`Иначе банк заберёт ${w}.`:`Иначе будет просрочка. Ещё ${left} — и банк заберёт точки.`;})()}</p>
     <div class="row"><span class="n">Долг</span><span class="v">$${S.loans.reduce((a,l)=>a+l.principal,0)}</span></div>
-    <div class="row"><span class="n">Процент за каждый круг</span><span class="v">$${loanInterest()}</span></div>
+    <div class="row"><span class="n">Процент за каждый круг</span><span class="v">${loanInterest()?'$'+loanInterest():'нет'}</span></div>
     <p>Пока ты в минусе, покупки закрыты. Деньги принесут продажи на СТАРТЕ и бизнесы.</p>`,
     [{t:`Закрыть минус · 💎 ${hardForCash(-S.cash)}`,v:2,cls:'hard',dis:S.hard<hardForCash(-S.cash)},{t:'Понял',v:1,cls:'bad'}],{sticky:true});
   if(v===2){const h=hardForCash(-S.cash),amt=-S.cash;if(spendHard(h)){S.cash=0;track('buy_soft',{amt,cost:h,tr:'collectors'});if(!S.graced){for(const l of (S.loans||[]))l.strikes=Math.max(0,l.strikes-1);}log(`Закрыл минус $${amt} за 💎 ${h}${S.graced?'':', просрочка снята'}.`);fly('💵',AT.card(),AT.cash(),flyN(amt),{pulse:'sCash'});save();render();}}
@@ -1740,12 +1740,12 @@ async function bank(remote){ // remote — открыт тапом по клет
   const draw=()=>{
     const n=S.loans.length, overdue=S.loans.some(l=>l.strikes>0), afford=canLoan(n), canTake=!remote&&S.loanLandN!==S.landN&&!overdue&&afford, next=(n<CFG.LOANS.length&&canTake)?CFG.LOANS[n]:null, amt=next?loanAmount(n):0;
     $('card').innerHTML=`<h2>🏦 Chase Manhattan <small>${n?'кредиты: '+n+' из 3':'кредиты'}</small>${helpBtn('Процент списывается каждый раз, когда проходишь банк. Не хватило денег — выйди в плюс до полуночи, иначе будет просрочка. Слишком много просрочек — банк заберёт точки.')}</h2>
-      ${S.loans.map((l,i)=>`<div class="row"><span class="n">${l.name}<small>−$${Math.round(l.principal*l.rate)} за круг · просрочек ${l.strikes} из ${l.maxStrikes}</small></span><span class="v">$${l.principal}</span><button class="sm ok" data-repay="${i}" ${S.cash<l.principal?'disabled':''}>Погасить</button></div>`).join('')}
-      ${n?`<div class="row"><span class="n">Все проценты за круг</span><span class="v">$${loanInterest()}</span></div><div class="row"><span class="n">За просрочки заберут</span><span class="v">${seizePlan(S.loans.reduce((a,l)=>a+l.principal,0)).length} ${(()=>{const k=seizePlan(S.loans.reduce((a,l)=>a+l.principal,0)).length;return k===1?'точку':k<5?'точки':'точек';})()}</span></div>`:''}
-      ${next?`<div class="row"><span class="n">${next.name} кредит<small>−$${Math.round(amt*next.rate)} за каждый круг</small></span><button class="sm ${n>=2?'bad':'hard'}" id="lTake" ${S.hard<next.hard?'disabled':''}>Взять $${amt}<small>💎 ${next.hard}</small></button></div>`:(n>=CFG.LOANS.length?'<p>Больше кредитов не дадут.</p>':overdue?'<p class="t">Пока есть просрочка, новый кредит не дадут.</p>':!afford?`<p class="t">Прибыль за круг пока маленькая — ещё один кредит не дадут.</p>`:remote?'<p>Новый кредит — только стоя на клетке банка.</p>':'<p>Один кредит за раз.</p>')}
+      ${S.loans.map((l,i)=>`<div class="row"><span class="n">${l.name}<small>${l.rate?'−$'+Math.round(l.principal*l.rate)+' за круг':'без процентов'} · просрочек ${l.strikes} из ${l.maxStrikes}</small></span><span class="v">$${l.principal}</span><button class="sm ok" data-repay="${i}" ${S.cash<l.principal?'disabled':''}>Погасить</button></div>`).join('')}
+      ${n?`<div class="row"><span class="n">Все проценты за круг</span><span class="v">${loanInterest()?'$'+loanInterest():'нет'}</span></div><div class="row"><span class="n">За просрочки заберут</span><span class="v">${seizePlan(S.loans.reduce((a,l)=>a+l.principal,0)).length} ${(()=>{const k=seizePlan(S.loans.reduce((a,l)=>a+l.principal,0)).length;return k===1?'точку':k<5?'точки':'точек';})()}</span></div>`:''}
+      ${next?`<div class="row"><span class="n">${next.name} кредит<small>${next.rate?'−$'+Math.round(amt*next.rate)+' за каждый круг':'без процентов — вернёшь только взятое'}</small></span><button class="sm ${n>=2?'bad':'hard'}" id="lTake" ${S.hard<next.hard?'disabled':''}>Взять $${amt}<small>${next.hard?'💎 '+next.hard:'без взноса'}</small></button></div>`:(n>=CFG.LOANS.length?'<p>Больше кредитов не дадут.</p>':overdue?'<p class="t">Пока есть просрочка, новый кредит не дадут.</p>':!afford?`<p class="t">Прибыль за круг пока маленькая — ещё один кредит не дадут.</p>`:remote?'<p>Новый кредит — только стоя на клетке банка.</p>':'<p>Один кредит за раз.</p>')}
       <div class="mbtns"><button class="sec" id="lNo">Закрыть</button></div>`;
     $('card').querySelectorAll('button[data-repay]').forEach(b=>b.onclick=()=>{const l=S.loans[+b.dataset.repay];fly('💵',AT.cash(),AT.tile(20),flyN(l.principal));S.cash-=l.principal;S.loans.splice(+b.dataset.repay,1);track('loan_repay',{tier:l.tier,amt:l.principal});log(`Погасил кредит «${l.name}» $${l.principal}.`);render();draw();});
-    const tk=$('lTake'); if(tk)tk.onclick=()=>{if(!spendHard(next.hard,AT.tile(20)))return;fly('💵',AT.tile(20),AT.cash(),flyN(amt),{pulse:'sCash'});S.loans.push({tier:n+1,name:next.name,principal:amt,rate:next.rate,strikes:0,maxStrikes:next.strikes});S.cash+=amt;S.loanLandN=S.landN;track('loan_take',{tier:n+1,amt,rate:next.rate});log(`Взял кредит «${next.name}» $${amt} под ${Math.round(next.rate*100)}% за круг.`);render();draw();};
+    const tk=$('lTake'); if(tk)tk.onclick=()=>{if(next.hard&&!spendHard(next.hard,AT.tile(20)))return;fly('💵',AT.tile(20),AT.cash(),flyN(amt),{pulse:'sCash'});S.loans.push({tier:n+1,name:next.name,principal:amt,rate:next.rate,strikes:0,maxStrikes:next.strikes});S.cash+=amt;S.loanLandN=S.landN;track('loan_take',{tier:n+1,amt,rate:next.rate});log(`Взял кредит «${next.name}» $${amt} под ${Math.round(next.rate*100)}% за круг.`);render();draw();};
     $('lNo').onclick=()=>closeModal();
   };
   draw(); await openCustom(); save(); render();
@@ -2011,7 +2011,7 @@ function render(){
   $('sDay').textContent=`${S.day}/${CFG.DAYS}`;$('tJ').textContent='ур. '+level();$('sRolls').textContent=S.rolls+'/'+CFG.ROLLS_PER_DAY;$('sCash').textContent=S.cash;$('sCash').classList.toggle('neg',S.cash<0);$('sHard').textContent=S.hard;
   const taxiOn=S.day>=CFG.TAXI_FROM_DAY, shopOn=true, canShip=(!S.parcelSent||parcelsBehind()>0)&&myKiosks().reduce((a,t)=>a+t.goods,0)>0;
   $('tTaxi').textContent=taxiOn?'💎 '+taxiPrice():`с ${CFG.TAXI_FROM_DAY} дня`;
-  const ev=[];if(S.trend)ev.push(`🔥 ${good(S.trend).name} ×${CFG.TREND_MULT}`);if(S.day===CFG.BLACK_FRIDAY_DAY)ev.push('🛍×'+CFG.BF_MULT);if((S.loans||[]).length)ev.push('🏦 −$'+loanInterest()+'/круг');
+  const ev=[];if(S.trend)ev.push(`🔥 ${good(S.trend).name} ×${CFG.TREND_MULT}`);if(S.day===CFG.BLACK_FRIDAY_DAY)ev.push('🛍×'+CFG.BF_MULT);if((S.loans||[]).length)ev.push(loanInterest()?'🏦 −$'+loanInterest()+'/круг':'🏦 без процентов');
   if(S.jail>0)ev.push(`🚔 ${S.jail} попытки`);
   $('sEvent').hidden=true;$('sEvent').textContent=ev.join(' · ');
   {const tm=(()=>{if(!CFG.REAL_DAYS)return `📅 день ${S.day}`;const now=new Date(),mid=new Date(now);mid.setHours(24,0,0,0);const h=Math.floor((mid-now)/36e5),m=Math.floor(((mid-now)%36e5)/6e4);return `До полуночи ${h}ч ${String(m).padStart(2,'0')}м`;})();$('sTimer').querySelector('span').textContent=tm;$('sTimer').title=ev.join(' · ');}
@@ -3373,7 +3373,7 @@ eventInfo=async function(){
  if(S.day===CFG.BLACK_FRIDAY_DAY)today.push({cls:'hot',ic:'🛍',b:`Чёрная пятница ×${String(CFG.BF_MULT).replace('.',',')}`,s:'все продажи дороже'});
  const behind=parcelsBehind()-(S.parcelSent?0:1);
  if(behind>0)today.push({ic:`<img src="assets/icons/crate.webp" alt="">`,b:`Догони ${behind} ${behind===1?'поставку':'поставки'}`,s:(S.catchups||0)<CFG.LATE.catchupFree?'первая — бесплатно':'бандл «Догон»'});
- if((S.loans||[]).length)today.push({cls:'bad',ic:'🏦',b:`Кредит: −$${loanInterest()} за круг`,s:'при проходе банка'});
+ if((S.loans||[]).length)today.push({cls:'bad',ic:'🏦',b:loanInterest()?`Кредит: −$${loanInterest()} за круг`:'Кредит без процентов',s:'при проходе банка'});
  if(S.jail>0)today.push({cls:'bad',ic:`<img src="board/assets/symbols/police.svg" alt="">`,b:'Ты в участке',s:`попыток на дубль: ${S.jail}`});
  if(!today.length)today.push({ic:`<img src="assets/icons/clock.webp" alt="">`,b:'Спокойный день',s:S.parcelSent?'поставка уже ушла':'не забудь поставку'});
  const plates=today.map(r=>`<div class="hub-plate td-now ${r.cls||''}"><span class="td-ic">${r.ic}</span><span class="hub-text"><b>${r.b}</b><small>${r.s}</small></span></div>`).join('');
@@ -4291,6 +4291,17 @@ CFG.MILESTONES[2].pts=1350;
 // Соперники в «Топе» растут вместе с игроком, иначе он уходит в отрыв раньше.
 CFG.LB_SCALE=1.14;
 (function(){const base=lbBots;lbBots=function(){return base.apply(this,arguments).map(b=>({...b,fin:Math.round(b.fin*CFG.LB_SCALE)}));};})();
+// Первый кредит — без взноса кристаллами и без процентов (решение продюсера 30.09.2026):
+// клетка банка должна работать с первого захода, главное — вернуть тело долга. Второй и третий как были.
+CFG.LOANS[0].hard=0;CFG.LOANS[0].rate=0;
+// Первый кредит доступен без залога и без проверки платёжеспособности (иначе с дешёвыми точками
+// банк отказывал): сумма — от минимума до потолка FIRST_LOAN_CAP по потенциалу прибыли за круг.
+CFG.FIRST_LOAN_CAP=1000;
+(function(){
+  const baseCan=canLoan,baseAmt=loanAmount;
+  canLoan=function(i){if(i===0&&!(S.loans||[]).length)return true;return baseCan.apply(this,arguments);};
+  loanAmount=function(i){if(i===0&&!(S.loans||[]).length){const L=CFG.LOANS[0];return Math.round(Math.min(CFG.FIRST_LOAN_CAP,Math.max(L.floor,lapPotential()*L.laps))/10)*10;}return baseAmt.apply(this,arguments);};
+})();
 
 // ===== Пуш «Ходы восстановились» =====
 // Дизайн: черновики/америкэн-бой-пуш-ходов.md. Ходы копятся до потолка и дальше
@@ -5598,7 +5609,7 @@ new MutationObserver(()=>sfCardNote()).observe($('card'),{childList:true,subtree
 const sfBaseNew=newGame;
 newGame=function(){const r=sfBaseNew.apply(this,arguments);
   S.firstRoute={variant:0,index:0,done:true};S.training={shipped:true,explained:true,skipped:true};S.starter.closed=true;
-  S.q=[];S.rolls=SF.rolls;S.opened=[true,true,true];S.sf={done:{},ended:false,covered:0,lic:{}};S.tips.intro=true;
+  S.q=[];S.rolls=SF.rolls;S.opened=[true,true,true];S.sf={done:{},ended:false,covered:0,lic:{}};S.tips.intro=true;S.tips.shipHot=true; // поставок в режиме нет — совет «пора отправлять фуру» не нужен
   log('Джонни в Сан-Франциско. В кармане $'+S.cash+'. Пустыри ждут — строй, что хочешь.');save();render();return r;};
 intro=async function(){await modal(`<h2>🌉 Сан-Франциско</h2><p class="t">Город на холмах. Здесь Джонни не покупает готовое — он строит.</p>
   <p>На любом пустыре строится что угодно — если есть лицензия. Начинаешь со сладостей и напитков. <b>Лицензии на одежду и технику покупаются прямо в меню пустыря.</b></p>
@@ -5641,7 +5652,7 @@ function sfLotBar(){
 }
 // Сохранение из общего кода могло подставить пустырю базовый товар — снимаем.
 (function(){const base=newGame;newGame=function(){const r=base.apply(this,arguments);S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});return r;};})();
-(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles){S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});S.sf=S.sf||{done:{},ended:false,covered:0};S.sf.lic=S.sf.lic||{};}}catch(e){}return r;};})();
+(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles){S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});S.sf=S.sf||{done:{},ended:false,covered:0};S.sf.lic=S.sf.lic||{};S.tips=S.tips||{};S.tips.shipHot=true;}}catch(e){}return r;};})();
 async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks().map(t=>t.base));
   await modal(`<h2>🌉 Благосостояние города</h2><p class="t">Город обеспечен ${sfCovered()}/6 категорий — все товары продаются на <b>+${Math.round((sfPriceMult()-1)*100)}%</b> дороже.</p>
     <div class="row"><span class="n">Есть</span><span class="v">${SF.cats.filter(c=>have.has(c)).map(c=>good(c).icon).join(' ')||'—'}</span></div>

@@ -12,3 +12,14 @@ CFG.MILESTONES[2].pts=1350;
 // Соперники в «Топе» растут вместе с игроком, иначе он уходит в отрыв раньше.
 CFG.LB_SCALE=1.14;
 (function(){const base=lbBots;lbBots=function(){return base.apply(this,arguments).map(b=>({...b,fin:Math.round(b.fin*CFG.LB_SCALE)}));};})();
+// Первый кредит — без взноса кристаллами и без процентов (решение продюсера 30.09.2026):
+// клетка банка должна работать с первого захода, главное — вернуть тело долга. Второй и третий как были.
+CFG.LOANS[0].hard=0;CFG.LOANS[0].rate=0;
+// Первый кредит доступен без залога и без проверки платёжеспособности (иначе с дешёвыми точками
+// банк отказывал): сумма — от минимума до потолка FIRST_LOAN_CAP по потенциалу прибыли за круг.
+CFG.FIRST_LOAN_CAP=1000;
+(function(){
+  const baseCan=canLoan,baseAmt=loanAmount;
+  canLoan=function(i){if(i===0&&!(S.loans||[]).length)return true;return baseCan.apply(this,arguments);};
+  loanAmount=function(i){if(i===0&&!(S.loans||[]).length){const L=CFG.LOANS[0];return Math.round(Math.min(CFG.FIRST_LOAN_CAP,Math.max(L.floor,lapPotential()*L.laps))/10)*10;}return baseAmt.apply(this,arguments);};
+})();

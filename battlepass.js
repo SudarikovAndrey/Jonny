@@ -160,7 +160,7 @@ eventInfo=async function(){
  if(S.day===CFG.BLACK_FRIDAY_DAY)today.push({cls:'hot',ic:'🛍',b:`Чёрная пятница ×${String(CFG.BF_MULT).replace('.',',')}`,s:'все продажи дороже'});
  const behind=parcelsBehind()-(S.parcelSent?0:1);
  if(behind>0)today.push({ic:`<img src="assets/icons/crate.webp" alt="">`,b:`Догони ${behind} ${behind===1?'поставку':'поставки'}`,s:(S.catchups||0)<CFG.LATE.catchupFree?'первая — бесплатно':'бандл «Догон»'});
- if((S.loans||[]).length)today.push({cls:'bad',ic:'🏦',b:`Кредит: −$${loanInterest()} за круг`,s:'при проходе банка'});
+ if((S.loans||[]).length)today.push({cls:'bad',ic:'🏦',b:loanInterest()?`Кредит: −$${loanInterest()} за круг`:'Кредит без процентов',s:'при проходе банка'});
  if(S.jail>0)today.push({cls:'bad',ic:`<img src="board/assets/symbols/police.svg" alt="">`,b:'Ты в участке',s:`попыток на дубль: ${S.jail}`});
  if(!today.length)today.push({ic:`<img src="assets/icons/clock.webp" alt="">`,b:'Спокойный день',s:S.parcelSent?'поставка уже ушла':'не забудь поставку'});
  const plates=today.map(r=>`<div class="hub-plate td-now ${r.cls||''}"><span class="td-ic">${r.ic}</span><span class="hub-text"><b>${r.b}</b><small>${r.s}</small></span></div>`).join('');

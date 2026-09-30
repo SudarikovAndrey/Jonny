@@ -161,7 +161,7 @@ new MutationObserver(()=>sfCardNote()).observe($('card'),{childList:true,subtree
 const sfBaseNew=newGame;
 newGame=function(){const r=sfBaseNew.apply(this,arguments);
   S.firstRoute={variant:0,index:0,done:true};S.training={shipped:true,explained:true,skipped:true};S.starter.closed=true;
-  S.q=[];S.rolls=SF.rolls;S.opened=[true,true,true];S.sf={done:{},ended:false,covered:0,lic:{}};S.tips.intro=true;
+  S.q=[];S.rolls=SF.rolls;S.opened=[true,true,true];S.sf={done:{},ended:false,covered:0,lic:{}};S.tips.intro=true;S.tips.shipHot=true; // поставок в режиме нет — совет «пора отправлять фуру» не нужен
   log('Джонни в Сан-Франциско. В кармане $'+S.cash+'. Пустыри ждут — строй, что хочешь.');save();render();return r;};
 intro=async function(){await modal(`<h2>🌉 Сан-Франциско</h2><p class="t">Город на холмах. Здесь Джонни не покупает готовое — он строит.</p>
   <p>На любом пустыре строится что угодно — если есть лицензия. Начинаешь со сладостей и напитков. <b>Лицензии на одежду и технику покупаются прямо в меню пустыря.</b></p>
@@ -204,7 +204,7 @@ function sfLotBar(){
 }
 // Сохранение из общего кода могло подставить пустырю базовый товар — снимаем.
 (function(){const base=newGame;newGame=function(){const r=base.apply(this,arguments);S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});return r;};})();
-(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles){S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});S.sf=S.sf||{done:{},ended:false,covered:0};S.sf.lic=S.sf.lic||{};}}catch(e){}return r;};})();
+(function(){const base=load;load=function(){const r=base.apply(this,arguments);try{if(r&&S&&S.tiles){S.tiles.forEach(t=>{if(sfIsLot(t))t.base=null;});S.sf=S.sf||{done:{},ended:false,covered:0};S.sf.lic=S.sf.lic||{};S.tips=S.tips||{};S.tips.shipHot=true;}}catch(e){}return r;};})();
 async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks().map(t=>t.base));
   await modal(`<h2>🌉 Благосостояние города</h2><p class="t">Город обеспечен ${sfCovered()}/6 категорий — все товары продаются на <b>+${Math.round((sfPriceMult()-1)*100)}%</b> дороже.</p>
     <div class="row"><span class="n">Есть</span><span class="v">${SF.cats.filter(c=>have.has(c)).map(c=>good(c).icon).join(' ')||'—'}</span></div>
