@@ -1,1281 +1,2158 @@
 {
- "plate": [
-  1536,
-  1024
- ],
- "note": "Канзас: ферма в центре, заборы, деревья по карте (tools/map_colliders/kansas.py).",
- "prisms": [
-  {
-   "name": "GrainElevator",
-   "roof": [
-    [
-     750.9,
-     206.5
-    ],
-    [
-     853.5,
-     272.5
-    ],
-    [
-     782.3,
-     318.3
-    ],
-    [
-     679.6,
-     252.3
-    ]
-   ],
-   "height": 3.7
-  },
-  {
-   "name": "ElevatorCupola",
-   "roof": [
-    [
-     762.3,
-     167.9
-    ],
-    [
-     813.6,
-     200.9
-    ],
-    [
-     773.7,
-     226.5
-    ],
-    [
-     722.4,
-     193.5
-    ]
-   ],
-   "height": 4.8
-  },
-  {
-   "name": "RedBarn",
-   "roof": [
-    [
-     562.7,
-     347.2
-    ],
-    [
-     705.3,
-     438.8
-    ],
-    [
-     585.6,
-     515.8
-    ],
-    [
-     443.0,
-     424.2
-    ]
-   ],
-   "height": 1.6
-  },
-  {
-   "name": "FeedShed",
-   "roof": [
-    [
-     899.1,
-     460.8
-    ],
-    [
-     996.1,
-     523.1
-    ],
-    [
-     864.9,
-     607.4
-    ],
-    [
-     768.0,
-     545.1
-    ]
-   ],
-   "height": 1.6
-  },
-  {
-   "name": "Tractor",
-   "roof": [
-    [
-     671.1,
-     575.0
-    ],
-    [
-     716.7,
-     604.4
-    ],
-    [
-     682.5,
-     626.3
-    ],
-    [
-     636.9,
-     597.0
-    ]
-   ],
-   "height": 0.7
-  },
-  {
-   "name": "CratesBarn",
-   "roof": [
-    [
-     494.3,
-     517.8
-    ],
-    [
-     534.2,
-     543.4
-    ],
-    [
-     500.0,
-     565.4
-    ],
-    [
-     460.1,
-     539.8
-    ]
-   ],
-   "height": 0.5
-  },
-  {
-   "name": "CratesFeed",
-   "roof": [
-    [
-     779.4,
-     620.4
-    ],
-    [
-     825.0,
-     649.7
-    ],
-    [
-     785.1,
-     675.4
-    ],
-    [
-     739.5,
-     646.0
-    ]
-   ],
-   "height": 0.5
-  },
-  {
-   "name": "CratesElevator",
-   "roof": [
-    [
-     733.8,
-     393.2
-    ],
-    [
-     768.0,
-     415.2
-    ],
-    [
-     733.8,
-     437.1
-    ],
-    [
-     699.6,
-     415.2
-    ]
-   ],
-   "height": 0.5
-  },
-  {
-   "name": "Sunflowers",
-   "roof": [
-    [
-     1098.7,
-     457.6
-    ],
-    [
-     1161.4,
-     497.9
-    ],
-    [
-     1110.1,
-     530.9
-    ],
-    [
-     1047.4,
-     490.5
-    ]
-   ],
-   "height": 1.0
-  },
-  {
-   "name": "BarrelsFeed",
-   "roof": [
-    [
-     904.8,
-     645.5
-    ],
-    [
-     933.3,
-     663.8
-    ],
-    [
-     904.8,
-     682.1
-    ],
-    [
-     876.3,
-     663.8
-    ]
-   ],
-   "height": 0.45
-  }
- ],
- "hulls": [],
- "crowns": [],
- "beams": [
-  {
-   "name": "FenceRail0",
-   "ends": [
-    [
-     628.3157879810385,
-     389.2296365191985,
-     0.32
-    ],
-    [
-     696.732544888285,
-     433.20708015411253,
-     0.32
-    ]
-   ],
-   "radius": 0.06
-  },
-  {
-   "name": "FenceRail1",
-   "ends": [
-    [
-     853.520946134058,
-     383.7324560648343,
-     0.32
-    ],
-    [
-     876.3265317698068,
-     416.71553879101975,
-     0.32
-    ]
-   ],
-   "radius": 0.06
-  },
-  {
-   "name": "FenceRail2",
-   "ends": [
-    [
-     1035.9656312200486,
-     471.6873433346622,
-     0.32
-    ],
-    [
-     1121.4865773541064,
-     522.9943609087285,
-     0.32
-    ]
-   ],
-   "radius": 0.06
-  },
-  {
-   "name": "FenceRail3",
-   "ends": [
-    [
-     1141.4414647853869,
-     550.4802631805497,
-     0.32
-    ],
-    [
-     1075.875406082609,
-     592.6253133306756,
-     0.32
-    ]
-   ],
-   "radius": 0.06
-  }
- ],
- "rounds": [
-  {
-   "name": "SiloWestLegs",
-   "pixel": [
-    939.0,
-    499.5
-   ],
-   "radius": 0.32,
-   "height": 0.85,
-   "bottom": 0
-  },
-  {
-   "name": "SiloWestBody",
-   "pixel": [
-    939.0,
-    499.5
-   ],
-   "radius": 0.55,
-   "height": 1.9499999999999997,
-   "bottom": 0.85
-  },
-  {
-   "name": "SiloWestCone",
-   "pixel": [
-    939.0,
-    499.5
-   ],
-   "radius": 0.22,
-   "height": 0.40000000000000036,
-   "bottom": 2.8
-  },
-  {
-   "name": "SiloEastLegs",
-   "pixel": [
-    1013.2,
-    567.0
-   ],
-   "radius": 0.32,
-   "height": 1.0,
-   "bottom": 0
-  },
-  {
-   "name": "SiloEastBody",
-   "pixel": [
-    1013.2,
-    567.0
-   ],
-   "radius": 0.55,
-   "height": 1.9,
-   "bottom": 1.0
-  },
-  {
-   "name": "SiloEastCone",
-   "pixel": [
-    1013.2,
-    567.0
-   ],
-   "radius": 0.22,
-   "height": 0.3999999999999999,
-   "bottom": 2.9
-  },
-  {
-   "name": "Windmill",
-   "pixel": [
-    414.5,
-    578.0
-   ],
-   "radius": 0.15,
-   "height": 2.2,
-   "bottom": 0
-  },
-  {
-   "name": "LampEast",
-   "pixel": [
-    994.9,
-    616.8
-   ],
-   "radius": 0.08,
-   "height": 1.3,
-   "bottom": 0
-  },
-  {
-   "name": "LampMid",
-   "pixel": [
-    711.0,
-    552.3
-   ],
-   "radius": 0.06,
-   "height": 1.4,
-   "bottom": 0
-  },
-  {
-   "name": "BarrelSilo",
-   "pixel": [
-    1047.4,
-    618.3
-   ],
-   "radius": 0.16,
-   "height": 0.5,
-   "bottom": 0
-  },
-  {
-   "name": "Tree0",
-   "pixel": [
-    330,
-    17
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree1",
-   "pixel": [
-    1332,
-    28
-   ],
-   "radius": 0.24,
-   "height": 0.49,
-   "bottom": 0.47,
-   "sphere": true
-  },
-  {
-   "name": "Tree2",
-   "pixel": [
-    126,
-    98
-   ],
-   "radius": 0.26,
-   "height": 0.53,
-   "bottom": 0.48,
-   "sphere": true
-  },
-  {
-   "name": "Tree3",
-   "pixel": [
-    1120,
-    104
-   ],
-   "radius": 0.31,
-   "height": 0.62,
-   "bottom": 0.5,
-   "sphere": true
-  },
-  {
-   "name": "Tree4",
-   "pixel": [
-    279,
-    174
-   ],
-   "radius": 0.2,
-   "height": 0.41,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree5",
-   "pixel": [
-    190,
-    209
-   ],
-   "radius": 0.22,
-   "height": 0.44,
-   "bottom": 0.46,
-   "sphere": true
-  },
-  {
-   "name": "Tree6",
-   "pixel": [
-    1242,
-    216
-   ],
-   "radius": 0.31,
-   "height": 0.62,
-   "bottom": 0.51,
-   "sphere": true
-  },
-  {
-   "name": "Tree7",
-   "pixel": [
-    1428,
-    288
-   ],
-   "radius": 0.3,
-   "height": 0.6,
-   "bottom": 0.5,
-   "sphere": true
-  },
-  {
-   "name": "Tree8",
-   "pixel": [
-    32,
-    321
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree9",
-   "pixel": [
-    1476,
-    333
-   ],
-   "radius": 0.2,
-   "height": 0.4,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree10",
-   "pixel": [
-    615,
-    334
-   ],
-   "radius": 0.3,
-   "height": 0.6,
-   "bottom": 0.5,
-   "sphere": true
-  },
-  {
-   "name": "Tree11",
-   "pixel": [
-    614,
-    337
-   ],
-   "radius": 0.3,
-   "height": 0.6,
-   "bottom": 0.5,
-   "sphere": true
-  },
-  {
-   "name": "Tree12",
-   "pixel": [
-    1500,
-    341
-   ],
-   "radius": 0.2,
-   "height": 0.4,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree13",
-   "pixel": [
-    879,
-    371
-   ],
-   "radius": 0.19,
-   "height": 0.38,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree14",
-   "pixel": [
-    1455,
-    375
-   ],
-   "radius": 0.21,
-   "height": 0.43,
-   "bottom": 0.46,
-   "sphere": true
-  },
-  {
-   "name": "Tree15",
-   "pixel": [
-    540,
-    381
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree16",
-   "pixel": [
-    539,
-    383
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree17",
-   "pixel": [
-    538,
-    384
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree18",
-   "pixel": [
-    1422,
-    441
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree19",
-   "pixel": [
-    1101,
-    462
-   ],
-   "radius": 0.2,
-   "height": 0.4,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree20",
-   "pixel": [
-    1518,
-    482
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree21",
-   "pixel": [
-    765,
-    530
-   ],
-   "radius": 0.25,
-   "height": 0.5,
-   "bottom": 0.47,
-   "sphere": true
-  },
-  {
-   "name": "Tree22",
-   "pixel": [
-    754,
-    557
-   ],
-   "radius": 0.23,
-   "height": 0.46,
-   "bottom": 0.46,
-   "sphere": true
-  },
-  {
-   "name": "Tree23",
-   "pixel": [
-    1127,
-    567
-   ],
-   "radius": 0.21,
-   "height": 0.41,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree24",
-   "pixel": [
-    57,
-    601
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree25",
-   "pixel": [
-    28,
-    666
-   ],
-   "radius": 0.29,
-   "height": 0.57,
-   "bottom": 0.49,
-   "sphere": true
-  },
-  {
-   "name": "Tree26",
-   "pixel": [
-    732,
-    736
-   ],
-   "radius": 0.22,
-   "height": 0.45,
-   "bottom": 0.46,
-   "sphere": true
-  },
-  {
-   "name": "Tree27",
-   "pixel": [
-    328,
-    743
-   ],
-   "radius": 0.19,
-   "height": 0.39,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree28",
-   "pixel": [
-    164,
-    747
-   ],
-   "radius": 0.18,
-   "height": 0.37,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree29",
-   "pixel": [
-    1093,
-    756
-   ],
-   "radius": 0.2,
-   "height": 0.4,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree30",
-   "pixel": [
-    1092,
-    757
-   ],
-   "radius": 0.2,
-   "height": 0.4,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree31",
-   "pixel": [
-    706,
-    763
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree32",
-   "pixel": [
-    96,
-    808
-   ],
-   "radius": 0.47,
-   "height": 0.93,
-   "bottom": 0.58,
-   "sphere": true
-  },
-  {
-   "name": "Tree33",
-   "pixel": [
-    272,
-    845
-   ],
-   "radius": 0.49,
-   "height": 0.98,
-   "bottom": 0.59,
-   "sphere": true
-  },
-  {
-   "name": "Tree34",
-   "pixel": [
-    394,
-    853
-   ],
-   "radius": 0.4,
-   "height": 0.8,
-   "bottom": 0.55,
-   "sphere": true
-  },
-  {
-   "name": "Tree35",
-   "pixel": [
-    579,
-    884
-   ],
-   "radius": 0.18,
-   "height": 0.36,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Tree36",
-   "pixel": [
-    228,
-    896
-   ],
-   "radius": 0.29,
-   "height": 0.58,
-   "bottom": 0.5,
-   "sphere": true
-  },
-  {
-   "name": "Tree37",
-   "pixel": [
-    478,
-    985
-   ],
-   "radius": 0.38,
-   "height": 0.75,
-   "bottom": 0.54,
-   "sphere": true
-  },
-  {
-   "name": "Tree38",
-   "pixel": [
-    40,
-    995
-   ],
-   "radius": 0.19,
-   "height": 0.39,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree39",
-   "pixel": [
-    37,
-    999
-   ],
-   "radius": 0.19,
-   "height": 0.39,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree40",
-   "pixel": [
-    35,
-    1001
-   ],
-   "radius": 0.19,
-   "height": 0.39,
-   "bottom": 0.45,
-   "sphere": true
-  },
-  {
-   "name": "Tree41",
-   "pixel": [
-    85,
-    1005
-   ],
-   "radius": 0.18,
-   "height": 0.37,
-   "bottom": 0.44,
-   "sphere": true
-  },
-  {
-   "name": "Trunk0",
-   "pixel": [
-    330,
-    55.292762204724404
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk1",
-   "pixel": [
-    1332,
-    72.24955711829122
-   ],
-   "radius": 0.07,
-   "height": 0.57,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk2",
-   "pixel": [
-    126,
-    143.99085263726408
-   ],
-   "radius": 0.07,
-   "height": 0.58,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk3",
-   "pixel": [
-    1120,
-    154.15744980632775
-   ],
-   "radius": 0.07,
-   "height": 0.6,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk4",
-   "pixel": [
-    279,
-    214.56667534510254
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk5",
-   "pixel": [
-    190,
-    250.94476699864808
-   ],
-   "radius": 0.07,
-   "height": 0.56,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk6",
-   "pixel": [
-    1242,
-    266.43365528652004
-   ],
-   "radius": 0.07,
-   "height": 0.61,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk7",
-   "pixel": [
-    1428,
-    337.4074843481489
-   ],
-   "radius": 0.07,
-   "height": 0.6,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk8",
-   "pixel": [
-    32,
-    359.2927622047244
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk9",
-   "pixel": [
-    1476,
-    373.0008818897638
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk10",
-   "pixel": [
-    615,
-    383.59686032077764
-   ],
-   "radius": 0.07,
-   "height": 0.6,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk11",
-   "pixel": [
-    614,
-    386.59686032077764
-   ],
-   "radius": 0.07,
-   "height": 0.6,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk12",
-   "pixel": [
-    1500,
-    381.32124675468236
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk13",
-   "pixel": [
-    879,
-    410.117928487039
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk14",
-   "pixel": [
-    1455,
-    416.45169719013904
-   ],
-   "radius": 0.07,
-   "height": 0.56,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk15",
-   "pixel": [
-    540,
-    419.2927622047244
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk16",
-   "pixel": [
-    539,
-    421.2927622047244
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk17",
-   "pixel": [
-    538,
-    422.2927622047244
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk18",
-   "pixel": [
-    1422,
-    479.2927622047244
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk19",
-   "pixel": [
-    1101,
-    502.0367531433855
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk20",
-   "pixel": [
-    1518,
-    520.2927622047245
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk21",
-   "pixel": [
-    765,
-    574.5968818897638
-   ],
-   "radius": 0.07,
-   "height": 0.57,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk22",
-   "pixel": [
-    754,
-    599.7409898709307
-   ],
-   "radius": 0.07,
-   "height": 0.56,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk23",
-   "pixel": [
-    1127,
-    607.6362161052405
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk24",
-   "pixel": [
-    57,
-    639.2927622047245
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk25",
-   "pixel": [
-    28,
-    714.0438818897637
-   ],
-   "radius": 0.07,
-   "height": 0.59,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk26",
-   "pixel": [
-    732,
-    778.3307739673044
-   ],
-   "radius": 0.07,
-   "height": 0.56,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk27",
-   "pixel": [
-    328,
-    782.6015766327946
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk28",
-   "pixel": [
-    164,
-    785.5816635859719
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk29",
-   "pixel": [
-    1093,
-    796.3212467546823
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk30",
-   "pixel": [
-    1092,
-    797.3212467546823
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk31",
-   "pixel": [
-    706,
-    801.2927622047245
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk32",
-   "pixel": [
-    96,
-    872.8840174316506
-   ],
-   "radius": 0.07,
-   "height": 0.68,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk33",
-   "pixel": [
-    272,
-    911.9550882614323
-   ],
-   "radius": 0.07,
-   "height": 0.69,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk34",
-   "pixel": [
-    394,
-    911.8310035238961
-   ],
-   "radius": 0.07,
-   "height": 0.65,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk35",
-   "pixel": [
-    579,
-    922.2927622047245
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk36",
-   "pixel": [
-    228,
-    944.6611299658334
-   ],
-   "radius": 0.07,
-   "height": 0.6,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk37",
-   "pixel": [
-    478,
-    1041.562352626327
-   ],
-   "radius": 0.07,
-   "height": 0.64,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk38",
-   "pixel": [
-    40,
-    1034.4911271045974
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk39",
-   "pixel": [
-    37,
-    1038.4911271045974
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk40",
-   "pixel": [
-    35,
-    1040.4911271045974
-   ],
-   "radius": 0.07,
-   "height": 0.55,
-   "bottom": 0
-  },
-  {
-   "name": "Trunk41",
-   "pixel": [
-    85,
-    1043.581663585972
-   ],
-   "radius": 0.07,
-   "height": 0.54,
-   "bottom": 0
-  }
- ]
+  "plate": [
+    1536,
+    1024
+  ],
+  "note": "Канзас: ферма в центре, заборы, деревья по карте (tools/map_colliders/kansas.py). Light-study correction: roof outlines and lamp positions traced against plate-railway, 2026-10-01.",
+  "prisms": [
+    {
+      "name": "GrainElevator",
+      "roof": [
+        [
+          678,
+          277
+        ],
+        [
+          750,
+          236
+        ],
+        [
+          859,
+          286
+        ],
+        [
+          784,
+          332
+        ]
+      ],
+      "height": 3.7
+    },
+    {
+      "name": "ElevatorCupola",
+      "roof": [
+        [
+          722,
+          244
+        ],
+        [
+          765,
+          220
+        ],
+        [
+          817,
+          244
+        ],
+        [
+          773,
+          272
+        ]
+      ],
+      "height": 4.4,
+      "bottom": 3.7,
+      "base": [
+        [
+          723,
+          277
+        ],
+        [
+          766,
+          251
+        ],
+        [
+          817,
+          280
+        ],
+        [
+          773,
+          306
+        ]
+      ]
+    },
+    {
+      "name": "RedBarn",
+      "roof": [
+        [
+          449,
+          457
+        ],
+        [
+          546,
+          409
+        ],
+        [
+          685,
+          494
+        ],
+        [
+          591,
+          546
+        ]
+      ],
+      "height": 1.3
+    },
+    {
+      "name": "FeedShed",
+      "roof": [
+        [
+          768,
+          588
+        ],
+        [
+          855,
+          540
+        ],
+        [
+          972,
+          607
+        ],
+        [
+          881,
+          659
+        ]
+      ],
+      "height": 1.05
+    },
+    {
+      "name": "Tractor",
+      "roof": [
+        [
+          671.1,
+          575.0
+        ],
+        [
+          716.7,
+          604.4
+        ],
+        [
+          682.5,
+          626.3
+        ],
+        [
+          636.9,
+          597.0
+        ]
+      ],
+      "height": 0.7
+    },
+    {
+      "name": "CratesBarn",
+      "roof": [
+        [
+          494.3,
+          517.8
+        ],
+        [
+          534.2,
+          543.4
+        ],
+        [
+          500.0,
+          565.4
+        ],
+        [
+          460.1,
+          539.8
+        ]
+      ],
+      "height": 0.5
+    },
+    {
+      "name": "CratesFeed",
+      "roof": [
+        [
+          779.4,
+          620.4
+        ],
+        [
+          825.0,
+          649.7
+        ],
+        [
+          785.1,
+          675.4
+        ],
+        [
+          739.5,
+          646.0
+        ]
+      ],
+      "height": 0.5
+    },
+    {
+      "name": "CratesElevator",
+      "roof": [
+        [
+          733.8,
+          393.2
+        ],
+        [
+          768.0,
+          415.2
+        ],
+        [
+          733.8,
+          437.1
+        ],
+        [
+          699.6,
+          415.2
+        ]
+      ],
+      "height": 0.5
+    },
+    {
+      "name": "Sunflowers",
+      "roof": [
+        [
+          1098.7,
+          457.6
+        ],
+        [
+          1161.4,
+          497.9
+        ],
+        [
+          1110.1,
+          530.9
+        ],
+        [
+          1047.4,
+          490.5
+        ]
+      ],
+      "height": 1.0
+    },
+    {
+      "name": "BarrelsFeed",
+      "roof": [
+        [
+          904.8,
+          645.5
+        ],
+        [
+          933.3,
+          663.8
+        ],
+        [
+          904.8,
+          682.1
+        ],
+        [
+          876.3,
+          663.8
+        ]
+      ],
+      "height": 0.45
+    }
+  ],
+  "hulls": [
+    {
+      "name": "BarnPitchedRoof",
+      "vertices": [
+        [
+          449,
+          457,
+          1.3
+        ],
+        [
+          546,
+          409,
+          1.3
+        ],
+        [
+          685,
+          494,
+          1.3
+        ],
+        [
+          591,
+          546,
+          1.3
+        ],
+        [
+          493,
+          396,
+          2.0
+        ],
+        [
+          636,
+          482,
+          2.0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          4,
+          5,
+          3
+        ],
+        [
+          4,
+          1,
+          2,
+          5
+        ],
+        [
+          0,
+          1,
+          4
+        ],
+        [
+          3,
+          5,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "FeedPitchedRoof",
+      "vertices": [
+        [
+          768,
+          588,
+          1.05
+        ],
+        [
+          855,
+          540,
+          1.05
+        ],
+        [
+          972,
+          607,
+          1.05
+        ],
+        [
+          881,
+          659,
+          1.05
+        ],
+        [
+          808,
+          534,
+          1.7
+        ],
+        [
+          929,
+          607,
+          1.7
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          4,
+          5,
+          3
+        ],
+        [
+          4,
+          1,
+          2,
+          5
+        ],
+        [
+          0,
+          1,
+          4
+        ],
+        [
+          3,
+          5,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "CupolaPitchedRoof",
+      "vertices": [
+        [
+          719,
+          244,
+          4.4
+        ],
+        [
+          767,
+          218,
+          4.4
+        ],
+        [
+          820,
+          244,
+          4.4
+        ],
+        [
+          773,
+          270,
+          4.4
+        ],
+        [
+          744,
+          209,
+          4.8
+        ],
+        [
+          795,
+          236,
+          4.8
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          4,
+          5,
+          3
+        ],
+        [
+          4,
+          1,
+          2,
+          5
+        ],
+        [
+          0,
+          1,
+          4
+        ],
+        [
+          3,
+          5,
+          2
+        ]
+      ]
+    }
+  ],
+  "crowns": [],
+  "beams": [
+    {
+      "name": "FenceRail0",
+      "ends": [
+        [
+          628.3157879810385,
+          389.2296365191985,
+          0.32
+        ],
+        [
+          696.732544888285,
+          433.20708015411253,
+          0.32
+        ]
+      ],
+      "radius": 0.06
+    },
+    {
+      "name": "FenceRail1",
+      "ends": [
+        [
+          853.520946134058,
+          383.7324560648343,
+          0.32
+        ],
+        [
+          876.3265317698068,
+          416.71553879101975,
+          0.32
+        ]
+      ],
+      "radius": 0.06
+    },
+    {
+      "name": "FenceRail2",
+      "ends": [
+        [
+          1035.9656312200486,
+          471.6873433346622,
+          0.32
+        ],
+        [
+          1121.4865773541064,
+          522.9943609087285,
+          0.32
+        ]
+      ],
+      "radius": 0.06
+    },
+    {
+      "name": "FenceRail3",
+      "ends": [
+        [
+          1141.4414647853869,
+          550.4802631805497,
+          0.32
+        ],
+        [
+          1075.875406082609,
+          592.6253133306756,
+          0.32
+        ]
+      ],
+      "radius": 0.06
+    }
+  ],
+  "rounds": [
+    {
+      "name": "SiloWestLegs",
+      "pixel": [
+        939.0,
+        499.5
+      ],
+      "radius": 0.32,
+      "height": 0.85,
+      "bottom": 0,
+      "groundAnchor": true
+    },
+    {
+      "name": "SiloWestBody",
+      "pixel": [
+        939.0,
+        499.5
+      ],
+      "radius": 0.55,
+      "height": 1.6,
+      "bottom": 0.85,
+      "groundAnchor": true
+    },
+    {
+      "name": "SiloWestCone",
+      "pixel": [
+        939.0,
+        499.5
+      ],
+      "radius": 0.55,
+      "height": 0.72,
+      "bottom": 2.45,
+      "radiusTop": 0.025,
+      "groundAnchor": true
+    },
+    {
+      "name": "SiloEastLegs",
+      "pixel": [
+        1013.2,
+        567.0
+      ],
+      "radius": 0.32,
+      "height": 1.0,
+      "bottom": 0,
+      "groundAnchor": true
+    },
+    {
+      "name": "SiloEastBody",
+      "pixel": [
+        1013.2,
+        567.0
+      ],
+      "radius": 0.55,
+      "height": 1.6,
+      "bottom": 1.0,
+      "groundAnchor": true
+    },
+    {
+      "name": "SiloEastCone",
+      "pixel": [
+        1013.2,
+        567.0
+      ],
+      "radius": 0.55,
+      "height": 0.72,
+      "bottom": 2.6,
+      "radiusTop": 0.025,
+      "groundAnchor": true
+    },
+    {
+      "name": "Windmill",
+      "pixel": [
+        414.5,
+        578.0
+      ],
+      "radius": 0.15,
+      "height": 2.2,
+      "bottom": 0
+    },
+    {
+      "name": "LampEast",
+      "pixel": [
+        996,
+        686
+      ],
+      "radius": 0.08,
+      "height": 1.28,
+      "bottom": 0
+    },
+    {
+      "name": "LampMid",
+      "pixel": [
+        711,
+        613
+      ],
+      "radius": 0.06,
+      "height": 1.35,
+      "bottom": 0
+    },
+    {
+      "name": "BarrelSilo",
+      "pixel": [
+        1047.4,
+        618.3
+      ],
+      "radius": 0.16,
+      "height": 0.5,
+      "bottom": 0
+    },
+    {
+      "name": "Tree0",
+      "pixel": [
+        1322,
+        36
+      ],
+      "radius": 0.26,
+      "height": 0.52,
+      "bottom": 0.48,
+      "sphere": true
+    },
+    {
+      "name": "Tree1",
+      "pixel": [
+        323,
+        45
+      ],
+      "radius": 0.32,
+      "height": 0.64,
+      "bottom": 0.51,
+      "sphere": true
+    },
+    {
+      "name": "Tree2",
+      "pixel": [
+        1194,
+        53
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree3",
+      "pixel": [
+        1193,
+        54
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree4",
+      "pixel": [
+        1145,
+        74
+      ],
+      "radius": 0.3,
+      "height": 0.6,
+      "bottom": 0.5,
+      "sphere": true
+    },
+    {
+      "name": "Tree5",
+      "pixel": [
+        1144,
+        75
+      ],
+      "radius": 0.3,
+      "height": 0.6,
+      "bottom": 0.5,
+      "sphere": true
+    },
+    {
+      "name": "Tree6",
+      "pixel": [
+        1305,
+        80
+      ],
+      "radius": 0.22,
+      "height": 0.43,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree7",
+      "pixel": [
+        131,
+        91
+      ],
+      "radius": 0.27,
+      "height": 0.53,
+      "bottom": 0.48,
+      "sphere": true
+    },
+    {
+      "name": "Tree8",
+      "pixel": [
+        1186,
+        119
+      ],
+      "radius": 0.19,
+      "height": 0.38,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree9",
+      "pixel": [
+        241,
+        159
+      ],
+      "radius": 0.46,
+      "height": 0.92,
+      "bottom": 0.58,
+      "sphere": true
+    },
+    {
+      "name": "Tree10",
+      "pixel": [
+        126,
+        184
+      ],
+      "radius": 0.26,
+      "height": 0.53,
+      "bottom": 0.48,
+      "sphere": true
+    },
+    {
+      "name": "Tree11",
+      "pixel": [
+        191,
+        207
+      ],
+      "radius": 0.25,
+      "height": 0.49,
+      "bottom": 0.47,
+      "sphere": true
+    },
+    {
+      "name": "Tree12",
+      "pixel": [
+        1254,
+        207
+      ],
+      "radius": 0.3,
+      "height": 0.6,
+      "bottom": 0.5,
+      "sphere": true
+    },
+    {
+      "name": "Tree13",
+      "pixel": [
+        109,
+        209
+      ],
+      "radius": 0.25,
+      "height": 0.5,
+      "bottom": 0.47,
+      "sphere": true
+    },
+    {
+      "name": "Tree14",
+      "pixel": [
+        1425,
+        289
+      ],
+      "radius": 0.29,
+      "height": 0.57,
+      "bottom": 0.49,
+      "sphere": true
+    },
+    {
+      "name": "Tree15",
+      "pixel": [
+        350,
+        311
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree16",
+      "pixel": [
+        625,
+        315
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree17",
+      "pixel": [
+        626,
+        316
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree18",
+      "pixel": [
+        627,
+        317
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree19",
+      "pixel": [
+        22,
+        328
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree20",
+      "pixel": [
+        1196,
+        329
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree21",
+      "pixel": [
+        1397,
+        339
+      ],
+      "radius": 0.19,
+      "height": 0.38,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree22",
+      "pixel": [
+        583,
+        353
+      ],
+      "radius": 0.26,
+      "height": 0.53,
+      "bottom": 0.48,
+      "sphere": true
+    },
+    {
+      "name": "Tree23",
+      "pixel": [
+        584,
+        355
+      ],
+      "radius": 0.26,
+      "height": 0.53,
+      "bottom": 0.48,
+      "sphere": true
+    },
+    {
+      "name": "Tree24",
+      "pixel": [
+        1469,
+        360
+      ],
+      "radius": 0.29,
+      "height": 0.58,
+      "bottom": 0.49,
+      "sphere": true
+    },
+    {
+      "name": "Tree25",
+      "pixel": [
+        874,
+        368
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree26",
+      "pixel": [
+        875,
+        370
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree27",
+      "pixel": [
+        1366,
+        372
+      ],
+      "radius": 0.2,
+      "height": 0.4,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree28",
+      "pixel": [
+        542,
+        382
+      ],
+      "radius": 0.19,
+      "height": 0.37,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree29",
+      "pixel": [
+        1502,
+        420
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree30",
+      "pixel": [
+        1114,
+        441
+      ],
+      "radius": 0.3,
+      "height": 0.6,
+      "bottom": 0.5,
+      "sphere": true
+    },
+    {
+      "name": "Tree31",
+      "pixel": [
+        1115,
+        442
+      ],
+      "radius": 0.3,
+      "height": 0.6,
+      "bottom": 0.5,
+      "sphere": true
+    },
+    {
+      "name": "Tree32",
+      "pixel": [
+        1418,
+        443
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree33",
+      "pixel": [
+        426,
+        444
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree34",
+      "pixel": [
+        1119,
+        453
+      ],
+      "radius": 0.3,
+      "height": 0.6,
+      "bottom": 0.5,
+      "sphere": true
+    },
+    {
+      "name": "Tree35",
+      "pixel": [
+        341,
+        496
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree36",
+      "pixel": [
+        341,
+        498
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree37",
+      "pixel": [
+        766,
+        524
+      ],
+      "radius": 0.24,
+      "height": 0.48,
+      "bottom": 0.47,
+      "sphere": true
+    },
+    {
+      "name": "Tree38",
+      "pixel": [
+        388,
+        530
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree39",
+      "pixel": [
+        748,
+        565
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree40",
+      "pixel": [
+        1083,
+        577
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree41",
+      "pixel": [
+        99,
+        634
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree42",
+      "pixel": [
+        100,
+        635
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree43",
+      "pixel": [
+        1492,
+        689
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree44",
+      "pixel": [
+        1491,
+        690
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree45",
+      "pixel": [
+        1490,
+        691
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree46",
+      "pixel": [
+        1489,
+        692
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree47",
+      "pixel": [
+        204,
+        693
+      ],
+      "radius": 0.27,
+      "height": 0.54,
+      "bottom": 0.49,
+      "sphere": true
+    },
+    {
+      "name": "Tree48",
+      "pixel": [
+        1488,
+        693
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree49",
+      "pixel": [
+        1487,
+        694
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree50",
+      "pixel": [
+        1456,
+        710
+      ],
+      "radius": 0.18,
+      "height": 0.37,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree51",
+      "pixel": [
+        171,
+        730
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree52",
+      "pixel": [
+        720,
+        737
+      ],
+      "radius": 0.28,
+      "height": 0.56,
+      "bottom": 0.49,
+      "sphere": true
+    },
+    {
+      "name": "Tree53",
+      "pixel": [
+        326,
+        741
+      ],
+      "radius": 0.22,
+      "height": 0.45,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree54",
+      "pixel": [
+        163,
+        765
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree55",
+      "pixel": [
+        300,
+        781
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree56",
+      "pixel": [
+        109,
+        802
+      ],
+      "radius": 0.31,
+      "height": 0.63,
+      "bottom": 0.51,
+      "sphere": true
+    },
+    {
+      "name": "Tree57",
+      "pixel": [
+        391,
+        822
+      ],
+      "radius": 0.25,
+      "height": 0.51,
+      "bottom": 0.48,
+      "sphere": true
+    },
+    {
+      "name": "Tree58",
+      "pixel": [
+        257,
+        836
+      ],
+      "radius": 0.25,
+      "height": 0.5,
+      "bottom": 0.47,
+      "sphere": true
+    },
+    {
+      "name": "Tree59",
+      "pixel": [
+        304,
+        836
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree60",
+      "pixel": [
+        247,
+        864
+      ],
+      "radius": 0.27,
+      "height": 0.54,
+      "bottom": 0.49,
+      "sphere": true
+    },
+    {
+      "name": "Tree61",
+      "pixel": [
+        400,
+        872
+      ],
+      "radius": 0.21,
+      "height": 0.43,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Tree62",
+      "pixel": [
+        202,
+        889
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree63",
+      "pixel": [
+        201,
+        890
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree64",
+      "pixel": [
+        200,
+        891
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree65",
+      "pixel": [
+        199,
+        892
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree66",
+      "pixel": [
+        198,
+        893
+      ],
+      "radius": 0.19,
+      "height": 0.39,
+      "bottom": 0.45,
+      "sphere": true
+    },
+    {
+      "name": "Tree67",
+      "pixel": [
+        580,
+        896
+      ],
+      "radius": 0.32,
+      "height": 0.65,
+      "bottom": 0.51,
+      "sphere": true
+    },
+    {
+      "name": "Tree68",
+      "pixel": [
+        556,
+        908
+      ],
+      "radius": 0.32,
+      "height": 0.65,
+      "bottom": 0.51,
+      "sphere": true
+    },
+    {
+      "name": "Tree69",
+      "pixel": [
+        354,
+        911
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree70",
+      "pixel": [
+        479,
+        986
+      ],
+      "radius": 0.34,
+      "height": 0.67,
+      "bottom": 0.52,
+      "sphere": true
+    },
+    {
+      "name": "Tree71",
+      "pixel": [
+        1035,
+        986
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree72",
+      "pixel": [
+        1087,
+        999
+      ],
+      "radius": 0.18,
+      "height": 0.36,
+      "bottom": 0.44,
+      "sphere": true
+    },
+    {
+      "name": "Tree73",
+      "pixel": [
+        63,
+        1003
+      ],
+      "radius": 0.21,
+      "height": 0.42,
+      "bottom": 0.46,
+      "sphere": true
+    },
+    {
+      "name": "Trunk0",
+      "pixel": [
+        1322,
+        81.85506344284238
+      ],
+      "radius": 0.07,
+      "height": 0.58,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk1",
+      "pixel": [
+        323,
+        96.04564088500516
+      ],
+      "radius": 0.07,
+      "height": 0.61,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk2",
+      "pixel": [
+        1194,
+        92.49112710459733
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk3",
+      "pixel": [
+        1193,
+        93.49112710459733
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk4",
+      "pixel": [
+        1145,
+        123.5732584790144
+      ],
+      "radius": 0.07,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk5",
+      "pixel": [
+        1144,
+        124.5732584790144
+      ],
+      "radius": 0.07,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk6",
+      "pixel": [
+        1305,
+        121.68330421662613
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk7",
+      "pixel": [
+        131,
+        137.20655569809236
+      ],
+      "radius": 0.07,
+      "height": 0.58,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk8",
+      "pixel": [
+        1186,
+        158.11792848703905
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk9",
+      "pixel": [
+        241,
+        223.253917164276
+      ],
+      "radius": 0.07,
+      "height": 0.68,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk10",
+      "pixel": [
+        126,
+        229.99085263726408
+      ],
+      "radius": 0.07,
+      "height": 0.58,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk11",
+      "pixel": [
+        191,
+        251.4238806839936
+      ],
+      "radius": 0.07,
+      "height": 0.57,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk12",
+      "pixel": [
+        1254,
+        256.28846623182847
+      ],
+      "radius": 0.07,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk13",
+      "pixel": [
+        109,
+        253.6255889590452
+      ],
+      "radius": 0.07,
+      "height": 0.57,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk14",
+      "pixel": [
+        1425,
+        337.0688483573064
+      ],
+      "radius": 0.07,
+      "height": 0.59,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk15",
+      "pixel": [
+        350,
+        349.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk16",
+      "pixel": [
+        625,
+        353.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk17",
+      "pixel": [
+        626,
+        354.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk18",
+      "pixel": [
+        627,
+        355.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk19",
+      "pixel": [
+        22,
+        366.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk20",
+      "pixel": [
+        1196,
+        367.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk21",
+      "pixel": [
+        1397,
+        378.00440698679813
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk22",
+      "pixel": [
+        583,
+        398.9908526372641
+      ],
+      "radius": 0.07,
+      "height": 0.58,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk23",
+      "pixel": [
+        584,
+        400.9908526372641
+      ],
+      "radius": 0.07,
+      "height": 0.58,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk24",
+      "pixel": [
+        1469,
+        408.44055697354
+      ],
+      "radius": 0.07,
+      "height": 0.59,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk25",
+      "pixel": [
+        874,
+        406.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk26",
+      "pixel": [
+        875,
+        408.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk27",
+      "pixel": [
+        1366,
+        412.1795449799564
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk28",
+      "pixel": [
+        542,
+        420.8518818897638
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk29",
+      "pixel": [
+        1502,
+        458.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk30",
+      "pixel": [
+        1114,
+        490.4074843481489
+      ],
+      "radius": 0.07,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk31",
+      "pixel": [
+        1115,
+        491.4074843481489
+      ],
+      "radius": 0.07,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk32",
+      "pixel": [
+        1418,
+        481.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk33",
+      "pixel": [
+        426,
+        482.2927622047244
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk34",
+      "pixel": [
+        1119,
+        502.4074843481489
+      ],
+      "radius": 0.07,
+      "height": 0.6,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk35",
+      "pixel": [
+        341,
+        534.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk36",
+      "pixel": [
+        341,
+        536.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk37",
+      "pixel": [
+        766,
+        567.7183381766241
+      ],
+      "radius": 0.07,
+      "height": 0.57,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk38",
+      "pixel": [
+        388,
+        568.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk39",
+      "pixel": [
+        748,
+        603.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk40",
+      "pixel": [
+        1083,
+        615.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk41",
+      "pixel": [
+        99,
+        672.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk42",
+      "pixel": [
+        100,
+        673.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk43",
+      "pixel": [
+        1492,
+        730.116058487764
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk44",
+      "pixel": [
+        1491,
+        731.116058487764
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk45",
+      "pixel": [
+        1490,
+        732.116058487764
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk46",
+      "pixel": [
+        1489,
+        733.116058487764
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk47",
+      "pixel": [
+        204,
+        739.8426005514789
+      ],
+      "radius": 0.07,
+      "height": 0.59,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk48",
+      "pixel": [
+        1488,
+        734.116058487764
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk49",
+      "pixel": [
+        1487,
+        735.116058487764
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk50",
+      "pixel": [
+        1456,
+        748.5816635859719
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk51",
+      "pixel": [
+        171,
+        768.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk52",
+      "pixel": [
+        720,
+        784.4374454970904
+      ],
+      "radius": 0.07,
+      "height": 0.59,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk53",
+      "pixel": [
+        326,
+        783.3307739673044
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk54",
+      "pixel": [
+        163,
+        803.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk55",
+      "pixel": [
+        300,
+        819.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk56",
+      "pixel": [
+        109,
+        852.6163307983206
+      ],
+      "radius": 0.07,
+      "height": 0.61,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk57",
+      "pixel": [
+        391,
+        867.1923908132208
+      ],
+      "radius": 0.07,
+      "height": 0.58,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk58",
+      "pixel": [
+        257,
+        880.6255889590452
+      ],
+      "radius": 0.07,
+      "height": 0.57,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk59",
+      "pixel": [
+        304,
+        874.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk60",
+      "pixel": [
+        247,
+        910.8426005514789
+      ],
+      "radius": 0.07,
+      "height": 0.59,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk61",
+      "pixel": [
+        400,
+        913.3850253534277
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk62",
+      "pixel": [
+        202,
+        928.4911271045974
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk63",
+      "pixel": [
+        201,
+        929.4911271045974
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk64",
+      "pixel": [
+        200,
+        930.4911271045974
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk65",
+      "pixel": [
+        199,
+        931.4911271045974
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk66",
+      "pixel": [
+        198,
+        932.4911271045974
+      ],
+      "radius": 0.07,
+      "height": 0.55,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk67",
+      "pixel": [
+        580,
+        947.5791361440752
+      ],
+      "radius": 0.07,
+      "height": 0.61,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk68",
+      "pixel": [
+        556,
+        959.5129698779939
+      ],
+      "radius": 0.07,
+      "height": 0.61,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk69",
+      "pixel": [
+        354,
+        949.2927622047245
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk70",
+      "pixel": [
+        479,
+        1038.661152375636
+      ],
+      "radius": 0.07,
+      "height": 0.62,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk71",
+      "pixel": [
+        1035,
+        1024.2927622047243
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk72",
+      "pixel": [
+        1087,
+        1037.2927622047243
+      ],
+      "radius": 0.07,
+      "height": 0.54,
+      "bottom": 0
+    },
+    {
+      "name": "Trunk73",
+      "pixel": [
+        63,
+        1044.1498818897637
+      ],
+      "radius": 0.07,
+      "height": 0.56,
+      "bottom": 0
+    }
+  ]
 }
