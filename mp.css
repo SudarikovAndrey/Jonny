@@ -58,6 +58,7 @@
 .mp-seat.empty i{background:transparent;border:2px dashed var(--c)}
 .mp-kick{position:absolute;top:2px;right:2px;padding:0 6px!important;font-size:12px!important;border:none!important;background:none!important;color:#6b5f52!important}
 .mp-set{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:13px}
+.mp-set>span small{display:block;font-size:10px;color:#6b5f52;font-weight:600}
 .mp-seg{display:flex;border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;overflow:hidden}
 .mp-seg button{border:none!important;border-radius:0!important;padding:6px 9px!important;font-size:13px!important;background:transparent!important}
 .mp-seg button+button{border-left:1.5px solid var(--mp-ink)!important}
@@ -127,7 +128,8 @@
 .mp-token:after{content:"";position:absolute;left:50%;bottom:-9px;width:3px;height:8px;margin-left:-1.5px;background:var(--mp-ink)}
 .mp-token.on{width:30px;height:30px;margin:-34px 0 0 -15px;line-height:25px;font-size:15px;box-shadow:0 0 0 3px #fbf0d4,2px 4px 0 rgba(37,34,28,.6)}
 .mp-token.off{opacity:.45}
-.mp-flag{width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:3px 6px 3px 5px;background:var(--c);border:1.5px solid var(--mp-ink);
+.mp-flag{display:none!important;   /* поле само заливает чужие клетки цветом хозяина (b8713d6) */
+  width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:3px 6px 3px 5px;background:var(--c);border:1.5px solid var(--mp-ink);
   color:#fbf0d4;font:800 9px/13px var(--mp-num);text-align:center}
 
 /* окно чужой клетки */
@@ -141,3 +143,110 @@
 .mp-clock{position:fixed;z-index:31;transform:translate(-100%,-100%);padding:3px 9px;font:800 13px var(--mp-num);font-variant-numeric:tabular-nums;
   color:var(--mp-paper);background:var(--mp-ink);border:2px solid var(--mp-ink);border-radius:8px 10px 7px 9px;box-shadow:2px 2px 0 rgba(37,34,28,.5);pointer-events:none}
 .mp-clock[hidden]{display:none}.mp-clock.late{background:var(--mp-red)}
+
+/* ===== плейтест 01.10 ===== */
+/* круг стола: цифра — барабан прокачки (NumberDrum), плашка «глотает» смену */
+.mp-round{pointer-events:auto}
+.mp-round.bump{animation:mp-gulp .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mp-gulp{0%{transform:scale(1)}30%{transform:scale(.88,1.1)}65%{transform:scale(1.14,.92)}100%{transform:scale(1)}}
+.mp-chips{display:flex;gap:5px}
+.mp-pts{margin-left:5px;font-size:11px;font-weight:700;color:#4a3f31}
+
+/* чужой ход: кубика нет, на его месте — «Ходит Вася»; свой ход после броска: на его месте «Передать ход» */
+.mp-wait #bRoll,.mp-rolled #bRoll{visibility:hidden}
+.mp-tag.center{transform:translate(-50%,-50%);flex-direction:column;align-items:center;gap:0;padding:6px 12px;min-width:84px;border-radius:13px 16px 12px 15px}
+.mp-tag.center span{font-size:11px}.mp-tag.center b{font-size:16px;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.mp-end{transform:translate(-50%,-50%);min-height:64px;justify-content:center}
+.mp-end:active{transform:translate(calc(-50% + 2px),calc(-50% + 2px))}
+/* время на исходе: мигает плашка, кнопка и часы на карточке */
+.mp-tag.late,.mp-end.late,.mp-clock.late{animation:mp-blink .5s steps(2,jump-none) infinite}
+.mp-late #bRoll{animation:mp-blink .5s steps(2,jump-none) infinite}
+@keyframes mp-blink{50%{filter:brightness(1.35) saturate(1.3);box-shadow:0 0 0 4px #ffd27a,3px 4px 0 var(--mp-ink)}}
+
+/* «Твой ход!» — плакат выпрыгивает и улетает в кубик */
+.mp-bang{position:fixed;left:50%;top:42%;z-index:60;pointer-events:none;padding:12px 26px 14px;background:var(--mp-red);color:#fbf0d4;
+  border:3px solid var(--mp-ink);border-radius:14px 18px 13px 17px;box-shadow:6px 7px 0 var(--mp-ink);transform:translate(-50%,-50%)}
+.mp-bang b{display:block;font:800 34px/1 var(--mp-num);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+
+/* заметная плашка денег: рента, перекуп, дубль */
+.mp-plate{position:fixed;left:50%;top:34%;z-index:58;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:1px;
+  min-width:190px;padding:10px 18px 9px;background:var(--mp-paper) url(assets/paper-grain.svg);color:var(--mp-ink);
+  border:3px solid var(--mp-ink);border-radius:13px 17px 12px 16px;box-shadow:5px 6px 0 rgba(37,34,28,.85);transform:translate(-50%,-50%)}
+.mp-plate b{font:800 16px var(--mp-num)}
+.mp-plate strong{font:800 34px/1.05 var(--mp-num);font-variant-numeric:tabular-nums}
+.mp-plate small{font:600 12px var(--mp-txt);color:#6b5f52;max-width:240px;text-align:center}
+.mp-plate.minus strong{color:var(--mp-red)}.mp-plate.plus strong{color:var(--mp-green)}
+.mp-plate.minus{border-color:var(--mp-red)}.mp-plate.plus{border-color:var(--mp-green)}
+
+/* всплытие над клеткой соперника: +$ / −$ */
+.mp-float{position:fixed;z-index:7;pointer-events:none;font:800 18px var(--mp-num);white-space:nowrap;
+  text-shadow:-1.5px -1.5px 0 #fbf0d4,1.5px -1.5px 0 #fbf0d4,-1.5px 1.5px 0 #fbf0d4,1.5px 1.5px 0 #fbf0d4,0 3px 0 rgba(37,34,28,.35)}
+
+/* окно перекупа: что можно сделать */
+#card .mp-choice{margin:10px 0 0;padding:8px 10px;border:1.5px dashed rgba(37,34,28,.45);border-radius:9px 12px 8px 11px}
+#card .mp-choice b{display:block;font-size:13px;margin-bottom:4px}
+#card .mp-choice p{margin:3px 0;font-size:13px;line-height:1.3}
+#card .mp-choice p span{font-weight:800}
+
+@media (prefers-reduced-motion:reduce){.mp-tag.late,.mp-end.late,.mp-clock.late,.mp-late #bRoll{animation:none}.mp-round.bump{animation:none}}
+
+/* итог-шоу */
+.mp-show{position:relative}
+.mp-cards{display:flex;flex-direction:column;gap:8px;margin:6px 0 12px}
+.mp-card{border:2px solid var(--mp-ink);border-radius:10px 13px 9px 12px;background:#fbf3dc;padding:7px 9px;opacity:.55;transition:opacity .2s}
+.mp-card.live,.mp-card.done{opacity:1}.mp-card.live{box-shadow:0 0 0 3px var(--c)}
+.mp-card-h{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.mp-card-h i{width:28px;height:28px;border-radius:50%;background:var(--c);border:2px solid var(--mp-ink);color:#fbf0d4;font:800 14px/24px var(--mp-num);text-align:center;font-style:normal}
+.mp-card-h b{font:800 15px var(--mp-num)}
+.mp-sum{font:800 22px var(--mp-num);font-variant-numeric:tabular-nums}
+.mp-lines{margin-top:4px}
+.mp-line{display:none;justify-content:space-between;font-size:13px;padding:2px 0 2px 36px;border-top:1px dashed rgba(37,34,28,.2)}
+.mp-line.on{display:flex;animation:mp-line-in .22s cubic-bezier(.34,1.56,.64,1)}
+.mp-line small{color:#6b5f52;font-size:11px}
+.mp-line b{font-variant-numeric:tabular-nums}.mp-line.neg b{color:var(--mp-red)}
+@keyframes mp-line-in{from{transform:translateY(-6px);opacity:0}}
+.mp-crown{display:none;margin-top:6px;text-align:center;font:800 15px var(--mp-num);color:#7a5a12}
+.mp-card.win{opacity:1;background:#f6e3a8;border-color:#c99a32;box-shadow:0 0 0 3px #c99a32,4px 5px 0 var(--mp-ink);animation:mp-win .6s cubic-bezier(.34,1.56,.64,1)}
+.mp-card.win .mp-crown{display:block}
+.mp-card.lose{opacity:.7}
+@keyframes mp-win{0%{transform:scale(.9)}45%{transform:scale(1.07) rotate(-1deg)}75%{transform:scale(.98)}100%{transform:scale(1)}}
+.mp-skip{position:absolute;right:12px;top:14px;padding:4px 10px!important;font-size:12px!important;background:transparent!important}
+@media (prefers-reduced-motion:reduce){.mp-card.win{animation:none}.mp-line.on{animation:none}}
+/* лобби: пять длин партии не влезали в строку — подпись сверху, кнопки на всю ширину */
+.mp-set{flex-direction:column;align-items:stretch;gap:4px;margin-bottom:10px}
+.mp-set>span{display:flex;align-items:baseline;gap:6px}
+.mp-set>span small{display:inline}
+.mp-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
+.mp-seg button{white-space:nowrap;padding:7px 4px!important}
+
+/* ручная пауза: кнопка в полосе игроков и плашка поверх поля */
+.mp-pausebtn{pointer-events:auto;flex:none;width:30px;border:2px solid var(--mp-ink);border-radius:8px 10px 7px 9px;background:var(--mp-paper);
+  color:var(--mp-ink);font:800 13px var(--mp-num);box-shadow:2px 2px 0 rgba(37,34,28,.7);cursor:pointer;padding:0}
+.mp-pausebtn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(37,34,28,.7)}
+.mp-paused .mp-pausebtn{visibility:hidden}
+.mp-pause{position:fixed;inset:0;z-index:92;display:flex;align-items:center;justify-content:center;background:rgba(37,34,28,.5)}
+.mp-pause[hidden]{display:none}
+.mp-pause-card{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:220px;padding:16px 22px 14px;background:var(--mp-paper) url(assets/paper-grain.svg);
+  border:3px solid var(--mp-ink);border-radius:14px 18px 13px 17px;box-shadow:6px 7px 0 var(--mp-ink);animation:mp-pause-in .26s cubic-bezier(.34,1.56,.64,1)}
+.mp-pause-card>b{font:800 30px var(--mp-num);text-transform:uppercase;color:var(--mp-ink)}
+.mp-pause-card>small{font:600 14px var(--mp-txt);color:#4a3f31}
+.mp-pause-card .mp-big{margin-top:10px;font-family:var(--mp-num)!important}
+@keyframes mp-pause-in{from{transform:scale(.86);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mp-pause-card{animation:none}}
+
+/* полоса игроков на 3–4 игрока не влезала в 375 px: переносится, фишки компактнее */
+.mp-bar{flex-wrap:wrap;justify-content:center;row-gap:4px}
+.mp-chips{flex-wrap:wrap;justify-content:center}
+.mp-bar.tight .mp-chips{order:-1;flex-basis:100%}
+.mp-bar.tight .mp-chip{padding:3px 6px 5px 3px;column-gap:4px}
+.mp-bar.tight .mp-nm{max-width:52px}
+.mp-bar.tight .mp-cap{font-size:12px}
+.mp-bar.tight .mp-pts{margin-left:3px;font-size:10px}
+.mp-bar{width:min(calc(100% - 16px),560px)}
+.mp-bar.tight .mp-chips{display:grid;grid-template-columns:1fr 1fr;gap:4px;width:min(100%,340px);flex-basis:auto;margin:0 auto}
+.mp-bar.tight .mp-chips+.mp-pausebtn,.mp-bar.tight .mp-round{height:24px}
+/* предложение о покупке: шесть цен — вложенное ×1…×10 */
+#card .mp-mults{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+#card .mp-mult{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px!important;min-height:0;border-radius:9px 12px 8px 11px}
+#card .mp-mult b{font:800 15px var(--mp-num)}
+#card .mp-mult span{font:700 12px var(--mp-num);font-variant-numeric:tabular-nums}

@@ -18,9 +18,18 @@
     if(withRow){const row=document.createElement('div');row.className='tile-sheet-row';row.innerHTML=$('tilebar').innerHTML;plate.append(row);}
     Object.assign(plate.style,px(from));document.body.append(plate);return plate;
   }
+  // Кошелёк при открытой карточке точки: карточка начинается под строкой денег и кристаллов,
+  // и та остаётся видна сквозь лёгкое затемнение (плейтест 01.10: игрок закрывал окно точки,
+  // чтобы посмотреть, хватает ли денег).
+  function showWallet(){
+    const row=document.querySelector('#top .bar1');if(!row)return;
+    const r=row.getBoundingClientRect();if(r.height<10)return;
+    document.documentElement.style.setProperty('--sheet-top',Math.round(r.bottom+8)+'px');
+  }
+  function hideWallet(){document.documentElement.style.removeProperty('--sheet-top');}
   function enter(){
     const card=$('card'),bar=$('tilebar');
-    document.body.classList.add('tile-sheet');
+    document.body.classList.add('tile-sheet');showWallet();
     if(reduced.matches||CFG.SPEED>=100||!visible(bar)){bar.classList.add('tile-sheet-away');return;}
     const from=box(bar);bar.classList.add('tile-sheet-away');
     PaperMotion.stop(card);const to=box(card);
@@ -37,7 +46,7 @@
   }
   function leave(){
     const card=$('card'),bar=$('tilebar');
-    const done=()=>{document.body.classList.remove('tile-sheet');bar.classList.remove('tile-sheet-away');dropPlate();card.style.opacity='';};
+    const done=()=>{document.body.classList.remove('tile-sheet');bar.classList.remove('tile-sheet-away');dropPlate();card.style.opacity='';hideWallet();};
     if(reduced.matches||CFG.SPEED>=100||bar.hidden){done();return;}
     const from=box(card);bar.classList.remove('tile-sheet-away');bar.style.visibility='hidden';
     const to=visible(bar)?box(bar):null;
@@ -53,7 +62,7 @@
     const fresh=$('modal').hidden||$('modal').classList.contains('closing');
     const res=baseCustom.apply(this,args);
     if(isSheet()&&(fresh||!open()))enter();
-    else if(!isSheet()&&open()){document.body.classList.remove('tile-sheet');$('tilebar').classList.remove('tile-sheet-away');dropPlate();}
+    else if(!isSheet()&&open()){document.body.classList.remove('tile-sheet');$('tilebar').classList.remove('tile-sheet-away');dropPlate();hideWallet();}
     return res;
   };
   const baseClose=closeModal;

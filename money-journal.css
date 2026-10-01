@@ -1,0 +1,44 @@
+/* Журнал «откуда деньги» (web/money-journal.js): бумажная плашка под шапкой слева. */
+#moneyJournal{position:absolute;left:10px;top:calc(var(--world-top,120px) + 8px);z-index:4;
+  max-width:min(300px,calc(100% - 20px));font-family:inherit;color:#25221c}
+#moneyJournal[data-mode="off"]{display:none}
+#moneyJournal .mj-sum{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+#moneyJournal .mj-sum.plus{color:#3f6b3a}
+#moneyJournal .mj-sum.minus{color:#a92720}
+
+/* Свёрнут: одна строка с последней проводкой. */
+#moneyJournal .mj-pill{display:flex;align-items:center;gap:6px;min-height:36px;max-width:100%;padding:5px 11px 5px 8px;
+  border:2px solid #25221c;border-radius:12px 14px 13px 12px;background:#f2e3bd;box-shadow:0 3px 0 #25221c;
+  font:inherit;font-size:13px;line-height:1.15;color:#25221c;text-align:left;cursor:pointer}
+#moneyJournal .mj-pill:active{translate:0 2px;box-shadow:0 1px 0 #25221c}
+#moneyJournal .mj-ico{font-size:17px;flex:none}
+#moneyJournal .mj-last{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#moneyJournal[data-mode="open"] .mj-pill{display:none}
+#moneyJournal.ping .mj-pill{animation:mj-ping .5s steps(4,end)}
+@keyframes mj-ping{0%{rotate:0deg}25%{rotate:-2deg;scale:1.04}60%{rotate:1.5deg}100%{rotate:0deg;scale:1}}
+
+/* Развёрнут: список, новые сверху. */
+#moneyJournal .mj-panel{display:none;width:min(300px,calc(100vw - 20px));max-width:100%;
+  border:2px solid #25221c;border-radius:14px 12px 15px 13px;background:#f2e3bd;box-shadow:0 3px 0 #25221c;overflow:hidden}
+#moneyJournal[data-mode="open"] .mj-panel{display:flex;flex-direction:column}
+#moneyJournal header{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-bottom:2px solid #25221c;background:#e9d8ae}
+#moneyJournal header b{flex:1;font-size:16px;letter-spacing:.01em}
+#moneyJournal header button{width:36px;height:36px;border:2px solid #25221c;border-radius:10px;background:#f2e3bd;
+  box-shadow:0 2px 0 #25221c;cursor:pointer;position:relative;padding:0}
+#moneyJournal header button:active{translate:0 2px;box-shadow:none}
+#moneyJournal .mj-fold::before{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;
+  border:solid #25221c;border-width:0 3px 3px 0;translate:-50% -70%;rotate:45deg}
+#moneyJournal .mj-x::before,#moneyJournal .mj-x::after{content:'';position:absolute;left:50%;top:50%;width:16px;height:3px;
+  background:#a92720;border-radius:2px;translate:-50% -50%;rotate:45deg}
+#moneyJournal .mj-x::after{rotate:-45deg}
+#moneyJournal .mj-list{list-style:none;margin:0;padding:6px 0;max-height:min(42vh,320px);overflow:auto;
+  -webkit-mask:linear-gradient(transparent,#000 8px,#000 calc(100% - 8px),transparent);mask:linear-gradient(transparent,#000 8px,#000 calc(100% - 8px),transparent)}
+#moneyJournal .mj-list li{display:flex;align-items:baseline;gap:10px;padding:5px 12px;font-size:13px;line-height:1.25}
+#moneyJournal .mj-list li+li{border-top:1px solid #25221c26}
+#moneyJournal .mj-text{flex:1;min-width:0;overflow-wrap:anywhere}
+#moneyJournal .mj-list .mj-sum{font-size:15px;margin-left:auto}
+#moneyJournal .mj-list li.rival{background:#78929a1f}
+#moneyJournal .mj-list li.mine{background:#c99a3233}
+#moneyJournal .mj-who{font-weight:800}
+#moneyJournal .mj-empty{display:none;margin:0;padding:12px;font-size:13px;color:#5d5547}
+#moneyJournal.empty .mj-empty{display:block}

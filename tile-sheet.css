@@ -10,3 +10,19 @@
 /* кубик над затемнением: панель поднимается над окном, остальное в ней приглушено */
 body.tile-sheet #panel{z-index:31}
 body.tile-sheet #panel .dk,body.tile-sheet #panel #inv,body.tile-sheet #guide{opacity:.4;filter:saturate(.6);pointer-events:none}
+/* карточка точки начинается под строкой денег — кошелёк виден, пока окно открыто */
+body.tile-sheet #modal{padding-top:var(--sheet-top,14px)!important}
+
+/* Миссии (mission-peek.js): ряд вне потока шапки — поле не ужимается; виден только во время показа */
+#top #qrow{position:absolute;left:8px;right:8px;top:calc(100% + 4px);z-index:3;transition:opacity .18s ease-out,translate .18s ease-out}
+body:not(.missions-peek) #top #qrow{opacity:0;translate:0 -8px;pointer-events:none;visibility:hidden;transition:opacity .22s ease-in,translate .22s ease-in,visibility 0s .22s}
+#top #qrow .mission-bump{animation:missionBump .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes missionBump{0%{scale:1}40%{scale:1.06}100%{scale:1}}
+@media (prefers-reduced-motion:reduce){#top #qrow,body:not(.missions-peek) #top #qrow{transition:none}#top #qrow .mission-bump{animation:none}}
+
+/* Банк: условия возврата (bank-terms.js) — печатная памятка на бумаге */
+#card .bank-terms{margin:8px 0 10px;padding:8px 10px 6px;border:2px dashed #5b4c35;border-radius:8px;background:#f2e3bd80 url(assets/paper-grain.svg)}
+#card .bank-terms-title{margin:0 0 4px;font:800 12px/1.2 Bitter,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#a92720}
+#card .bank-term{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;padding:3px 0;border-top:1px solid #5b4c3533;font-size:13px;line-height:1.3;color:#3c3325}
+#card .bank-term:first-of-type{border-top:0}
+#card .bank-term b{font:800 13px/1.3 Bitter,Georgia,serif;color:#25221c}
