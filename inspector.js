@@ -4,7 +4,7 @@
 // точка не работает на игрока (нет продаж за круг, нет сбора за проход).
 // Остановился на клетке — попап как в ментовке: заплатить или ловить дубль.
 // На поле не больше трёх проверок за раз. Карта 1 клетки инспектора не имеет.
-CFG.INSP={limit:3,attempts:3,fineShare:0.5,steps:[3,7]}; // штраф = доля полицейского штрафа; steps: до 3 своих клеток — 1 проверка, до 7 — 2, дальше — 3
+CFG.INSP={limit:3,attempts:3,fineShare:0.5,steps:[3,7],fromLap:5,lapStep:3}; // штраф = доля полицейского штрафа; steps: до 3 своих клеток — 1 проверка, до 7 — 2, дальше — 3
 
 function inspActive(){return S.tiles.filter(t=>t.insp);}
 function inspFine(){return Math.max(10,Math.round(policeFine()*CFG.INSP.fineShare/10)*10);}
@@ -13,7 +13,12 @@ function inspLabel(t){return t.type==='biz'?'бизнес не платит':'т
 
 // Клетка 🌪 стала инспектором: вместо неприятностей — проверки.
 hazard=async function(){
-  const free=CFG.INSP.limit-inspActive().length;
+  // Плейтест 01.10: проверки в первом круге останавливали весь бизнес. Инспектор не приезжает до 5-го круга,
+  // потом дозированно: одна проверка, каждые 3 круга потолок растёт на одну (правило «одна механика за раз»).
+  const lapsDone=S.laps||0;
+  if(lapsDone<CFG.INSP.fromLap){toast(`📋 Мэрия ещё не прислала инспектора — до ${CFG.INSP.fromLap}-го круга проверок нет`);log(`📋 Клетка инспектора: проверки начнутся с ${CFG.INSP.fromLap}-го круга.`);return;}
+  const lapCap=1+Math.floor((lapsDone-CFG.INSP.fromLap)/CFG.INSP.lapStep);
+  const free=Math.min(CFG.INSP.limit-inspActive().length,lapCap-inspActive().length);
   if(free<=0){toast('📋 Инспектор: все три проверки уже идут');log('📋 Инспектор приходил, но проверок и так три — ушёл.');return;}
   const fit=t=>(t.type==='kiosk'||t.type==='biz')&&unlocked(t)&&!t.insp&&t.i!==S.pos;
   let spots=S.tiles.filter(t=>fit(t)&&t.owner);

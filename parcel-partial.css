@@ -1,0 +1,8 @@
+/* Неполное место в фуре (tools/parcel_partial.py): пунктир пустого места поверх
+   заполненного — видно, что место занято не до конца; снизу — сколько штук из k. */
+#card.pc-card .pc-slot.f.part{border-style:dashed;background:#f6ecd0}
+#card.pc-card .pc-slot.f.part img{inset:8% 14% 26%;height:66%;opacity:.85}
+#card.pc-card .pc-slot .pc-part{position:absolute;left:0;right:0;bottom:1px;text-align:center;
+  font-weight:800;font-size:10px;line-height:1.1;color:var(--ink,#2a2118);letter-spacing:-.02em}
+#card.pc-card .pc-qty b{display:grid;justify-items:center;line-height:1}
+#card.pc-card .pc-qty .pc-part-n{font-weight:700;font-size:11px;line-height:1.1;color:#6b5a3e;white-space:nowrap}

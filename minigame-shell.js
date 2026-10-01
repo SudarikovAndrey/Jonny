@@ -55,3 +55,23 @@ window.MinigameShell={
   return dispose;
  }
 };
+
+// События мини-игр для внешних режимов (мультиплеер ставит на них часы хода на паузу).
+// window 'minigame:open'  detail {id:'bandit'|'dice21', game, tile, landing, at}
+// window 'minigame:close' detail {…то же, cash (+/− итог в $), delta:{cash,hard,rolls,goods}, durationMs, summary}
+// delta — изменение ресурсов игрока за весь визит: призы, ставки, покупки спинов.
+window.MinigameEvents={
+ wallet(){const goods=(S.tiles||[]).reduce((a,t)=>a+(t.owner==='you'?(t.goods||0):0),0);return {cash:Math.round(S.cash||0),hard:S.hard||0,rolls:S.rolls||0,goods};},
+ begin(game,{landing=false}={}){
+  const start=this.wallet(),detail={id:game==='slot'?'bandit':game,game,tile:S.pos,landing:!!landing,at:Date.now()},log=[];let done=false;
+  dispatchEvent(new CustomEvent('minigame:open',{detail:{...detail}}));
+  return {
+   note(entry){log.push(entry);},
+   end(){
+    if(done)return;done=true;const w=MinigameEvents.wallet();
+    const delta={cash:w.cash-start.cash,hard:w.hard-start.hard,rolls:w.rolls-start.rolls,goods:w.goods-start.goods};
+    dispatchEvent(new CustomEvent('minigame:close',{detail:{...detail,cash:delta.cash,durationMs:Date.now()-detail.at,delta,summary:log.slice()}}));
+   },
+  };
+ },
+};

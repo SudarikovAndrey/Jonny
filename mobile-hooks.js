@@ -891,6 +891,28 @@ function streetPassCoin(tile){
   });
 })();
 
+// Отладка: «Шаг на 1 клетку» в меню тестирования (окно «Настройки» с #iRolls).
+// Идёт обычный бросок с кубиками 1 + 0: срабатывает вся логика хода — старт, сборы
+// с точек, остановка на клетке, участок и инспектор. Ход не списывается.
+(function(){
+  async function debugStep(){
+    if(moving||S.finished)return;
+    // Бросок списывает ход до кубиков — возвращаем ровно его. Ходы, выданные на клетке, остаются.
+    const md=mobileDice,bump=S.rolls<=0;let used=false;
+    mobileDice=async()=>{used=true;return {a:1,b:0,lesson:false};};
+    if(bump)S.rolls=1;
+    try{await roll();}finally{mobileDice=md;}
+    if(used)S.rolls++;if(bump)S.rolls=Math.max(0,S.rolls-1);save();render();
+  }
+  new MutationObserver(()=>{const c=$('card');
+    // Проверка по всей странице: кнопка встаёт перед .mbtns, а не внутрь наблюдаемого блока.
+    if(!c.querySelector('#iRolls')||document.getElementById('dbgStep'))return;
+    const b=document.createElement('button');b.id='dbgStep';b.className='sec';b.textContent='👣 Шаг на 1 клетку';b.style.cssText='width:100%;margin:6px 0';
+    (c.querySelector('.mbtns')||c).before(b);if(typeof enamelButton==='function')enamelButton(b);
+    b.onclick=()=>{closeModal();setTimeout(debugStep,160);};
+  }).observe($('card'),{childList:true,subtree:true});
+})();
+
 // Полный экран — и в «Настройках аккаунта» (окно из web/top-hud.js), чтобы включать с телефона.
 // На iPhone Safari полноэкранного режима для страниц нет — там кнопки не будет.
 (function(){

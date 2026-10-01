@@ -1,0 +1,143 @@
+/* ===== Мультиплеер «Сан-Франциско» (?map=sf&mp): лобби, полоса игроков, фишки соперников =====
+   Палитра Style Bible: бумага #F2E3BD, чернила #25221C, красный #A92720, синий #243F4B, золото #C99A32. */
+.mp-mode{--mp-paper:#f2e3bd;--mp-paper2:#e9d8ae;--mp-ink:#25221c;--mp-red:#a92720;--mp-green:#496b45;--mp-num:'Golos Text','Suisse Intl',Arial,sans-serif;--mp-txt:'Bitter',Georgia,serif}
+.mp-mode #bTaxi{display:none!important}               /* такси двигает фишку вне очереди */
+.mp-mode #sRollsCap,.mp-mode #sRolls{visibility:hidden}   /* ход = один бросок, запаса ходов нет */
+
+/* ---- лобби и итог ---- */
+.mp-lobby{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(37,34,28,.55);overflow:auto}
+.mp-lobby[hidden]{display:none}
+.mp-sheet{width:min(100%,420px);max-height:calc(100% - 8px);overflow:auto;background:var(--mp-paper) url(assets/paper-grain.svg);
+  color:var(--mp-ink);border:2.5px solid var(--mp-ink);border-radius:14px 10px 15px 9px;box-shadow:5px 6px 0 rgba(37,34,28,.85);
+  padding:18px 18px 14px;font-family:var(--mp-txt);font-weight:600}
+.mp-sheet h2{margin:0 0 6px;font:800 21px/1.15 var(--mp-num);letter-spacing:-.01em}
+.mp-lead{margin:0 0 12px;font-size:14px;line-height:1.35;color:#4a3f31}
+.mp-err{margin:0 0 10px;padding:7px 10px;border:2px solid var(--mp-red);border-radius:8px 11px 7px 10px;color:var(--mp-red);font-size:14px}
+.mp-warn{margin:8px 0 0;font-size:12px;line-height:1.3;color:var(--mp-red)}
+.mp-host-note{color:#4a3f31}
+.mp-field{display:block;margin:0 0 12px}
+.mp-field span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b5f52;margin-bottom:4px}
+.mp-sheet input{width:100%;box-sizing:border-box;font:700 17px var(--mp-txt)!important;padding:10px 12px;color:var(--mp-ink);
+  background:#fbf3dc;border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;outline:none}
+.mp-sheet input:focus{border-color:var(--mp-red)}
+.mp-sheet button{font-family:var(--mp-txt)!important;font-weight:800;cursor:pointer;color:var(--mp-ink);background:var(--mp-paper2);
+  border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;padding:9px 14px;font-size:15px}
+.mp-sheet button:disabled{opacity:.5;cursor:default}
+.mp-big{display:block;width:100%;margin:6px 0 4px;padding:13px 16px!important;font:800 19px var(--mp-num)!important;letter-spacing:.01em;
+  color:#fbf0d4!important;background:var(--mp-red)!important;border:2.5px solid var(--mp-ink)!important;border-radius:11px 14px 10px 13px!important;
+  box-shadow:4px 4px 0 var(--mp-ink);text-transform:uppercase}
+.mp-big:active:not(:disabled){transform:translate(3px,3px);box-shadow:1px 1px 0 var(--mp-ink)}
+.mp-big:disabled{background:#6f665a!important;box-shadow:3px 3px 0 rgba(37,34,28,.6)}
+.mp-or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;font-size:12px;color:#6b5f52;text-transform:uppercase;letter-spacing:.06em}
+.mp-or:before,.mp-or:after{content:"";flex:1;border-top:1.5px solid rgba(37,34,28,.35)}
+.mp-join{display:flex;gap:8px}
+.mp-join input{flex:1;text-align:center;font:800 22px var(--mp-num)!important;letter-spacing:.3em;text-transform:uppercase}
+.mp-join button{flex:none;background:var(--mp-green);color:#fbf0d4;white-space:nowrap}
+.mp-solo{display:block;margin:12px auto 0;text-align:center;font-size:13px;color:#6b5f52;text-decoration:underline;text-underline-offset:3px}
+.mp-code{display:inline-block;padding:0 8px;margin-left:2px;font:800 26px var(--mp-num);letter-spacing:.18em;color:var(--mp-red);
+  border:2px dashed var(--mp-red);border-radius:8px 11px 7px 10px;transform:rotate(-1.5deg)}
+.mp-spin{width:34px;height:34px;margin:10px auto;border:4px solid rgba(37,34,28,.2);border-top-color:var(--mp-red);border-radius:50%;animation:mp-spin 1s steps(8) infinite}
+@keyframes mp-spin{to{transform:rotate(360deg)}}
+.mp-share{display:flex;gap:12px;align-items:center;margin:10px 0 12px;padding:10px;border:1.5px solid rgba(37,34,28,.35);border-radius:10px 13px 9px 12px}
+.mp-qr{flex:none;width:132px;height:132px;display:flex;align-items:center;justify-content:center;background:var(--mp-paper)}
+.mp-qr img,.mp-qr canvas{display:block;width:132px;height:132px}
+.mp-qr-code{font:800 28px var(--mp-num);letter-spacing:.15em}
+.mp-share-t{flex:1;min-width:0}
+.mp-share-t p{margin:0 0 8px;font-size:13px;line-height:1.3;color:#4a3f31}
+.mp-share-t button{display:block;width:100%;margin:0 0 6px;font-size:14px;padding:8px 10px}
+.mp-share-t button:first-of-type{background:var(--mp-green);color:#fbf0d4}
+.mp-seats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+.mp-seat{position:relative;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;
+  padding:8px;border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;background:#fbf3dc;min-width:0}
+.mp-seat i{grid-row:span 2;width:30px;height:30px;border-radius:50%;background:var(--c);border:2px solid var(--mp-ink);color:#fbf0d4;
+  font:800 15px/26px var(--mp-num);text-align:center;font-style:normal}
+.mp-seat b{font:800 14px var(--mp-num);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-seat small{font-size:11px;color:#6b5f52}
+.mp-seat.empty{border-style:dashed;background:transparent;opacity:.65}
+.mp-seat.empty i{background:transparent;border:2px dashed var(--c)}
+.mp-kick{position:absolute;top:2px;right:2px;padding:0 6px!important;font-size:12px!important;border:none!important;background:none!important;color:#6b5f52!important}
+.mp-set{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:13px}
+.mp-seg{display:flex;border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;overflow:hidden}
+.mp-seg button{border:none!important;border-radius:0!important;padding:6px 9px!important;font-size:13px!important;background:transparent!important}
+.mp-seg button+button{border-left:1.5px solid var(--mp-ink)!important}
+.mp-seg button.on{background:var(--mp-ink)!important;color:var(--mp-paper)!important;opacity:1!important}
+.mp-seg button:disabled:not(.on){opacity:.55}
+.mp-est{margin:4px 0 8px;font-size:12px;line-height:1.3;color:#6b5f52}
+.mp-waithost{text-align:center;font-style:italic}
+.mp-rank{margin:6px 0 12px}
+.mp-place{display:grid;grid-template-columns:22px 32px 1fr auto;gap:8px;align-items:center;padding:8px 6px;border-bottom:1.5px solid rgba(37,34,28,.25)}
+.mp-place.first{background:rgba(201,154,50,.22);border:2px solid #c99a32;border-radius:9px 12px 8px 11px}
+.mp-n{font:800 20px var(--mp-num);text-align:center}
+.mp-place i{width:30px;height:30px;border-radius:50%;background:var(--c);border:2px solid var(--mp-ink);color:#fbf0d4;font:800 15px/26px var(--mp-num);text-align:center;font-style:normal}
+.mp-who{min-width:0}.mp-who b{display:block;font:800 15px var(--mp-num)}
+.mp-who small{display:block;font-size:11px;line-height:1.25;color:#6b5f52}
+.mp-tot{font:800 18px var(--mp-num)}
+
+/* ---- полоса игроков под шапкой ---- */
+.mp-bar{position:fixed;left:50%;transform:translateX(-50%);z-index:29;display:flex;gap:5px;align-items:stretch;max-width:calc(100% - 16px);
+  pointer-events:none;font-family:var(--mp-num)}
+.mp-bar[hidden]{display:none}
+.mp-round{display:flex;align-items:center;padding:3px 8px;font-size:11px;color:var(--mp-paper);background:rgba(37,34,28,.82);border-radius:8px 10px 7px 9px;white-space:nowrap}
+.mp-round b{font-size:14px;margin-right:1px}
+.mp-chip{position:relative;display:grid;grid-template-columns:auto 1fr;column-gap:5px;align-items:center;min-width:0;padding:3px 7px 5px 4px;
+  background:var(--mp-paper);border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;box-shadow:2px 2px 0 rgba(37,34,28,.7);overflow:hidden}
+.mp-chip>i{grid-row:span 2;width:22px;height:22px;border-radius:50%;background:var(--c);border:1.5px solid var(--mp-ink);color:#fbf0d4;
+  font:800 12px/19px var(--mp-num);text-align:center;font-style:normal}
+.mp-nm{font-size:11px;font-weight:700;color:#4a3f31;max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+.mp-cap{display:flex;align-items:center;gap:2px;font-size:13px;font-weight:800;color:var(--mp-ink);line-height:1.1;white-space:nowrap}
+.mp-cap .cash-glyph{width:12px;height:12px;flex:none}
+.mp-chip em{position:absolute;right:4px;top:2px;font-size:9px;font-style:normal;color:var(--mp-red)}
+.mp-chip.off{opacity:.55}
+.mp-chip.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),3px 3px 0 rgba(37,34,28,.75);transform:translateY(1px)}
+.mp-chip u{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--c);text-decoration:none}
+.mp-chip:not(.on) u{display:none}
+
+/* ---- «чей ход» над кубиком и «Передать ход» ---- */
+.mp-tag,.mp-end{position:fixed;z-index:29;   /* под окнами (#modal — 30) */transform:translate(-50%,-100%);font-family:var(--mp-num);white-space:nowrap}
+.mp-tag[hidden],.mp-end[hidden]{display:none}
+.mp-tag{display:flex;gap:6px;align-items:baseline;padding:5px 10px;pointer-events:none;color:var(--mp-paper);background:var(--c,#25221c);
+  border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px;box-shadow:2px 3px 0 rgba(37,34,28,.75)}
+.mp-tag span{font-size:11px;opacity:.85}.mp-tag b{font-size:14px}.mp-tag small{font-size:12px;font-variant-numeric:tabular-nums;opacity:.9}
+.mp-tag.mine{animation:mp-bob 1.1s steps(4) infinite}
+.mp-tag.late small{color:#ffd27a;opacity:1}
+@keyframes mp-bob{50%{transform:translate(-50%,calc(-100% - 3px))}}
+.mp-end{display:flex;flex-direction:column;align-items:center;padding:8px 16px 6px;cursor:pointer;color:#fbf0d4;background:var(--mp-red);
+  border:2.5px solid var(--mp-ink);border-radius:11px 14px 10px 13px;box-shadow:3px 4px 0 var(--mp-ink)}
+.mp-end b{font-size:16px;text-transform:uppercase;letter-spacing:.02em}
+.mp-end small{font-size:12px;font-variant-numeric:tabular-nums;opacity:.9}
+.mp-end:active{transform:translate(calc(-50% + 2px),calc(-100% + 2px));box-shadow:1px 2px 0 var(--mp-ink)}
+.mp-end.late small{color:#ffd27a;opacity:1}
+
+/* не свой ход: кубик и действия с клетками приглушены (поле двигать можно) */
+.mp-wait #bRoll{filter:grayscale(.85) brightness(.9)}
+.mp-wait #tilebar,.mp-wait #bShop,.mp-wait #bUp,.mp-wait #bShip{pointer-events:none;opacity:.5}
+.mp-mine #bRoll{filter:none}
+
+.mp-status{position:fixed;left:50%;bottom:calc(var(--world-bottom,200px) + 8px);transform:translateX(-50%);z-index:95;max-width:calc(100% - 32px);
+  padding:7px 12px;font:700 13px var(--mp-txt);color:var(--mp-paper);background:rgba(169,39,32,.95);border:2px solid var(--mp-ink);border-radius:9px 12px 8px 11px}
+.mp-status[hidden]{display:none}
+
+/* ---- фишки соперников и флажки их клеток ---- */
+.mp-layer{position:fixed;inset:0;z-index:6;pointer-events:none}
+.mp-layer[hidden]{display:none}
+.mp-token,.mp-flag{position:absolute;left:0;top:0;will-change:transform}
+.mp-token{width:26px;height:26px;margin:-30px 0 0 -13px;border-radius:50% 50% 50% 50%/55% 55% 45% 45%;background:var(--c);color:#fbf0d4;
+  border:2.5px solid var(--mp-ink);box-shadow:2px 3px 0 rgba(37,34,28,.6);font:800 13px/21px var(--mp-num);text-align:center}
+.mp-token:after{content:"";position:absolute;left:50%;bottom:-9px;width:3px;height:8px;margin-left:-1.5px;background:var(--mp-ink)}
+.mp-token.on{width:30px;height:30px;margin:-34px 0 0 -15px;line-height:25px;font-size:15px;box-shadow:0 0 0 3px #fbf0d4,2px 4px 0 rgba(37,34,28,.6)}
+.mp-token.off{opacity:.45}
+.mp-flag{width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:3px 6px 3px 5px;background:var(--c);border:1.5px solid var(--mp-ink);
+  color:#fbf0d4;font:800 9px/13px var(--mp-num);text-align:center}
+
+/* окно чужой клетки */
+#card .mp-owner{display:flex;align-items:center;gap:6px}
+#card .mp-owner i{display:inline-block;width:22px;height:22px;border-radius:50%;border:1.5px solid #25221c;color:#fbf0d4;font:800 12px/19px var(--mp-num);text-align:center;font-style:normal}
+#card .mp-buyout-note{font-size:12px;color:#6b5f52;margin:8px 0 0}
+#card .mp-need{margin-top:6px}
+
+@media (max-width:380px){.mp-nm{max-width:44px}.mp-cap{font-size:12px}.mp-round{padding:3px 5px}}
+@media (prefers-reduced-motion:reduce){.mp-tag.mine{animation:none}.mp-spin{animation-duration:3s}}
+.mp-clock{position:fixed;z-index:31;transform:translate(-100%,-100%);padding:3px 9px;font:800 13px var(--mp-num);font-variant-numeric:tabular-nums;
+  color:var(--mp-paper);background:var(--mp-ink);border:2px solid var(--mp-ink);border-radius:8px 10px 7px 9px;box-shadow:2px 2px 0 rgba(37,34,28,.5);pointer-events:none}
+.mp-clock[hidden]{display:none}.mp-clock.late{background:var(--mp-red)}

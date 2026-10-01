@@ -7,6 +7,7 @@ function makeService(){return Dice21Engine.createService({read:()=>S.dice21,wall
  if(state.phase==='result'&&(action.type==='stand'||action.type==='hit')){
   const net=state.result.net;if(net>0){S.stat.earned+=net;S.dstat.earned+=net;qProg('earn',net);}
   track('dice21',{outcome:state.result.outcome,stake:state.stake,net});
+  current?.events?.note({outcome:state.result.outcome,stake:state.stake,net});
   log(`🎲 21 в кости: ${net>0?'+':''}$${net}.`);
  }
  // Вторая партия остановки сыграна — стол закрывается сам.
@@ -28,8 +29,8 @@ function open({landing=false}={}){
 
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
  layer.append(frame,cancel);const dispose=MinigameShell.attach(layer,frame);app.inert=true;document.body.append(layer);
- const exit=()=>{if(!current||current.closing)return;current.closing=true;dispose.close().then(()=>{dispose();layer.remove();current=null;app.inert=wasInert;render();if(prior?.isConnected)prior.focus({preventScroll:true});resolve();});};
- cancel.onclick=exit;current={frame,token,service:makeService(),exit,cancel,promise,dispose,closing:false};
+ const exit=()=>{if(!current||current.closing)return;current.closing=true;dispose.close().then(()=>{dispose();layer.remove();const events=current?.events;current=null;app.inert=wasInert;render();events?.end();if(prior?.isConnected)prior.focus({preventScroll:true});resolve();});};
+ cancel.onclick=exit;current={frame,token,service:makeService(),exit,cancel,promise,dispose,closing:false,events:window.MinigameEvents?.begin('dice21',{landing})};
  return promise;
 }
 window.Dice21={open,connect(child,token){const c=current;if(!c||c.token!==token||c.frame.contentWindow!==child)return null;return{resources:()=>({cash:S.cash,hard:S.hard}),snapshot:()=>c.service.snapshot(),dispatch:a=>c.closing?{ok:false,error:'Игра закрывается',snapshot:c.service.snapshot()}:c.service.dispatch(a),soundEnabled:()=>!c.closing&&!GameFeedback.muted,ready:()=>c.dispose.ready(),exit:c.exit};}};

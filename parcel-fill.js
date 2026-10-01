@@ -7,8 +7,10 @@ const ParcelFill=(()=>{
   if(previous?.body.isConnected)return;
   const draft={...current},steps=[];
   // Remove goods displaced by the optimal cargo before adding its new goods.
-  for(const id of Object.keys(target))for(let n=draft[id]||0;n>target[id];n--)steps.push([id,-1]);
-  for(const id of Object.keys(target))for(let n=draft[id]||0;n<target[id];n++)steps.push([id,1]);
+  // Места бывают неполными (tools/parcel_partial.py): последний шаг — дробный остаток.
+  const E=1e-9;
+  for(const id of Object.keys(target))for(let n=draft[id]||0;n>target[id]+E;){const d=Math.min(1,n-target[id]);steps.push([id,-d]);n-=d;}
+  for(const id of Object.keys(target))for(let n=draft[id]||0;n<target[id]-E;){const d=Math.min(1,target[id]-n);steps.push([id,d]);n+=d;}
   if(!steps.length)return;
   if(reduced.matches||CFG.SPEED>=100){render({...target});return;}
   const state={body:card.querySelector('.pc-body')};active.set(card,state);
@@ -28,7 +30,7 @@ const ParcelFill=(()=>{
     if(!alive())return;
     draft[id]+=delta;paint();
     if(delta>0){
-     let index=-1;for(const key of Object.keys(draft)){index+=draft[key];if(key===id)break;}
+     let index=-1;for(const key of Object.keys(draft)){index+=Math.ceil(draft[key]-1e-9);if(key===id)break;}
      const icon=card.querySelectorAll('.pc-slot')[index]?.querySelector('img');
      icon?.animate([
       {opacity:0,transform:'translateY(-14px) rotate(-8deg) scale(.8)'},

@@ -9,7 +9,7 @@ window.ShipmentEvent=(()=>{
  const sound=key=>{try{GameFeedback.sound(key);}catch{}};
  let active=null;
  function cargoPlan(box,k=1){
-  const ids=Object.keys(box).filter(id=>box[id]>0),remaining=Object.fromEntries(ids.map(id=>[id,Math.max(0,Math.floor(box[id]*k))]));
+  const ids=Object.keys(box).filter(id=>box[id]>0),remaining=Object.fromEntries(ids.map(id=>[id,Math.max(0,Math.round(box[id]*k))]));
   const count=Object.values(remaining).reduce((a,b)=>a+b,0),items=[];
   if(!count)return items;
   const flat=[];

@@ -8,7 +8,7 @@ var SFMAP=new URLSearchParams(location.search).get('map')==='sf';
 if(SFMAP){
 document.body.classList.add('map-mode','sf-mode');
 boardMap=()=>'sanfrancisco';setBoardMap=()=>{};
-Object.assign(CFG,{START_CASH:400,REAL_DAYS:false,ROLLS_PER_DAY:120,BANK_DAY:1}); // старт: 2–3 дешёвые точки с запасом, не «застроить всё» // банк на углу 20 открыт с первого хода
+Object.assign(CFG,{START_CASH:600,REAL_DAYS:false,ROLLS_PER_DAY:120,BANK_DAY:1}); // плейтест 01.10: с $400 оборотки не было — $600 на 3–4 дешёвые точки с запасом // банк на углу 20 открыт с первого хода
 CFG.KIOSK.showProfit=true;
 // Пустырь — псевдотовар, чтобы строка точки и карточка не падали на good(null).
 CFG.GOODS.push({id:'lot',name:'Пустырь',buy:1,sell:1,pts:0,zone:0,icon:'🏗'});
@@ -22,8 +22,9 @@ const SF={
   cats:['gum','cola','jeans','sneak','tape','vcr'],               // порядок карточек в меню пустыря: от стартовых к лицензионным
   // v2 (30.09): соседства нет, на любом пустыре строится любая категория, на которую есть лицензия.
   // Лицензии покупаются прямо из меню пустыря, только за деньги, без условий.
-  lic:[{id:'clothes',name:'Одежда и обувь',cats:['jeans','sneak'],price:800},
-       {id:'tech',name:'Техника',cats:['tape','vcr'],price:3000}],
+  lic:[{id:'clothes',name:'Одежда и обувь',cats:['jeans','sneak'],price:600}, // плейтест 01.10: лицензии дешевле, чтобы не застревать на дешёвых точках
+       {id:'tech',name:'Техника',cats:['tape','vcr'],price:2500}],
+  lotPass:5,                                                      // монетка за проход по чужому пустырю — оборотка на старте (плейтест 01.10)
   techPoints:3,                                                   // финальная задача: точек техники
   // Цена стройки по категориям (30.09, после пробы: $25/$35 не делали разницы и на старт хватало на всё).
   // Лестница: сладости $50 · напитки $100 · одежда $400 · обувь $700 · аудио $250 · видео $1500.
@@ -149,6 +150,16 @@ async function sfBuildMenu(t){
   save();render();
 }
 
+// ---- Проход по пустырю даёт монетку: деньги на старте капают даже без точек ----
+(function(){const base=step;step=async function(from,to){const r=await base.apply(this,arguments);
+  try{const t=S.tiles[to];if(sfIsLot(t)&&SF.lotPass>0){S.cash+=SF.lotPass;S.stat.earned+=SF.lotPass;S.dstat.earned+=SF.lotPass;float(t.i,'+$'+SF.lotPass,'#9aa3b8');}}catch(e){}
+  return r;};})();
+// ---- Банк: первый кредит без срока — точки не отнимут, но новый не дадут, пока не вернёшь ----
+new MutationObserver(()=>{const card=$('card');if(!card||card.hidden)return;const h=card.querySelector('h2');if(!h||!/Chase/.test(h.textContent))return;
+  card.querySelectorAll('.row').forEach(r=>{const n=r.querySelector('.n');if(!n||r.dataset.sfBank)return;
+    if(/заберут/.test(n.textContent)){r.dataset.sfBank='1';n.textContent='Точки не отнимут';const v=r.querySelector('.v');if(v)v.textContent='кредит без срока';}});
+}).observe($('card'),{childList:true,subtree:true});
+
 // ---- Карточка построенной точки: строка соседства и городской надбавки ----
 function sfCardNote(){
   const card=$('card'),t=S&&S.tiles[S.pos];
@@ -216,7 +227,7 @@ async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks
     <div class="row"><span class="n">Городу не хватает</span><span class="v">${SF.cats.filter(c=>!have.has(c)).map(c=>SF.cat[c]).join(', ')||'ничего'}</span></div>
     <h2 style="margin-top:10px">Задачи</h2>${ts.map(q=>`<div class="row"><span class="n">${q.ok?'✓ ':''}${q.text(q.goal)}</span><span class="v">${q.v}/${q.goal}</span></div>`).join('')}`,[{t:'Ок',v:1,cls:'ok'}]);}
 $('bHub').onclick=sfHub;
-window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,price:sfPrice,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense};
+window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,prosp:SF.prosp,sell:SF.sell,build:SF.build,price:sfPrice,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense}; // prosp — надбавка к ценам за категорию; её читает мультиплеер (web/mp.js)
 // Шапка (web/top-hud.js) берёт прогресс и задачи режима отсюда.
 window.MapMode={
   progress(){const ts=sfTasks();return {name:'Сан-Франциско',value:sfCovered(),goal:6,percent:ts.reduce((a,q)=>a+q.v/q.goal,0)/ts.length*100,unit:'категорий'};},

@@ -22,6 +22,7 @@ function makeSession(){return Session.createSession(Engine,{
   if(kind==='settle'&&result){
    if(dc>0){S.stat.earned+=dc;S.dstat.earned+=dc;qProg('earn',dc);}
    track('slot',{id:result.id,cash:dc,hard:dg,rolls:dm,restock:result.restock});
+   current?.events?.note({id:result.id,cash:dc,hard:dg,rolls:dm,jackpot:result.id==='jackpot'});
    log(`🎰 Автомат: ${Engine.describe({...result,restock:result.refund?null:result.restock})}.`);
   }
   if(kind==='buyPack'){
@@ -45,11 +46,11 @@ function open(opts={}){
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
  const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=__BANDIT_VERSION__#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
- current={promise,session,frame,token,layer,closing:false,resolve};
+ current={promise,session,frame,token,layer,closing:false,resolve,events:window.MinigameEvents?.begin('slot',{landing:opts.free!==false&&opts.landing===true})};
  const finish=()=>{
   if(!current||current.token!==token||current.closing||session.busy)return;
   current.closing=true;session.close();
-  const end=()=>{current?.unfit?.();layer.remove();app.inert=wasInert;current=null;render();if(priorFocus?.isConnected)priorFocus.focus({preventScroll:true});resolve();};
+  const end=()=>{current?.unfit?.();const events=current?.events;layer.remove();app.inert=wasInert;current=null;render();events?.end();if(priorFocus?.isConnected)priorFocus.focus({preventScroll:true});resolve();};
   current.unfit.close().then(end,end);
  };
  current.finish=finish;cancel.onclick=finish;
@@ -74,7 +75,7 @@ function connect(child,token){
 function openTile({landing=false}={}){
  if(S.finished||document.querySelector('.minigame-layer'))return Promise.resolve();
  if(landing){S.minigames=MinigameRotation.advance(S.minigames);save();}
- return MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing});
+ return MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
 }
 // Every completed lap contributes to the same persistent jackpot.
 if(typeof lapDone==='function'){const base=lapDone;lapDone=async function(){const result=await base.apply(this,arguments);st().pot=(st().pot||0)+10*S.day;save();return result;};}
