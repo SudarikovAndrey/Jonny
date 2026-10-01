@@ -8,26 +8,41 @@ window.ShipmentEvent=(()=>{
  const svg=(tag,attrs={},parent)=>{const el=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);parent?.append(el);return el;};
  const sound=key=>{try{GameFeedback.sound(key);}catch{}};
  let active=null;
- function cargoPlan(box,k){
-  // Bound drawings, not the actual cargo: one icon can stand for several units.
-  const ids=Object.keys(box).filter(id=>box[id]>0),slots=ids.reduce((n,id)=>n+box[id],0),count=Math.min(18,slots),items=[];
+ function cargoPlan(box,k=1){
+  const ids=Object.keys(box).filter(id=>box[id]>0),remaining=Object.fromEntries(ids.map(id=>[id,Math.max(0,Math.floor(box[id]*k))]));
+  const count=Object.values(remaining).reduce((a,b)=>a+b,0),items=[];
   if(!count)return items;
-  const remaining={...box},flat=[];
+  const flat=[];
   while(flat.length<count){for(const id of ids){if(remaining[id]>0&&flat.length<count){flat.push(id);remaining[id]--;}}}
-  for(let i=0;i<count;i++)items.push({id:flat[i],start:500+i*Math.min(220,2400/count),duration:1050});
+  // One crate per item. Large loads overlap into a brisk stream, rather than
+  // extending the event by one animation per unit.
+  const spread=Math.min(2300,Math.max(0,count-1)*180);
+  for(let i=0;i<count;i++)items.push({id:flat[i],start:550+(count>1?i/(count-1)*spread:0),duration:880+(i%3)*30});
   return items;
  }
+ let stageModule;
+ const loadStage=()=>stageModule||(stageModule=import(window.SHIPMENT_STAGE_URL||'./shipment-stage.js').catch(e=>{stageModule=null;throw e;}));
+ // Pick a renderer once. A late WebGL scene is disposed, never swapped into an
+ // animation already in flight.
+ async function chooseStage(pending,timeout=2500){
+  let expired=false,timer;
+  const ready=pending.then(stage=>{if(expired){stage.dispose();return null;}return stage;}).catch(()=>null);
+  const stage=await Promise.race([ready,new Promise(resolve=>{timer=setTimeout(()=>{expired=true;resolve(null);},timeout);})]);
+  clearTimeout(timer);return stage;
+ }
+ if(typeof document!=='undefined')setTimeout(()=>loadStage().then(m=>m.preload()).catch(()=>{}),1200);
  // One uninterrupted trajectory: approach the near opening, then settle inside it.
- function cargoPose(index,t){
-  t=clamp(t);const entry=.68,col=index%3,row=Math.floor(index/3);
+ function cargoPose(index,t,count=18){
+  t=clamp(t);const entry=.68,col=index%3,row=Math.floor(index%18/3);
+  const depth=Math.floor(index/18)/Math.max(1,Math.ceil(count/18)-1);
   let x,y,scale,angle;
   if(t<entry){const u=t/entry,v=1-u;
    x=v*v*v*(200+(index%2)*38)+3*v*v*u*130+3*v*u*u*180+u*u*u*267;
    y=v*v*v*1110+3*v*v*u*945+3*v*u*u*660+u*u*u*725;
    scale=lerp(1.08,.78,u);angle=lerp(-8+(index%3)*6,0,u);
   }else{const u=ease((t-entry)/(1-entry));
-   x=lerp(267,258+col*53,u);y=lerp(725,690+col*14-row*42,u);
-   scale=lerp(.78,.56,u);angle=Math.sin(u*Math.PI*2)*2*(1-u);
+   x=lerp(267,lerp(350+col*32,258+col*53,depth),u);y=lerp(725,lerp(594+col*9-row*26,690+col*14-row*42,depth),u);
+   scale=lerp(.78,lerp(.36,.56,depth),u);angle=Math.sin(u*Math.PI*2)*2*(1-u);
   }
   return {x,y,scale,angle,inside:t>=entry,landed:t===1};
  }
@@ -96,7 +111,7 @@ window.ShipmentEvent=(()=>{
   const status=(title,note)=>{if(lastPhase===title)return;lastPhase=title;phase.textContent=title;detail.textContent=note;};
   function paint(ms){
    const simple=reduced.matches||input.reduceMotion||CFG.SPEED>=100;
-   const visual=simple||ms>=endAt?endAt:Math.floor(ms/1000*24)/24*1000;
+   const visual=simple||ms>=endAt?endAt:ms;
    dialog.classList.toggle('shipment-reduced',simple);
    stage3d?.update({time:visual,closeAt,liftAt,endAt,simple});
    dialog.dataset.phase=visual<600?'ready':visual<closeAt?'loading':visual<resultAt?'closing':visual<liftAt?'result':visual<endAt?'lifting':'done';
@@ -105,11 +120,11 @@ window.ShipmentEvent=(()=>{
    const sway=simple?0:Math.sin(visual/500)*.45*(visual<closeAt?1:.35);
    rig.setAttribute('transform',`rotate(${sway} 514 -210)`);
    for(const p of particles){
-    const t=clamp((visual-p.start)/p.duration),pose=cargoPose(p.i,t);
+    const t=clamp((visual-p.start)/p.duration),pose=cargoPose(p.i,t,plan.length);
     if(pose.inside)p.carrier.setAttribute('clip-path','url(#shipment-mouth)');else p.carrier.removeAttribute('clip-path');
     p.pic.setAttribute('transform',`translate(${pose.x} ${pose.y}) rotate(${pose.angle}) scale(${pose.scale})`);
     p.carrier.setAttribute('opacity',t>0?1:0);
-    if(pose.landed)soundAt('cargo'+p.i,'step');
+    if(pose.landed&&p.i%Math.max(1,Math.ceil(plan.length/12))===0)soundAt('cargo'+p.i,'step');
    }
    const left=ease((visual-closeAt)/510),right=ease((visual-closeAt-130)/510);
    doors.forEach((d,i)=>d.setAttribute('transform',`matrix(${doorMatrix(i?'right':'left',i?right:left).join(' ')})`));
@@ -152,13 +167,15 @@ window.ShipmentEvent=(()=>{
   reduced.addEventListener('change',onReduced);document.addEventListener('visibilitychange',onVisibility);
   const images=[ART+'container-open.webp',ART+'door.webp',ART+'cargo-crate.webp',...new Set(plan.map(p=>`assets/goods/${p.id}.webp`))];
   // Decode before the first flight; a failed asset must never lock the result.
-  const ready3d=import(window.SHIPMENT_STAGE_URL||'./shipment-stage.js').then(m=>m.create(dialog.querySelector('.shipment-stage'),{plan,units:data.units})).then(stage=>{if(disposed){stage.dispose();return;}stage3d=stage;dialog.querySelector('.shipment-stage>svg').style.display='none';paint(time);}).catch(e=>console.warn('Shipment 3D unavailable, using painted fallback',e));
-  // The painted fallback is the authoritative animation.  A WebGL import or
-  // scene creation can be delayed by a cold mobile tab; it must never hold the
-  // whole dialog (and its body blur) open indefinitely.
-  const ready3dOrTimeout=Promise.race([ready3d,new Promise(r=>setTimeout(r,900))]);
-  Promise.all([ready3dOrTimeout,Promise.race([Promise.all(images.map(src=>{const im=new Image();im.src=src;return im.decode().catch(()=>{});})),new Promise(r=>setTimeout(r,1600))])]).then(()=>{
-   if(disposed||finished)return;if(input.previewAt!==undefined){time=Number(input.previewAt)||0;paint(time);return;}lastStamp=performance.now();if(reduced.matches||input.reduceMotion||CFG.SPEED>=100)skip();else frame=requestAnimationFrame(tick);
+  const fallbackReady=Promise.race([Promise.all(images.map(src=>{const im=new Image();im.src=src;return im.decode().catch(()=>{});})),new Promise(r=>setTimeout(r,1600))]);
+  chooseStage(loadStage().then(m=>m.create(dialog.querySelector('.shipment-stage'),{plan,units:data.units}))).then(async stage=>{
+   if(disposed||finished){stage?.dispose();return;}
+   stage3d=stage;
+   if(stage3d)dialog.querySelector('.shipment-stage>svg').style.display='none';else await fallbackReady;
+   if(disposed||finished)return;
+   time=input.previewAt!==undefined?Number(input.previewAt)||0:0;paint(time);
+   stage3d?.reveal();dialog.classList.add('scene-ready');dialog.dataset.renderer=stage3d?'webgl':'painted';
+   if(input.previewAt!==undefined)return;lastStamp=performance.now();if(reduced.matches||input.reduceMotion||CFG.SPEED>=100)skip();else frame=requestAnimationFrame(tick);
   });
   return promise;
  }
@@ -185,5 +202,5 @@ window.ShipmentEvent=(()=>{
   sound('joy');button.focus({preventScroll:true});
   return new Promise(resolve=>{const finish=()=>{animations.forEach(a=>a.cancel());dialog.close();dialog.remove();previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});resolve();};button.onclick=finish;dialog.addEventListener('cancel',e=>{e.preventDefault();finish();});});
  }
- return {play,celebrate,get busy(){return !!active;},cargoPlan,cargoPose,doorMatrix};
+ return {play,celebrate,get busy(){return !!active;},cargoPlan,cargoPose,doorMatrix,chooseStage};
 })();

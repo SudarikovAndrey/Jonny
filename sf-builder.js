@@ -14,16 +14,20 @@ CFG.KIOSK.showProfit=true;
 CFG.GOODS.push({id:'lot',name:'Пустырь',buy:1,sell:1,pts:0,zone:0,icon:'🏗'});
 const SF={
   rolls:120,taskRolls:10,levelCap:5,payback:6,
-  upPayback:20,upGrow:1.15,                                       // прокачка: +1 продажа окупается за 20 кругов, каждый уровень дороже на 15% (30.09: было 6 кругов — качали в макс сразу)
+  upPayback:10,upGrow:1.15,                                       // прокачка: +1 продажа окупается за 10 кругов, каждый уровень дороже на 15%
+  // Своя экономика режима (30.09, третья проба: «денег не хватает ни на что»): доход только с продаж,
+  // поэтому цены продажи выше бруклинских — маржа сладости $6, напитки $9, аудио $25, одежда $40, обувь $60, видео $120;
+  // продаж на 1-м уровне 3 за круг. Ориентир: 4 дешёвые точки ≈ $100/круг к 5-му кругу, лицензия «Одежда» к 7–8-му.
+  sell:{gum:8,cola:13,tape:35,jeans:65,sneak:120,vcr:270},
   cats:['gum','cola','jeans','sneak','tape','vcr'],               // порядок карточек в меню пустыря: от стартовых к лицензионным
   // v2 (30.09): соседства нет, на любом пустыре строится любая категория, на которую есть лицензия.
   // Лицензии покупаются прямо из меню пустыря, только за деньги, без условий.
-  lic:[{id:'clothes',name:'Одежда и обувь',cats:['jeans','sneak'],price:1500},
-       {id:'tech',name:'Техника',cats:['tape','vcr'],price:6000}],
+  lic:[{id:'clothes',name:'Одежда и обувь',cats:['jeans','sneak'],price:800},
+       {id:'tech',name:'Техника',cats:['tape','vcr'],price:3000}],
   techPoints:3,                                                   // финальная задача: точек техники
   // Цена стройки по категориям (30.09, после пробы: $25/$35 не делали разницы и на старт хватало на всё).
   // Лестница: сладости $50 · напитки $100 · одежда $400 · обувь $700 · аудио $250 · видео $1500.
-  build:{gum:50,cola:100,jeans:400,sneak:700,tape:250,vcr:1500},
+  build:{gum:50,cola:100,jeans:300,sneak:500,tape:200,vcr:1200},
   prosp:.06,                                                      // +6% к ценам за каждую категорию, которой обеспечен город
   cat:{gum:'Сладости',cola:'Напитки',tape:'Аудио',jeans:'Одежда',sneak:'Обувь',vcr:'Видео'},
   gen:{gum:'сладостей',cola:'напитков',tape:'кассет',jeans:'джинсов',sneak:'кроссовок',vcr:'видиков'},
@@ -46,8 +50,9 @@ function sfBuyLicense(l){
   log(`📜 Купил лицензию «${l.name}» за $${l.price}.`);save();render();return true;
 }
 CFG.BIZ_NAMES=SF.biz;
-const sfBase=G=>2+(G-1);                                          // продажи за круг по уровню, как на карте 1
-function sfMargin(cat){return Math.max(1,good(cat).sell-good(cat).buy);}
+const sfBase=G=>3+(G-1);                                          // продажи за круг по уровню: 3 на 1-м, +1 за уровень
+function sfSell(cat){return SF.sell[cat]||good(cat).sell;}
+function sfMargin(cat){return Math.max(1,sfSell(cat)-good(cat).buy);}
 function sfPrice(cat){return SF.build[cat]||Math.max(20,Math.round(sfBase(1)*sfMargin(cat)*SF.payback/5)*5);}
 
 // Поле: пустыри вместо готовых точек. Служебные клетки как в Бруклине (углы: старт, бандит, банк, копилка на 25), «Шанса» нет.
@@ -90,7 +95,7 @@ function sfIsLot(t){return !!t&&t.type==='kiosk'&&!t.owner&&(t.lot||t.good==='lo
 pointName=function(t){if(sfIsLot(t)||!t.base)return 'Пустырь';const f=SF.formats[Math.min(SF.formats.length-1,Math.floor((t.salesLvl-1)/2))];return `${f} ${SF.gen[t.base]||''}`.trim();};
 evolveState=()=>'max';
 // Благосостояние: чем больше категорий у города, тем дороже всё продаётся.
-(function(){const base=sellPrice;sellPrice=function(g){return Math.round(base.apply(this,arguments)*sfPriceMult());};})();
+(function(){const base=sellPrice;sellPrice=function(g){const p=SF.sell[g]?base.apply(this,arguments)*SF.sell[g]/good(g).sell:base.apply(this,arguments);return Math.round(p*sfPriceMult());};})();
 
 // ---- Меню стройки на пустыре: три варианта, каждый с последствиями ----
 (function(){const base=kioskWindow;kioskWindow=async function(t){

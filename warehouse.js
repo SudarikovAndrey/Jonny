@@ -53,20 +53,8 @@ function decorateWarehouse(card){
     half.disabled=!myKiosks().some(t=>t.goods<cap(t)&&buyPrice(t.good)<=budget);
     half.title='Бюджет — половина суммы полной закупки. Товар распределится по точкам.';
     half.onclick=()=>{
-      let left=budget, spent=0;
-      const order=myKiosks().slice().sort((a,b)=>
-        sales(b)*(sellPrice(b.good)-buyPrice(b.good))-sales(a)*(sellPrice(a.good)-buyPrice(a.good)));
-      for(let round=0; round<40 && left>0; round++){
-        let moved=false;
-        for(const t of order){
-          const p=buyPrice(t.good);
-          if(left<p) continue;
-          if(cap(t)-t.goods<=0) continue;
-          if(!addGoods(t.good,1)) continue;
-          S.cash-=p; left-=p; spent+=p; moved=true;
-        }
-        if(!moved) break;
-      }
+      // Закупка — общим алгоритмом web/restock.js: кругами продаж, по прибыли на доллар (механика — Геймплей).
+      const spent=smartRestock(budget);
       if(spent>0){ toast('Закуплено на $'+spent); save(); render(); draw(); }
       else toast('Не хватает даже на одну штуку');
       closeModal();

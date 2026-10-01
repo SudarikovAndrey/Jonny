@@ -92,7 +92,7 @@
   tip:()=>showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.'),
   'tip-attached':()=>{shop();showTip('Серые клетки — стройка. Пробегая мимо, ты подрабатываешь и получаешь немного денег. Когда улица откроется, здесь появятся новые точки.');},
   progress:()=>eventHub('ticket'),inspector:()=>inspectorPopup(S.tiles[S.pos]),
-  shipment:async()=>{if(!UI_REVIEW)return;const before=params.has('points')?Math.max(0,Number(params.get('points'))||0):340;await ShipmentEvent.play({box:{gum:2,cola:2,tape:2},k:1,units:Math.max(1,Number(params.get('units'))||6),points:55,before,day:1,reduceMotion:params.has('reduced'),...(params.has('pose')?{previewAt:Number(params.get('pose'))}: {})});for(const m of CFG.MILESTONES.filter(m=>m.pts>before&&m.pts<=before+55))await ShipmentEvent.celebrate(m,{reduceMotion:params.has('reduced')});},
+  shipment:async()=>{if(!UI_REVIEW)return;const before=params.has('points')?Math.max(0,Number(params.get('points'))||0):340,units=Math.max(1,Math.floor(Number(params.get('units'))||6)),box={gum:Math.ceil(units/3),cola:Math.floor((units+1)/3),tape:Math.floor(units/3)};await ShipmentEvent.play({box,k:1,units,points:55,before,day:1,reduceMotion:params.has('reduced'),...(params.has('pose')?{previewAt:Number(params.get('pose'))}: {})});for(const m of CFG.MILESTONES.filter(m=>m.pts>before&&m.pts<=before+55))await ShipmentEvent.celebrate(m,{reduceMotion:params.has('reduced')});},
   warehouse:()=>shop(),shipping:()=>shipClick(),police:()=>police(),chance:()=>Chance.play(),johnny:()=>johnny(),shop:()=>shopHard()
  }[name];
  if(!open)return;
