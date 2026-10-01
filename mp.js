@@ -466,11 +466,16 @@ function doubleBonus(sum){
   const inc=Math.round(S.cash-before);if(inc>0)emit({kind:'pass',text:'прошёл старт — продажи',amount:inc,tile:0});return r;};})();
 // Покупки и прокачки — соперникам в журнал (по телеметрии движка, она есть у каждого действия).
 // Телеметрия уходит до того, как клетка поменялась (стройка: ещё «Пустырь»), — имя читаем на следующем такте.
-(function(){const base=track;track=function(type,d){const r=base.apply(this,arguments);
+// Стройка и перестройка на клетке: вложенное считается заново (наценка от прошлой покупки по предложению
+// больше не прибавляется), висящее предложение соперника на старую точку — отказ с возвратом денег.
+function onRebuild(t){if(!t)return;delete t.mpPrem;if(t.owner&&t.mpOffer)declineOffer(t,true);}
+(function(){const base=track;track=function(type,d){if(myTurn()&&d&&d.tile!=null&&(type==='sf_rebuild'||type==='sf_build'))onRebuild(S.tiles[d.tile]);
+  const r=base.apply(this,arguments);
   if(myTurn())setTimeout(()=>{try{trackToEvt(type,d||{});}catch(e){}},0);return r;};})();
 function trackToEvt(type,d){
   const t=d.tile!=null?S.tiles[d.tile]:null,nm=t?(t.type==='biz'?bizName(t):pointName(t)):'';
   if(type==='sf_build')emit({kind:'build',text:`построил ${nm}`,amount:-(d.price||0),tile:d.tile});
+  else if(type==='sf_rebuild')emit({kind:'build',text:`перестроил точку: теперь ${nm}`,amount:-(d.price||0)+(d.refund||0),tile:d.tile});
   else if(type==='buy_biz'||type==='buy_point')emit({kind:'build',text:`купил ${nm}`,amount:-(d.price||0),tile:d.tile});
   else if(type==='upgrade')emit({kind:'upgrade',text:`прокачал ${nm}`,amount:-(d.cost||0),tile:d.tile});
   else if(type==='sf_license'){const l=((window.SFBuilder&&SFBuilder.licenses)||[]).find(x=>x.id===d.id);emit({kind:'license',text:`купил лицензию «${l?l.name:d.id}»`,amount:-(d.price||0)});}
@@ -621,7 +626,7 @@ function reclaimOffers(){
 // =====================================================================
 const el=(tag,cls,parent=document.body)=>{const e=document.createElement(tag);if(cls)e.className=cls;parent.append(e);return e;};
 const bar=el('div','mp-bar');bar.id='mpBar';bar.hidden=true;
-const roundEl=el('span','mp-round',bar);roundEl.title='Круг стола: каждый за столом сделал по ходу';
+const roundEl=el('span','mp-round',bar);roundEl.title='Круг — проход через старт. Партия кончается, когда кто-то первым пройдёт последний круг';
 roundEl.innerHTML='Круг <b class="mp-rn"></b>';
 const chipsEl=el('span','mp-chips',bar);
 const pauseBtn=el('button','mp-pausebtn',bar);pauseBtn.type='button';pauseBtn.title='Пауза для всех';pauseBtn.setAttribute('aria-label','Пауза');pauseBtn.textContent='⏸';
@@ -629,7 +634,7 @@ pauseBtn.onclick=()=>{if(view&&view.phase==='play'&&!view.paused)net.send({t:'tp
 const pauseEl=el('div','mp-pause');pauseEl.hidden=true;
 pauseEl.innerHTML='<div class="mp-pause-card"><b>Пауза</b><small></small><button type="button" class="mp-big">Продолжить</button></div>';
 pauseEl.querySelector('button').onclick=()=>net.send({t:'tpause',on:false});
-let lastRound=0;
+let lastRound=0,finalShown=null;
 const tag=el('div','mp-tag');tag.id='mpTag';tag.hidden=true;
 const endBtn=el('button','mp-end');endBtn.id='mpEnd';endBtn.hidden=true;endBtn.type='button';
 endBtn.innerHTML='<b>Передать ход</b><small></small>';
@@ -669,7 +674,12 @@ function updateUi(){
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Круг стола: цифра меняется тем же барабаном, что уровень точки при прокачке (NumberDrum).
-  const rn=roundEl.querySelector('.mp-rn'),round=Math.min(val.round,view.settings.rounds),txt=`${round}/${view.settings.rounds}`;
+  // Круг — проход через старт (решение продюсера 01.10). В полосе — круг лидера: по нему кончается партия.
+  const M=view.settings.rounds,lead=Math.max(0,...view.players.map(p=>p.laps||0));
+  const rn=roundEl.querySelector('.mp-rn'),round=Math.min(lead+1,M),txt=`${round}/${M}`;
+  roundEl.classList.toggle('final',!!view.finalRound);
+  if(view.finalRound&&finalShown!==view.match){finalShown=view.match;
+    plate('🏁 Последний раунд',0,`${view.finalBy===PID?'Ты прошёл':(nameOf(view.finalBy)+' прошёл')} старт в ${M}-й раз — доигрываем раунд, потом итог`);}
   if(round!==lastRound){const before=lastRound?`${lastRound}/${view.settings.rounds}`:'';rn.textContent=txt;delete rn.dataset.drumValue;
     if(before&&round>lastRound){try{window.NumberDrum&&NumberDrum.update(rn,before);}catch(e){}
       roundEl.classList.remove('bump');void roundEl.offsetWidth;roundEl.classList.add('bump');}
@@ -858,7 +868,7 @@ function renderLobby(force){
   if(!force&&key===lobbyKey&&!lobby.hidden)return;lobbyKey=key;
   const host=!!net&&net.host,T=view,seats=[0,1,2,3].map(i=>T.players.find(p=>p.seat===i));
   const opt=(k,vals,cur,fmt)=>`<div class="mp-seg" data-k="${k}">${vals.map(v=>`<button class="${v===cur?'on':''}" data-v="${v}" ${host?'':'disabled'}>${fmt(v)}</button>`).join('')}</div>`;
-  const n=T.players.length,est=Math.round(n*T.settings.rounds*(T.settings.turnSec||60)*0.45/60),estTxt=est>=90?`≈ ${Math.round(est/60)} ч`:`≈ ${est} мин`;
+  const n=T.players.length,est=Math.round(n*T.settings.rounds*6*(T.settings.turnSec||60)*0.45/60),estTxt=est>=90?`≈ ${Math.round(est/60)} ч`:`≈ ${est} мин`;
   showLobby(`<h2>🌉 Стол <span class="mp-code">${esc(T.room)}</span></h2>
     <div class="mp-share">
       <div class="mp-qr" id="mpQr"></div>
@@ -869,7 +879,7 @@ function renderLobby(force){
     </div>
     <div class="mp-seats">${seats.map((p,i)=>p?`<div class="mp-seat" style="--c:${p.color}"><i>${esc(p.name.slice(0,1).toUpperCase())}</i><b>${esc(p.name)}${p.pid===PID?' · ты':''}</b><small>${p.pid===T.host?'хозяин стола':C.COLOR_NAMES[i]}</small>${host&&p.pid!==PID?`<button class="mp-kick" data-pid="${esc(p.pid)}" aria-label="Убрать">✕</button>`:''}</div>`
       :`<div class="mp-seat empty" style="--c:${C.COLORS[i]}"><i></i><b>свободно</b><small>${C.COLOR_NAMES[i]}</small></div>`).join('')}</div>
-    <div class="mp-set"><span>Кругов<small>круг — каждый сделал по ходу${T.settings.autoRounds!==false?' · на двоих 100, на 3–4 — 200':''}</small></span>${opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>String(v))}</div>
+    <div class="mp-set"><span>Кругов<small>проходов через старт</small></span>${opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>String(v))}</div>
     <div class="mp-set"><span>Время на ход<small>${T.settings.turnSec?'мини-игра часы не тратит':'без лимита — ход передаётся кнопкой'}</small></span>${opt('turnSec',C.TURN_OPTIONS,T.settings.turnSec,v=>v?v+' с':'∞')}</div>
     <p class="mp-est">${n>=2?`${estTxt} на ${n} ${plural(n,'игрока','игроков','игроков')} · досрочно выигрывает тот, кто первым возьмёт обе лицензии и 3 точки техники`:'Нужно минимум двое'}</p>
     ${host?`<button class="mp-big" id="mpStart" ${C.canStart(T)?'':'disabled'}>Начать</button>`:'<p class="mp-lead mp-waithost">Ждём, когда хозяин стола начнёт…</p>'}
@@ -897,8 +907,8 @@ function showOver(v){
   const ps=v.players.filter(p=>p.cap).map(p=>Object.assign({},p,p.cap));
   const rank=ps.slice().sort((a,b)=>b.total-a.total||b.cash-a.cash||a.seat-b.seat);
   const r=v.result||{},win=r.winner?ps.find(p=>p.pid===r.winner)||rank[0]:rank[0];
-  const rounds=r.round||v.settings.rounds;
-  const sub=r.why==='early'?'Досрочно: кто-то взял обе лицензии и 3 точки техники.':`${rounds} ${plural(rounds,'круг','круга','кругов')} позади. Считаем, кто сильнейший.`;
+  const laps=r.laps||v.settings.rounds;
+  const sub=r.why==='early'?'Досрочно: кто-то взял обе лицензии и 3 точки техники.':`${r.finalBy?esc(nameOf(r.finalBy))+' первым прошёл':'Пройдено'} ${laps} ${plural(laps,'круг','круга','кругов')}. Считаем, кто сильнейший.`;
   const lines=p=>[
     p.points?{k:'pts',t:`Точки ×${p.points}`,s:`сумма уровней ${p.levels}`,v:p.ptsInv}:null,
     p.biz?{k:'biz',t:`Бизнесы ×${p.biz}`,v:p.bizInv}:null,
