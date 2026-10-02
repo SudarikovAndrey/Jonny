@@ -797,11 +797,37 @@ window.MPBank={list:mpBankList,need:bankruptNeed,needs:()=>!!S&&bankruptNeed()>0
 window.MPTrade={open:t=>{t=typeof t==='number'?S.tiles[t]:t;return isRival(t)?rivalWindow(t):null;},offer:(...a)=>placeOfferAmount(...a),swap:(...a)=>placeSwap(...a),proposed:()=>proposedThisTurn()};   // окно чужой клетки откуда угодно в свой ход
 window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,open:lotWindow,bid:placeBid,bidWindow,html:lotHtml};
 
+// ---- проход старта в партии (плейтест 5): +$100 всем сверх продаж; карта соперника урезала продажи ----
+const MP_START_BONUS=100,MP_WH_CONSOLATION=20;
+function lapExtras(earned0){
+  if(S.mpLapCut!=null){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),loss=Math.round(inc*(1-S.mpLapCut));
+    if(loss>0){S.cash-=loss;S.stat.earned-=loss;plate(S.mpLapCut===0?'✊ Забастовка':'📉 Демпинг конкурента',-loss,S.mpLapCut===0?'продаж на этом проходе нет':'продажи на этом проходе вдвое меньше');log(`📉 Карта соперника: продажи на старте −${money(loss)}.`);}
+    delete S.mpLapCut;}
+  S.cash+=MP_START_BONUS;S.stat.earned=(S.stat.earned||0)+MP_START_BONUS;
+  plate('🏁 Старт',MP_START_BONUS,'каждый проход старта');log(`🏁 Проход старта: +${money(MP_START_BONUS)}.`);
+}
+// ---- такси до склада за 💎 (плейтест 5): в свой ход до броска, едет на ближайший склад впереди — это и есть ход ----
+async function mpTaxi(){
+  if(!view||view.phase!=='play'||!myTurn()){toast('Такси — в свой ход');return;}
+  if(rolled||ending||moving){toast('Такси — до броска');return;}
+  if(S.jail>0){toast('Из участка такси не ездит');return;}
+  const price=1;let to=-1;for(let k=1;k<40;k++){const t=S.tiles[(S.pos+k)%40];if(t.type==='wh'){to=t.i;break;}}
+  if(to<0)return;if((S.hard||0)<price){toast(`Нужен ${price} 💎`);return;}
+  if(!spendHard(price))return;
+  rolled=true;S.rolls=999;track('mp_taxi',{from:S.pos,to});log(`🚕 Такси до склада за 💎 ${price}.`);emit({kind:'taxi',text:'поехал на такси до склада',amount:null,tile:to});push();
+  moving=true;render();
+  try{try{await step(S.pos,to,CFG.MOVE_MS*3,'one');}catch(e){console.warn('taxi step',e);}   // сцена не ответила — фишку всё равно переносим
+    S.pos=to;render();await land(S.tiles[to]);}
+  finally{moving=false;landed=true;S.rolls=999;save();render();push();updateUi();}
+}
+window.MPTaxi={go:mpTaxi,can:()=>!!(view&&view.phase==='play'&&myTurn()&&!rolled&&!ending&&!S.jail&&(S.hard||0)>=1)};
+
 // ---- общая копилка стола: штрафы всех — в одну; забирает вставший ----
 function potDelta(fn){return function(){const before=S.pot||0;const r=fn.apply(this,arguments);const d=Math.round((S.pot||0)-before);
   if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;pushSoon();}return r;};}   // S.pot — как будет у стола, чтобы табличка на клетке не отставала
 pay=potDelta(pay);payFine=potDelta(payFine);
-(function(){const base=lapDone;lapDone=async function(){const before=S.pot||0,slot0=slotPotNow();const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
+(function(){const base=lapDone;lapDone=async function(){const before=S.pot||0,slot0=slotPotNow(),earned0=S.stat?S.stat.earned||0:0;const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
+  if(myTurn())lapExtras(earned0);
   if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;}
   slotPotFlush(slot0);
   // Круги в минусе (плейтест 02.10): первый — предупреждение, второй — клетки на торги. Вышел в плюс — счёт сброшен.
@@ -873,7 +899,11 @@ shopHard=function(){toast('В партии кристаллы не продаю�
 const rivalsOf=()=>view?view.players.filter(p=>p.pid!==PID):[];
 const richestRival=()=>rivalsOf().slice().sort((a,b)=>(b.cap?b.cap.total:b.cash)-(a.cap?a.cap.total:a.cash))[0];
 const bestRivalTile=()=>S.tiles.filter(t=>isRival(t)&&t.type==='kiosk'&&!t.insp&&!(t.frozen>view.turn.n)).sort((a,b)=>invested(b)-invested(a))[0];
-function hit(h){if(myTurn()&&net)net.send({t:'hit',h});}
+// Удар уходит хозяину стола, а клетку меняем и у себя: иначе следующий пакет хода вернул бы её старое состояние
+// (mergeTiles принимает от активного игрока drop/insp на чужих клетках — «Жалоба соседей» тут же снималась).
+function hit(h){if(!(myTurn()&&net))return;const t=h.tile!=null&&S.tiles[h.tile];
+  if(t){if(h.k==='insp')t.insp=true;else if(h.k==='freeze')t.frozen=view.turn.n+view.players.length;else if(h.k==='spoil'&&t.goods>0)t.goods-=Math.ceil(t.goods/2);}
+  net.send({t:'hit',h});}
 const MP_CHANCE=[
   {id:'birthday',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),a=30;for(const r of rs)credit(r.pid,-a,`${esc(r.name)} → ${esc(S.player)}: ${money(a)} на день рождения`);S.cash+=a*rs.length;return {text:`🎂 День рождения! Каждый соперник скидывается по ${money(a)}.`,amount:a*rs.length};}},
   {id:'treat',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),a=20;for(const r of rs)credit(r.pid,a,`${esc(S.player)} проставился ${esc(r.name)}: ${money(a)}`);S.cash-=a*rs.length;return {text:`🍻 Проставился пацанам: по ${money(a)} каждому.`,amount:-a*rs.length};}},
@@ -895,9 +925,61 @@ const MP_CHANCE=[
   {id:'queue',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),r=rs[Math.floor(Math.random()*rs.length)];hit({k:'skip',to:r.pid});return {text:`⏳ Очередь в ЖЭК: ${r.name} пропускает следующий ход.`,amount:null};}},
   {id:'blackout',ok:()=>!!bestRivalTile(),f:()=>{const t=bestRivalTile();hit({k:'freeze',tile:t.i});return {text:`❄️ Отключили свет: «${titleOf(t)}» (${nameOf(t.rival)}) круг не берёт ренту.`,amount:null,tile:t.i};}},
 ];
+MP_CHANCE.push(
+  {id:'dumping',ok:()=>rivalsOf().length>0,f:()=>{const r=richestRival();return {text:HAND.dumping.play(r.pid),amount:null};}},
+  {id:'spoiled',ok:()=>rivalsOf().some(p=>HAND.spoiled.ok(p.pid)),f:()=>{const p=rivalsOf().find(x=>HAND.spoiled.ok(x.pid));return {text:HAND.spoiled.play(p.pid),amount:null};}},
+  {id:'levy',ok:()=>!!leaderPid()&&leaderPid()!==PID,f:()=>({text:HAND.levy.play(leaderPid()),amount:null})},
+  {id:'audit',ok:()=>!!leaderPid()&&leaderPid()!==PID&&HAND.audit.ok(leaderPid()),f:()=>({text:HAND.audit.play(leaderPid()),amount:null})},
+  {id:'strike',ok:()=>!!leaderPid()&&leaderPid()!==PID,f:()=>({text:HAND.strike.play(leaderPid()),amount:null})});
 window.MP_CHANCE=MP_CHANCE;
+// ---- карты в руку (плейтест 5: «дать карточки шансов, которые можно использовать против кого-то») ----
+// Пакости из колоды не срабатывают сразу, а ложатся в руку (до MP_HAND_MAX). Сыграть — в свой ход, до или после броска,
+// одну за ход, против выбранного соперника; карты против лидера бьют лидера по капиталу. Соперники видят число карт, не какие.
+const MP_HAND_MAX=2;
+const leaderPid=()=>{const ps=view.players.slice().sort((a,b)=>(b.cap?b.cap.total:b.cash)-(a.cap?a.cap.total:a.cash));return ps[0]&&ps[0].pid;};
+const topTileOf=(pid,f)=>S.tiles.filter(t=>t.rival===pid&&(f?f(t):true)).sort((a,b)=>invested(b)-invested(a))[0];
+const HAND={
+  roadwork:{name:'🚧 Ремонт дороги',text:'соперник откатывается на 3 клетки',play:pid=>{hit({k:'move',to:pid,d:-3});return `🚧 Ремонт дороги: ${nameOf(pid)} откатывается на 3 клетки.`;}},
+  queue:{name:'⏳ Очередь в ЖЭК',text:'соперник пропускает следующий ход',play:pid=>{hit({k:'skip',to:pid});return `⏳ Очередь в ЖЭК: ${nameOf(pid)} пропускает ход.`;}},
+  blackout:{name:'❄️ Отключили свет',text:'самая дорогая точка соперника круг без ренты',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!(t.frozen>view.turn.n)),
+    play:pid=>{const t=topTileOf(pid,t=>t.type==='kiosk'&&!(t.frozen>view.turn.n));hit({k:'freeze',tile:t.i});return `❄️ Отключили свет: «${titleOf(t)}» (${nameOf(pid)}) круг не берёт ренту.`;}},
+  complaint:{name:'📋 Жалоба соседей',text:'инспектор в самую дорогую точку соперника',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
+    play:pid=>{const t=topTileOf(pid,t=>t.type==='kiosk'&&!t.insp);hit({k:'insp',tile:t.i});return `📋 Жалоба соседей: инспектор идёт в «${titleOf(t)}» (${nameOf(pid)}).`;}},
+  dumping:{name:'📉 Демпинг',text:'следующий проход старта соперника — продажи вдвое меньше',play:pid=>{hit({k:'cut',to:pid,cut:0.5});return `📉 Демпинг: у ${nameOf(pid)} следующий проход старта — продажи вдвое меньше.`;}},
+  spoiled:{name:'🦠 Просрочка',text:'половина товара в самой полной точке соперника портится',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&t.goods>0),
+    play:pid=>{const t=S.tiles.filter(x=>x.rival===pid&&x.type==='kiosk'&&x.goods>0).sort((a,b)=>b.goods-a.goods)[0];hit({k:'spoil',tile:t.i});return `🦠 Просрочка: половина товара в «${titleOf(t)}» (${nameOf(pid)}) испортилась.`;}},
+  // Против лидера (идея Сани): цель — лидер по капиталу, сыграть можно, только если лидер не ты.
+  levy:{name:'🧾 Налоговая',text:'лидер платит 10% нала (до $300) в копилку',leader:true,play:pid=>{hit({k:'levy',to:pid});return `🧾 Налоговая к лидеру: ${nameOf(pid)} платит 10% нала в копилку.`;}},
+  audit:{name:'🔎 Проверка лидера',text:'инспектор в две самые дорогие точки лидера',leader:true,ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
+    play:pid=>{const ts=S.tiles.filter(t=>t.rival===pid&&t.type==='kiosk'&&!t.insp).sort((a,b)=>invested(b)-invested(a)).slice(0,2);ts.forEach(t=>hit({k:'insp',tile:t.i}));return `🔎 Проверка лидера: инспектор в ${ts.map(t=>'«'+titleOf(t)+'»').join(' и ')} (${nameOf(pid)}).`;}},
+  strike:{name:'✊ Забастовка',text:'следующий проход старта лидера — без продаж',leader:true,play:pid=>{hit({k:'cut',to:pid,cut:0});return `✊ Забастовка: у ${nameOf(pid)} следующий проход старта без продаж.`;}},
+};
+const handTargets=id=>{const c=HAND[id];if(!c||!view)return [];if(c.leader){const l=leaderPid();return l&&l!==PID&&(!c.ok||c.ok(l))?[l]:[];}return rivalsOf().map(p=>p.pid).filter(pid=>!c.ok||c.ok(pid));};
+function handPlay(idx,pid){
+  const id=(S.mpHand||[])[idx],c=HAND[id];if(!c||!myTurn()||ending)return false;
+  if(S.mpHandN===view.turn.n){toast('Одна карта за ход');return false;}
+  if(!handTargets(id).includes(pid)){toast(c.leader?'Карта против лидера — а лидер сейчас ты или цели нет':'Против этого игрока карта не сработает');return false;}
+  const text=c.play(pid);S.mpHand.splice(idx,1);S.mpHandN=view.turn.n;
+  track('mp_hand_play',{card:id,to:pid});log(`🃏 ${text}`);emit({kind:'chance',text,amount:null,tile:S.pos,to:pid});plate('🃏 Карта сыграна',0,text.replace(/^\S+\s/,''));
+  save();render();push();return true;
+}
+async function handWindow(){
+  if(!view||view.phase!=='play')return;const hand=S.mpHand||[];
+  if(!hand.length){toast('В руке нет карт — их дают клетки «Шанса»');return;}
+  const can=myTurn()&&!ending&&S.mpHandN!==view.turn.n;
+  const rows=hand.map((id,i)=>{const c=HAND[id];const ts=handTargets(id);
+    return `<div class="row mp-hand-row"><span class="n">${esc(c.name)}<small>${esc(c.text)}</small></span>${can&&ts.length?ts.map(pid=>`<button type="button" class="sm mp-hand-go buy-btn buy-ok" data-i="${i}" data-pid="${esc(pid)}">${c.leader?'Против лидера · ':''}${esc(nameOf(pid))}</button>`).join(''):`<small>${!myTurn()?'в свой ход':S.mpHandN===view.turn.n?'одна карта за ход':'цели нет'}</small>`}</div>`;}).join('');
+  const pending=modal(`<h2>🃏 Карты в руке · ${hand.length}/${MP_HAND_MAX}</h2><p class="t">Сыграй в свой ход, до или после броска, — одну за ход. Соперники видят только число карт.</p>${rows}`,[{t:'Закрыть',v:0,cls:'sec'}]);
+  $('card').querySelectorAll('.mp-hand-go').forEach(b=>b.onclick=()=>closeModal('h:'+b.dataset.i+':'+b.dataset.pid));
+  const v=await pending;if(typeof v==='string'&&v.startsWith('h:')){const [,i,pid]=v.split(':');handPlay(+i,pid);}
+}
+window.MPHand={list:()=>(S&&S.mpHand||[]).map(id=>({id,name:HAND[id].name,text:HAND[id].text,leader:!!HAND[id].leader,targets:handTargets(id)})),play:handPlay,open:handWindow,max:MP_HAND_MAX,cards:HAND};
 async function mpChance(forceId){
   const deck=MP_CHANCE.filter(c=>!c.ok||c.ok()),c=(forceId&&MP_CHANCE.find(x=>x.id===forceId))||deck[Math.floor(Math.random()*deck.length)];
+  // Пакость — в руку, если есть место; рука полна — срабатывает сразу по автоматической цели, как раньше.
+  if(HAND[c.id]&&(S.mpHand||[]).length<MP_HAND_MAX){S.mpHand=(S.mpHand||[]).concat(c.id);
+    track('mp_hand_draw',{card:c.id});log(`🃏 В руку: ${HAND[c.id].name}.`);emit({kind:'hand',text:'взял карту в руку',amount:null,tile:S.pos});save();render();push();
+    await modal(`<h2>🃏 Карта в руку</h2><p class="t"><b>${esc(HAND[c.id].name)}</b> — ${esc(HAND[c.id].text)}.</p><p class="t">Сыграй в свой ход, до или после броска, против выбранного соперника. Соперники видят, что у тебя есть карта, но не какая.</p>`,[{t:'Понял',v:1}]);return;}
   const r=c.f();if(r.amount>0)S.stat.earned=(S.stat.earned||0)+r.amount;
   track('mp_chance',{card:c.id,amount:r.amount||0});log(`🎴 ${r.text}`);
   emit({kind:'chance',text:r.text,amount:r.amount,tile:r.tile!=null?r.tile:S.pos});
@@ -1037,6 +1119,7 @@ const landedHere=()=>!!(view&&view.turn&&S&&S.mpLanded&&S.mpLanded.n===view.turn
 (function(){const base=land;land=async function(t){
   if(t&&view&&view.turn)S.mpLanded={n:view.turn.n,i:t.i};
   if(!isRival(t)){
+    if(t&&t.type==='wh'&&myTurn()&&view&&view.phase==='play'&&!S.tiles.some(x=>x.owner&&x.type==='kiosk')){S.cash+=MP_WH_CONSOLATION;plate('🏬 Склад',MP_WH_CONSOLATION,'точек нет — утешительный приз');log(`🏬 Своих точек нет: утешительный приз ${money(MP_WH_CONSOLATION)}.`);}
     // Копилка-джекпот («вдвоём угарно») — у неё нет окна мини-игры, выигрыш показываем соперникам сами.
     const before=S.cash,r=await base.apply(this,arguments),d=Math.round(S.cash-before);
     if(t&&t.type==='pot'&&d>0)emit({kind:'minigame',text:'сорвал копилку',amount:d,tile:t.i});
@@ -1322,10 +1405,12 @@ menuBtn.onclick=async()=>{
   await verCheck();
   const v=await modal(`<h2>☰ Партия · стол ${esc(ROOM)}</h2><p class="mp-ver ${verStale?'stale':''}">${verLine()}</p>
     ${host?'<p class="t mp-warn">Ты хозяин стола: если выйдешь, партия остановится у всех.</p>':'<p class="t">Выйдешь — твоё место останется, вернуться можно по коду стола.</p>'}`,
-    [{t:'Продолжить',v:0,cls:'ok'},{t:'🏠 Мои владения',v:6,cls:'sec'},{t:`🗺 Карта: ${mapName(tableMap())}${host?'':' · меняет хозяин'}`,v:5,cls:'sec',dis:!host},window.MPRules?{t:'Правила',v:4,cls:'sec'}:null,view.win?{t:'Как победить',v:3,cls:'sec'}:null,{t:'Выйти из-за стола',v:1,cls:'sec'},{t:'Играть одному',v:2,cls:'sec'}].filter(Boolean));
+    [{t:'Продолжить',v:0,cls:'ok'},{t:'🏠 Мои владения',v:6,cls:'sec'},{t:`🃏 Карты в руке · ${(S&&S.mpHand||[]).length}`,v:7,cls:'sec'},window.MPTaxi&&MPTaxi.can()?{t:'🚕 На склад · 💎 1',v:8,cls:'sec'}:null,{t:`🗺 Карта: ${mapName(tableMap())}${host?'':' · меняет хозяин'}`,v:5,cls:'sec',dis:!host},window.MPRules?{t:'Правила',v:4,cls:'sec'}:null,view.win?{t:'Как победить',v:3,cls:'sec'}:null,{t:'Выйти из-за стола',v:1,cls:'sec'},{t:'Играть одному',v:2,cls:'sec'}].filter(Boolean));
   if(v===3)winEl.click();
   if(v===4&&window.MPRules)MPRules.open();
   if(v===5)mapPicker();
+  if(v===7)handWindow();
+  if(v===8)mpTaxi();
   if(v===6)setTimeout(()=>holdingsWindow(),200);
   if(v===1||v===2){try{if(!net.host)net.send({t:'bye'});}catch(e){}
     location.href=v===1?`mp.html?map=sf&mp${Q.has('mute')?'&mute':''}`:`index.html?map=sf${Q.has('mute')?'&mute':''}`;}
@@ -1779,6 +1864,8 @@ function onEvt(from,e){
   if(e.kind==='won'&&mine)plate(`🔨 Продано · ${p.name}`,e.paid||0,`«${tileName}»`);
   if(e.kind==='bank'&&mine)plate('🏦 Банк забрал',amount,`«${tileName}» — ставок не было`);
   if(e.kind==='unsold'&&mine)plate('🔨 Торги без ставок',0,`«${tileName}» осталась у тебя`);
+  if(e.kind==='hand'&&from!==PID)toast(`🃏 ${p.name} взял карту в руку`,2200);
+  if(e.kind==='taxi'&&from!==PID)toast(`🚕 ${p.name} поехал на такси до склада`,2200);
   if(e.kind==='map')plate(`🗺 Карта · ${p.name}`,0,`хозяин стола ${e.text}`);
   if(e.kind==='chance'&&!mine&&from!==PID)toast(`🎴 ${p.name}: ${e.text}`,2600);
   // Инкассатор соперника: монеты разлетаются по полю и у остальных — видно, куда легли (плейтест 01.10).
@@ -1942,7 +2029,7 @@ function renderLobby(force){
         ${/^(localhost|127\.|\[::1\])/.test(location.hostname)?'<p class="mp-warn">Игра открыта по localhost — телефонам ссылка не подойдёт. Открой по адресу Mac в сети.</p>':''}</div>
     </div>
     <div class="mp-seats">${seats.map((p,i)=>p?`<div class="mp-seat" style="--c:${p.color}"><i>${esc(p.name.slice(0,1).toUpperCase())}</i><b>${esc(p.name)}${p.pid===PID?' · ты':''}</b><small>${p.pid===T.host?'хозяин стола':C.COLOR_NAMES[i]}</small>${host&&p.pid!==PID?`<button class="mp-kick" data-pid="${esc(p.pid)}" aria-label="Убрать">✕</button>`:''}</div>`
-      :`<div class="mp-seat empty" style="--c:${C.COLORS[i]}"><i></i><b>свободно</b><small>${C.COLOR_NAMES[i]}</small></div>`).join('')}</div>
+      :`<div class="mp-seat empty" style="--c:${C.COLORS[i]}"><i></i><b>свободно</b><small>${C.COLOR_NAMES[i]}</small>${host&&Q.get('test')==='1'?'<button type="button" class="mp-seat-bot">🤖 + Бот</button>':''}</div>`).join('')}</div>
     ${host?'':'<p class="mp-guest-note">🔒 Настраивает хозяин стола — ты видишь, что он выбрал</p>'}
     <div class="mp-set mp-set-map"><span>Карта<small>вид поля; клетки те же — хозяин может сменить и в партии</small></span><select class="mp-map-sel" ${host?'':'disabled'}>${C.BOARD_OPTIONS.map(([id,name])=>`<option value="${id}" ${id===(T.settings.boardMap||'sanfrancisco')?'selected':''}>${esc(name)}</option>`).join('')}</select></div>
     <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>esc((C.WIN_OPTIONS.find(w=>w.id===v)||{}).name||v))}</div>
@@ -1958,6 +2045,8 @@ function renderLobby(force){
   lobby.querySelectorAll('.mp-seg button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,v=b.dataset.v;net.send({t:'settings',[k]:isNaN(+v)?v:+v});});
   lobby.querySelectorAll('.mp-kick').forEach(b=>b.onclick=()=>net.send({t:'kick',pid:b.dataset.pid}));
   {const ms=lobby.querySelector('.mp-map-sel');if(ms)ms.onchange=()=>net.send({t:'settings',boardMap:ms.value});}
+  // Тестовый стол: «+ Бот» — прямо в пустом месте за столом (замечание Андрея 02.10); бота сажает mp-test.js (#mpBotBtn).
+  lobby.querySelectorAll('.mp-seat-bot').forEach(b=>b.onclick=()=>{const x=$('mpBotBtn');if(x)x.click();else toast('Боты — только на тестовом столе (&test=1)');});
   const st=$('mpStart');if(st){if(verStale)st.disabled=true;
     // Хозяин не начинает партию на старой версии (плейтест 5: стол открыли до выкладки и играли в исправленные баги).
     st.onclick=async()=>{st.disabled=true;await verCheck();if(verStale){toast('Вышла новая версия — перезагрузи страницу, потом начинай',3200);renderLobby(true);return;}net.send({t:'start'});};}

@@ -308,3 +308,19 @@ body.mp-mode #card .mp-pl-pot{font-size:16px;line-height:1.35}
 #card .mp-offer-step{padding:6px 7px!important;min-height:0!important;font:800 12px var(--mp-num)!important;background:#f2e3bd!important;border:1.5px solid #25221c!important;color:#25221c!important;border-radius:7px 9px 6px 8px!important}
 #card .mp-offer-x{flex-basis:100%;font:700 12px var(--mp-num);color:#a92720}
 #card .mp-hold-acts{display:flex;flex-direction:column;gap:4px}
+
+/* Правила: картинки крупнее, номер слайда не перекрыт, корона — SVG (замечания Андрея 02.10) */
+#onboard.mp-rules .ob-art{min-height:220px}
+body #onboard.mp-rules .mpr-main{max-width:86%;max-height:240px}
+body #onboard.mp-rules .mpr-char>img{max-height:250px}
+body #onboard.mp-rules .mpr-row img{width:40%;height:auto;max-width:170px;max-height:170px}
+body #onboard.mp-rules .mpr-badge{width:66px;height:66px}
+body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
+.mpr-mults b,.mpr-big b{min-width:68px;height:68px;font-size:26px}
+.mpr-crown{width:150px;height:auto}
+.mpr-share{margin:10px 0 0;width:100%}
+/* «+ Бот» в пустом месте лобби (тестовый стол); старая кнопка над «Начать» не нужна */
+.mp-seat-bot{grid-column:1/-1;margin-top:6px;padding:5px 8px!important;font:800 13px var(--mp-num)!important;background:#4f7c4a!important;color:#fff6de!important;border:1.5px solid #25221c!important;border-radius:8px 10px 7px 9px!important;cursor:pointer}
+.mp-seat:has(.mp-seat-bot)~#mpBotBtn,.mp-sheet:has(.mp-seat-bot) #mpBotBtn{display:none}
+.mpr-mults b:last-child{background:#f2e3bd;color:#25221c}   /* красный — только у выкупа ×10 */
+#onboard.mp-rules{z-index:120}   /* над панелью тестового стола */

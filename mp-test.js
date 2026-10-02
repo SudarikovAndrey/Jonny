@@ -185,7 +185,7 @@ async function botTurnHidden(pid){
   }catch(e){console.error('bot hidden',e);}
   finally{
     const slice=sliceOfBot(S),shared=botShared(S.tiles,pid);
-    S=S0;H.view=view0;H.PID=pid0;
+    S=S0;H.view=view0;H.PID=pid0;try{render();}catch(e){}   // карта из руки бота могла перерисовать экран его срезом
     for(const e of evts)hubSend(pid,{t:'evt',e});
     const pack={n,s:slice,tiles:shared,credits,rolled:true,landed:true,dice};
     hubSend(pid,{t:'state',pack});
@@ -199,6 +199,8 @@ async function botTurnHidden(pid){
 function lapHidden({credit,emit}){
   S.laps=(S.laps||0)+1;let income=0,units=0;const mult=SFB()&&SFB().priceMult?SFB().priceMult():1;
   for(const t of myKiosks()){const k=Math.min(sales(t),t.goods||0);if(k<=0)continue;t.goods-=k;units+=k;income+=Math.round(k*H.sellOf(t.good)*mult);}
+  if(S.mpLapCut!=null){income=Math.round(income*S.mpLapCut);delete S.mpLapCut;}   // карта соперника: демпинг или забастовка
+  income+=100;   // проход старта в партии: +$100 сверх продаж (плейтест 5)
   if(income>0){S.cash+=income;S.stat.earned=(S.stat.earned||0)+income;emit({kind:'pass',text:'прошёл старт — продажи',amount:income,tile:0});}
   credit(null,0,{slot:10});
   for(const l of (S.loans||[]))if(l.micro){const i=Math.round(l.principal*l.rate);S.cash-=i;}
@@ -236,7 +238,7 @@ function landHidden(t,ctx){
       if(t.rival){rentHidden(t,ctx);break;}
       if(!t.owner&&rnd(.3)&&S.cash>=t.price*1.5){S.cash-=t.price;t.owner='you';t.level=t.level||1;emit({kind:'build',text:`купил бизнес «${titleOf(t)}»`,amount:-t.price,tile:t.i});trace.push(bot.name+': купил бизнес');}
       break;}
-    case 'wh':for(const k of myKiosks())fillGoods(k,.35);break;
+    case 'wh':if(!myKiosks().length){S.cash+=20;emit({kind:'bonus',text:'утешительный приз на складе',amount:20,tile:t.i});}for(const k of myKiosks())fillGoods(k,.35);break;
     case 'chance':chanceHidden(ctx);break;
     case 'police':{const fine=policeFine();
       if(S.cash>=fine&&rnd(.7)){S.cash-=fine;credit(null,0,{pot:fine});emit({kind:'fine',text:'заплатил полиции',amount:-fine,tile:t.i});}
@@ -269,6 +271,8 @@ function rentHidden(t,{credit,emit,v}){
 }
 // «Шанс» бота: денежные карты той же колоды плюс изредка пакость (сдвиг, пропуск хода) через удар стола.
 function chanceHidden({credit,emit,v,after}){
+  // Пакость — в руку (до 2 карт), как у игрока; сыграет бот позже в strategyHidden.
+  if(window.MPHand&&(S.mpHand||[]).length<MPHand.max&&rnd(.5)){const ids=Object.keys(MPHand.cards);S.mpHand=(S.mpHand||[]).concat(pick(ids));emit({kind:'hand',text:'взял карту в руку',amount:null,tile:S.pos});trace.push('бот: карта в руку');return;}
   const rivals=v.players.filter(p=>p.pid!==H.PID),r=rnd;let text,amount=null;
   const roll=Math.random();
   if(roll<.2){amount=60;S.cash+=60;text='👟 Нашёл в старых кроссовках $60. Америка!';}
@@ -318,6 +322,7 @@ function strategyHidden({credit,emit,v,after,bot}){
       if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;offer(r,1.5);}
       else{S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;buyout(r);}}}
   else{
+    if(window.MPHand&&(S.mpHand||[]).length&&rnd(.5)){const l=MPHand.list(),i=l.findIndex(c=>c.targets.length);if(i>=0){MPHand.play(i,pick(l[i].targets));trace.push(bot.name+': сыграл карту из руки');}}
     if(rivalHere){if(rnd(.05))buyout(t);else if(rnd(.2))offer(t,rnd(.5)?1.5:2);}
     for(const l of (v.lots||[])){if(l.seller===H.PID||l.bestBy===H.PID)continue;const next=l.best?Math.ceil(l.best*1.1/10)*10:l.min;if(S.cash>=next*1.5&&rnd(.5))after.push({t:'bid',id:l.id,amount:next});}
     if(rnd(.06)&&mine.length)after.push({t:'lot',tile:mine[0].i,min:Math.round(H.invested(mine[0])*1.5),kind:'sale'});

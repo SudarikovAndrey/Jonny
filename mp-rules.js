@@ -8,6 +8,8 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const sym=n=>`board/assets/symbols/${n}.svg`;
 // Картинка слайда: главная иллюстрация и до двух значков клеток поля.
 const art=(img,badges=[],cls='')=>`<div class="mpr-art ${cls}"><img class="mpr-main" src="${img}" alt="">${badges.map(b=>`<span class="mpr-badge"><img src="${b}" alt=""></span>`).join('')}</div>`;
+// Корона печатным штрихом: растровая иконка 79×69 при увеличении рвалась (замечание Андрея).
+const CROWN='<svg class="mpr-crown" viewBox="0 0 120 92" aria-hidden="true"><path d="M8 30 L30 54 L60 12 L90 54 L112 30 L102 80 L18 80 Z" fill="#e9b33b" stroke="#25221c" stroke-width="6" stroke-linejoin="round"/><path d="M18 80 L102 80 L100 88 L20 88 Z" fill="#c99a32" stroke="#25221c" stroke-width="6" stroke-linejoin="round"/><circle cx="60" cy="12" r="7" fill="#a92720" stroke="#25221c" stroke-width="4"/><circle cx="8" cy="30" r="6" fill="#a92720" stroke="#25221c" stroke-width="4"/><circle cx="112" cy="30" r="6" fill="#a92720" stroke="#25221c" stroke-width="4"/><path d="M34 66 H86" stroke="#fbf0d4" stroke-width="5" stroke-linecap="round" opacity=".7"/></svg>';
 const chip=(t,c)=>`<span class="mpr-chip" style="--c:${c}">${esc(t)}</span>`;
 
 function slides(){
@@ -19,10 +21,10 @@ function slides(){
       a:art('assets/points/pt_gum_1.webp',[sym('lot')])},
     {t:'Соседи дороже',x:'Соседние клетки одного хозяина: +25% ренты за каждого соседа.',
       a:`<div class="mpr-art mpr-row"><img src="assets/points/pt_cola_1.webp" alt=""><img src="assets/points/pt_gum_1.webp" alt=""><b>+25%</b></div>`},
-    {t:'Касса на старте',x:'Закупай товар на складе Costco. Прошёл старт — товар продаётся, монеты твои.',
+    {t:'Касса на старте',x:'Закупай товар на складе Costco. Прошёл старт — товар продаётся, и сверху +$100. На склад можно доехать на такси за 💎 1 — до броска.',
       a:art('assets/icons/coins.webp',[sym('warehouse'),sym('home')])},
-    {t:'Предложи цену',x:'Стоя на чужой клетке, предложи хозяину вложенное ×1…×10. Он ответит в свой ход; откажет — деньги вернутся.',
-      a:`<div class="mpr-art mpr-mults">${['×1','×2','×5','×10'].map(m=>`<b>${m}</b>`).join('')}</div>`},
+    {t:'Предложи цену',x:'В свой ход — на любую чужую клетку: тапни по ней на карте. Вложенное хозяином ×1…×10 или своя сумма. Ответит в свой ход; откажет — деньги вернутся. Одно предложение за ход.',
+      a:`<div class="mpr-art mpr-mults">${['×1','×1,5','×2','×3'].map(m=>`<b>${m}</b>`).join('')}</div>`},
     {t:'Выкуп ×10',x:'Не хочет продавать — забери сразу за ×10 вложенного. Не чаще раза в два своих круга.',
       a:`<div class="mpr-art mpr-big"><b>×10</b><small>без согласия</small></div>`},
     {t:'Торги',x:'Свою клетку можно выставить на торги. Ставят все до твоего следующего хода — кто дал больше, тот и хозяин. Без ставок клетка остаётся у тебя.',
@@ -35,14 +37,14 @@ function slides(){
       a:`<div class="mpr-art mpr-row"><img src="${sym('piggy')}" alt=""><img src="${sym('slot')}" alt=""><img src="${sym('scatter')}" alt=""></div>`},
     {t:'Мини-игры',x:'Автомат и «21 в кости» работают только в тот ход, когда ты на них встал. Часы хода в это время стоят.',
       a:`<div class="mpr-art mpr-row"><img src="${sym('slot')}" alt=""><img src="${sym('dice21')}" alt=""></div>`},
-    {t:'Шанс с пакостями',x:'Три клетки «Шанса» — 7, 22 и 36. Карты бьют по соперникам: донос, ремонт дороги, отключили свет, очередь в ЖЭК. Бывает и тебе прилетит — спасает «крыша».',
+    {t:'Шанс с пакостями',x:'Три клетки «Шанса» — 7, 22 и 36. Пакости ложатся в руку (до 2 карт): сыграй в свой ход против выбранного соперника — откат, пропуск хода, свет, инспектор, демпинг, просрочка. Против лидера — налоговая, проверка, забастовка.',
       a:`<div class="mpr-art mpr-row"><img src="${sym('chance')}" alt=""><b>🎂 🚔 ❄️ 🛡</b></div>`},
-    {t:'Минус — на торги',x:'Ушёл в минус — ход не передать, пока не выставишь клетки на торги на сумму долга. Без ставок клетку забирает банк.',
+    {t:'В минусе',x:'В минусе играешь дальше, но покупок нет. Прошёл старт в минусе — предупреждение: можно взять микрозайм или продать товар за полцены. Второй раз на старте в минусе — клетки на торги на сумму долга, без ставок их берёт банк.',
       a:art('assets/icons/money.webp',[sym('bank')])},
     {t:'Время партии',x:`Партия — ${min} минут. Время вышло — доигрываем круг стола, потом итог.`,
       a:`<div class="mpr-art mpr-big"><b>⏱ ${min}:00</b><small>потом — последний круг</small></div>`},
     {t:win?`Победа: ${win.name}`:'Как победить',x:win?win.text:'Условие победы выбирает хозяин стола в лобби — оно видно в полосе игроков.',
-      a:`<div class="mpr-art mpr-big"><img src="assets/icons/crown.webp" alt=""><small>${chip('A','#A92720')}${chip('B','#243F4B')}${chip('C','#C99A32')}</small></div>`},
+      a:`<div class="mpr-art mpr-big">${CROWN}<small>${chip('A','#A92720')}${chip('B','#243F4B')}${chip('C','#C99A32')}</small></div>`},
   ];
 }
 
@@ -54,12 +56,12 @@ function open(){
     root.id='onboard';root.className='mp-rules';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Правила партии');
     root.innerHTML=`<div class="ob-card">
       <button class="ob-skip" type="button">Закрыть</button>
-      ${share?`<button class="mpr-share" type="button">🔗 Стол <b>${esc(share)}</b> — поделиться ссылкой</button>`:''}
       <div class="ob-track">${list.map((s,i)=>`<section class="ob-slide" data-i="${i}" aria-hidden="${i?'true':'false'}">
         <div class="ob-step">${i+1} из ${list.length}</div><div class="ob-art">${s.a}</div>
         <h2 class="ob-title">${esc(s.t)}</h2><p class="ob-text">${esc(s.x)}</p></section>`).join('')}</div>
       <div class="ob-dots">${list.map((_,i)=>`<i data-i="${i}"></i>`).join('')}</div>
       <div class="mpr-nav"><button class="ob-prev sec" type="button">Назад</button><button class="ob-next" type="button">Дальше</button></div>
+      ${share?`<button class="mpr-share" type="button">🔗 Стол <b>${esc(share)}</b> — поделиться ссылкой</button>`:''}
     </div>`;
     document.body.append(root);
     const slidesEl=[...root.querySelectorAll('.ob-slide')],dots=[...root.querySelectorAll('.ob-dots i')],next=root.querySelector('.ob-next'),prev=root.querySelector('.ob-prev');

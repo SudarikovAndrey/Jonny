@@ -281,6 +281,13 @@ function applyHit(T,pid,h){
     case 'skip':{if(!rival)return false;to.skip=(to.skip||0)+1;event(T,{from:pid,kind:'hit',text:`${to.name} пропустит ход`,amount:null,tile:null,to:to.pid});return true;}
     case 'freeze':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid)return false;t.frozen=T.turn.n+n;
       event(T,{from:pid,kind:'hit',text:`заморозил клетку ${pnameOf(T,t.owner)} на круг`,amount:null,tile:t.i,to:t.owner});return true;}
+    // Карты из руки (плейтест 5): урезать следующий проход старта, испортить товар, налог на лидера.
+    case 'cut':{if(!rival)return false;const k=h.cut===0?0:0.5;to.s.mpLapCut=Math.min(to.s.mpLapCut==null?1:to.s.mpLapCut,k);
+      event(T,{from:pid,kind:'hit',text:k?`урезал ${to.name} продажи на старте вдвое`:`устроил ${to.name} забастовку — проход старта без продаж`,amount:null,tile:null,to:to.pid});return true;}
+    case 'spoil':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||!(t.goods>0))return false;const lost=Math.ceil(t.goods/2);t.goods-=lost;
+      event(T,{from:pid,kind:'hit',text:`испортил ${lost} шт товара у ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
+    case 'levy':{if(!rival)return false;const x=Math.min(300,Math.round(Math.max(0,to.s.cash||0)*0.1));if(x<=0)return false;to.s.cash-=x;T.pot=(T.pot||0)+x;
+      event(T,{from:pid,kind:'hit',text:`наслал на ${to.name} налоговую: $${x} в копилку`,amount:null,tile:null,to:to.pid});return true;}
     case 'insp':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||t.insp)return false;t.insp=true;
       event(T,{from:pid,kind:'hit',text:`натравил инспектора на точку ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
   }
@@ -380,7 +387,8 @@ function viewFor(T,pid,valuer){
   return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
     tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),slotPot:Math.round(T.slotPot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
-      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,skip:p.skip||0,
+      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,hand:p.s&&Array.isArray(p.s.mpHand)?p.s.mpHand.length:0,   // число карт в руке видно всем, какие — нет
+      jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,skip:p.skip||0,
       cap:T.tiles&&valuer?capital(T,p.pid,valuer):null,chain:T.tiles?sfChain(T,p.pid):null,win:T.tiles?winProgress(T,p.pid,valuer):null})),
     mine:me&&me.s?me.s:null};
 }
