@@ -85,51 +85,6 @@
     save_();
   }
 
-  // ---- спасение логов, сыгранных до включения отправки (плейтест 01.10) ----
-  // Копии старых логов откладывает web/tm-rescue.js раньше прототипа (abrescue:<ключ>:<партия>).
-  // Ставим в очередь с пометкой recovered и удаляем копию. Старые события — без поля at;
-  // события новой телеметрии уже ушли обычным путём и не повторяются. Каждую партию — один раз.
-  (function recover(){
-    const RK='americanboy_recovered';let done={};try{done=JSON.parse(lsGet(RK)||'{}')||{};}catch(e){done={};}
-    const mark=k=>{done[k]=Date.now();lsSet(RK,JSON.stringify(done));};
-    const base=()=>({recovered:true,recoveredAt:isoLocal(Date.now()),build:BUILD,tz:TZ,url:location.pathname,player:lsGet('abmp_name')||null});
-    function runlog(k,all){
-      const id=(all.summary&&all.summary.runId)||all.runId,ev=(all.events||[]).filter(e=>!e.at);
-      const tag='runlog:'+k+':'+id;if(!id||done[tag]||!ev.length)return;
-      enqueue(Object.assign(base(),all.summary||{},{recovered:true,runId:id,source:k,recoveredEvents:ev.length}),ev);mark(tag);
-    }
-    function log(k,ev){
-      ev=(Array.isArray(ev)?ev:[]).filter(e=>!e.at);if(!ev.length)return;
-      const tag='log:'+k+':'+ev.length+':'+(ev[ev.length-1].t||0);if(done[tag])return;
-      enqueue(Object.assign(base(),{runId:'recovered-'+k+'-'+(ev[0].t||0),source:k,recoveredEvents:ev.length}),ev);mark(tag);
-    }
-    function table(k,T){
-      if(!T||!T.match||T.startedAt)return;const tag='table:'+k+':m'+T.match;if(done[tag])return;
-      const ev=[];(T.log||[]).forEach((note,i)=>ev.push({type:'table_log',i,note:typeof note==='string'?note:JSON.stringify(note)}));
-      (T.players||[]).forEach(p=>((p.s&&p.s.log)||[]).forEach((line,i)=>ev.push({type:'player_log',pid:p.pid,name:p.name,seat:p.seat,i,line:typeof line==='string'?line:JSON.stringify(line)})));
-      if(!ev.length)ev.push({type:'table_empty'});
-      enqueue(Object.assign(base(),{kind:'mp_table_recovered',runId:`mp-${T.room||k.slice(10)}-m${T.match}-table-recovered`,player:'стол '+(T.room||k.slice(10)),source:k,
-        room:T.room||k.slice(10),match:T.match,phase:T.phase,settings:T.settings||null,result:T.result||null,finalRound:T.finalRound||null,
-        turn:T.turn?{n:T.turn.n,round:T.turn.round,pid:T.turn.pid}:null,
-        players:(T.players||[]).map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,cash:p.s?Math.round(p.s.cash||0):null,laps:p.s?p.s.laps||0:null,
-          pts:p.s?p.s.pts||0:null,stat:p.s?p.s.stat||null:null,loans:p.s&&p.s.loans?p.s.loans.length:0,owned:(p.s&&p.s.tiles||[]).filter(t=>t.owner).length})),
-        tiles:(T.tiles||[]).filter(t=>t&&t.owner).map(t=>({i:t.i,type:t.type,name:t.name||null,owner:t.owner,tier:t.tier||null}))}),ev);
-      mark(tag);
-    }
-    function one(k,raw){
-      if(/_runlog$/.test(k))runlog(k,JSON.parse(raw||'{}'));
-      else if(/_log$/.test(k)&&k!==LOGK)log(k,JSON.parse(raw||'[]'));
-      else if(/^abmp_host_[A-Z]{4}$/.test(k))table(k,JSON.parse(raw||'null'));
-    }
-    let keys=[];try{for(let i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){return;}
-    for(const k of keys.filter(k=>k.startsWith('abrescue:'))){   // копии, отложенные до прототипа
-      const raw=lsGet(k),src=k.slice(9).replace(/:[^:]*$/,'');
-      try{localStorage.removeItem(k);}catch(e){}
-      try{one(src,raw);}catch(e){}
-    }
-    for(const k of keys)if(!k.startsWith('abrescue:'))try{one(k,lsGet(k));}catch(e){}
-  })();
-
   // ---- отправка: по одной порции, удаляем после «ok» ----
   const inflight=new Set();let busy=false,failAt=0;
   async function post(b,keepalive){
@@ -172,7 +127,6 @@
     try{dispatchEvent(new CustomEvent('abtm:flush',{detail:{final:!!final}}));}catch(e){}   // хозяин стола сдаёт лог стола
     if(pending.length){
       const chunk=pending.splice(0,pending.length);
-      chunk.forEach(e=>{if(!e.at&&e.t)e.at=isoLocal(e.t);});   // уходят сейчас — спасение (recover) их не повторит
       try{const all=JSON.parse(lsGet(FULLK)||'{}');if(all.runId!==S.runId){all.runId=S.runId;all.events=[];}
         all.events=(all.events||[]).concat(chunk).slice(-3000);all.summary=summary();lsSet(FULLK,JSON.stringify(all));}catch(e){}
       lsSet(LOGK,'[]');
