@@ -12,12 +12,17 @@
    (формат согласован с «Американ мультиплеер режим»).
 
    Виды: свёрнут (плашка с последней проводкой) · развёрнут (список) · закрыт
-   (вернуть — кнопкой в «Настройках аккаунта»). Состояние помнится в браузере. */
+   (вернуть — кнопкой в «Настройках аккаунта»). Состояние помнится в браузере.
+   Крестик на раскрытом журнале сворачивает его в плашку (плейтест 01.10: «закрыт насовсем» путал всех);
+   совсем убрать журнал — только в «Настройках аккаунта». */
 (function(){
   const MODE_KEY='americanboy_journal', LOG_KEY='americanboy_journal_log', MAX=80, MERGE_MS=2500;
   const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
   let entries=[];try{entries=JSON.parse(store.get(LOG_KEY,'[]'))||[];}catch(e){entries=[];}
   let mode=store.get(MODE_KEY,'min'); // 'min' | 'open' | 'off'
+  // Закрытый крестиком до 01.10 журнал возвращаем плашкой один раз: тогда крестик прятал его насовсем.
+  if(mode==='off'&&store.get(MODE_KEY+'_v','')!=='2'){mode='min';store.set(MODE_KEY,mode);}
+  store.set(MODE_KEY+'_v','2');
 
   // ---------- откуда проводка ----------
   const tileName=t=>{try{return typeof name==='function'?name(t):(t.name||'');}catch(e){return '';}};
@@ -114,13 +119,12 @@
     root=document.createElement('div');root.id='moneyJournal';root.className='mj';
     root.innerHTML=`<button class="mj-pill" type="button" aria-label="Журнал: откуда деньги"><span class="mj-ico" aria-hidden="true">📒</span><span class="mj-last"></span></button>
       <section class="mj-panel" aria-label="Журнал: откуда деньги"><header><b>Откуда деньги</b>
-        <button class="mj-fold" type="button" aria-label="Свернуть журнал"></button><button class="mj-x" type="button" aria-label="Закрыть журнал"></button></header>
+        <button class="mj-x" type="button" aria-label="Свернуть журнал"></button></header>
         <ol class="mj-list"></ol><p class="mj-empty">Пока пусто — бросай кубики.</p></section>`;
     app.append(root);
     list=root.querySelector('.mj-list');pill=root.querySelector('.mj-last');
     root.querySelector('.mj-pill').onclick=()=>setMode('open');
-    root.querySelector('.mj-fold').onclick=()=>setMode('min');
-    root.querySelector('.mj-x').onclick=()=>{setMode('off');try{toast('Журнал закрыт. Вернуть — в «Настройках аккаунта».');}catch(e){}};
+    root.querySelector('.mj-x').onclick=()=>setMode('min');
     paint();
   }
   function setMode(m){mode=m;store.set(MODE_KEY,m);paint();}

@@ -17,7 +17,10 @@ hazard=async function(){
   // потом дозированно: одна проверка, каждые 3 круга потолок растёт на одну (правило «одна механика за раз»).
   const lapsDone=S.laps||0;
   if(lapsDone<CFG.INSP.fromLap){toast(`📋 Мэрия ещё не прислала инспектора — до ${CFG.INSP.fromLap}-го круга проверок нет`);log(`📋 Клетка инспектора: проверки начнутся с ${CFG.INSP.fromLap}-го круга.`);return;}
-  const lapCap=1+Math.floor((lapsDone-CFG.INSP.fromLap)/CFG.INSP.lapStep);
+  // Мультиплеер (01.10): вместо кругов — порог по владениям (CFG.INSP.minOwn, точки и бизнесы вместе).
+  const ownNow=S.tiles.filter(t=>(t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t)).length;
+  if(ownNow<(CFG.INSP.minOwn||0)){toast(`📋 Инспектору пока некого проверять — проверки с ${CFG.INSP.minOwn} владений`);log(`📋 Клетка инспектора: проверки начнутся с ${CFG.INSP.minOwn} владений.`);return;}
+  const lapCap=1+Math.floor(Math.max(0,lapsDone-CFG.INSP.fromLap)/CFG.INSP.lapStep);
   const free=Math.min(CFG.INSP.limit-inspActive().length,lapCap-inspActive().length);
   if(free<=0){toast('📋 Инспектор: все три проверки уже идут');log('📋 Инспектор приходил, но проверок и так три — ушёл.');return;}
   const fit=t=>(t.type==='kiosk'||t.type==='biz')&&unlocked(t)&&!t.insp&&t.i!==S.pos;

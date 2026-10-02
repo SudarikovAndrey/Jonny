@@ -968,7 +968,7 @@ function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180
  points:[{n:'Candy Stand',cap:14,q:6,buy:2,profit:28},{n:'Soda Cart',cap:8,q:0,buy:4,profit:48},{n:'Music Stall',cap:22,q:22,buy:10,profit:110}]};}
 function restore(raw){
  const s=initial();if(!raw||raw.version!==2)return s;
- for(const k of ['P','cash','gem','move','pot','paidSpins','visits','totalSpins'])s[k]=integer(raw[k]);
+ for(const k of ['P','cash','gem','move','pot','paidSpins','visits','totalSpins','rollCash'])s[k]=integer(raw[k]);   // rollCash>0 — мультиплеер: ходы не копятся, кубики платят налом
  s.day=integer(raw.day,1,7);s.freeSpins=integer(raw.freeSpins,0,99);if(!s.freeSpins&&raw.freeSpin===true)s.freeSpins=1;s.freeSpin=s.freeSpins>0;s.closed=raw.closed===true;s.sound=raw.sound===true;
  s.points.forEach((p,i)=>{p.q=integer(raw.points?.[i]?.q,0,p.cap);});
  for(const key of ['pending','lastPrize']){
@@ -993,11 +993,11 @@ function award(s,o,syms){
  switch(o.id){
  case 'jackpot':p.cash=s.pot;p.gem=5;break;
  case 'gem3':p.gem=3;break;
- case 'dice3':p.move=10;break;
+ case 'dice3':if(s.rollCash>0)p.cash=10*s.rollCash;else p.move=10;break;
  case 'coin3':p.cash=Math.round(1.5*P);break;
  case 'box3':p.restock='all';break;
  case 'cherry3':p.cash=Math.round(.5*P);break;
- case 'dice2':p.move=3;break;
+ case 'dice2':if(s.rollCash>0)p.cash=3*s.rollCash;else p.move=3;break;
  case 'box2':p.restock='one';break;
  case 'pair':p.cash=Math.round(.25*P);break;
  default:break; // разнобой — мимо
@@ -1209,9 +1209,9 @@ function renderActions(){
 function renderRows(){
  const P=Math.max(S.P,15*S.day),spec=[
  ['jackpot',['seven','seven','seven'],'Касса + 5 💎'],['gem3',['gem','gem','gem'],'3 💎'],
- ['dice3',['dice','dice','dice'],'+10 ходов'],['coin3',['coin','coin','coin'],money(1.5*P)],
+ ['dice3',['dice','dice','dice'],S.rollCash>0?money(10*S.rollCash):'+10 ходов'],['coin3',['coin','coin','coin'],money(1.5*P)],
  ['cherry3',['cherry','cherry','cherry'],money(.5*P)],['box3',['box','box','box'],'Во все точки'],
- ['dice2',['dice','dice','·'],'+3 хода'],['box2',['box','box','·'],'В лучшую точку'],
+ ['dice2',['dice','dice','·'],S.rollCash>0?money(3*S.rollCash):'+3 хода'],['box2',['box','box','·'],'В лучшую точку'],
  ['pair',null,money(.25*P)],['none',null,'—']];
  $('colL').innerHTML='';$('colR').innerHTML='';
  spec.forEach(([id,syms,value],i)=>{const d=document.createElement('div');d.className='row';d.dataset.row=id;
@@ -1432,7 +1432,7 @@ function dialog(title,html,actions=[['Понятно',()=>{}]]){
  actions.forEach(([label,fn])=>{const b=document.createElement('button');b.className='cbtn';b.textContent=label;b.onclick=()=>{d.close();fn();};d.querySelector('.dialog-actions').append(b);});
  d.addEventListener('close',()=>{d.remove();modal=null;idle.refresh();returnFocus?.focus();});d.addEventListener('click',e=>{if(e.target===d)d.close();});document.body.append(d);modal=d;idle.quiet();d.showModal();
 }
-function help(){const P=Math.max(S.P,15*S.day),values={jackpot:money(S.pot)+' + 5 💎',gem3:'3 💎',dice3:'+10 ходов',coin3:money(1.5*P),box3:'Товар во все точки',cherry3:money(.5*P),dice2:'+3 хода',box2:'Товар в лучшую точку',pair:money(.25*P),none:'ничего'};
+function help(){const P=Math.max(S.P,15*S.day),values={jackpot:money(S.pot)+' + 5 💎',gem3:'3 💎',dice3:S.rollCash>0?money(10*S.rollCash):'+10 ходов',coin3:money(1.5*P),box3:'Товар во все точки',cherry3:money(.5*P),dice2:S.rollCash>0?money(3*S.rollCash):'+3 хода',box2:'Товар в лучшую точку',pair:money(.25*P),none:'ничего'};
  dialog('Каждый спин с призом',`<p>На клетке — один бесплатный спин. Считается только средняя линия между золотыми стрелками.</p><table class="odds"><thead><tr><th>Комбинация</th><th>Приз</th><th>Шанс</th></tr></thead><tbody>${OUTCOMES.map(o=>`<tr><td aria-label="${o.symbol?names[o.symbol]+' ×'+o.count:o.label}">${o.symbol?svg(o.symbol):''}${o.symbol?' ×'+o.count:o.label}</td><td>${values[o.id]}</td><td>${o.chance}%</td></tr>`).join('')}</tbody></table><p><strong>1 кристалл = 5 спинов.</strong> Цена постоянная. Покупка только добавляет спины, вращение запускается отдельно. Купленные спины сохраняются между остановками. Все призы начисляются автоматически после остановки барабанов. Кнопка «Крутить» и рычаг запускают следующий спин. Рычаг можно нажать или потянуть вниз.</p><p>Коробки пополняют запас точек. Одна коробочная пара выбирает самую прибыльную незаполненную точку. Если всё заполнено, выдаются деньги.</p><p class="fine">Денежные призы зависят от прибыли за круг. Таблица показывает суммы для текущих параметров демо.</p>`);
 }
 function toggleSound(){S.sound=!S.sound;sound.stop();save();render();if(S.sound)sound.button();}

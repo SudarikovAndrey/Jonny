@@ -1,0 +1,42 @@
+/* ===== Мультиплеер: интерфейс по второму плейтесту 01.10 (web/mp.js, раздел «Интерфейс поверх поля») ===== */
+
+/* Кошелёк над всеми окнами: карточка начинается под строкой денег, строка видна сквозь затемнение. */
+.mp-play.mp-modal #modal{padding-top:var(--mp-wallet,28px)!important}
+.mp-play.mp-modal #card{max-height:calc(100dvh - var(--mp-wallet,28px) - 22px)!important}
+.mp-play.mp-modal #modal:has(#card.print-property) #card.bare.illustrated-property.print-property{
+  height:min(560px,calc(100dvh - var(--mp-wallet,28px) - 130px));max-height:calc(100dvh - var(--mp-wallet,28px) - 130px)!important}
+/* Списки в окнах прокручиваются пальцем и на iOS: не отдаём жест полю под окном. */
+#card .ev-body,#card .notice-content{touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* Часы хода — на левом верхнем углу карточки (справа крестик, сверху кошелёк). */
+.mp-clock{transform:translate(0,-50%)}
+
+/* Журнал денег — под полосой игроков (и под плашкой предложения), полоса больше не уезжает на поле. */
+.mp-play #moneyJournal{top:var(--mp-under,160px)}
+
+/* Предложение о покупке твоей клетки: висит, пока не ответишь. */
+.mp-offer-badge{position:fixed;right:8px;z-index:29;display:flex;align-items:center;gap:7px;max-width:min(calc(100% - 16px),360px);
+  padding:6px 8px 6px 7px;font:700 13px/1.2 var(--mp-txt);color:var(--mp-ink);text-align:left;cursor:pointer;
+  background:var(--mp-paper) url(assets/paper-grain.svg);border:2.5px solid var(--c,var(--mp-ink));border-radius:10px 13px 9px 12px;
+  box-shadow:3px 3px 0 var(--mp-ink);animation:mp-offer-in .3s cubic-bezier(.34,1.56,.64,1)}
+.mp-offer-badge[hidden]{display:none}
+.mp-offer-badge i{font-style:normal;font-size:18px;flex:none}
+.mp-offer-badge span{min-width:0}
+.mp-offer-badge em{font-style:normal;color:var(--mp-red)}
+.mp-offer-badge u{flex:none;text-decoration:none;padding:4px 8px;border-radius:8px 10px 7px 9px;font:800 12px var(--mp-num);
+  color:#fbf0d4;background:#4f7c4a;border:2px solid var(--mp-ink);white-space:nowrap}
+.mp-wait .mp-offer-badge u{background:#8c8873}
+.mp-offer-badge:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--mp-ink)}
+.mp-mine:not(.mp-rolled) .mp-offer-badge{animation:mp-offer-in .3s cubic-bezier(.34,1.56,.64,1),mp-offer-nudge 1.6s steps(4) .4s infinite}
+@keyframes mp-offer-in{from{transform:translateY(-8px) scale(.9);opacity:0}}
+@keyframes mp-offer-nudge{0%,70%,100%{rotate:0deg}80%{rotate:-2deg}90%{rotate:1.5deg}}
+
+/* окно ответа: сумма крупно, во сколько раз выше вложенного */
+#card .mp-offer-big{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;margin:8px 0 10px;padding:10px 12px;
+  border:2px solid var(--mp-ink);border-radius:10px 13px 9px 12px;background:#fbf3dc}
+#card .mp-offer-big strong{grid-row:span 2;font:800 30px/1 var(--mp-num);font-variant-numeric:tabular-nums;color:var(--mp-green)}
+#card .mp-offer-big span{font:700 14px var(--mp-txt)}
+#card .mp-offer-big span b{font:800 18px var(--mp-num);color:var(--mp-red)}
+#card .mp-offer-big small{font-size:12px;color:#6b5f52}
+
+@media (prefers-reduced-motion:reduce){.mp-offer-badge,.mp-mine:not(.mp-rolled) .mp-offer-badge{animation:none}}

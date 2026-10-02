@@ -45,7 +45,7 @@ function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings
 const winOf=T=>WIN_OPTIONS.find(w=>w.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0];
 function newTable(room,settings){
   return {room,phase:'lobby',settings:Object.assign({},DEFAULTS,settings||{}),players:[],tiles:null,
-          turn:null,applied:{},result:null,match:0,log:[],pot:0,rent:{}};
+          turn:null,applied:{},result:null,match:0,log:[],pot:0,rent:{},lots:[],events:[],evSeq:0};
 }
 // Садится за стол или возвращается на своё место. Вернувшегося узнаём по pid, а если вкладку
 // закрыли и pid потерян — по имени среди отвалившихся.
@@ -71,8 +71,8 @@ function canStart(T){return T.phase==='lobby'&&T.players.length>=MIN_PLAYERS;}
 function start(T,tiles,slice,now){
   if(!canStart(T))return false;
   T.phase='play';T.match++;T.startedAt=now;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
-  T.pot=0;T.rent={};T.deadline=now+(T.settings.minutes||DEFAULTS.minutes)*60000;   // часы партии — у хозяина стола
-  T.players.forEach(p=>{p.s=slice(p);});
+  T.pot=0;T.rent={};T.lots=[];T.events=[];T.evSeq=0;T.deadline=now+(T.settings.minutes||DEFAULTS.minutes)*60000;   // часы партии — у хозяина стола
+  T.players.forEach(p=>{p.s=slice(p);p.skip=0;});
   T.paused=null;
   T.turn={idx:0,pid:T.players[0].pid,n:1,round:1,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
   skipOffline(T,now);
@@ -87,12 +87,12 @@ function applyState(T,pid,pack,now){
   if(pack.s)p.s=pack.s;
   // Кто-то первым прошёл старт в N-й раз — доигрываем текущий раунд стола (у всех поровну ходов) и считаем итог.
   if(!T.finalRound&&lapsOf(p)>=T.settings.rounds){T.finalRound=T.turn.round;T.finalBy=p.pid;}
-  if(pack.tiles)T.tiles=mergeTiles(T.tiles,pack.tiles,pid);
-  // Общая копилка стола: штрафы всех падают в одну (решение продюсера 01.10); забирает тот, кто встал.
-  if(+pack.potAdd>0)T.pot=(T.pot||0)+Math.round(+pack.potAdd);
-  if(pack.potTake){const m=Math.round(T.pot||0);T.pot=0;if(m>0&&p.s){p.s.cash=(p.s.cash||0)+m;p.s.mpPotTaken=m;}}
+  if(pack.tiles)T.tiles=mergeTiles(T.tiles,pack.tiles,pid,pack.credits||[]);
   for(const c of pack.credits||[]){
     if(!c||!c.id||T.applied[c.id])continue;
+    // Общая копилка стола (решение продюсера 01.10): штрафы всех — в одну; забирает тот, кто встал (нал уже в его срезе).
+    if(+c.pot){T.pot=Math.max(0,(T.pot||0)+Math.round(+c.pot));T.applied[c.id]=true;continue;}   // минус — карта «Шанса» забрала часть копилки
+    if(c.potTake){T.pot=0;T.applied[c.id]=true;continue;}
     const to=T.players.find(x=>x.pid===c.to);if(!to||!to.s)continue;
     to.s.cash=(to.s.cash||0)+(+c.cash||0);T.applied[c.id]=true;
     if(c.rent&&+c.cash>0)T.rent[c.to]=(T.rent[c.to]||0)+(+c.cash);           // сколько ренты собрал — для условия «Рантье»
@@ -111,11 +111,17 @@ function applyState(T,pid,pack,now){
 }
 // Поле от активного игрока принимается только в его зоне: свои клетки, свободные (стройка) и drop/insp на чужих.
 // Иначе игрок с устаревшим полем (ушёл в фон, пропустил виды) стирал чужие покупки — «у Макса пропали точки».
-function mergeTiles(cur,next,pid){
+// Исключения на чужой клетке («Интерфейс», 01.10): своё предложение о покупке (поставил или забрал резерв) и выкуп ×10 —
+// клетка переходит, только если в этом же пакете есть проводка старому хозяину с пометкой force за эту клетку.
+function mergeTiles(cur,next,pid,credits){
   if(!cur||!Array.isArray(next))return next;
   return cur.map((t,i)=>{const n=next[i];if(!n)return t;
     if(!t.owner||t.owner===pid)return n;                         // свободная или своя — верим целиком
-    const o=Object.assign({},t);if('drop' in n)o.drop=n.drop;if('insp' in n)o.insp=n.insp;return o;});   // чужая: только находки и проверки
+    if(n.owner===pid&&(credits||[]).some(c=>c&&c.force&&c.tile===i&&c.to===t.owner&&+c.cash>0))return n;   // выкуп ×10 оплачен
+    const o=Object.assign({},t);if('drop' in n)o.drop=n.drop;if('insp' in n)o.insp=n.insp;   // чужая: только находки и проверки
+    if(n.mpOffer&&n.mpOffer.from===pid)o.mpOffer=n.mpOffer;                                    // своё предложение хозяину
+    else if(t.mpOffer&&t.mpOffer.from===pid&&!n.mpOffer)delete o.mpOffer;                     // забрал резерв / отозвал
+    return o;});
 }
 // Мини-игра (бандит, 21…) останавливает часы хода: «за 30 секунд я должен быстро тыкать — фатально».
 function pause(T,pid,on,now){
@@ -145,10 +151,18 @@ function tablePause(T,pid,on,now,name){
 function nextIdx(T,idx){return (idx+1)%T.players.length;}
 function advance(T,now){
   if(T.phase!=='play')return;
-  let idx=T.turn.idx,round=T.turn.round;
-  idx=nextIdx(T,idx);if(idx===0)round++;
-  if(round>T.turn.round&&(T.finalRound||round>T.settings.rounds*ROUND_CAP)){finish(T,'rounds');return;}
-  T.turn={idx,pid:T.players[idx].pid,n:T.turn.n+1,round,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
+  let guard=0;
+  while(guard++<T.players.length*2){
+    let idx=T.turn.idx,round=T.turn.round;
+    idx=nextIdx(T,idx);if(idx===0)round++;
+    if(round>T.turn.round&&(T.finalRound||round>T.settings.rounds*ROUND_CAP)){finish(T,'rounds');return;}
+    T.turn={idx,pid:T.players[idx].pid,n:T.turn.n+1,round,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
+    resolveLots(T);
+    const p=active(T);
+    // Карта «Шанса» соперника: пропуск хода. Отвалившегося не считаем — его и так пропустят.
+    if(p.skip>0&&p.online){p.skip--;event(T,{from:p.pid,kind:'skip',text:'пропускает ход',amount:null,tile:null,to:p.pid});continue;}
+    break;
+  }
   skipOffline(T,now);
 }
 // Отвалившегося пропускаем сразу, остальные его не ждут. Все офлайн — стол стоит.
@@ -158,7 +172,88 @@ function skipOffline(T,now){
     let idx=nextIdx(T,T.turn.idx),round=T.turn.round;if(idx===0)round++;
     if(round>T.turn.round&&(T.finalRound||round>T.settings.rounds*ROUND_CAP)){finish(T,'rounds');return;}
     T.turn={idx,pid:T.players[idx].pid,n:T.turn.n+1,round,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
+    resolveLots(T);
   }
+}
+
+// ---- События стола для всех клиентов (торги, удары, пропуски): клиент показывает те, чей id больше виденного ----
+function event(T,e){T.evSeq=(T.evSeq||0)+1;(T.events=T.events||[]).push(Object.assign({id:T.evSeq,n:T.turn?T.turn.n:0},e));if(T.events.length>24)T.events=T.events.slice(-24);return e;}
+const pnameOf=(T,pid)=>(T.players.find(p=>p.pid===pid)||{}).name||'соперник';
+
+// ---- Торги (решение продюсера 01.10, второй плейтест): свою клетку можно выставить соперникам; банкрот обязан ----
+// Лот живёт до следующего хода продавца (все остальные успевают сделать ставку в свой ход или между ходами).
+// Ставка — только выше текущей и не больше, чем нал минус уже лидирующие ставки игрока. Деньги не резервируются:
+// победитель платит при закрытии, даже в минус (тогда действует правило банкротства).
+// lotApi.baseInv(t) — вложено по ценам движка, lotApi.toLot(t) — клетка снова пустырь; задаёт хозяин стола (mp.js).
+const lotApi={baseInv:null,toLot:null};
+function listLot(T,pid,tile,min,kind){
+  if(T.phase!=='play'||!T.turn||T.turn.pid!==pid)return null;
+  const t=T.tiles&&T.tiles[tile];if(!t||t.owner!==pid||!(t.type==='kiosk'||t.type==='biz'))return null;
+  if((T.lots||[]).some(l=>l.tile===tile))return null;
+  min=Math.max(1,Math.round(+min||0));
+  const lot={id:`lot:${T.match}:${T.turn.n}:${tile}`,tile,seller:pid,kind:kind==='bankrupt'?'bankrupt':'sale',min,best:0,bestBy:null,bids:{},startN:T.turn.n,endsN:T.turn.n+T.players.length};
+  (T.lots=T.lots||[]).push(lot);
+  event(T,{from:pid,kind:'lot',text:lot.kind==='bankrupt'?`выставил клетку на торги за долги, от $${min}`:`выставил клетку на торги, от $${min}`,amount:null,tile,to:null,lot:lot.id});
+  return lot;
+}
+function bid(T,pid,lotId,amount){
+  const lot=(T.lots||[]).find(l=>l.id===lotId);if(!lot||lot.seller===pid||T.phase!=='play')return false;
+  const p=T.players.find(x=>x.pid===pid);if(!p||!p.s)return false;
+  amount=Math.round(+amount||0);
+  if(amount<lot.min||amount<=lot.best)return false;
+  const committed=(T.lots||[]).filter(l=>l!==lot&&l.bestBy===pid).reduce((a,l)=>a+l.best,0);
+  if((p.s.cash||0)-committed<amount)return false;
+  lot.best=amount;lot.bestBy=pid;lot.bids[pid]=amount;
+  event(T,{from:pid,kind:'bid',text:`ставка $${amount} на торгах`,amount:null,tile:lot.tile,to:lot.seller,lot:lot.id});
+  return true;
+}
+// Закрытие торгов — при смене хода, когда снова очередь продавца. Ставка есть — клетка покупателю (вложено = уплачено);
+// нет — лот банкрота уходит банку по стартовой цене, обычный лот снимается. Клетку уже выкупили — лот пропадает.
+function resolveLots(T){
+  const out=[];if(!T.lots||!T.lots.length||!T.turn)return out;
+  const n=T.turn.n,keep=[];
+  for(const lot of T.lots){
+    const t=T.tiles[lot.tile],seller=T.players.find(p=>p.pid===lot.seller);
+    if(!t||t.owner!==lot.seller){out.push({lot,result:'void'});continue;}
+    if(n<lot.endsN){keep.push(lot);continue;}
+    const buyer=lot.bestBy?T.players.find(p=>p.pid===lot.bestBy):null;
+    if(buyer&&buyer.s){
+      buyer.s.cash=(buyer.s.cash||0)-lot.best;if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+lot.best;
+      const base=lotApi.baseInv?lotApi.baseInv(t):0;t.owner=lot.bestBy;t.mpPrem=lot.best-base;delete t.mpOffer;
+      event(T,{from:lot.bestBy,kind:'won',text:`купил клетку на торгах у ${pnameOf(T,lot.seller)} за $${lot.best}`,amount:-lot.best,tile:lot.tile,to:lot.seller,lot:lot.id,paid:lot.best});
+      out.push({lot,result:'sold',to:lot.bestBy,amount:lot.best});continue;
+    }
+    if(lot.kind==='bankrupt'){
+      if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+lot.min;
+      if(lotApi.toLot)lotApi.toLot(t);else{t.owner=null;delete t.mpPrem;}
+      event(T,{from:lot.seller,kind:'bank',text:`никто не взял — банк забрал клетку за $${lot.min}`,amount:lot.min,tile:lot.tile,to:lot.seller,lot:lot.id});
+      out.push({lot,result:'bank',amount:lot.min});continue;
+    }
+    event(T,{from:lot.seller,kind:'unsold',text:'торги прошли без ставок — клетка осталась у хозяина',amount:null,tile:lot.tile,to:lot.seller,lot:lot.id});
+    out.push({lot,result:'unsold'});
+  }
+  T.lots=keep;return out;
+}
+
+// ---- Удары из колоды «Шанса» партии: только по соперникам и только в свой ход ----
+// move — сдвинуть фишку на d клеток (без события клетки), jail — в участок (3 попытки на дубль, выход бесплатно),
+// skip — пропуск следующего хода, freeze — чужая клетка не берёт ренту один круг стола, insp — чужая точка под проверку.
+function applyHit(T,pid,h){
+  if(T.phase!=='play'||!T.turn||T.turn.pid!==pid||!h||!h.k)return false;
+  const to=h.to?T.players.find(p=>p.pid===h.to):null,n=T.players.length;
+  const rival=to&&to.s&&to.pid!==pid;
+  switch(h.k){
+    case 'move':{if(!rival)return false;const d=Math.round(+h.d||0);if(!d)return false;to.s.pos=(((to.s.pos||0)+d)%40+40)%40;
+      event(T,{from:pid,kind:'hit',text:`${d>0?'подвинул':'откатил'} ${to.name} на ${Math.abs(d)} ${Math.abs(d)===1?'клетку':Math.abs(d)<5?'клетки':'клеток'}`,amount:null,tile:to.s.pos,to:to.pid});return true;}
+    case 'jail':{if(!rival)return false;const i=(T.tiles||[]).findIndex(t=>t.type==='police');if(i<0)return false;
+      to.s.pos=i;to.s.jail=3;to.s.jailFine=0;event(T,{from:pid,kind:'hit',text:`сдал ${to.name} в участок`,amount:null,tile:i,to:to.pid});return true;}
+    case 'skip':{if(!rival)return false;to.skip=(to.skip||0)+1;event(T,{from:pid,kind:'hit',text:`${to.name} пропустит ход`,amount:null,tile:null,to:to.pid});return true;}
+    case 'freeze':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid)return false;t.frozen=T.turn.n+n;
+      event(T,{from:pid,kind:'hit',text:`заморозил клетку ${pnameOf(T,t.owner)} на круг`,amount:null,tile:t.i,to:t.owner});return true;}
+    case 'insp':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||t.insp)return false;t.insp=true;
+      event(T,{from:pid,kind:'hit',text:`натравил инспектора на точку ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
+  }
+  return false;
 }
 function endTurn(T,pid,n,now){
   if(T.phase!=='play'||T.turn.pid!==pid||(n!=null&&n!==T.turn.n))return false;
@@ -229,23 +324,23 @@ function finish(T,why,winner){
   T.result={why,winner:winner||null,round:T.turn?T.turn.round:0,laps,finalBy:T.finalBy||null,win:winOf(T).id};
 }
 function backToLobby(T){
-  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.rent={};T.deadline=null;
+  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];
   T.players=T.players.filter(p=>p.online);T.players.forEach(p=>{p.s=null;});autoRounds(T);
 }
 // Что уходит конкретному игроку: общее поле, публичные сводки всех и полный срез его самого.
 function viewFor(T,pid,valuer){
   const me=T.players.find(p=>p.pid===pid);
   return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
-    tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),deadline:T.deadline||null,win:winOf(T),
+    tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
-      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,
+      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,skip:p.skip||0,
       cap:T.tiles&&valuer?capital(T,p.pid,valuer):null,chain:T.tiles?sfChain(T,p.pid):null,win:T.tiles?winProgress(T,p.pid,valuer):null})),
     mine:me&&me.s?me.s:null};
 }
 
 const api={COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
-  capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor};
+  capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

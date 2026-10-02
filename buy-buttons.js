@@ -23,6 +23,23 @@
       if(b.dataset.enamel&&b.dataset.enamel!==(no?'dark':'green'))b.dataset.enamel=no?'dark':'green';
     });
   }
+  // Деньги пришли или ушли, пока окно открыто (дубль, рента, находка): кнопка покупки за полную цену
+  // и пункты стройки пересчитываются сразу. Плейтест 01.10: кнопка осталась серой, хотя денег уже хватало.
+  const priceOf=text=>{const m=String(text).replace(/\s+/g,' ').match(/(\d[\d,]*)\s*$/);return m?+m[1].replace(/,/g,''):null;};
+  function live(){
+    const card=$('card');if(!card||$('modal').hidden||typeof S==='undefined'||!S)return;
+    for(const b of card.querySelectorAll('#bBuy,#kBuy')){
+      const p=priceOf(b.textContent);if(p==null)continue;const no=S.cash<p;if(b.disabled===no)continue;
+      b.disabled=no;const need=b.parentNode&&b.parentNode.querySelector('.need');if(need)need.hidden=!no;
+    }
+    for(const o of card.querySelectorAll('.sf-opt,.sf-lic-doc:not(.owned)')){
+      const m=(o.getAttribute('aria-label')||'').match(/\$(\d+)/);if(!m)continue;const no=S.cash<+m[1];
+      if(o.classList.contains('poor')===no)continue;
+      o.classList.toggle('poor',no);o.tabIndex=no?-1:0;if(no)o.setAttribute('aria-disabled','true');else o.removeAttribute('aria-disabled');
+      if(o.dataset.i!=null){const b=card.querySelector(`.mbtns button[data-i="${o.dataset.i}"]`);if(b)b.disabled=no;}   // стройка жмёт скрытую кнопку окна
+    }
+  }
+  if(typeof render==='function'){const base=render;render=function(){const r=base.apply(this,arguments);try{live();}catch(e){}return r;};}
   let queued=false;
   const run=()=>{queued=false;paint($('card'));const po=document.querySelector('.pass-offer');if(po)paint(po);};
   const schedule=()=>{if(!queued){queued=true;requestAnimationFrame(run);}};
