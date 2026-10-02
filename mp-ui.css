@@ -324,3 +324,39 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 .mp-seat:has(.mp-seat-bot)~#mpBotBtn,.mp-sheet:has(.mp-seat-bot) #mpBotBtn{display:none}
 .mpr-mults b:last-child{background:#f2e3bd;color:#25221c}   /* красный — только у выкупа ×10 */
 #onboard.mp-rules{z-index:120}   /* над панелью тестового стола */
+
+/* ===== Рука карт «Шанса» и такси у кубика (плейтест 5) ===== */
+.mp-hand{position:fixed;z-index:28;display:flex;gap:6px;align-items:center;translate:0 -50%}
+.mp-hand[hidden]{display:none}
+.mp-hand-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:46px;height:62px;padding:2px;
+  background:#f2e3bd url(assets/paper-grain.svg);border:2.5px solid #25221c;border-radius:6px 8px 5px 7px;box-shadow:2px 3px 0 #25221c;cursor:pointer;rotate:-4deg}
+.mp-hand-card+.mp-hand-card{rotate:5deg;margin-left:-14px}
+.mp-hand-card em{font-style:normal;font-size:22px;line-height:1}
+.mp-hand-card small{font:800 8px/1.05 var(--mp-num);text-align:center;color:#25221c;max-width:42px;overflow:hidden}
+.mp-hand-card.lead{border-color:#a92720;box-shadow:0 0 0 2px #c99a32,2px 3px 0 #25221c}
+.mp-hand-card:active{translate:1px 2px;box-shadow:1px 1px 0 #25221c}
+.mp-mine:not(.mp-rolled) .mp-hand-card{animation:mp-offer-nudge 2s steps(4) infinite}
+.mp-hand-used{font-style:normal;font:700 10px var(--mp-txt);color:#fbf0d4;background:#25221cb0;padding:2px 5px;border-radius:5px;white-space:nowrap}
+#card .mp-hand-big{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px auto 10px;padding:14px 12px;max-width:240px;text-align:center;
+  background:#fbf3dc;border:3px solid #25221c;border-radius:10px 13px 9px 12px;box-shadow:4px 5px 0 #25221c}
+#card .mp-hand-big.lead{border-color:#a92720;box-shadow:0 0 0 3px #c99a32,4px 5px 0 #25221c}
+#card .mp-hand-big em{font-style:normal;font-size:48px;line-height:1}
+#card .mp-hand-big h2{margin:2px 0 0;font:800 20px var(--mp-num)}
+#card .mp-hand-big p{margin:0;font-size:15px;line-height:1.35}
+#card .mp-hand-big small{font:700 12px var(--mp-num);color:#a92720}
+#card .mp-hand-why{text-align:center;color:#a92720}
+.mp-hand-pick{position:fixed;left:8px;right:8px;bottom:calc(var(--world-bottom,190px) + 8px);z-index:41;display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;
+  padding:8px 10px;background:#25221c;color:#fbf0d4;border:2px solid #c99a32;border-radius:10px 13px 9px 12px;font-family:var(--mp-txt)}
+.mp-hand-pick b{font:800 15px var(--mp-num)}.mp-hand-pick span{grid-column:1;font-size:12px}
+.mp-hand-pick button{grid-row:1/span 2;grid-column:2;padding:7px 12px;font:800 13px var(--mp-num);background:#f2e3bd;color:#25221c;border:2px solid #c99a32;border-radius:8px}
+.mp-hand-picking .mp-bar .mp-chip{pointer-events:auto}
+.mp-hand-picking .mp-bar .mp-chip:not(.mp-target){opacity:.35}
+.mp-bar .mp-chip.mp-target{cursor:pointer;box-shadow:0 0 0 3px #c99a32,0 0 14px #c99a32;animation:mp-blink 1s steps(2,jump-none) infinite}
+.mp-chip-hand{position:absolute;right:-4px;top:-6px;padding:0 3px;border-radius:6px;background:#25221c;color:#f2e3bd;font:800 10px/15px var(--mp-num);border:1px solid #f2e3bd}
+.mp-taxi{position:fixed;z-index:28;translate:-100% -50%;display:flex;flex-direction:column;align-items:center;padding:5px 8px 4px;font-size:24px;line-height:1;cursor:pointer;
+  background:#f2e3bd url(assets/paper-grain.svg);border:2.5px solid #25221c;border-radius:9px 12px 8px 11px;box-shadow:2px 3px 0 #25221c}
+.mp-taxi[hidden]{display:none}
+.mp-taxi small{font:800 9px var(--mp-num);color:#25221c;white-space:nowrap}
+.mp-taxi:active{translate:calc(-100% + 1px) calc(-50% + 2px);box-shadow:1px 1px 0 #25221c}
+@media (prefers-reduced-motion:reduce){.mp-mine:not(.mp-rolled) .mp-hand-card,.mp-bar .mp-chip.mp-target{animation:none}}
+.mp-plate{z-index:62}   /* плашки денег и карт — над плакатом хода, который висит до броска */
