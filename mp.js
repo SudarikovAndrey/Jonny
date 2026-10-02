@@ -715,13 +715,22 @@ window.MPSlotHooks={
   if(view&&view.phase==='play'&&!landedHere()&&!remote){toast('Банк — только в тот ход, когда на него встал',2400);return;}
   return base.apply(this,arguments);};})();
 
-// ---- полиция в партии: откупился — бросаешь сразу; три промаха — выход бесплатно ----
+// ---- полиция в партии ----
+// Встал на участок: заплатил штраф — ход на этом кончается (лишнего броска нет, продюсер 02.10: «откупился — сразу ещё ход — неверно»);
+// сел — три попытки на дубль, три промаха — выход бесплатно. Сидишь в участке и откупился в начале своего хода — бросаешь
+// обычным броском в этот же ход, ход не пропадает.
 (function(){const base=police;police=async function(){
-  const cash0=S.cash,hard0=S.hard;const r=await base.apply(this,arguments);
-  if(!(view&&view.phase==='play'&&myTurn()))return r;
-  if(S.jail>0){S.jailFine=0;log('🚔 В партии после трёх промахов выпускают без штрафа.');}
-  else if(S.cash<cash0||S.hard<hard0){rolled=false;landed=false;S.rolls=999;toast('🚔 Откупился — бросай ещё раз в этот же ход',2800);push();updateUi();}
+  const r=await base.apply(this,arguments);
+  if(view&&view.phase==='play'&&myTurn()&&S.jail>0){S.jailFine=0;log('🚔 В партии после трёх промахов выпускают без штрафа.');}
   return r;};})();
+async function jailChoice(){
+  const fine=policeFine(),bail=CFG.HARD.bail||1;
+  const v=await modal(`<h2>🚔 Ты в участке</h2><p class="t">Откупись — и бросай обычным броском прямо сейчас. Или бросай на дубль: дубль выпускает бесплатно, осталось попыток — ${S.jail}; после третьего промаха выпустят без штрафа.</p>`,
+    [{t:(S.cash>=fine?'Откупиться · $':'Откупиться в минус · $')+fine,v:1,cls:'ok'},{t:`Откупиться · 💎 ${bail}`,v:3,cls:'hard',dis:(S.hard||0)<bail},{t:'Бросать на дубль',v:0,cls:'sec'}]);
+  if(v===1){payFine(fine);S.jail=0;log(`🚔 Откупился из участка за ${money(fine)} — бросаю.`);emit({kind:'fine',text:'откупился из участка',amount:-fine,tile:S.pos});}
+  else if(v===3&&spendHard(bail)){S.jail=0;log(`🚔 Откупился из участка за 💎 ${bail} — бросаю.`);emit({kind:'fine',text:'откупился из участка',amount:null,tile:S.pos});}
+  render();
+}
 
 // ---- кристаллы в партии не продаются (решение продюсера 01.10) ----
 shopHard=function(){toast('В партии кристаллы не продаются: 5 на старте плюс выигранные',2600);};
@@ -818,6 +827,7 @@ async function autoFinish(){
   if(!view||view.phase!=='play'){toast('Партия ещё не началась');return;}
   if(!myTurn()){toast(`Сейчас ходит ${nameOf(view.turn.pid)}`);return;}
   if(rolled||ending){toast('Бросок уже был — жми «Передать ход»');return;}
+  if(S.jail>0&&!autoEnding&&S.mpJailAskN!==view.turn.n){S.mpJailAskN=view.turn.n;await jailChoice();if(!myTurn()||rolled||ending)return;}   // в участке: откупиться и бросить, или бросать на дубль
   rolled=true;S.rolls=999;lastDice=null;push();
   try{await base.apply(this,arguments);}finally{
     landed=true;S.rolls=999;
