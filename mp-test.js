@@ -294,7 +294,7 @@ function inspHidden(t,{emit}){
 // Автомат в фоне: бесплатные спины тем же движком и таблицей выплат; на поле — только результат.
 function slotHidden(t,{credit,emit,v}){
   const E=window.SlotEngine;if(!E)return;
-  const st={P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:window.MP_ROLL_CASH?window.MP_ROLL_CASH():H.rollCash(),mp:true,visits:1};
+  const st={P:Math.max(0,Math.round(typeof window.MP_SLOT_BASE==='function'?window.MP_SLOT_BASE():lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:window.MP_ROLL_CASH?window.MP_ROLL_CASH():H.rollCash(),mp:true,visits:1};
   let cash=0,potD=10,gem=0;
   for(let i=0;i<3;i++){const o=E.choose(Math.random),p=E.award(st,o,[]);
     if(o.id==='jackpot'){cash+=p.cash;gem+=p.gem;potD-=st.pot;st.pot=0;}

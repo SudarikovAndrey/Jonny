@@ -159,8 +159,10 @@ async function sfBuildMenu(t,opts={}){
 }
 
 // ---- Проход по пустырю даёт монетку: деньги на старте капают даже без точек ----
+// Монетка вылетает из клетки 3D-эффектом поля (street_coin, как проход стройки в одиночной игре):
+// в Сан-Франциско и мультиплеере закрытых клеток нет, и без этого эффект пропадал (плейтест 4, 02.10).
 (function(){const base=step;step=async function(from,to){const r=await base.apply(this,arguments);
-  try{const t=S.tiles[to];if(sfIsLot(t)&&SF.lotPass>0){S.cash+=SF.lotPass;S.stat.earned+=SF.lotPass;S.dstat.earned+=SF.lotPass;float(t.i,'+$'+SF.lotPass,'#9aa3b8');}}catch(e){}
+  try{const t=S.tiles[to];if(sfIsLot(t)&&SF.lotPass>0){S.cash+=SF.lotPass;S.stat.earned+=SF.lotPass;S.dstat.earned+=SF.lotPass;float(t.i,'+$'+SF.lotPass,'#9aa3b8');if(typeof streetPassCoin==='function')streetPassCoin(t.i);}}catch(e){}
   return r;};})();
 // ---- Банк: первый кредит без срока — точки не отнимут, но новый не дадут, пока не вернёшь ----
 new MutationObserver(()=>{const card=$('card');if(!card||card.hidden)return;const h=card.querySelector('h2');if(!h||!/Chase/.test(h.textContent))return;

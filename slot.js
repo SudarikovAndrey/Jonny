@@ -6,7 +6,7 @@ let current=null;
 const st=()=>{S.slot=S.slot||{pot:0,visits:0};return S.slot;};
 const clone=x=>JSON.parse(JSON.stringify(x));
 function context(){return {
- P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),   // партия: средний доход за круг по игрокам
+ P:Math.max(0,Math.round(typeof window.MP_SLOT_BASE==='function'?window.MP_SLOT_BASE():typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),   // партия: средний доход стола, не ниже $100
 day:S.day,cash:S.cash,gem:S.hard,move:S.rolls,pot:st().pot||0,
  rollCash:typeof window.MP_ROLL_CASH==='function'?Math.max(0,Math.round(window.MP_ROLL_CASH())):0,   // мультиплеер: кубики платят налом
  mp:typeof window.MP_LAP_P==='function',   // явный признак партии: таблица призов, цены пакетов и лимит — партийные

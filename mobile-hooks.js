@@ -58,7 +58,10 @@ function step(from,to,ms,kind){
   return MobileHost.request('step',{from,to,ms:duration,kind},10000);
 }
 function float(i,text,color,size){
-  if(!S.tiles[i]?.drop)return;
+  // Подписи над клетками — только у находок (22.09); исключение — проход пустыря «+$5» (SF.lotPass, плейтест 4:
+  // «непонятно, откуда деньги»), иначе её никто не видел.
+  const lot=typeof sfIsLot==='function'&&sfIsLot(S.tiles[i]);
+  if(!S.tiles[i]?.drop&&!lot)return;
   const at=screenOfTile(i),el=document.createElement('span');
   el.className='map-float';el.textContent=text;el.style.left=at.x+'px';el.style.top=at.y+'px';el.style.color=color||'#fff1ce';if(typeof cashGlyph==='function')cashGlyph(el);
   document.body.append(el);setTimeout(()=>el.remove(),1400);

@@ -2117,7 +2117,10 @@ function step(from,to,ms,kind){
   return MobileHost.request('step',{from,to,ms:duration,kind},10000);
 }
 function float(i,text,color,size){
-  if(!S.tiles[i]?.drop)return;
+  // Подписи над клетками — только у находок (22.09); исключение — проход пустыря «+$5» (SF.lotPass, плейтест 4:
+  // «непонятно, откуда деньги»), иначе её никто не видел.
+  const lot=typeof sfIsLot==='function'&&sfIsLot(S.tiles[i]);
+  if(!S.tiles[i]?.drop&&!lot)return;
   const at=screenOfTile(i),el=document.createElement('span');
   el.className='map-float';el.textContent=text;el.style.left=at.x+'px';el.style.top=at.y+'px';el.style.color=color||'#fff1ce';if(typeof cashGlyph==='function')cashGlyph(el);
   document.body.append(el);setTimeout(()=>el.remove(),1400);
@@ -3836,7 +3839,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='54f1d701d9';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='6ab8da98e3';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -5599,7 +5602,7 @@ let current=null;
 const st=()=>{S.slot=S.slot||{pot:0,visits:0};return S.slot;};
 const clone=x=>JSON.parse(JSON.stringify(x));
 function context(){return {
- P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),   // партия: средний доход за круг по игрокам
+ P:Math.max(0,Math.round(typeof window.MP_SLOT_BASE==='function'?window.MP_SLOT_BASE():typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),   // партия: средний доход стола, не ниже $100
 day:S.day,cash:S.cash,gem:S.hard,move:S.rolls,pot:st().pot||0,
  rollCash:typeof window.MP_ROLL_CASH==='function'?Math.max(0,Math.round(window.MP_ROLL_CASH())):0,   // мультиплеер: кубики платят налом
  mp:typeof window.MP_LAP_P==='function',   // явный признак партии: таблица призов, цены пакетов и лимит — партийные
@@ -5990,8 +5993,10 @@ async function sfBuildMenu(t,opts={}){
 }
 
 // ---- Проход по пустырю даёт монетку: деньги на старте капают даже без точек ----
+// Монетка вылетает из клетки 3D-эффектом поля (street_coin, как проход стройки в одиночной игре):
+// в Сан-Франциско и мультиплеере закрытых клеток нет, и без этого эффект пропадал (плейтест 4, 02.10).
 (function(){const base=step;step=async function(from,to){const r=await base.apply(this,arguments);
-  try{const t=S.tiles[to];if(sfIsLot(t)&&SF.lotPass>0){S.cash+=SF.lotPass;S.stat.earned+=SF.lotPass;S.dstat.earned+=SF.lotPass;float(t.i,'+$'+SF.lotPass,'#9aa3b8');}}catch(e){}
+  try{const t=S.tiles[to];if(sfIsLot(t)&&SF.lotPass>0){S.cash+=SF.lotPass;S.stat.earned+=SF.lotPass;S.dstat.earned+=SF.lotPass;float(t.i,'+$'+SF.lotPass,'#9aa3b8');if(typeof streetPassCoin==='function')streetPassCoin(t.i);}}catch(e){}
   return r;};})();
 // ---- Банк: первый кредит без срока — точки не отнимут, но новый не дадут, пока не вернёшь ----
 new MutationObserver(()=>{const card=$('card');if(!card||card.hidden)return;const h=card.querySelector('h2');if(!h||!/Chase/.test(h.textContent))return;

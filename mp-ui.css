@@ -233,3 +233,53 @@ body.mp-mode #card .mp-pl p{margin-top:5px;font-size:15px;line-height:1.35;color
 body.mp-mode #card .mp-pl .mp-pl-win{font-weight:700;color:#6b4a0c}
 body.mp-mode #card .mp-pl strong{font-size:23px}
 body.mp-mode #card .mp-pl-pot{font-size:16px;line-height:1.35}
+
+/* ===== Плейтест 4 (02.10) ===== */
+/* Плакаты «Твой ход!» / «Ходит Вася» — до броска: выше центра, покачиваются, под окнами не мешают */
+.mp-poster{top:30%}
+.mp-poster small{display:block;font:700 13px var(--mp-txt);opacity:.9;text-align:center}
+.mp-poster.hold{animation:mp-poster-bob 1.4s steps(4) infinite}
+@keyframes mp-poster-bob{50%{translate:0 -4px;rotate:-1deg}}
+.mp-modal .mp-poster{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.mp-poster.hold{animation:none}}
+/* Условие победы — в верхней панели вместо «Твои категории»; справа в колонке его больше нет */
+.mp-play .mp-bar .mp-win{display:none!important}
+#bHub.mp-win-hub .hud-map-heading b small{font-size:.62em}
+/* Заметки событий у клетки на поле */
+.mp-note{position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;max-width:230px;padding:4px 8px 4px 4px;translate:-50% -100%;
+  font:600 12px/1.25 var(--mp-txt);color:var(--mp-ink);background:var(--mp-paper) url(assets/paper-grain.svg);border:2px solid var(--c,var(--mp-ink));
+  border-radius:9px 12px 8px 11px;box-shadow:2px 3px 0 rgba(37,34,28,.75);white-space:normal;pointer-events:none}
+.mp-note::after{content:"";position:absolute;left:50%;bottom:-7px;width:10px;height:10px;margin-left:-5px;background:inherit;border:solid var(--c,var(--mp-ink));border-width:0 2px 2px 0;rotate:45deg}
+.mp-note i{flex:none;width:20px;height:20px;border-radius:50%;background:var(--c);border:1.5px solid var(--mp-ink);color:#fbf0d4;font:800 11px/17px var(--mp-num);font-style:normal;text-align:center}
+.mp-note span{min-width:0}.mp-note b{font-weight:800}
+.mp-note strong{flex:none;font:800 14px var(--mp-num);font-variant-numeric:tabular-nums}
+.mp-note strong.plus{color:var(--mp-green)}.mp-note strong.minus{color:var(--mp-red)}
+.mp-note.big{max-width:260px;padding:6px 10px 6px 6px;font-size:14px;border-width:3px;z-index:2}
+.mp-note.big strong{font-size:20px}
+.mp-note.big i{width:26px;height:26px;font-size:13px;line-height:23px}
+/* памятка микрозайма в окне долга */
+#card .mp-micro-memo{margin:-2px 0 8px;padding:8px 10px;border:1.5px dashed #a92720;border-radius:9px 12px 8px 11px;background:#a927200d;font-size:13px;line-height:1.35}
+#card .mp-micro-memo>b{display:block;margin-bottom:4px;font:800 14px var(--mp-num);color:#a92720}
+#card .mp-micro-memo>div{display:grid;grid-template-columns:120px 1fr;gap:6px;padding:2px 0;border-top:1px solid #25221c1f}
+#card .mp-micro-memo>div span:first-child{font-weight:700;color:#25221c}
+/* «Мои владения» по группам и обмен */
+#card .mp-hold-open{display:block;width:100%;margin:0 0 10px}
+#card .mp-hold-group{margin:8px 0 4px;padding:6px 8px 4px;border:1.5px solid #25221c33;border-radius:9px 12px 8px 11px;background:#fbf3dc80}
+#card .mp-hold-group:has(.mp-hold-row+.mp-hold-row){border:2px solid #4f7c4a;background:#4f7c4a14}
+#card .mp-hold-head{margin:0 0 4px;font:800 13px var(--mp-num);color:#4f7c4a}
+#card .mp-hold-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed #25221c33}
+#card .mp-hold-head+.mp-hold-row{border-top:0}
+#card .mp-hold-row>em{font-style:normal;font-size:24px;text-align:center}
+#card .mp-hold-row b{display:block;font:800 15px var(--mp-num)}
+#card .mp-hold-row small{display:block;font-size:12.5px;line-height:1.3;color:#4a3f31}
+#card .mp-hold-row button{white-space:nowrap}
+#card .mp-swap-open{display:block;width:100%;margin-top:6px}
+#card .mp-swap-cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:stretch;margin:6px 0 10px}
+#card .mp-swap-cmp>span{align-self:center;font:800 22px var(--mp-num)}
+#card .mp-swap-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;border:2px solid #25221c;border-radius:10px 13px 9px 12px;background:#fbf3dc;text-align:center}
+#card .mp-swap-card em{font-style:normal;font-size:28px}
+#card .mp-swap-card b{font:800 14px/1.2 var(--mp-num)}
+#card .mp-swap-card small{font-size:11.5px;color:#4a3f31}
+#card .mp-swap-pays{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}
+#card .mp-swap-p{padding:7px 3px!important;font:700 12px/1.15 var(--mp-num)!important;background:#f2e3bd!important;border:1.5px solid #25221c!important;border-radius:8px 10px 7px 9px!important;color:#25221c!important}
+#card .mp-swap-p.on{background:#4f7c4a!important;color:#fff6de!important}
