@@ -447,7 +447,7 @@ function onView(v,now){
     const wasMine=mine;curTurn=v.turn.n;mine=isMine;rolled=!!(isMine&&v.turn.rolled);landed=!!(isMine&&v.turn.landed);ending=false;autoEnding=false;credits=[];
     if(wasMine&&!isMine)closeAll();
     adopt(v);
-    if(isMine){reclaimOffers();yourTurn();}   // в чужой ход камера ведёт фишку того, кто ходит (followRival)
+    if(isMine){reclaimOffers();yourTurn();}else rivalTurn(v.turn.pid);   // в чужой ход камера ведёт фишку того, кто ходит (followRival)
     mgReset();
   } else if(v.phase==='play'&&!isMine){adopt(v);}
   if(v.phase==='over'){mine=false;if(shownOver!==v.match){shownOver=v.match;closeAll();adopt(v);showOver(v);try{flush(true);}catch(e){}}}
@@ -495,6 +495,20 @@ function yourTurn(){
     if(dice&&myTurn())dice.animate([{transform:'scale(1)'},{transform:'scale(1.3,.78)'},{transform:'scale(.9,1.14)'},{transform:'scale(1.05,.96)'},{transform:'scale(1)'}],
       {duration:420,easing:'ease-out'});
   });
+}
+// Чужой ход — крупный плакат «Ходит Вася» в цвет игрока и улетает в плашку «Ходит» над кубиком (плейтест 01.10).
+function rivalTurn(pid){
+  const p=playerOf(pid);if(!p)return;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const b=el('div','mp-bang mp-bang-rival');b.style.setProperty('--c',p.color);b.innerHTML=`<small>Ходит</small><b>${esc(p.name)}</b>`;
+  if(reduced){b.animate([{opacity:0},{opacity:1,offset:.2},{opacity:1,offset:.8},{opacity:0}],{duration:1100}).finished.then(()=>b.remove());return;}
+  const r=tag.getBoundingClientRect(),dx=r.width?r.left+r.width/2-innerWidth/2:0,dy=r.width?r.top+r.height/2-innerHeight*.42:200;
+  b.animate([
+    {transform:'translate(-50%,-50%) scale(.3) rotate(6deg)',opacity:0},
+    {transform:'translate(-50%,-50%) scale(1.14) rotate(-2deg)',opacity:1,offset:.18,easing:'cubic-bezier(.34,1.56,.64,1)'},
+    {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.3},
+    {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.7,easing:'cubic-bezier(.5,0,.8,.4)'},
+    {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.25)`,opacity:.15}],{duration:1300,fill:'forwards'}).finished.then(()=>b.remove());
 }
 function closeAll(){
   for(let i=0;i<3&&!$('modal').hidden;i++)closeModal();
@@ -1087,7 +1101,7 @@ function updateUi(){
   // На плейтесте число капитала (538, 899) никто не опознал — в полосе нал и число точек.
   const own=p=>p.cap?p.cap.points+p.cap.biz:0;   // точки и бизнесы вместе — «владения» (плейтест 01.10: «точек» путало)
   bar.classList.toggle('tight',view.players.length>2);   // трое-четверо: компактные фишки, круг и пауза — второй строкой
-  chipsEl.innerHTML=view.players.map(p=>`<span class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.pid===PID?' me':''}" style="--c:${p.color}">
+  chipsEl.innerHTML=view.players.map(p=>`<span data-pid="${esc(p.pid)}" class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.pid===PID?' me':''}" style="--c:${p.color}">
       <i>${esc(p.name.slice(0,1).toUpperCase())}</i><span class="mp-nm">${esc(p.pid===PID?'Ты':p.name)}</span>
       <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} ${view.players.length>2?'вл.':plural(own(p),'владение','владения','владений')}</span></span>
       ${p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
@@ -1144,6 +1158,7 @@ function tick(){
   const lb=lotBadge.hidden?'':under+'px';if(lotBadge.style.top!==lb)lotBadge.style.top=lb;
   if(!lotBadge.hidden)under=Math.round(lotBadge.getBoundingClientRect().bottom+6);
   setVar('--mp-under',under+'px');
+  {const tt=under+'px';if(ticker.style.top!==tt)ticker.style.top=tt;}
   // Окно открыто — карточка начинается под строкой денег: кошелёк виден (плейтест 01.10, все окна).
   const wr=!$('modal').hidden&&document.querySelector('#top .bar1');
   document.body.classList.toggle('mp-modal',!!wr);
@@ -1218,6 +1233,12 @@ function onEvt(from,e){
   const mine=e.to===PID,amount=e.amount==null?null:Math.round(e.amount);
   try{dispatchEvent(new CustomEvent('mp:event',{detail:{kind:e.kind,who:p.name,color:p.color,text:e.text,amount,tile:e.tile==null?null:e.tile,mine}}));}catch(x){}
   if(e.tile!=null&&amount)floatAt(e.tile,(amount>0?'+':'−')+money(Math.abs(amount)),amount>0?'#2f6b35':'#a92720');
+  if(from!==PID){
+    if(e.to&&amount&&(e.kind==='rent'||e.kind==='sale'))flyBetween(amount<0?from:e.to,amount<0?e.to:from,amount);
+    // плашка — если событие не про меня (про меня уже есть крупная плашка денег)
+    const big=mine&&['rent','offer','sale','decline','hit','bid','won','bank','unsold'].includes(e.kind);
+    if(!big&&e.kind!=='scatter'&&e.kind!=='chance'&&e.text)tickerAdd(p,e,amount);
+  }
   if(mine&&e.kind==='rent')plate(`🏠 Рента · ${p.name}`,-amount,'заплатил за '+e.text.replace(/^заплатил ренту за /,''));
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
   if(mine&&e.kind==='sale')plate(`🤝 ${p.name} согласился`,-amount,e.text.replace(/^продал /,'')+' теперь твоя');
@@ -1238,6 +1259,23 @@ function onEvt(from,e){
     plate(`🚚 ${p.name}: мешок лопнул`,0,`${e.cash?money(e.cash)+' ':''}разлетелось по клеткам — заберёт тот, кто встанет`);
     if(MobileHost.ready)MobileHost.request('scatter',{from:e.tile==null?0:e.tile,drops:e.drops},15000).catch(()=>{});
   }
+}
+// Деньги между игроками — монеты летят от фишки плательщика к фишке получателя в полосе (плейтест 01.10).
+function chipAt(pid){const c=chipsEl.querySelector(`.mp-chip[data-pid="${CSS.escape(pid)}"]`);if(!c)return null;const r=c.getBoundingClientRect();return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null;}
+function flyBetween(from,to,amount){
+  const a=chipAt(from),b=chipAt(to);if(!a||!b||!amount)return;
+  try{fly('💵',a,b,flyN(Math.abs(amount)),{onDone:()=>{const c=chipsEl.querySelector(`.mp-chip[data-pid="${CSS.escape(to)}"]`);if(c&&c.animate)c.animate([{transform:'scale(1)'},{transform:'scale(.9,1.1)'},{transform:'scale(1.08,.94)'},{transform:'scale(1)'}],{duration:320,easing:'ease-out'});}});}catch(e){}
+}
+// Короткие плашки событий соперников: кто, что, сколько — сами гаснут, не больше двух сразу.
+const ticker=el('div','mp-ticker');ticker.id='mpTicker';
+function tickerAdd(p,e,amount){
+  const tile=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile],icon=tile?(tile.type==='biz'?bizIcon(tile):tile.good&&good(tile.good)?good(tile.good).icon:''):'';
+  const to=e.to?(e.to===PID?'тебе':nameOf(e.to)):'';
+  const text=e.kind==='rent'&&to?`заплатил ${to} ${e.text.replace(/^заплатил ренту /,'ренту ')}`:e.text;
+  const n=el('div','mp-tick',ticker);n.style.setProperty('--c',p.color);
+  n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><span><b>${esc(p.name)}</b> ${esc(text)}</span>${icon?`<em>${icon}</em>`:''}${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
+  while(ticker.children.length>2)ticker.firstChild.remove();
+  n.animate([{transform:'translateY(-8px) scale(.9)',opacity:0},{transform:'none',opacity:1,offset:.08,easing:'cubic-bezier(.34,1.56,.64,1)'},{opacity:1,offset:.85},{opacity:0}],{duration:3200,fill:'forwards'}).finished.then(()=>n.remove(),()=>n.remove());
 }
 function floatAt(i,text,color){
   if(!MobileHost.ready)return;const at=screenOfTile(i),f=el('div','mp-float');f.textContent=text;f.style.color=color;f.style.left=at.x+'px';f.style.top=(at.y-34)+'px';
