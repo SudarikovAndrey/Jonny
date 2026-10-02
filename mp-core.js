@@ -10,7 +10,11 @@ const MAX_PLAYERS=4, MIN_PLAYERS=2;
 // Плейтест 01.10 (второй): длина партии — по времени, 15…30 минут (решение продюсера): кругов 25…500 было слишком много.
 // rounds остаётся страховочным потолком раундов стола. win — условие победы, показывается в лобби и в партии.
 // Третий плейтест 02.10: длина партии — минуты ИЛИ круги (mode time|laps); миссии (все условия, кроме «Богатейшего») без лимита.
-const DEFAULTS={rounds:10,turnSec:60,autoRounds:true,minutes:20,win:'capital',mode:'time'};
+const DEFAULTS={rounds:10,turnSec:60,autoRounds:true,minutes:20,win:'capital',mode:'time',boardMap:'sanfrancisco'};
+// Вид локации (решение продюсера 02.10): хозяин меняет подложку поля всем, клетки и партия те же. Все 9 подложек
+// проверены с кольцом из 40 клеток Сан-Франциско («Геймплей», 02.10): клетки на дороге, на арт не наезжают.
+const BOARD_OPTIONS=[['sanfrancisco','Сан-Франциско'],['kansas','Канзас'],['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['vegas','Лас-Вегас'],
+  ['paloalto','Пало-Альто'],['losangeles','Лос-Анджелес'],['manhattan','Манхэттен'],['liberty','Остров Свободы']];
 const MODE_OPTIONS=['time','laps'];
 const MINUTE_OPTIONS=[15,20,25,30];
 // Условия победы (решение продюсера 01.10: выбираются на старте, видны всем). Параметры — в goal.
@@ -45,6 +49,8 @@ const lapsOf=p=>(p&&p.s&&p.s.laps)||0;
 const ROUND_CAP=40;             // страховка: стол не идёт дольше 40 раундов на каждый требуемый круг
 function setRounds(T,rounds){if(!ROUND_OPTIONS.includes(+rounds))return false;T.settings.rounds=+rounds;T.settings.autoRounds=false;return true;}
 function setMinutes(T,m){if(!MINUTE_OPTIONS.includes(+m))return false;T.settings.minutes=+m;return true;}
+function setBoardMap(T,id){if(!BOARD_OPTIONS.some(b=>b[0]===id))return false;if(T.settings.boardMap===id)return false;T.settings.boardMap=id;
+  if(T.phase==='play')event(T,{from:T.hostPid||null,kind:'map',text:`сменил карту на «${(BOARD_OPTIONS.find(b=>b[0]===id)||[])[1]}»`,amount:null,tile:null,to:null,map:id});return true;}
 function setMode(T,m){if(!MODE_OPTIONS.includes(m))return false;T.settings.mode=m;return true;}
 // Лимит длины есть только у «Богатейшего»; миссии играются до выполнения (решение продюсера 02.10).
 const timed=T=>winOf(T).id==='capital';
@@ -379,7 +385,7 @@ function viewFor(T,pid,valuer){
     mine:me&&me.s?me.s:null};
 }
 
-const api={COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+const api={BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;
