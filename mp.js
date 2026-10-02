@@ -993,8 +993,9 @@ menuBtn.onclick=async()=>{
   if(!view||!$('modal').hidden||moving)return;const host=!!(net&&net.host);
   const v=await modal(`<h2>☰ Партия · стол ${esc(ROOM)}</h2>
     ${host?'<p class="t mp-warn">Ты хозяин стола: если выйдешь, партия остановится у всех.</p>':'<p class="t">Выйдешь — твоё место останется, вернуться можно по коду стола.</p>'}`,
-    [{t:'Продолжить',v:0,cls:'ok'},view.win?{t:'Как победить',v:3,cls:'sec'}:null,{t:'Выйти из-за стола',v:1,cls:'sec'},{t:'Играть одному',v:2,cls:'sec'}].filter(Boolean));
+    [{t:'Продолжить',v:0,cls:'ok'},window.MPRules?{t:'Правила',v:4,cls:'sec'}:null,view.win?{t:'Как победить',v:3,cls:'sec'}:null,{t:'Выйти из-за стола',v:1,cls:'sec'},{t:'Играть одному',v:2,cls:'sec'}].filter(Boolean));
   if(v===3)winEl.click();
+  if(v===4&&window.MPRules)MPRules.open();
   if(v===1||v===2){try{if(!net.host)net.send({t:'bye'});}catch(e){}
     location.href=v===1?`mp.html?map=sf&mp${Q.has('mute')?'&mute':''}`:`index.html?map=sf${Q.has('mute')?'&mute':''}`;}
 };
@@ -1365,7 +1366,7 @@ function renderEntry(){
 }
 function renderWait(text){showLobby(`<h2>🌉 Стол ${esc(ROOM)}</h2><p class="mp-lead">${esc(text)}</p><div class="mp-spin"></div><a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Отмена</a>`);}
 let qrFor='';
-let lobbyKey='';
+let lobbyKey='',rulesAuto=false;
 function renderLobby(force){
   const key=JSON.stringify([view.players.map(p=>[p.pid,p.name,p.seat,p.online]),view.settings,!!net&&net.host]);
   if(!force&&key===lobbyKey&&!lobby.hidden)return;lobbyKey=key;
@@ -1387,11 +1388,15 @@ function renderLobby(force){
     <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>esc((C.WIN_OPTIONS.find(w=>w.id===v)||{}).name||v))}</div>
     <div class="mp-set"><span>Время на ход<small>${T.settings.turnSec?'мини-игра часы не тратит':'без лимита — ход передаётся кнопкой'}</small></span>${opt('turnSec',C.TURN_OPTIONS,T.settings.turnSec,v=>v?v+' с':'∞')}</div>
     <p class="mp-est">${n>=2?`${T.settings.minutes} мин на ${n} ${plural(n,'игрока','игроков','игроков')} · ${esc(C.winOf(T).name)}: ${esc(C.winOf(T).text)}`:'Нужно минимум двое'}</p>
+    ${window.MPRules?'<button class="sec mp-rules-btn" id="mpRulesBtn" type="button">📖 Как играть</button>':''}
     ${host?`<button class="mp-big" id="mpStart" ${C.canStart(T)?'':'disabled'}>Начать</button>`:'<p class="mp-lead mp-waithost">Ждём, когда хозяин стола начнёт…</p>'}
     <a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Выйти</a>`);
   lobby.querySelectorAll('.mp-seg button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,v=b.dataset.v;net.send({t:'settings',[k]:isNaN(+v)?v:+v});});
   lobby.querySelectorAll('.mp-kick').forEach(b=>b.onclick=()=>net.send({t:'kick',pid:b.dataset.pid}));
   const st=$('mpStart');if(st)st.onclick=()=>net.send({t:'start'});
+  {const rb=$('mpRulesBtn');if(rb)rb.onclick=()=>MPRules.open();}
+  // Правила — сами один раз на телефоне, когда впервые сел за стол (плейтест 01.10: «обучение перед партией»).
+  if(window.MPRules&&!rulesAuto){rulesAuto=true;setTimeout(()=>MPRules.once(),400);}
   $('mpShare').onclick=async()=>{const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${T.room}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);};
   $('mpCopy').onclick=()=>copy(link());
   drawQr();

@@ -132,3 +132,27 @@
 /* журнал слева и плашки событий справа не наезжают друг на друга */
 .mp-play #moneyJournal[data-mode="min"]{max-width:min(44vw,190px)}
 .mp-ticker{max-width:min(54vw,260px)}
+
+/* Правила партии — листалка онбординга (#onboard.mp-rules) */
+#onboard.mp-rules{z-index:96}
+#onboard.mp-rules .ob-art{display:flex;align-items:center;justify-content:center}
+.mpr-art{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;min-height:150px}
+.mpr-main{max-width:70%;max-height:170px;object-fit:contain;filter:drop-shadow(0 4px 0 #25221c40)}
+.mpr-char .mpr-main{max-height:190px}
+.mpr-badge{position:absolute;right:12%;bottom:6%;width:54px;height:54px;border-radius:50%;background:#f2e3bd;border:2.5px solid #25221c;box-shadow:2px 3px 0 #25221c;display:grid;place-items:center}
+.mpr-badge+.mpr-badge{right:auto;left:12%}
+.mpr-badge img{width:34px;height:34px}
+.mpr-row img{width:30%;max-width:110px;max-height:120px;object-fit:contain}
+.mpr-row b{font:800 22px 'Golos Text',Arial,sans-serif;color:#4f7c4a}
+.mpr-mults{gap:8px}
+.mpr-mults b,.mpr-big b{display:grid;place-items:center;min-width:58px;height:58px;padding:0 10px;border:2.5px solid #25221c;border-radius:12px 15px 11px 14px;
+  background:#f2e3bd;box-shadow:3px 3px 0 #25221c;font:800 22px 'Golos Text',Arial,sans-serif;color:#25221c}
+.mpr-mults b:last-child{background:#a92720;color:#fbf0d4}
+.mpr-big{flex-direction:column}
+.mpr-big b{font-size:38px;min-width:120px;height:84px}
+.mpr-big img{width:110px;height:110px;object-fit:contain}
+.mpr-big small{font:700 13px Bitter,Georgia,serif;color:#5b4c35;display:flex;gap:6px}
+.mpr-chip{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--c);border:2px solid #25221c;color:#fbf0d4;font:800 13px 'Golos Text',Arial,sans-serif}
+.mpr-nav{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.mpr-nav button{width:100%}
+.mp-rules-btn{display:block;width:100%;margin:4px 0 8px}

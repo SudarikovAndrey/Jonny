@@ -14,11 +14,11 @@
   if(!q.has('mp')||q.get('map')!=='sf'){if(!q.has('mp'))q.set('mp','');q.set('map','sf');history.replaceState(null,'','?'+q.toString().replace(/mp=(&|$)/,'mp$1'));}
   const get=u=>fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u+' '+r.status);return r.text();});
   try{
-    const [html,core,mp]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js')]);
+    const [html,core,mp,rules]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js'),get('mp-rules.js').catch(()=>'')]);
     const anchor='const startAskName=askName',i=html.indexOf(anchor);
     if(i<0)throw new Error('в index.html нет точки запуска партии');
     let h=5381;const src=core+mp;for(let k=0;k<src.length;k++)h=((h<<5)+h+src.charCodeAt(k))|0;   // версия мультиплеера — для логов
-    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";\n'+html.slice(i));document.close();
+    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\n'+rules+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";\n'+html.slice(i));document.close();
   }catch(e){document.getElementById('mpBoot').textContent='Не удалось открыть стол: '+e.message;console.error(e);}
 })();
 </script></body></html>
