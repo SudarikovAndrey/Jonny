@@ -12,14 +12,18 @@
 (async()=>{
   const q=new URLSearchParams(location.search);
   if(!q.has('mp')||q.get('map')!=='sf'){if(!q.has('mp'))q.set('mp','');q.set('map','sf');history.replaceState(null,'','?'+q.toString().replace(/mp=(&|$)/,'mp$1'));}
-  const get=u=>fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u+' '+r.status);return r.text();});
+  // Подпись каждого файла (ETag, иначе дата+размер) — mp.js сверяет её с сервером: открытый до выкладки стол видит, что вышла новая версия.
+  const sig={},sigOf=r=>r.headers.get('etag')||((r.headers.get('last-modified')||'')+'/'+(r.headers.get('content-length')||''));
+  const get=u=>fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u+' '+r.status);sig[u]=sigOf(r);return r.text();});
   try{
     const test=q.get('test')==='1';   // тестовый стол: боты и панель механик (web/mp-test.js)
     const [html,core,mp,rules,tst]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js'),get('mp-rules.js').catch(()=>''),test?get('mp-test.js').catch(()=>''):Promise.resolve('')]);
     const anchor='const startAskName=askName',i=html.indexOf(anchor);
     if(i<0)throw new Error('в index.html нет точки запуска партии');
     let h=5381;const src=core+mp;for(let k=0;k<src.length;k++)h=((h<<5)+h+src.charCodeAt(k))|0;   // версия мультиплеера — для логов
-    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\n'+rules+'\n'+tst+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";\n'+html.slice(i));document.close();
+    let v=5381;const all=html+core+mp+rules;for(let k=0;k<all.length;k++)v=((v<<5)+v+all.charCodeAt(k))|0;   // версия всей сборки: страница + модули партии
+    const ver={id:(v>>>0).toString(36).slice(-6),sig};
+    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\n'+rules+'\n'+tst+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";window.AB_VER='+JSON.stringify(ver)+';\n'+html.slice(i));document.close();
   }catch(e){document.getElementById('mpBoot').textContent='Не удалось открыть стол: '+e.message;console.error(e);}
 })();
 </script></body></html>

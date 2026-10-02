@@ -283,3 +283,28 @@ body.mp-mode #card .mp-pl-pot{font-size:16px;line-height:1.35}
 #card .mp-swap-pays{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}
 #card .mp-swap-p{padding:7px 3px!important;font:700 12px/1.15 var(--mp-num)!important;background:#f2e3bd!important;border:1.5px solid #25221c!important;border-radius:8px 10px 7px 9px!important;color:#25221c!important}
 #card .mp-swap-p.on{background:#4f7c4a!important;color:#fff6de!important}
+
+/* Версия сборки: в лобби и в ☰; устарела — плашка у всех (плейтест 5) */
+.mp-ver{margin:8px 0 0;text-align:center;font:600 11px var(--mp-num);color:#6b5f52}
+.mp-ver.stale{font-size:13px;color:#a92720;font-weight:800}
+.mp-ver-reload{display:inline;padding:0 4px!important;min-height:0!important;font:800 13px var(--mp-num)!important;color:#a92720!important;background:none!important;border:0!important;text-decoration:underline;box-shadow:none!important}
+.mp-ver-banner{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:97;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;
+  padding:8px 10px;background:#a92720;color:#fbf0d4;border:2.5px solid #25221c;border-radius:10px 13px 9px 12px;box-shadow:3px 4px 0 #25221c;font-family:var(--mp-txt)}
+.mp-ver-banner b{font:800 15px var(--mp-num)}.mp-ver-banner span{grid-column:1;font-size:12px}
+.mp-ver-banner button{grid-row:1/span 2;grid-column:2;padding:8px 12px;font:800 13px var(--mp-num);color:#25221c;background:#f2e3bd;border:2px solid #25221c;border-radius:8px 10px 7px 9px;cursor:pointer}
+
+/* Плейтест 5: метка минуса, «из чего вложено», своя сумма с шагами, обмен из владений */
+.mp-debt-chip{pointer-events:auto;order:0;display:flex;flex-direction:column;align-items:center;padding:2px 7px;border:2px solid #25221c;border-radius:8px 10px 7px 9px;
+  background:#a92720;color:#fbf0d4;font-family:var(--mp-num);box-shadow:2px 2px 0 #25221c;cursor:pointer;line-height:1.1}
+.mp-debt-chip[hidden]{display:none}
+.mp-debt-chip b{font-size:13px}.mp-debt-chip small{font-size:9px;font-weight:700}
+.mp-debt-chip.warn{animation:mp-blink 1s steps(2,jump-none) infinite}
+@media (prefers-reduced-motion:reduce){.mp-debt-chip.warn{animation:none}}
+#card .mp-inv-parts{margin:-2px 0 6px;font-size:12px;line-height:1.35;color:#4a3f31}
+#card .mp-offer-own{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+#card .mp-offer-own>span:first-child{flex-basis:100%;font:700 13px var(--mp-txt)}
+#card .mp-offer-steps{display:flex;align-items:center;gap:4px;flex:1 1 auto}
+#card .mp-offer-steps input{width:84px;min-width:0;padding:6px!important;font:800 16px var(--mp-num)!important;text-align:center}
+#card .mp-offer-step{padding:6px 7px!important;min-height:0!important;font:800 12px var(--mp-num)!important;background:#f2e3bd!important;border:1.5px solid #25221c!important;color:#25221c!important;border-radius:7px 9px 6px 8px!important}
+#card .mp-offer-x{flex-basis:100%;font:700 12px var(--mp-num);color:#a92720}
+#card .mp-hold-acts{display:flex;flex-direction:column;gap:4px}

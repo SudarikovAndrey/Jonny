@@ -92,6 +92,26 @@ const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'$'+Math.round(n||0).toLocaleString('en-US');
 const plural=(n,a,b,c)=>{const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c;};
+// ---- версия сборки: защита от стола, открытого до выкладки (плейтест 5, 02.10) ----
+// mp.html при загрузке записал подпись каждого файла (ETag) и id версии; здесь раз в 90 с и перед стартом партии
+// спрашиваем сервер HEAD-запросом. Подпись поменялась — вышла новая версия: плашка у всех, хозяин не стартует.
+let verStale=false,verAt=0;
+const verLine=()=>{const id=(window.AB_VER||{}).id||'—';return verStale?`⚠ Вышла новая версия — <button type="button" class="mp-ver-reload">перезагрузи</button> · у тебя ${esc(id)}`:`версия ${esc(id)}`;};
+async function verCheck(){
+  const V=window.AB_VER;if(!V||!V.sig||Date.now()-verAt<4000)return verStale;verAt=Date.now();
+  for(const [u,sg] of Object.entries(V.sig)){
+    try{const r=await fetch(u+'?v='+Date.now(),{method:'HEAD',cache:'no-store'});if(!r.ok)continue;
+      const now=r.headers.get('etag')||((r.headers.get('last-modified')||'')+'/'+(r.headers.get('content-length')||''));
+      if(sg&&now&&now!==sg){if(!verStale){verStale=true;verBanner();}return true;}}catch(e){}
+  }
+  return verStale;
+}
+function verBanner(){
+  const b=el('div','mp-ver-banner');b.innerHTML=`<b>Вышла новая версия игры</b><span>${view&&view.phase==='play'?'доиграйте партию и перезагрузите страницу':'перезагрузи страницу, чтобы играть в свежую'}</span><button type="button">Перезагрузить</button>`;
+  b.querySelector('button').onclick=()=>location.reload();
+  if(view&&view.phase==='lobby')renderLobby(true);
+}
+setInterval(()=>{verCheck();},90000);setTimeout(()=>{verCheck();},5000);
 const mmss=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 
 // Идентификатор игрока живёт во вкладке: перезагрузка возвращает на то же место, две вкладки — два игрока.
@@ -268,7 +288,7 @@ function Hub(room,restored){
     // Хозяин перезагрузился посреди партии — журнал начинается заново: текущий ход пишем сразу (плейтест 4: «нет TURN #72»).
     if(!tlast){tlast=snap;if(snap.phase==='play'&&tr)tev('turn',{pid:tr.pid,name:pname(tr.pid),seat:(T.players.find(p=>p.pid===tr.pid)||{}).seat,resumed:true});return;}
     if(snap.phase!==tlast.phase){
-      if(snap.phase==='play')tev('match_start',{players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color})),rounds:T.settings.rounds,turnSec:T.settings.turnSec});
+      if(snap.phase==='play')tev('match_start',{players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color})),rounds:T.settings.rounds,turnSec:T.settings.turnSec,ver:(window.AB_VER||{}).id||null,stale:verStale});
       if(snap.phase==='over'){tev('match_over',{result:T.result,durationSec:T.startedAt?Math.round((Date.now()-T.startedAt)/1000):null});tsend(true);}
     }
     if(snap.phase==='play'&&snap.n!==tlast.n&&tr){for(let k=(tlast.n||0)+1;k<tr.n;k++){const sk=(T.events||[]).find(e=>e.kind==='skip'&&e.n===k);tev('turn_skipped',{n:k,pid:sk?sk.from:null,name:sk?pname(sk.from):null,why:sk?'карта «Очередь в ЖЭК»':'игрок офлайн'});}   // пропуски (карта «Шанса», офлайн) — чтобы номера в журнале не терялись
@@ -532,6 +552,8 @@ function onView(v,now){
   if(v.phase==='play'&&prev&&prev.phase==='over'){shownOver=null;hideOver();curTurn=null;toast('⏱ Партия продлена — играем дальше',2600);}   // «Ещё время»
   if(v.phase==='over'){mine=false;if(shownOver!==v.match){shownOver=v.match;closeAll();adopt(v);showOver(v);try{flush(true);}catch(e){}}}
   for(const e of v.events||[])if(e.id>lastEvId){lastEvId=e.id;try{onEvt(e.from,e);}catch(x){console.error(x);}}
+  // Копилка общая: цифра на клетке у всех — со стола, и в свой ход тоже (плейтест 5: «у вас 236, у меня пустая»).
+  if(S&&v.phase==='play'){const vp=Math.round(v.pot||0);if(vp!==lastViewPot){lastViewPot=vp;S.pot=vp;try{mobileSync();}catch(e){}}}
   syncTokens(v);syncFlags();updateUi();
   if(v.phase!=='lobby')applyBoardMap();
   // плакат хода гаснет, когда кубики брошены (или ход сменился, партия кончилась)
@@ -540,7 +562,7 @@ function onView(v,now){
     else if(P.kind==='rival'&&(v.turn.rolled||v.turn.pid!==P.pid))posterAway(v.turn.pid!==P.pid);
     else if(P.kind==='mine'&&(v.turn.pid!==PID||v.turn.n!==P.n||v.turn.rolled))posterAway(v.turn.pid!==PID);}
 }
-let lastEvId=0,wasLead=false;
+let lastEvId=0,wasLead=false,lastViewPot=null;
 // Инспектор бьёт лидера сильнее (решение продюсера 01.10): заметный отрыв по владениям или капиталу —
 // на карте до 4 проверок вместо 3 и штраф 75% полицейского вместо 50%. Порог: в полтора раза больше лучшего из соперников.
 function mpLeader(){
@@ -744,7 +766,7 @@ async function debtWindow(fromEnd){
   if(fromEnd&&S.cash>=0){toast('Минус закрыт',1800);}
   if(fromEnd)finishTurn();
 }
-window.MPDebt={open:debtWindow,micro:microLoan,microAmount,canMicro,stockValue,sellStock,laps:()=>S?S.mpDebtLaps||0:0};
+window.MPDebt={open:()=>debtWindow(false),micro:microLoan,microAmount,canMicro,stockValue,sellStock,laps:()=>S?S.mpDebtLaps||0:0};
 // forced=false — добровольно из окна долга: выбрать клетки на торги за долги без требования суммы.
 async function mpBankWindow(forced=true){
   while(myTurn()&&(forced?bankruptNeed()>0:S.cash<0)){
@@ -772,6 +794,7 @@ async function mpBankWindow(forced=true){
   }
 }
 window.MPBank={list:mpBankList,need:bankruptNeed,needs:()=>!!S&&bankruptNeed()>0,open:mpBankWindow,debtLaps:()=>S?S.mpDebtLaps||0:0};
+window.MPTrade={open:t=>{t=typeof t==='number'?S.tiles[t]:t;return isRival(t)?rivalWindow(t):null;},offer:(...a)=>placeOfferAmount(...a),swap:(...a)=>placeSwap(...a),proposed:()=>proposedThisTurn()};   // окно чужой клетки откуда угодно в свой ход
 window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,open:lotWindow,bid:placeBid,bidWindow,html:lotHtml};
 
 // ---- общая копилка стола: штрафы всех — в одну; забирает вставший ----
@@ -785,7 +808,7 @@ pay=potDelta(pay);payFine=potDelta(payFine);
   if(myTurn()){if(S.cash<0){S.mpDebtLaps=(S.mpDebtLaps||0)+1;
       if(S.mpDebtLaps>=DEBT_LAPS){plate('🏦 Второй круг в минусе',0,'клетки пойдут на торги в конце хода');log('🏦 Второй проход старта в минусе — клетки на торги.');}
       else{plate('⚠️ Прошёл старт в минусе',0,'ещё круг в минусе — клетки на торги');log('⚠️ Прошёл старт в минусе: предупреждение.');}}
-    else S.mpDebtLaps=0;}
+    else{S.mpDebtLaps=0;S.mpDebtSeen=0;}}
   return r;};})();
 
 // ---- касса «Однорукого бандита» — общая на стол (решение продюсера 01.10): цифра у всех одна ----
@@ -908,7 +931,9 @@ save=function(){pushSoon();};       // сохранение партии — у 
 function finishTurn(){
   if(!myTurn()||ending)return;
   if(bankruptNeed()>0&&mpBankList().length){mpBankWindow();return;}   // второй круг в минусе — ход не передать, пока клетки не на торгах
-  if(S.cash<0&&S.mpDebtAskN!==view.turn.n&&(mpBankList().length||stockValue()>0||canMicro())){S.mpDebtAskN=view.turn.n;debtWindow(true);return;}   // в минусе — сразу предложить выход
+  // Окно долга само — только когда прошёл старт в минусе (новый круг в минусе) — плейтест 5: «каждый ход подбешивает».
+  // В остальное время в минусе играешь молча; окно открывается по тапу (MPDebt.open) из метки «минус» в полосе.
+  if(S.cash<0&&(S.mpDebtLaps||0)>(S.mpDebtSeen||0)&&S.mpDebtAskN!==view.turn.n&&(mpBankList().length||stockValue()>0||canMicro())){S.mpDebtAskN=view.turn.n;S.mpDebtSeen=S.mpDebtLaps||0;debtWindow(true);return;}
   // Не ответил на предложение до конца хода — отказ, деньги покупателю возвращаются.
   for(const t of S.tiles)if(t.owner&&t.mpOffer)declineOffer(t,true);
   for(const t of S.tiles)if(t.owner&&t.mpSwap)declineSwap(t,true);
@@ -1052,7 +1077,9 @@ const titleOf=t=>t.type==='biz'?bizName(t):pointName(t);
 async function rivalWindow(t){
   const biz=t.type==='biz',owner=t.rival,who=nameOf(owner),col=colorOf(owner),inv=invested(t),title=titleOf(t);
   const g=biz?null:good(t.good),here=S.pos===t.i,offer=t.mpOffer;
-  const mine=offer&&offer.from===PID,busy=offer&&!mine,canOffer=myTurn()&&here&&!ending&&!offer;
+  // Плейтест 5: предлагать цену и обмен можно на любую чужую клетку в свой ход (из «Моих владений» и с карты), не только стоя;
+  // одно новое предложение (цена или обмен) за ход. Выкуп ×10 — по-прежнему только стоя на клетке.
+  const mine=offer&&offer.from===PID,busy=offer&&!mine,canOffer=myTurn()&&!ending&&!offer&&!t.mpSwap&&!lotOn(t.i)&&!proposedThisTurn();
   const rows=[
     biz?['Уровень',t.level]:['Уровень',t.salesLvl],
     biz?['За остановку',money(fee(t)*CFG.BIZ.landMult)]:['Прибыль хозяина за круг',money(sales(t)*marginOf(t.good))],
@@ -1064,21 +1091,23 @@ async function rivalWindow(t){
   const opts=OFFER_MULTS.map(m=>{const a=Math.round(inv*m),ok=canOffer&&S.cash>=a;
     return `<button type="button" class="mp-mult buy-btn ${ok?'buy-ok':'buy-no'}" data-m="${m}" ${ok?'':'disabled'}><b>×${String(m).replace('.',',')}</b><span>${money(a)}</span></button>`;}).join('');
   const lot=lotOn(t.i),forceAmt=Math.round(inv*FORCE_MULT),canForce=myTurn()&&here&&!ending&&!lot&&forceReady()&&S.cash>=forceAmt;
-  const swapHtml=here&&!ending&&!lot&&myTurn()?swapBlock(t):'';
+  const swapHtml=!ending&&!lot&&myTurn()&&(!proposedThisTurn()||(t.mpSwap&&t.mpSwap.from===PID))?swapBlock(t):'';
   if(t.frozen&&view.turn&&t.frozen>view.turn.n)rows.push(['Заморожена','ренты нет до следующего хода хозяина']);
   const pending=modal(`<h2>${biz?bizIcon(t):g.icon} ${esc(title)}</h2>
     <p class="t mp-owner"><i style="background:${col}">${esc(who.slice(0,1).toUpperCase())}</i> Хозяин — <b style="color:${col}">${esc(who)}</b></p>
     ${rows.map(r=>`<div class="row"><span class="n">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')}
     ${mine?`<div class="mp-choice"><b>Твоё предложение — ${money(offer.amount)}</b><p>${esc(who)} ответит в начале своего хода. Деньги в резерве; откажет — вернутся.</p></div>`
      :busy?`<div class="mp-choice"><b>${esc(nameOf(offer.from))} уже предложил цену</b><p>Одно предложение на клетку — жди ответа ${esc(who)}.</p></div>`
-     :`<div class="mp-choice"><b>${here?'Рента уплачена. Предложи хозяину цену:':'Встань на клетку — сможешь предложить цену.'}</b>
+     :`<div class="mp-choice"><b>${!myTurn()?'Предложить цену можно в свой ход.':proposedThisTurn()?'В этот ход ты уже сделал предложение — следующее в следующий ход.':'Предложи хозяину цену:'}</b>
        <p>Сумма — от того, что ${esc(who)} вложил. ${esc(who)} решит в начале своего хода: согласится — ${biz?'бизнес':'точка'} твоя${biz?'':' вместе с товаром'}, откажет — деньги вернутся.</p>
-       <div class="mp-mults">${opts}</div></div>`}
+       <div class="mp-mults">${opts}</div>
+       ${canOffer?`<div class="mp-offer-own"><span>Своя сумма, от ${money(inv)}:</span><input type="number" class="mp-offer-amount" min="${Math.ceil(inv/10)*10}" step="10" value="${Math.ceil(inv*1.5/10)*10}"><button type="button" class="mp-offer-go buy-btn buy-ok">Предложить</button></div>`:''}</div>`}
     ${lot?lotHtml(lot):''}
     ${swapHtml}
     ${here&&!ending&&!lot?`<div class="mp-choice mp-force-box"><b>Или выкупить сразу, без согласия ${esc(who)}:</b><button type="button" class="mp-force buy-btn ${canForce?'buy-ok':'buy-no'}" ${canForce?'':'disabled'}>${forceReady()?`Выкупить ×${FORCE_MULT} · ${money(forceAmt)}`:`Выкуп ×${FORCE_MULT} — через ${forceWait()} ${plural(forceWait(),'круг','круга','кругов')}`}</button></div>`:''}`,
     [{t:'Уйти',v:0,cls:'sec'}]);
   $('card').querySelectorAll('.mp-mult').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal(+b.dataset.m);});
+  {const go=$('card').querySelector('.mp-offer-go');if(go)go.onclick=()=>{const a=Math.round(+$('card').querySelector('.mp-offer-amount').value||0);if(a<inv){toast(`Не меньше вложенного — ${money(inv)}`);return;}if(a>S.cash){toast('Столько денег нет');return;}closeModal('amt:'+a);};}
   {const f=$('card').querySelector('.mp-force');if(f)f.onclick=()=>{if(!f.disabled)closeModal('force');};}
   wireBids();
   {const sb=$('card').querySelector('.mp-swap-go');if(sb)sb.onclick=()=>{if(sb.disabled)return;const g=+$('card').querySelector('.mp-swap-give').value,pay=+$('card').querySelector('.mp-swap-pay').value;closeModal('swap:'+g+':'+pay);};}
@@ -1086,9 +1115,11 @@ async function rivalWindow(t){
   if(m==='force'){forceBuy(t);return;}
   if(typeof m==='string'&&m.startsWith('swap:')){const [,g,pay]=m.split(':');placeSwap(t,+g,+pay);return;}
   if(typeof m==='string'&&m.startsWith('bid:')){placeBid(lot&&lot.id,+m.slice(4));return;}
+  if(typeof m==='string'&&m.startsWith('amt:')){placeOfferAmount(t,+m.slice(4));return;}
   if(!m||!OFFER_MULTS.includes(m))return;
   placeOffer(t,m);
 }
+const proposedThisTurn=()=>!!(view&&view.turn&&S&&S.mpProposeN===view.turn.n);
 // ---- обмен клетками с доплатой (решение продюсера 02.10: «делай») ----
 // Стоя на чужой клетке, предлагаешь хозяину свою клетку в обмен; доплата −$500…+$500 (плюс — платишь ты, минус — он).
 // Хозяин отвечает в начале своего хода; товар остаётся в клетках. Один обмен на пару игроков за партию (метка mpSwapPair на клетках).
@@ -1110,9 +1141,9 @@ function swapBlock(t){
 }
 function placeSwap(t,give,pay){
   const g=S.tiles[give];
-  if(!isRival(t)||t.mpSwap||t.mpOffer||!myTurn()||S.pos!==t.i||lotOn(t.i)||!g||!g.owner||lotOn(give)||swappedWith(t.rival))return false;
+  if(!isRival(t)||t.mpSwap||t.mpOffer||!myTurn()||ending||lotOn(t.i)||!g||!g.owner||lotOn(give)||swappedWith(t.rival)||proposedThisTurn())return false;
   if(pay>0){if(S.cash<pay){toast(`На доплату ${money(pay)} нет денег`);return false;}S.cash-=pay;S.mpEscrow=(S.mpEscrow||0)+pay;}
-  const who=nameOf(t.rival);t.mpSwap={from:PID,give,pay,n:view.turn.n};
+  const who=nameOf(t.rival);t.mpSwap={from:PID,give,pay,n:view.turn.n};S.mpProposeN=view.turn.n;
   track('mp_swap_offer',{tile:t.i,give,pay,to:t.rival});
   log(`🔁 Предложил ${who} обмен: «${titleOf(g)}» на «${titleOf(t)}»${pay?`, доплата ${pay>0?'моя':'его'} ${money(Math.abs(pay))}`:''}.`);
   plate(`🔁 Обмен · ${who}`,pay>0?-pay:0,'ответ — в начале его хода');
@@ -1156,10 +1187,13 @@ function declineSwap(t,silent){
   emit({kind:'decline',text:`отказал в обмене на «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});
   if(!silent){log(`✋ Отказал ${nameOf(o.from)} в обмене.`);save();render();}push();
 }
-function placeOffer(t,m){
-  if(!isRival(t)||t.mpOffer||!myTurn()||S.pos!==t.i||lotOn(t.i))return false;
-  const owner=t.rival,who=nameOf(owner),title=titleOf(t),amount=Math.round(invested(t)*m);if(S.cash<amount)return false;
-  S.cash-=amount;S.mpEscrow=(S.mpEscrow||0)+amount;
+function placeOffer(t,m){return placeOfferAmount(t,Math.round(invested(t)*m),m);}
+// Своя сумма — не меньше вложенного хозяином (×1); множитель для окна хозяина — amount / вложенное.
+function placeOfferAmount(t,amount,m){
+  if(!isRival(t)||t.mpOffer||t.mpSwap||!myTurn()||ending||lotOn(t.i)||proposedThisTurn())return false;
+  const owner=t.rival,who=nameOf(owner),title=titleOf(t),inv=invested(t);amount=Math.round(amount);if(amount<Math.round(inv)||S.cash<amount)return false;
+  m=m||Math.round(amount/Math.max(1,inv)*100)/100;
+  S.cash-=amount;S.mpEscrow=(S.mpEscrow||0)+amount;S.mpProposeN=view.turn.n;
   t.mpOffer={from:PID,amount,mult:m,n:view.turn.n};
   track('mp_offer',{tile:t.i,to:owner,amount,mult:m});
   log(`💼 Предложил ${who} ${money(amount)} за «${title}» (×${m}).`);
@@ -1285,7 +1319,8 @@ pauseBtn.onclick=()=>{if(!view||view.phase!=='play'||view.paused)return;
 const menuBtn=el('button','mp-pausebtn mp-menubtn',bar);menuBtn.type='button';menuBtn.title='Меню партии';menuBtn.setAttribute('aria-label','Меню партии');menuBtn.textContent='☰';
 menuBtn.onclick=async()=>{
   if(!view||!$('modal').hidden||moving)return;const host=!!(net&&net.host);
-  const v=await modal(`<h2>☰ Партия · стол ${esc(ROOM)}</h2>
+  await verCheck();
+  const v=await modal(`<h2>☰ Партия · стол ${esc(ROOM)}</h2><p class="mp-ver ${verStale?'stale':''}">${verLine()}</p>
     ${host?'<p class="t mp-warn">Ты хозяин стола: если выйдешь, партия остановится у всех.</p>':'<p class="t">Выйдешь — твоё место останется, вернуться можно по коду стола.</p>'}`,
     [{t:'Продолжить',v:0,cls:'ok'},{t:'🏠 Мои владения',v:6,cls:'sec'},{t:`🗺 Карта: ${mapName(tableMap())}${host?'':' · меняет хозяин'}`,v:5,cls:'sec',dis:!host},window.MPRules?{t:'Правила',v:4,cls:'sec'}:null,view.win?{t:'Как победить',v:3,cls:'sec'}:null,{t:'Выйти из-за стола',v:1,cls:'sec'},{t:'Играть одному',v:2,cls:'sec'}].filter(Boolean));
   if(v===3)winEl.click();
@@ -1384,6 +1419,7 @@ function mpRender(){
   // Копилка: что она копит (плейтест 01.10: «копилка +0» никто не понял).
   if(tb&&t&&t.type==='pot'&&!moving&&!tb.hidden)$('tbText').textContent=`🐷 Копилка ${money((view&&view.pot)||0)} — штрафы всех; встал — забрал`;
   hubLabel();
+  try{debtSync();playersDock();}catch(e){}   // док «Игроки» соло перерисовывает при каждой отрисовке — возвращаем фишки
 }
 // «Сан-Франциско 0/6» в шапке — это свои категории товара (каждая +6% к ценам). Шапку перерисовывает top-hud.js — подпись ставим заново.
 // Верхняя центральная панель в партии — условие победы и бар прогресса к нему (плейтест 4, 02.10: «Твои категории»
@@ -1431,7 +1467,7 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();
+  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
@@ -1524,6 +1560,7 @@ function setVar(k,v){if(vars[k]===v)return;vars[k]=v;document.documentElement.st
 {const b=$('bJohnny');if(b){
   b.classList.add('mp-players');b.setAttribute('aria-label','Игроки');b.title='Игроки';
   b.addEventListener('click',e=>{if(!view||view.phase!=='play')return;e.stopImmediatePropagation();e.preventDefault();playersWindow();},true);}}
+{const b=$('bJohnny');if(b)new MutationObserver(()=>{if(!b.querySelector('.mp-dk-pl'))playersDock();}).observe(b,{childList:true});}   // кто бы ни переписал док — фишки возвращаются
 function playersDock(){
   const b=$('bJohnny');if(!b||!view||!view.players)return;
   // Разметку дока соло один раз переписывают при запуске — ставим свою, когда её нет (подписи в доке скрыты: значок — фишки игроков).
@@ -1545,7 +1582,7 @@ function holdRow(i,opts){
   const lot=lotOn(i),busy=lot?'🔨 на торгах':t.mpOffer?'💼 предложение':t.mpSwap?'🔁 обмен':'';
   let rent=0;try{rent=rentOfMine(t);}catch(e){}
   const act=opts.pick?`<button type="button" class="sm mp-hold-pick buy-btn ${busy?'buy-no':'buy-ok'}" data-i="${i}" ${busy?'disabled':''}>${esc(opts.pickLabel||'Выбрать')}</button>`
-    :myTurn()&&!ending&&!busy?`<button type="button" class="sm sec mp-hold-lot" data-i="${i}">🔨 На торги</button>`:'';
+    :myTurn()&&!ending&&!busy?`<span class="mp-hold-acts"><button type="button" class="sm sec mp-hold-lot" data-i="${i}">🔨 На торги</button>${proposedThisTurn()?'':`<button type="button" class="sm sec mp-hold-swap" data-i="${i}">🔁 Обменять</button>`}</span>`:'';
   return `<div class="mp-hold-row"><em>${icon}</em><div><b>${esc(titleOf(t))}</b><small>клетка ${i} · ур. ${lvl||1} · вложено ${money(invested(t))} · 🏠 ${money(rent)}${busy?` · ${busy}`:''}</small></div>${act}</div>`;
 }
 async function holdingsWindow(opts={}){
@@ -1556,16 +1593,29 @@ async function holdingsWindow(opts={}){
   const pending=modal(`<h2>🏠 ${esc(opts.title||'Мои владения')}</h2>${opts.lead?`<p class="t">${opts.lead}</p>`:'<p class="t">По порядку на поле, соседи — группой: продашь или отдашь клетку из группы — у соседей рента ниже.</p>'}${body}`,[{t:opts.pick?'Назад':'Закрыть',v:0,cls:'sec'}]);
   $('card').querySelectorAll('.mp-hold-pick').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal('pick:'+b.dataset.i);});
   $('card').querySelectorAll('.mp-hold-lot').forEach(b=>b.onclick=()=>closeModal('lot:'+b.dataset.i));
+  $('card').querySelectorAll('.mp-hold-swap').forEach(b=>b.onclick=()=>closeModal('swap:'+b.dataset.i));
   const v=await pending;
   if(typeof v==='string'&&v.startsWith('lot:')){setTimeout(()=>lotWindow(+v.slice(4)),180);return null;}
   if(typeof v==='string'&&v.startsWith('pick:'))return +v.slice(5);
+  // Обменять свою клетку: выбрать чужую на карте (кольца над клетками соперников), дальше — доплата.
+  if(typeof v==='string'&&v.startsWith('swap:')){const give=+v.slice(5);
+    const cands=S.tiles.filter(x=>isRival(x)&&!x.mpOffer&&!x.mpSwap&&!lotOn(x.i)&&!swappedWith(x.rival)).map(x=>({i:x.i,title:`${titleOf(x)} · ${nameOf(x.rival)}`,price:invested(x),bank:0}));
+    if(!cands.length){toast('Меняться не на что: у соперников нет свободных клеток');return null;}
+    await wait(180);const r=await mapPick(cands,{title:`🔁 На что меняешь «${titleOf(S.tiles[give])}»`,sum:sel=>sel.size>1?'выбери одну клетку':sel.size?'дальше — доплата':'тап по клетке соперника'});
+    if(r&&r.size===1){await wait(150);swapPay(S.tiles[[...r][0]],give);}else if(r&&r.size>1)toast('Выбери одну клетку соперника');
+    return null;}
   return null;
 }
+let lastRival=null;
+rivalWindow=(function(base){return function(t){lastRival=t;return base.apply(this,arguments);};})(rivalWindow);
 // Обмен: вместо двух голых списков — выбрать свою клетку в «Моих владениях», затем доплату с карточкой «отдаёшь → получаешь».
 async function swapFlow(t){
-  if(!isRival(t)||!myTurn()||S.pos!==t.i)return;const who=nameOf(t.rival);
+  if(!isRival(t)||!myTurn())return;const who=nameOf(t.rival);
   const give=await holdingsWindow({pick:true,pickLabel:'Отдать',title:'Что отдаёшь в обмен',lead:`На «${esc(titleOf(t))}» хозяина ${esc(who)}. Выбери свою клетку — дальше доплата.`});
-  if(give==null)return;const g=S.tiles[give];await wait(200);
+  if(give==null)return;await wait(200);return swapPay(t,give);
+}
+async function swapPay(t,give){
+  const who=nameOf(t.rival),g=S.tiles[give];if(!g||!isRival(t))return;
   const card=(x,mine)=>{let r=0;try{r=mine?rentOfMine(x):rentOf(x);}catch(e){}const biz=x.type==='biz';
     return `<div class="mp-swap-card"><em>${biz?bizIcon(x):(good(x.good)||{}).icon||'🏪'}</em><b>${esc(titleOf(x))}</b><small>ур. ${(biz?x.level:x.salesLvl)||1} · вложено ${money(invested(x))} · 🏠 ${money(r)}</small></div>`;};
   const pays=SWAP_PAYS.map(v=>`<button type="button" class="mp-swap-p ${v===0?'on':''}" data-v="${v}">${v>0?'ты +'+money(v):v<0?esc(who)+' +'+money(-v):'без доплаты'}</button>`).join('');
@@ -1581,7 +1631,42 @@ new MutationObserver(()=>{
   const go=box.querySelector('.mp-swap-go');if(!go)return;box.dataset.ui='1';
   box.querySelectorAll('select').forEach(x=>x.style.display='none');go.style.display='none';
   const b=document.createElement('button');b.type='button';b.className='mp-swap-open buy-btn buy-ok';b.textContent='🔁 Выбрать, что отдаёшь';
-  b.onclick=()=>{const t=S.tiles[S.pos];closeModal(0);setTimeout(()=>swapFlow(t),200);};box.append(b);
+  b.onclick=()=>{const t=lastRival||S.tiles[S.pos];closeModal(0);setTimeout(()=>swapFlow(t),200);};box.append(b);
+}).observe($('card'),{childList:true,subtree:true});
+// ---- тап по чужой клетке на карте — её окно: рента, предложить цену или обмен (плейтест 5) ----
+{const cv=$('board');let down=null;
+  if(cv){cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};},true);
+    cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||pick||!view||view.phase!=='play'||!$('modal').hidden||moving)return;
+      if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>8||!MobileHost.ready)return;
+      let best=-1,bd=40;for(let i=0;i<40;i++){const q=screenOfTile(i),dd=Math.hypot(e.clientX-q.x,e.clientY-q.y);if(dd<bd){bd=dd;best=i;}}
+      const t=best>=0&&S.tiles[best];if(!t||!isRival(t))return;
+      e.stopImmediatePropagation();window.MPTrade?MPTrade.open(t):rivalWindow(t);},true);}}
+// ---- минус: красная метка в полосе, тап — окно долга (само оно открывается только при проходе старта, «Геймплей» be12a25) ----
+const debtChip=el('button','mp-debt-chip',bar);debtChip.type='button';debtChip.hidden=true;
+debtChip.onclick=()=>{if(window.MPDebt&&$('modal').hidden&&!moving)MPDebt.open();};
+function debtSync(){
+  const on=!!(view&&view.phase==='play'&&S&&S.cash<0);debtChip.hidden=!on;if(!on)return;
+  const laps=window.MPDebt?MPDebt.laps():0,html=`<b>−${money(-S.cash)}</b><small>${laps>=1?'прошёл старт в минусе':'в минусе'}</small>`;
+  if(debtChip._h!==html){debtChip._h=html;debtChip.innerHTML=html;}debtChip.classList.toggle('warn',laps>=1);
+}
+// ---- окно чужой клетки: из чего «вложено» (плейтест 5: «почему за 100? откуда это предложение») и своя сумма с ± ----
+function investedParts(t){
+  if(t.type==='biz')return [['бизнес с прокачками',invested(t)-(t.mpPrem||0)]].concat(t.mpPrem?[['сверху за прошлую сделку',t.mpPrem]]:[]);
+  const base=t.price||(window.SFBuilder&&SFBuilder.basePrice?SFBuilder.basePrice(t.base):0),parts=[['стройка',base]];let up=0;
+  for(let l=1;l<(t.salesLvl||1);l++)up+=salesCost({base:t.base,good:t.good,salesLvl:l});
+  if(up)parts.push([`прокачки до ур. ${t.salesLvl}`,up]);if(t.mpPrem)parts.push(['сверху за прошлую сделку',t.mpPrem]);return parts;
+}
+new MutationObserver(()=>{
+  const c=$('card');if(!c||$('modal').hidden||!lastRival)return;
+  const row=[...c.querySelectorAll('.row')].find(r=>/Вложено хозяином/.test(r.textContent));
+  if(row&&!c.querySelector('.mp-inv-parts')){let parts=[];try{parts=investedParts(lastRival);}catch(e){}
+    if(parts.length){const d=document.createElement('p');d.className='mp-inv-parts';d.textContent='= '+parts.map(([n,v])=>`${n} ${money(v)}`).join(' + ')+'. Цены ×1…×10 — от этой суммы.';row.after(d);}}
+  const own=c.querySelector('.mp-offer-own');
+  if(own&&!own.dataset.ui){own.dataset.ui='1';const inp=own.querySelector('.mp-offer-amount');if(inp){
+    const mk=(txt,dv)=>{const b=document.createElement('button');b.type='button';b.className='mp-offer-step';b.textContent=txt;b.onclick=()=>{const min=+inp.min||0;inp.value=Math.max(min,Math.round((+inp.value||0)+dv));inp.dispatchEvent(new Event('input'));};return b;};
+    const wrap=document.createElement('span');wrap.className='mp-offer-steps';wrap.append(mk('−50',-50),mk('−10',-10),inp,mk('+10',10),mk('+50',50));own.insertBefore(wrap,own.querySelector('.mp-offer-go'));
+    const inv=invested(lastRival),hint=document.createElement('small');hint.className='mp-offer-x';own.append(hint);
+    const upd=()=>{hint.textContent=inv?`×${((+inp.value||0)/inv).toFixed(1).replace('.',',')} к вложенному`:'';};inp.addEventListener('input',upd);upd();}}
 }).observe($('card'),{childList:true,subtree:true});
 function playersWindow(){
   if(!view||view.phase!=='play'||!$('modal').hidden||moving)return;
@@ -1676,7 +1761,7 @@ function onEvt(from,e){
     const big=mine&&['offer','sale','decline','hit','bid','won','bank','unsold'].includes(e.kind);
     if(!big&&e.kind!=='chance'&&e.kind!=='scatter'&&e.kind!=='insp'&&e.text){
       const n=noteOf(p,e,mine,amount);
-      if(e.tile!=null&&MobileHost.ready)fieldNote(e.tile,p,n.text,n.amount,mine&&e.kind==='rent');else tickerAdd(p,Object.assign({},e,{text:n.text}),n.amount);
+      if(e.tile!=null&&MobileHost.ready)fieldNote(e.tile,p,n.text,n.amount,(mine&&e.kind==='rent')||n.big);else tickerAdd(p,Object.assign({},e,{text:n.text}),n.amount);
     }
   } else if(e.tile!=null&&amount)floatAt(e.tile,(amount>0?'+':'−')+money(Math.abs(amount)),amount>0?'#2f6b35':'#a92720');
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
@@ -1718,6 +1803,7 @@ function noteOf(p,e,mine,amount){
   const tile=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile],where=tile?`«${titleOf(tile)}»`:'';
   if(e.kind==='rent')return mine?{text:`попал на твою клетку ${where}`,amount:Math.abs(amount||0)}:{text:`попал на клетку ${nameOf(e.to)} ${where}`,amount:-Math.abs(amount||0)};
   if(e.kind==='scatter')return {text:`попал на инкассатора — разлетелось ${e.cash?money(e.cash):'по клеткам'}`,amount:null};
+  if(/копилк/.test(e.text||''))return {text:'забрал копилку стола',amount:Math.abs(amount||0),big:true};
   return {text:e.text,amount};
 }
 // Заметка у клетки: бумажный ярлык над клеткой, едет вместе с полем, гаснет через 3,5 с; про тебя — крупнее.
@@ -1867,11 +1953,15 @@ function renderLobby(force){
     <p class="mp-est">${n>=2?`${C.modeOf(T)==='time'?T.settings.minutes+' мин':C.modeOf(T)==='laps'?T.settings.rounds+' '+plural(T.settings.rounds,'круг','круга','кругов'):'без лимита'} на ${n} ${plural(n,'игрока','игроков','игроков')} · ${esc(C.winOf(T).name)}: ${esc(C.winOf(T).text)} · очерёдность разыграется случайно`:'Нужно минимум двое'}</p>
     ${window.MPRules?'<button class="sec mp-rules-btn" id="mpRulesBtn" type="button">📖 Как играть</button>':''}
     ${host?`<button class="mp-big" id="mpStart" ${C.canStart(T)?'':'disabled'}>Начать</button>`:'<p class="mp-lead mp-waithost">Ждём, когда хозяин стола начнёт…</p>'}
-    <a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Выйти</a>`);
+    <a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Выйти</a>
+    <p class="mp-ver ${verStale?'stale':''}">${verLine()}</p>`);
   lobby.querySelectorAll('.mp-seg button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,v=b.dataset.v;net.send({t:'settings',[k]:isNaN(+v)?v:+v});});
   lobby.querySelectorAll('.mp-kick').forEach(b=>b.onclick=()=>net.send({t:'kick',pid:b.dataset.pid}));
   {const ms=lobby.querySelector('.mp-map-sel');if(ms)ms.onchange=()=>net.send({t:'settings',boardMap:ms.value});}
-  const st=$('mpStart');if(st)st.onclick=()=>net.send({t:'start'});
+  const st=$('mpStart');if(st){if(verStale)st.disabled=true;
+    // Хозяин не начинает партию на старой версии (плейтест 5: стол открыли до выкладки и играли в исправленные баги).
+    st.onclick=async()=>{st.disabled=true;await verCheck();if(verStale){toast('Вышла новая версия — перезагрузи страницу, потом начинай',3200);renderLobby(true);return;}net.send({t:'start'});};}
+  {const rb=lobby.querySelector('.mp-ver-reload');if(rb)rb.onclick=()=>location.reload();}
   {const rb=$('mpRulesBtn');if(rb)rb.onclick=()=>MPRules.open();}
   // Правила — сами один раз на телефоне, когда впервые сел за стол (плейтест 01.10: «обучение перед партией»).
   // Хозяину сначала нужно позвать друзей — ему сама не открывается (плейтест 02.10); гостю — один раз.
@@ -1960,7 +2050,7 @@ async function enter(){
   renderEntry();
 }
 async function shareLink(){const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${ROOM}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);}
-window.MP={get view(){return view;},get pid(){return PID;},finishTurn,rentOf:t=>rentOf(t),invested,owners,share:shareLink,extend:()=>net&&net.host&&net.send({t:'extend'})};
+window.MP={get view(){return view;},get pid(){return PID;},verCheck,get verStale(){return verStale;},finishTurn,rentOf:t=>rentOf(t),invested,owners,share:shareLink,extend:()=>net&&net.host&&net.send({t:'extend'})};
 // ---- тестовый стол (?test=1): внутренности для ботов и панели механик (web/mp-test.js). У живых столов этого объекта нет ----
 if(TEST){
   window.__MP={
