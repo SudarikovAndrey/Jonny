@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'dec25744'+(m?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'96c92330'+(m?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -2068,7 +2068,7 @@ function mobileSync(){
   mobileCheckCash();
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,lvl:t.owner?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?S.pot:0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
+    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,   // уровень и у чужих клеток в партии (башенки соперников, плейтест 02.10)pot:t.type==='pot'?S.pot:0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?(window.MinigameRotation&&MinigameRotation.current(S.minigames)==='dice21'?'':'$'+((S.slot&&S.slot.pot)||0)):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -2262,7 +2262,9 @@ function panMap(dx,dy){
   MobileHost.send({action:'pan',dx,dy,input_width:$('board-frame').getBoundingClientRect().width});
 }
 cv.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY};tapMoved=false;cv.setPointerCapture(e.pointerId);});
-cv.addEventListener('pointermove',e=>{if(!gesture||pinchDistance)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>2)tapMoved=true;panMap(dx,dy);gesture={x:e.clientX,y:e.clientY};});
+// Мышь: кнопку отпустили, а pointerup не дошёл (захват потерян, курсор ушёл в окно поля) — карта больше не тянется за курсором
+// (плейтест 02.10, «камера залипает после перетаскивания»).
+cv.addEventListener('pointermove',e=>{if(gesture&&e.pointerType==='mouse'&&!e.buttons){gesture=null;return;}if(!gesture||pinchDistance)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>2)tapMoved=true;panMap(dx,dy);gesture={x:e.clientX,y:e.clientY};});
 cv.addEventListener('pointerup',e=>{
   gesture=null;if(tapMoved||moving||trainingPending()||!$('modal').hidden)return;
   const r=$('board-frame').getBoundingClientRect();
@@ -2278,6 +2280,8 @@ cv.addEventListener('pointerup',e=>{
   else if(t.type==='bank'&&S.day>=CFG.BANK_DAY)bank();
 });
 cv.addEventListener('pointercancel',()=>{gesture=null;});
+cv.addEventListener('lostpointercapture',()=>{gesture=null;});
+addEventListener('blur',()=>{gesture=null;});
 cv.addEventListener('wheel',e=>{
   e.preventDefault();
   const unit=e.deltaMode===1?16:e.deltaMode===2?cv.getBoundingClientRect().height:1;
@@ -3831,7 +3835,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='d994e21c11';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='d9b9e232e1';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -5494,18 +5498,24 @@ function symbols(o,rng){
  if(o.count===2){const x=o.symbol||pick(['seven','gem','coin','cherry']);return shuffle([x,x,pick(SYMBOLS.filter(s=>s!==x))],rng);}
  return shuffle(SYMBOLS.slice(),rng).slice(0,3);
 }
+// Мультиплеер (rollCash>0, плейтест 02.10: $970 за визит решали партию): P — прибыль за круг, но не выше MP_P_CAP;
+// денежные призы — доли MP_PAY; джекпот — касса стола + 2 кристалла; кубики — 6 и 2 курса rollCash.
+const MP_P_CAP=400,MP_PAY={coin3:.6,cherry3:.3,pair:.15,dice3:6,dice2:2,jackpotGem:2};
+const isMP=s=>s.rollCash>0;
+// Прокрутки за кристаллы дорожают с каждым визитом: 1 → 2 → 3 (мультиплеер, плейтест 02.10); соло — 1.
+function packPrice(s){return isMP(s)?Math.min(3,Math.max(1,integer(s.visits,0,99))):1;}
 function award(s,o,syms){
- const P=Math.max(s.P,15*s.day),p={id:o.id,syms,cash:0,gem:0,move:0,restock:null};
+ const mp=isMP(s),P=mp?Math.min(MP_P_CAP,Math.max(s.P,15*s.day)):Math.max(s.P,15*s.day),p={id:o.id,syms,cash:0,gem:0,move:0,restock:null};
  switch(o.id){
- case 'jackpot':p.cash=s.pot;p.gem=5;break;
+ case 'jackpot':p.cash=s.pot;p.gem=mp?MP_PAY.jackpotGem:5;break;
  case 'gem3':p.gem=3;break;
- case 'dice3':if(s.rollCash>0)p.cash=10*s.rollCash;else p.move=10;break;
- case 'coin3':p.cash=Math.round(1.5*P);break;
+ case 'dice3':if(mp)p.cash=MP_PAY.dice3*s.rollCash;else p.move=10;break;
+ case 'coin3':p.cash=Math.round((mp?MP_PAY.coin3:1.5)*P);break;
  case 'box3':p.restock='all';break;
- case 'cherry3':p.cash=Math.round(.5*P);break;
- case 'dice2':if(s.rollCash>0)p.cash=3*s.rollCash;else p.move=3;break;
+ case 'cherry3':p.cash=Math.round((mp?MP_PAY.cherry3:.5)*P);break;
+ case 'dice2':if(mp)p.cash=MP_PAY.dice2*s.rollCash;else p.move=3;break;
  case 'box2':p.restock='one';break;
- case 'pair':p.cash=Math.round(.25*P);break;
+ case 'pair':p.cash=Math.round((mp?MP_PAY.pair:.25)*P);break;
  default:break; // разнобой — мимо
  }
  return p;
@@ -5514,7 +5524,7 @@ function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.
 class Game {
  constructor(raw,rng=Math.random){this.state=restore(raw);this.rng=rng;this.busy=false;}
  available(){return this.state.paidSpins+(this.state.freeSpins||0);}
- buyPack(){const s=this.state;if(this.busy||s.gem<1||this.available()>0)return false;s.gem--;s.paidSpins+=5;return true;}
+ buyPack(){const s=this.state,price=packPrice(s);if(this.busy||s.gem<price||this.available()>0)return false;s.gem-=price;s.paidSpins+=5;return true;}
  begin(forced){
   const s=this.state;if(this.busy||s.pending||s.closed||this.available()<1)return null;
   this.busy=true;s.lastPrize=null;if(s.freeSpins>0)s.freeSpins--;else s.paidSpins--;s.freeSpin=s.freeSpins>0;
@@ -5543,7 +5553,7 @@ class Game {
  close(){if(this.busy)return false;this.collect();this.state.closed=true;return true;}
  snapshot(){return clone(this.state);}
 }
-const API={Game,OUTCOMES,SYMBOLS,initial,restore,award,symbols,choose,describe,money,integer};
+const API={Game,OUTCOMES,SYMBOLS,initial,restore,award,symbols,choose,describe,money,integer,packPrice,MP_PAY,MP_P_CAP};
 if(typeof module!=='undefined')module.exports=API;else root.SlotEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 
@@ -5621,7 +5631,7 @@ function open(opts={}){
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Однорукий бандит');
  const loading=document.createElement('div');loading.className='sl-loading';loading.textContent='Открываем автомат…';
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
- const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=f1a07c723213#'+encodeURIComponent(token);
+ const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=112f89bea174#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
  current={promise,session,frame,token,layer,closing:false,resolve,events:window.MinigameEvents?.begin('slot',{landing:opts.free!==false&&opts.landing===true})};
  const finish=()=>{
@@ -5651,8 +5661,12 @@ function connect(child,token){
 // Keep the chosen game until the next actual landing, including after reload.
 function openTile({landing=false}={}){
  if(S.finished||document.querySelector('.minigame-layer'))return Promise.resolve();
+ // Мультиплеер (web/mp.js, MPSlotHooks): мини-игра — только в ход остановки; касса автомата общая на стол.
+ const H=window.MPSlotHooks&&window.MPSlotHooks.active()?window.MPSlotHooks:null;
+ if(H&&!landing&&!H.canPlay()){H.deny();return Promise.resolve();}
  if(landing){S.minigames=MinigameRotation.advance(S.minigames);save();}
- return MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
+ const run=()=>MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
+ return H?H.wrap(run,landing):run();
 }
 // Every completed lap contributes to the same persistent jackpot.
 if(typeof lapDone==='function'){const base=lapDone;lapDone=async function(){const result=await base.apply(this,arguments);st().pot=(st().pot||0)+10*S.day;save();return result;};}

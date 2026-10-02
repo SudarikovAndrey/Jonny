@@ -75,8 +75,12 @@ function connect(child,token){
 // Keep the chosen game until the next actual landing, including after reload.
 function openTile({landing=false}={}){
  if(S.finished||document.querySelector('.minigame-layer'))return Promise.resolve();
+ // Мультиплеер (web/mp.js, MPSlotHooks): мини-игра — только в ход остановки; касса автомата общая на стол.
+ const H=window.MPSlotHooks&&window.MPSlotHooks.active()?window.MPSlotHooks:null;
+ if(H&&!landing&&!H.canPlay()){H.deny();return Promise.resolve();}
  if(landing){S.minigames=MinigameRotation.advance(S.minigames);save();}
- return MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
+ const run=()=>MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
+ return H?H.wrap(run,landing):run();
 }
 // Every completed lap contributes to the same persistent jackpot.
 if(typeof lapDone==='function'){const base=lapDone;lapDone=async function(){const result=await base.apply(this,arguments);st().pot=(st().pot||0)+10*S.day;save();return result;};}

@@ -9,7 +9,9 @@ const MAX_PLAYERS=4, MIN_PLAYERS=2;
 // rounds — длина партии в проходах через старт (решение продюсера 01.10: «проходы через старт = круги»).
 // Плейтест 01.10 (второй): длина партии — по времени, 15…30 минут (решение продюсера): кругов 25…500 было слишком много.
 // rounds остаётся страховочным потолком раундов стола. win — условие победы, показывается в лобби и в партии.
-const DEFAULTS={rounds:25,turnSec:60,autoRounds:true,minutes:20,win:'capital'};
+// Третий плейтест 02.10: длина партии — минуты ИЛИ круги (mode time|laps); миссии (все условия, кроме «Богатейшего») без лимита.
+const DEFAULTS={rounds:10,turnSec:60,autoRounds:true,minutes:20,win:'capital',mode:'time'};
+const MODE_OPTIONS=['time','laps'];
 const MINUTE_OPTIONS=[15,20,25,30];
 // Условия победы (решение продюсера 01.10: выбираются на старте, видны всем). Параметры — в goal.
 const WIN_OPTIONS=[
@@ -22,10 +24,12 @@ const WIN_OPTIONS=[
 ];
 // Плейтест 01.10: 25 кругов показались очень короткой партией, на ход в 30 с не хватало времени.
 // 0 — «∞ без лимита» (плейтест 01.10): ход передаётся только кнопкой, таймера нет.
-const ROUND_OPTIONS=[25,50,100,200,500], TURN_OPTIONS=[30,45,60,90,0];
+const ROUND_OPTIONS=[5,10,15,20], TURN_OPTIONS=[30,45,60,90,0];
 const PAUSE_MAX_MS=180000;      // мини-игра останавливает часы хода, но не дольше 3 минут
 const RESUME_MIN_MS=10000;      // после мини-игры на окна остаётся хотя бы 10 с
 const TIMEOUT_GRACE_MS=10000;   // сколько ждём клиента после «время вышло», потом ход переходит сам
+const TABLE_PAUSE_MAX_MS=180000; // одна ручная пауза — не дольше 3 минут, потом стол продолжает сам (плейтест 02.10)
+const EXTEND_MINUTES=5, EXTEND_LAPS=3;   // «Ещё время» на итоге
 const CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ';                   // без I и O — не путаются с 1 и 0
 
 function makeCode(rnd=Math.random){let s='';for(let i=0;i<4;i++)s+=CODE_ABC[Math.floor(rnd()*CODE_ABC.length)];return s;}
@@ -36,11 +40,15 @@ const deadline=(T,now,ms)=>limitless(T)?null:now+ms;
 
 // Длина по умолчанию — 25 проходов старта (≈150 бросков на игрока; прогон «Геймплея»: 100 раундов ≈ 17 кругов
 // на двоих — уже полная партия). Пока хозяин сам не выбрал длину — подстраивается под число игроков.
-function autoRounds(T){if(T.settings.autoRounds!==false)T.settings.rounds=25;}
+function autoRounds(T){if(T.settings.autoRounds!==false)T.settings.rounds=DEFAULTS.rounds;}
 const lapsOf=p=>(p&&p.s&&p.s.laps)||0;
 const ROUND_CAP=40;             // страховка: стол не идёт дольше 40 раундов на каждый требуемый круг
 function setRounds(T,rounds){if(!ROUND_OPTIONS.includes(+rounds))return false;T.settings.rounds=+rounds;T.settings.autoRounds=false;return true;}
 function setMinutes(T,m){if(!MINUTE_OPTIONS.includes(+m))return false;T.settings.minutes=+m;return true;}
+function setMode(T,m){if(!MODE_OPTIONS.includes(m))return false;T.settings.mode=m;return true;}
+// Лимит длины есть только у «Богатейшего»; миссии играются до выполнения (решение продюсера 02.10).
+const timed=T=>winOf(T).id==='capital';
+const modeOf=T=>timed(T)?(T.settings.mode==='laps'?'laps':'time'):'none';
 function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings.win=id;return true;}
 const winOf=T=>WIN_OPTIONS.find(w=>w.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0];
 function newTable(room,settings){
@@ -68,10 +76,12 @@ function leave(T,pid){
 }
 function canStart(T){return T.phase==='lobby'&&T.players.length>=MIN_PLAYERS;}
 // tiles — общее поле (владелец = pid), slice(p) — стартовый срез состояния игрока.
-function start(T,tiles,slice,now){
+// rnd — для тестов; очерёдность хода разыгрывается случайно (плейтест 02.10), места и цвета остаются за игроками.
+function start(T,tiles,slice,now,rnd=Math.random){
   if(!canStart(T))return false;
+  for(let i=T.players.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[T.players[i],T.players[j]]=[T.players[j],T.players[i]];}
   T.phase='play';T.match++;T.startedAt=now;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
-  T.pot=0;T.slotPot=0;T.rent={};T.lots=[];T.events=[];T.evSeq=0;T.deadline=now+(T.settings.minutes||DEFAULTS.minutes)*60000;   // часы партии — у хозяина стола
+  T.pot=0;T.slotPot=0;T.rent={};T.lots=[];T.events=[];T.evSeq=0;T.deadline=modeOf(T)==='time'?now+(T.settings.minutes||DEFAULTS.minutes)*60000:null;T.extended=0;   // часы партии — у хозяина стола
   T.players.forEach(p=>{p.s=slice(p);p.skip=0;});
   T.paused=null;
   T.turn={idx:0,pid:T.players[0].pid,n:1,round:1,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
@@ -86,7 +96,7 @@ function applyState(T,pid,pack,now){
   const p=active(T);
   if(pack.s)p.s=pack.s;
   // Кто-то первым прошёл старт в N-й раз — доигрываем текущий раунд стола (у всех поровну ходов) и считаем итог.
-  if(!T.finalRound&&lapsOf(p)>=T.settings.rounds){T.finalRound=T.turn.round;T.finalBy=p.pid;}
+  if(modeOf(T)==='laps'&&!T.finalRound&&lapsOf(p)>=T.settings.rounds){T.finalRound=T.turn.round;T.finalBy=p.pid;}
   if(pack.tiles)T.tiles=mergeTiles(T.tiles,pack.tiles,pid,pack.credits||[]);
   for(const c of pack.credits||[]){
     if(!c||!c.id||T.applied[c.id])continue;
@@ -187,13 +197,14 @@ const pnameOf=(T,pid)=>(T.players.find(p=>p.pid===pid)||{}).name||'соперн�
 // Ставка — только выше текущей и не больше, чем нал минус уже лидирующие ставки игрока. Деньги не резервируются:
 // победитель платит при закрытии, даже в минус (тогда действует правило банкротства).
 // lotApi.baseInv(t) — вложено по ценам движка, lotApi.toLot(t) — клетка снова пустырь; задаёт хозяин стола (mp.js).
-const lotApi={baseInv:null,toLot:null};
-function listLot(T,pid,tile,min,kind){
+const lotApi={baseInv:null,toLot:null,valuer:null};
+function listLot(T,pid,tile,min,kind,bank){
   if(T.phase!=='play'||!T.turn||T.turn.pid!==pid)return null;
   const t=T.tiles&&T.tiles[tile];if(!t||t.owner!==pid||!(t.type==='kiosk'||t.type==='biz'))return null;
   if((T.lots||[]).some(l=>l.tile===tile))return null;
   min=Math.max(1,Math.round(+min||0));
   const lot={id:`lot:${T.match}:${T.turn.n}:${tile}`,tile,seller:pid,kind:kind==='bankrupt'?'bankrupt':'sale',min,best:0,bestBy:null,bids:{},startN:T.turn.n,endsN:T.turn.n+T.players.length};
+  if(lot.kind==='bankrupt')lot.bank=Math.max(1,Math.round(+bank>0?+bank:min*0.5));   // банк без ставок берёт дешевле стартовой (плейтест 02.10: старт — рыночная цена)
   (T.lots=T.lots||[]).push(lot);
   event(T,{from:pid,kind:'lot',text:lot.kind==='bankrupt'?`выставил клетку на торги за долги, от $${min}`:`выставил клетку на торги, от $${min}`,amount:null,tile,to:null,lot:lot.id});
   return lot;
@@ -203,6 +214,7 @@ function bid(T,pid,lotId,amount){
   const p=T.players.find(x=>x.pid===pid);if(!p||!p.s)return false;
   amount=Math.round(+amount||0);
   if(amount<lot.min||amount<=lot.best)return false;
+  if(lot.bids[pid]===amount)return false;                                   // повтор той же ставки (двойной тап) не считается
   const committed=(T.lots||[]).filter(l=>l!==lot&&l.bestBy===pid).reduce((a,l)=>a+l.best,0);
   if((p.s.cash||0)-committed<amount)return false;
   lot.best=amount;lot.bestBy=pid;lot.bids[pid]=amount;
@@ -226,10 +238,10 @@ function resolveLots(T){
       out.push({lot,result:'sold',to:lot.bestBy,amount:lot.best});continue;
     }
     if(lot.kind==='bankrupt'){
-      if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+lot.min;
+      const bank=lot.bank||lot.min;if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+bank;
       if(lotApi.toLot)lotApi.toLot(t);else{t.owner=null;delete t.mpPrem;}
-      event(T,{from:lot.seller,kind:'bank',text:`никто не взял — банк забрал клетку за $${lot.min}`,amount:lot.min,tile:lot.tile,to:lot.seller,lot:lot.id});
-      out.push({lot,result:'bank',amount:lot.min});continue;
+      event(T,{from:lot.seller,kind:'bank',text:`никто не взял — банк забрал клетку за $${bank}`,amount:bank,tile:lot.tile,to:lot.seller,lot:lot.id});
+      out.push({lot,result:'bank',amount:bank});continue;
     }
     event(T,{from:lot.seller,kind:'unsold',text:'торги прошли без ставок — клетка осталась у хозяина',amount:null,tile:lot.tile,to:lot.seller,lot:lot.id});
     out.push({lot,result:'unsold'});
@@ -257,14 +269,18 @@ function applyHit(T,pid,h){
   }
   return false;
 }
-function endTurn(T,pid,n,now){
+// pack — последний срез хода внутри того же сообщения: иначе через два брокера «конец хода» мог обогнать
+// последний «state», и позиция/нал игрока откатывались (плейтест 02.10: «перебросило обратно на 31-ю»).
+function endTurn(T,pid,n,now,pack){
   if(T.phase!=='play'||T.turn.pid!==pid||(n!=null&&n!==T.turn.n))return false;
+  if(pack)applyState(T,pid,pack,now);
   advance(T,now);return true;
 }
 // Часы хозяина стола. Возвращает, что сделать: 'timeout' — сказать игроку, что время вышло;
 // 'advanced' — ход перешёл сам (игрок молчит или офлайн).
 function tick(T,now){
-  if(T.phase!=='play'||!T.turn||T.paused)return null;
+  if(T.phase!=='play'||!T.turn)return null;
+  if(T.paused){if(now-(T.paused.at||now)>=TABLE_PAUSE_MAX_MS){tablePause(T,T.paused.by,false,now);return 'resumed';}return null;}
   if(!T.finalRound&&T.deadline&&now>=T.deadline){T.finalRound=T.turn.round;T.finalBy='time';}   // «🏁 Последний раунд»: круг стола доигрывается
   const p=active(T);
   if(!p.online){advance(T,now);return 'advanced';}
@@ -323,10 +339,22 @@ function checkEarly(T,valuer){
 function finish(T,why,winner){
   T.phase='over';T.paused=null;
   const laps=Math.max(0,...T.players.map(lapsOf));
-  T.result={why,winner:winner||null,round:T.turn?T.turn.round:0,laps,finalBy:T.finalBy||null,win:winOf(T).id};
+  let rank=null;
+  // Победитель и раскладка — в итоге всегда (плейтест 02.10: match_over писал winner:null). lotApi.valuer() даёт оценщик хозяина.
+  try{if(T.tiles&&lotApi.valuer){rank=ranking(T,lotApi.valuer()).map(r=>({pid:r.pid,name:r.name,seat:r.seat,total:Math.round(r.total),cash:Math.round(r.cash),inv:Math.round(r.inv),goods:Math.round(r.goods),debt:Math.round(r.debt)}));}}catch(e){rank=null;}
+  if(!winner&&rank&&rank.length)winner=rank[0].pid;
+  T.result={why,winner:winner||null,round:T.turn?T.turn.round:0,laps,finalBy:T.finalBy||null,win:winOf(T).id,ranking:rank,mode:modeOf(T),extended:T.extended||0};
+}
+// «Ещё время» на итоге (решение продюсера 02.10): партия продолжается с того же места — +5 минут или +3 круга.
+function extend(T,now){
+  if(T.phase!=='over'||!T.result||T.result.why==='early'||!T.turn)return false;
+  const mode=modeOf(T);if(mode==='none')return false;
+  if(mode==='time')T.deadline=now+EXTEND_MINUTES*60000;else T.settings.rounds+=EXTEND_LAPS;
+  T.phase='play';T.result=null;T.finalRound=null;T.finalBy=null;T.extended=(T.extended||0)+1;
+  advance(T,now);return T.phase==='play';
 }
 function backToLobby(T){
-  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.slotPot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];
+  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.slotPot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];T.extended=0;
   T.players=T.players.filter(p=>p.online);T.players.forEach(p=>{p.s=null;});autoRounds(T);
 }
 // Что уходит конкретному игроку: общее поле, публичные сводки всех и полный срез его самого.
@@ -340,7 +368,7 @@ function viewFor(T,pid,valuer){
     mine:me&&me.s?me.s:null};
 }
 
-const api={COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,
+const api={COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;

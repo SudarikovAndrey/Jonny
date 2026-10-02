@@ -22,10 +22,12 @@ const FORCE_LAPS=2;         // выкуп ×10 — не чаще раза в д�
 window.MP_ROLL_CASH=()=>rollCash();   // автомат: кубики платят налом по этому курсу (src/bandit/engine.js)
 // Инспектор в партии: не по кругам, а с трёх владений (решение продюсера 01.10).
 CFG.INSP.fromLap=0;CFG.INSP.minOwn=3;
-const STEP_MS=170;
+CFG.HARD.bail=1;            // выход из участка — 1 кристалл вместо 3 (плейтест 02.10)
+const MICRO_RATE=0.25,MICRO_MIN=100,MICRO_MAX=500,STOCK_SELL=0.5,DEBT_LAPS=2;   // микрозайм и продажа товара в минусе; торги принудительно — со второго круга в минусе
+const STEP_MS=170;        // шаг чужой фишки по клетке
 // Ручная пауза (плейтест 01.10: её спамили): две на игрока за партию, дальше — одна раз в 5 минут.
 const PAUSE_FREE=2,PAUSE_CD_MS=5*60000;
-const pauseWait=(u,now)=>!u||u.n<PAUSE_FREE?0:Math.max(0,u.at+PAUSE_CD_MS-now);        // шаг чужой фишки по клетке
+const pauseWait=(u,now)=>!u||u.n<PAUSE_FREE?0:Math.max(0,u.at+PAUSE_CD_MS-now);   // лимит списывается с того, кто поставил паузу
 // Дубль и награды ходами привязаны к обороту игрока (формулы «Американ Геймплей», 01.10): lapPotential —
 // прибыль всех своих точек за круг при полном запасе плюс сборы бизнесов.
 const lapCash=()=>{try{return lapPotential()||0;}catch(e){return 0;}};
@@ -165,6 +167,7 @@ function Hub(room,restored){
   T.hostPid=PID;
   // Торги закрывает ядро при смене хода: вложено считаем по ценам движка, клетку банкрота возвращаем в пустырь.
   C.lotApi.baseInv=t=>{try{return baseInv(t);}catch(e){return 0;}};
+  C.lotApi.valuer=()=>makeValuer(T.tiles);   // победитель и раскладка в итоге — у ядра
   C.lotApi.toLot=t=>{if(t.type==='biz'){t.owner=null;t.level=0;delete t.mpPrem;return;}
     Object.assign(t,{owner:null,good:'lot',base:null,lot:true,goods:0,capLvl:1,salesLvl:1,tier:1,insp:false});delete t.mpPrem;delete t.boostN;delete t.frozen;
     t.price=window.SFBuilder&&SFBuilder.basePrice?SFBuilder.basePrice('gum'):50;};
@@ -207,7 +210,8 @@ function Hub(room,restored){
       if(snap.phase==='play')tev('match_start',{players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color})),rounds:T.settings.rounds,turnSec:T.settings.turnSec});
       if(snap.phase==='over'){tev('match_over',{result:T.result,durationSec:T.startedAt?Math.round((Date.now()-T.startedAt)/1000):null});tsend(true);}
     }
-    if(snap.phase==='play'&&snap.n!==tlast.n&&tr)tev('turn',{pid:tr.pid,name:pname(tr.pid),seat:(T.players.find(p=>p.pid===tr.pid)||{}).seat,timedOutPrev:!!(tlast.n&&tr.timedOut)});
+    if(snap.phase==='play'&&snap.n!==tlast.n&&tr){for(let k=(tlast.n||0)+1;k<tr.n;k++)tev('turn_skipped',{n:k});   // пропуски (карта «Шанса», офлайн) — чтобы номера в журнале не терялись
+      tev('turn',{pid:tr.pid,name:pname(tr.pid),seat:(T.players.find(p=>p.pid===tr.pid)||{}).seat,timedOutPrev:!!(tlast.n&&tr.timedOut)});}
     if(snap.paused!==tlast.paused)tev('pause',snap.paused?{on:true,by:T.paused.by,name:T.paused.name||pname(T.paused.by)}:{on:false});
     if(snap.final!==tlast.final&&snap.final)tev('final_round',{round:snap.final,by:T.finalBy,name:pname(T.finalBy)});
     if(snap.online!==tlast.online)tev('presence',{players:T.players.map(p=>({pid:p.pid,name:p.name,online:p.online}))});
@@ -246,7 +250,8 @@ function Hub(room,restored){
         if(!links.has(pid)||!p.online){p.online=true;links.set(pid,send);soon();}
         send&&send({t:'pong'});return;
       case 'state':if(C.applyState(T,pid,msg.pack,Date.now())){C.checkEarly(T);soon();}return;
-      case 'end':if(C.endTurn(T,pid,msg.n,Date.now())){C.checkEarly(T);soon();}return;
+      case 'end':if(C.endTurn(T,pid,msg.n,Date.now(),msg.pack||null)){C.checkEarly(T);soon();}return;
+      case 'extend':if(pid!==PID)return;if(C.extend(T,Date.now()))soon();return;   // «Ещё время» на итоге — хозяин стола
       case 'pause':if(C.pause(T,pid,!!msg.on,Date.now()))soon();return;
       case 'hit':if(C.applyHit(T,pid,msg.h))soon();return;                        // карта «Шанса» против соперника
       case 'lot':if(C.listLot(T,pid,+msg.tile,msg.min,msg.kind))soon();return;     // выставить клетку на торги
@@ -261,6 +266,7 @@ function Hub(room,restored){
       case 'settings':if(pid!==PID||T.phase!=='lobby')return;
         if('rounds' in msg)C.setRounds(T,msg.rounds);
         if('minutes' in msg)C.setMinutes(T,msg.minutes);
+        if('mode' in msg)C.setMode(T,String(msg.mode));
         if('win' in msg)C.setWin(T,String(msg.win));
         if('turnSec' in msg&&C.TURN_OPTIONS.includes(+msg.turnSec))T.settings.turnSec=+msg.turnSec;soon();return;
       case 'start':if(pid!==PID)return;
@@ -450,6 +456,7 @@ function onView(v,now){
     if(isMine){reclaimOffers();yourTurn();}else rivalTurn(v.turn.pid);   // в чужой ход камера ведёт фишку того, кто ходит (followRival)
     mgReset();
   } else if(v.phase==='play'&&!isMine){adopt(v);}
+  if(v.phase==='play'&&prev&&prev.phase==='over'){shownOver=null;hideOver();curTurn=null;toast('⏱ Партия продлена — играем дальше',2600);}   // «Ещё время»
   if(v.phase==='over'){mine=false;if(shownOver!==v.match){shownOver=v.match;closeAll();adopt(v);showOver(v);try{flush(true);}catch(e){}}}
   for(const e of v.events||[])if(e.id>lastEvId){lastEvId=e.id;try{onEvt(e.from,e);}catch(x){console.error(x);}}
   syncTokens(v);syncFlags();updateUi();
@@ -480,17 +487,17 @@ function yourTurn(){
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const b=el('div','mp-bang');b.innerHTML='<b>Твой ход!</b>';
   const dice=$('bRoll'),r=dice&&dice.getBoundingClientRect();
-  setTimeout(answerOffers,reduced?1300:1700);
-  if(reduced){b.animate([{opacity:0},{opacity:1,offset:.2},{opacity:1,offset:.8},{opacity:0}],{duration:1200}).finished.then(()=>b.remove());return;}
+  setTimeout(answerOffers,reduced?1600:2500);
+  if(reduced){b.animate([{opacity:0},{opacity:1,offset:.15},{opacity:1,offset:.85},{opacity:0}],{duration:2000}).finished.then(()=>b.remove());return;}
   const dx=r?r.left+r.width/2-innerWidth/2:0,dy=r?r.top+r.height/2-innerHeight*.42:200;
   b.animate([
     {transform:'translate(-50%,-50%) scale(.3) rotate(-8deg)',opacity:0},
-    {transform:'translate(-50%,-50%) scale(1.18) rotate(3deg)',opacity:1,offset:.16,easing:'cubic-bezier(.34,1.56,.64,1)'},
-    {transform:'translate(-50%,-50%) scale(.96) rotate(-1deg)',offset:.24},
-    {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.30},
-    {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.72,easing:'cubic-bezier(.5,0,.8,.4)'},
+    {transform:'translate(-50%,-50%) scale(1.18) rotate(3deg)',opacity:1,offset:.1,easing:'cubic-bezier(.34,1.56,.64,1)'},
+    {transform:'translate(-50%,-50%) scale(.96) rotate(-1deg)',offset:.15},
+    {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.19},
+    {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.83,easing:'cubic-bezier(.5,0,.8,.4)'},
     {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.2)`,opacity:.2},
-  ],{duration:1500,fill:'forwards'}).finished.then(()=>{b.remove();
+  ],{duration:2400,fill:'forwards'}).finished.then(()=>{b.remove();   // плейтест 02.10: «гаснет слишком быстро» — держится ~1,5 с
     // кубик «хлопается» на место: сжатие на контакте и отскок формы
     if(dice&&myTurn())dice.animate([{transform:'scale(1)'},{transform:'scale(1.3,.78)'},{transform:'scale(.9,1.14)'},{transform:'scale(1.05,.96)'},{transform:'scale(1)'}],
       {duration:420,easing:'ease-out'});
@@ -508,7 +515,7 @@ function rivalTurn(pid){
     {transform:'translate(-50%,-50%) scale(1.14) rotate(-2deg)',opacity:1,offset:.18,easing:'cubic-bezier(.34,1.56,.64,1)'},
     {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.3},
     {transform:'translate(-50%,-50%) scale(1) rotate(0)',offset:.7,easing:'cubic-bezier(.5,0,.8,.4)'},
-    {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.25)`,opacity:.15}],{duration:1300,fill:'forwards'}).finished.then(()=>b.remove());
+    {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.25)`,opacity:.15}],{duration:1900,fill:'forwards'}).finished.then(()=>b.remove());
 }
 function closeAll(){
   for(let i=0;i<3&&!$('modal').hidden;i++)closeModal();
@@ -546,10 +553,10 @@ async function bidWindow(lotId){
   const pending=modal(`<h2>${esc(titleOf(t))}</h2><p class="t">Хозяин — ${esc(nameOf(lot.seller))}, вложено ${money(invested(t))}.</p>${lotHtml(lot)}`,[{t:'Закрыть',v:0,cls:'sec'}]);
   wireBids();const m=await pending;if(typeof m==='string'&&m.startsWith('bid:'))placeBid(lotId,+m.slice(4));
 }
-function startLot(i,min,kind){
+function startLot(i,min,kind,bank){
   const t=S.tiles[i];if(!t||!t.owner||!myTurn()||ending||lotOn(i))return false;
   if(t.mpOffer)declineOffer(t,true);
-  net.send({t:'lot',tile:i,min:Math.max(1,Math.round(min)),kind:kind||'sale'});track('mp_lot',{tile:i,min,kind:kind||'sale'});
+  net.send({t:'lot',tile:i,min:Math.max(1,Math.round(min)),kind:kind||'sale',bank:bank?Math.round(bank):undefined});track('mp_lot',{tile:i,min,kind:kind||'sale'});
   log(`🔨 Выставил «${titleOf(t)}» на торги от ${money(min)}${kind==='bankrupt'?' — за долги':''}.`);return true;
 }
 async function lotWindow(i){
@@ -562,6 +569,21 @@ async function lotWindow(i){
 // Своя клетка в свой ход: кнопка «на торги» в окне точки или бизнеса (функциональная; вёрстка — «Интерфейс»).
 (function(){const base=kioskWindow;kioskWindow=function(t){const r=base.apply(this,arguments);lotButton(t);return r;};})();
 (function(){const base=bizWindow;bizWindow=function(t){const r=base.apply(this,arguments);lotButton(t);return r;};})();
+// Своя точка в партии: строка «Прибыль за круг» повторяла блок прокачки — на её месте «Гость платит»
+// (плейтест 02.10: «нигде нет, сколько платит гость»). Нет блока прокачки (максимум) — строка добавляется.
+function guestRentRow(t){
+  if(!t||!t.owner||!view||view.phase!=='play'||sfIsLot(t))return;
+  setTimeout(()=>{const c=$('card');if(!c||$('modal').hidden||c.querySelector('.mp-guest-rent'))return;
+    const body=c.querySelector('.property-body');if(!body)return;
+    let r=0;try{r=rentOfMine(t);}catch(e){return;}
+    const html=`<span>Гость платит</span><b><i class="cash-glyph"></i>${Math.round(r).toLocaleString('en-US')}</b>`;
+    const dup=[...body.querySelectorAll(':scope>.box')].find(b=>/Прибыль за круг/.test(b.textContent)&&b.nextElementSibling&&b.nextElementSibling.classList.contains('uup'));
+    if(dup){dup.classList.add('mp-guest-rent');dup.innerHTML=html;}
+    else{const row=document.createElement('div');row.className='box mp-guest-rent';row.innerHTML=html;(body.querySelector('.uup')||body.lastElementChild||body).before(row);}
+  },60);
+}
+(function(){const base=kioskWindow;kioskWindow=function(t){const r=base.apply(this,arguments);if(!isRival(t))guestRentRow(t);return r;};})();
+(function(){const base=bizWindow;bizWindow=function(t){const r=base.apply(this,arguments);if(!isRival(t))guestRentRow(t);return r;};})();
 function lotButton(t){
   if(!t||!t.owner||!view||view.phase!=='play'||!myTurn()||ending||sfIsLot(t))return;
   setTimeout(()=>{const c=$('card');if(!c||$('modal').hidden||c.querySelector('.mp-lot-btn'))return;
@@ -572,32 +594,78 @@ function lotButton(t){
 }
 
 // ---- банкротство: в минусе ход не передать, пока не выставил клетки на торги на сумму долга ----
+// Стартовая цена торгов за долги — рыночная (вложенное с прокачками), банк без ставок берёт за половину (плейтест 02.10).
 function mpBankList(){
   const busy=new Set((view&&view.lots||[]).map(l=>l.tile));
   return S.tiles.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t)&&!busy.has(t.i))
-    .map(t=>({i:t.i,title:titleOf(t),price:Math.round(invested(t)*BANK_SELL)})).sort((a,b)=>a.price-b.price);
+    .map(t=>({i:t.i,title:titleOf(t),price:Math.round(invested(t)),bank:Math.round(invested(t)*BANK_SELL)})).sort((a,b)=>a.price-b.price);
 }
-const bankruptNeed=()=>S.cash>=0?0:Math.max(0,-S.cash-myLots().filter(l=>l.kind==='bankrupt').reduce((a,l)=>a+l.min,0));
-async function mpBankWindow(){
-  while(myTurn()&&bankruptNeed()>0){
-    const list=mpBankList(),need=bankruptNeed();if(!list.length)return;
+// Принудительно — только со второго прохода старта в минусе (S.mpDebtLaps); до этого в минусе играешь дальше.
+const bankruptNeed=()=>S.cash>=0||(S.mpDebtLaps||0)<DEBT_LAPS?0:Math.max(0,-S.cash-myLots().filter(l=>l.kind==='bankrupt').reduce((a,l)=>a+l.bank,0));
+
+// ---- в минусе сразу доступны: микрозайм и продажа товара за полцены (решение продюсера 02.10) ----
+function microAmount(){return Math.min(MICRO_MAX,Math.max(MICRO_MIN,Math.ceil((-Math.min(0,S.cash)+50)/50)*50));}
+const canMicro=()=>!(S.loans||[]).some(l=>l.micro);
+function microLoan(){
+  if(!myTurn()||!canMicro())return false;const amt=microAmount();S.loans=S.loans||[];
+  S.loans.push({tier:0,micro:true,name:'Микрозайм',principal:amt,rate:MICRO_RATE,strikes:0,maxStrikes:99});
+  S.cash+=amt;track('mp_micro_loan',{amt});log(`💸 Взял микрозайм ${money(amt)} под ${Math.round(MICRO_RATE*100)}% за проход банка.`);
+  plate('💸 Микрозайм',amt,`${Math.round(MICRO_RATE*100)}% за каждый проход банка · гасится в банке`);
+  emit({kind:'loan',text:`взял микрозайм ${money(amt)}`,amount:amt,tile:S.pos});save();render();push();return true;
+}
+function stockValue(){return Math.round(myKiosks().reduce((a,t)=>a+(t.goods||0)*buyPrice(t.good)*STOCK_SELL,0));}
+function sellStock(){
+  if(!myTurn())return 0;const v=stockValue();if(v<=0)return 0;let units=0;
+  for(const t of myKiosks()){units+=t.goods||0;t.goods=0;}
+  S.cash+=v;track('mp_sell_stock',{v,units});log(`📦 Продал весь товар с точек за полцены: ${units} шт за ${money(v)}.`);
+  plate('📦 Товар продан',v,`${units} шт за полцены`);emit({kind:'sale',text:`продал товар с точек за ${money(v)}`,amount:v,tile:S.pos});
+  save();render();push();return v;
+}
+async function debtWindow(fromEnd){
+  if(!myTurn()||S.cash>=0)return;
+  const laps=S.mpDebtLaps||0,lotsN=mpBankList().length,sv=stockValue(),micro=canMicro()?microAmount():0;
+  const warn=laps>=DEBT_LAPS?'Второй круг в минусе — клетки идут на торги.':laps===1?'Ты прошёл старт в минусе. Ещё один проход — и клетки уйдут на торги.':'Играть можно и в минусе, но покупок нет. Пройдёшь старт в минусе дважды — клетки уйдут на торги.';
+  const v=await modal(`<h2>💸 Ты в минусе: ${money(S.cash)}</h2><p class="t">${warn}</p>
+    ${micro?`<div class="row"><span class="n">Микрозайм<small>${Math.round(MICRO_RATE*100)}% за каждый проход банка, гасится в банке</small></span><button type="button" class="sm mp-debt-micro buy-btn buy-ok">Взять · ${money(micro)}</button></div>`:''}
+    ${sv>0?`<div class="row"><span class="n">Продать весь товар с точек<small>за полцены закупки</small></span><button type="button" class="sm mp-debt-stock buy-btn buy-ok">Продать · ${money(sv)}</button></div>`:''}
+    ${lotsN?`<div class="row"><span class="n">Выставить клетку на торги<small>стартовая цена — рыночная</small></span><button type="button" class="sm mp-debt-lots buy-btn buy-ok">Выбрать</button></div>`:''}`,
+    [{t:fromEnd?'Играть дальше в минусе':'Закрыть',v:0,cls:'sec'}],{sticky:true});
+  const c=$('card');
+  if(c){const m=c.querySelector('.mp-debt-micro'),st=c.querySelector('.mp-debt-stock'),lo=c.querySelector('.mp-debt-lots');
+    if(m)m.onclick=()=>closeModal('micro');if(st)st.onclick=()=>closeModal('stock');if(lo)lo.onclick=()=>closeModal('lots');}
+  const r=await v;
+  if(r==='micro')microLoan();else if(r==='stock')sellStock();else if(r==='lots'){await mpBankWindow(false);return;}
+  if(fromEnd&&S.cash>=0){toast('Минус закрыт',1800);}
+  if(fromEnd)finishTurn();
+}
+window.MPDebt={open:debtWindow,micro:microLoan,microAmount,canMicro,stockValue,sellStock,laps:()=>S?S.mpDebtLaps||0:0};
+// forced=false — добровольно из окна долга: выбрать клетки на торги за долги без требования суммы.
+async function mpBankWindow(forced=true){
+  while(myTurn()&&(forced?bankruptNeed()>0:S.cash<0)){
+    const list=mpBankList(),need=forced?bankruptNeed():-S.cash;if(!list.length)return;
     const picked=new Set();
-    const rows=list.map(x=>`<div class="row mp-bank-row"><span class="n">${esc(x.title)}<small>стартовая цена — половина вложенного</small></span><button type="button" class="sm mp-bank-pick buy-btn buy-ok" data-i="${x.i}">Выставить · ${money(x.price)}</button></div>`).join('');
-    const pending=modal(`<h2>🏦 Ты в минусе: ${money(S.cash)}</h2><p class="t">Ход не передать, пока не выставишь клетки на торги на ${money(need)}. Соперники ставят до твоего следующего хода; кто не продался — уходит банку по стартовой цене.</p>${rows}<p class="t mp-bank-sum">Выбрано: <b>$0</b> из ${money(need)}</p>`,
-      [{t:'Выставить и передать ход',v:1,cls:'ok'}],{sticky:true});
+    const rows=list.map(x=>`<div class="row mp-bank-row"><span class="n">${esc(x.title)}<small>старт — рыночная цена, банк без ставок даст ${money(x.bank)}</small></span><button type="button" class="sm mp-bank-pick buy-btn buy-ok" data-i="${x.i}">Выставить · ${money(x.price)}</button></div>`).join('');
+    const pending=modal(`<h2>🏦 Ты в минусе: ${money(S.cash)}</h2><button type="button" class="sec mp-bank-map">🗺 Выбрать на карте</button><p class="t">${forced?`Второй круг в минусе: ход не передать, пока банковская цена выставленных клеток не покроет ${money(need)}.`:`Выбери, что выставить на торги за долги.`} Соперники ставят до твоего следующего хода; что не продалось — уходит банку за половину.</p>${rows}<p class="t mp-bank-sum">Банк даст: <b>$0</b> из ${money(need)}</p>`,
+      forced?[{t:'Выставить и передать ход',v:1,cls:'ok'}]:[{t:'Выставить',v:1,cls:'ok'},{t:'Назад',v:0,cls:'sec'}],{sticky:forced});
     const sumEl=$('card').querySelector('.mp-bank-sum b');
     $('card').querySelectorAll('.mp-bank-pick').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(picked.has(i))picked.delete(i);else picked.add(i);b.classList.toggle('on',picked.has(i));b.textContent=(picked.has(i)?'✓ ':'Выставить · ')+money(list.find(x=>x.i===i).price);
-      if(sumEl)sumEl.textContent=money(list.filter(x=>picked.has(x.i)).reduce((a,x)=>a+x.price,0));});
-    const v=await pending;
+      if(sumEl)sumEl.textContent=money(list.filter(x=>picked.has(x.i)).reduce((a,x)=>a+x.bank,0));});
+    {const mb=$('card').querySelector('.mp-bank-map');if(mb)mb.onclick=()=>closeModal('map');}
+    let v=await pending;
+    // Выбор на карте (плейтест 02.10: «я не знаю, какую точку выставляю») — вёрстка «Интерфейса», mapPick.
+    if(v==='map'){const r=await mapPick(list,{title:'🔨 Выбери клетки на торги',preset:picked,
+        sum:sel=>`банк даст ${money(list.filter(x=>sel.has(x.i)).reduce((a,x)=>a+x.bank,0))}${forced?` из ${money(need)}`:''}`});
+      if(!r)continue;picked.clear();r.forEach(i=>picked.add(i));if(!picked.size)continue;v=1;}
     if(v!==1)return;
-    const sum=list.filter(x=>picked.has(x.i)).reduce((a,x)=>a+x.price,0);
-    if(sum<need&&picked.size<list.length){toast(`Нужно выставить на ${money(need)} — выбрано ${money(sum)}`,2600);continue;}
-    for(const x of list)if(picked.has(x.i))startLot(x.i,x.price,'bankrupt');
+    const sum=list.filter(x=>picked.has(x.i)).reduce((a,x)=>a+x.bank,0);
+    if(forced&&sum<need&&picked.size<list.length){toast(`Банк должен покрыть ${money(need)} — выбрано на ${money(sum)}`,2600);continue;}
+    for(const x of list)if(picked.has(x.i))startLot(x.i,x.price,'bankrupt',x.bank);
+    if(!forced)return;
     for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await wait(100);   // ждём, пока хозяин стола примет лоты
     finishTurn();return;
   }
 }
-window.MPBank={list:mpBankList,need:bankruptNeed,needs:()=>!!S&&bankruptNeed()>0,open:mpBankWindow};
+window.MPBank={list:mpBankList,need:bankruptNeed,needs:()=>!!S&&bankruptNeed()>0,open:mpBankWindow,debtLaps:()=>S?S.mpDebtLaps||0:0};
 window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,open:lotWindow,bid:placeBid,bidWindow,html:lotHtml};
 
 // ---- общая копилка стола: штрафы всех — в одну; забирает вставший ----
@@ -606,7 +674,13 @@ function potDelta(fn){return function(){const before=S.pot||0;const r=fn.apply(t
 pay=potDelta(pay);payFine=potDelta(payFine);
 (function(){const base=lapDone;lapDone=async function(){const before=S.pot||0,slot0=slotPotNow();const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
   if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;}
-  slotPotFlush(slot0);return r;};})();
+  slotPotFlush(slot0);
+  // Круги в минусе (плейтест 02.10): первый — предупреждение, второй — клетки на торги. Вышел в плюс — счёт сброшен.
+  if(myTurn()){if(S.cash<0){S.mpDebtLaps=(S.mpDebtLaps||0)+1;
+      if(S.mpDebtLaps>=DEBT_LAPS){plate('🏦 Второй круг в минусе',0,'клетки пойдут на торги в конце хода');log('🏦 Второй проход старта в минусе — клетки на торги.');}
+      else{plate('⚠️ Прошёл старт в минусе',0,'ещё круг в минусе — клетки на торги');log('⚠️ Прошёл старт в минусе: предупреждение.');}}
+    else S.mpDebtLaps=0;}
+  return r;};})();
 
 // ---- касса «Однорукого бандита» — общая на стол (решение продюсера 01.10): цифра у всех одна ----
 // Правила роста прежние (+$10 за круг, 10% денежных призов, джекпот обнуляет) плюс +$10 за каждый визит любого игрока.
@@ -619,12 +693,17 @@ function slotPotFlush(before){const d=slotPotNow()-before;if(d&&myTurn()){credit
   if(myTurn())credit(null,0,null,0,{potTake:true});push();return r;};})();
 
 // ---- функциональные клетки — только в ход, когда на них встал (плейтест: 15 прокруток автомата за два хода) ----
-if(window.Slot&&Slot.openTile){const b=Slot.openTile;Slot.openTile=async function(o){if(view&&view.phase==='play'&&!(o&&o.landing)&&!landedHere()){toast('Мини-игра — только в тот ход, когда на неё встал',2400);return;}
-  if(view&&view.phase==='play'){syncSlotPot();if(o&&o.landing&&S.tiles[S.pos]&&S.tiles[S.pos].type==='slot'){S.slot.pot+=10;if(S.slot.bandit)S.slot.bandit.pot=S.slot.pot;}   // визит любого игрока — +$10 в общую кассу
-    const before=Math.round((view.slotPot||0));const r=await b.apply(this,arguments);slotPotFlush(before);return r;}
-  return b.apply(this,arguments);};}
+// Плейтест 02.10: игрок открывал автомат до броска в следующий ход — строка клетки и land зовут локальную openTile
+// внутри slot.js, обёртка над window.Slot.openTile её не ловила. Теперь slot.js сам спрашивает эти хуки.
+window.MPSlotHooks={
+  active:()=>!!(view&&view.phase==='play'),
+  canPlay:()=>myTurn()&&!ending&&landedHere(),
+  deny:()=>toast(myTurn()?'Мини-игра — только в тот ход, когда на неё встал':`Сейчас ходит ${nameOf(view.turn.pid)}`,2400),
+  async wrap(run,landing){syncSlotPot();if(landing&&S.tiles[S.pos]&&S.tiles[S.pos].type==='slot'){S.slot.pot+=10;if(S.slot.bandit)S.slot.bandit.pot=S.slot.pot;}   // визит любого игрока — +$10 в общую кассу
+    const before=Math.round((view.slotPot||0));const r=await run();slotPotFlush(before);return r;},
+};
 (function(){const base=bank;bank=async function(remote){
-  if(view&&view.phase==='play'&&!landedHere()){toast('Банк — только в тот ход, когда на него встал',2400);return;}
+  if(view&&view.phase==='play'&&!landedHere()&&!remote){toast('Банк — только в тот ход, когда на него встал',2400);return;}
   return base.apply(this,arguments);};})();
 
 // ---- полиция в партии: откупился — бросаешь сразу; три промаха — выход бесплатно ----
@@ -684,8 +763,9 @@ function push(){
   if(!myTurn())return;
   clearTimeout(pushT);pushT=0;
   S.rolls=999;   // ход = один бросок; награды ходами платят налом в явных местах (автомат, находки), общей конвертации нет
-  net.send({t:'state',pack:{n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,dice:lastDice&&!lastDice.lesson?{a:lastDice.a,b:lastDice.b}:null}});
+  net.send({t:'state',pack:makePack()});
 }
+function makePack(){return {n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,dice:lastDice&&!lastDice.lesson?{a:lastDice.a,b:lastDice.b}:null};}
 function pushSoon(){if(myTurn()&&!pushT)pushT=setTimeout(push,150);}
 save=function(){pushSoon();};       // сохранение партии — у хозяина стола
 // Ход = один бросок, запас ходов не нужен. Общей конвертации «лишних ходов» больше нет (плейтест 01.10:
@@ -700,10 +780,12 @@ save=function(){pushSoon();};       // сохранение партии — у 
 
 function finishTurn(){
   if(!myTurn()||ending)return;
-  if(bankruptNeed()>0&&mpBankList().length){mpBankWindow();return;}   // в минусе ход не передать, пока клетки не выставлены на торги
+  if(bankruptNeed()>0&&mpBankList().length){mpBankWindow();return;}   // второй круг в минусе — ход не передать, пока клетки не на торгах
+  if(S.cash<0&&S.mpDebtAskN!==view.turn.n&&(mpBankList().length||stockValue()>0||canMicro())){S.mpDebtAskN=view.turn.n;debtWindow(true);return;}   // в минусе — сразу предложить выход
   // Не ответил на предложение до конца хода — отказ, деньги покупателю возвращаются.
   for(const t of S.tiles)if(t.owner&&t.mpOffer)declineOffer(t,true);
-  ending=true;closeAll();push();net.send({t:'end',n:view.turn.n});updateUi();
+  ending=true;closeAll();clearTimeout(pushT);pushT=0;S.rolls=999;
+  net.send({t:'end',n:view.turn.n,pack:makePack()});updateUi();   // последний срез — внутри «конца хода», чтобы его не обогнать
 }
 async function autoFinish(){
   if(autoEnding)return;autoEnding=true;
@@ -715,8 +797,9 @@ async function autoFinish(){
     if(!moving&&rolled&&$('modal').hidden&&!document.querySelector('.minigame-layer'))break;
     await wait(150);
   }
-  // Время вышло в минусе — клетки выставляются на торги сами, с самого дешёвого.
-  if(bankruptNeed()>0){let acc=0;for(const x of mpBankList()){if(acc>=bankruptNeed())break;startLot(x.i,x.price,'bankrupt');acc+=x.price;}
+  // Время вышло на втором круге в минусе — клетки выставляются на торги сами, с самого дешёвого.
+  S.mpDebtAskN=view.turn.n;
+  if(bankruptNeed()>0){let acc=0;for(const x of mpBankList()){if(acc>=bankruptNeed())break;startLot(x.i,x.price,'bankrupt',x.bank);acc+=x.price;}
     for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await wait(100);}
   finishTurn();
 }
@@ -1006,7 +1089,7 @@ let finalShown=null;
 const tag=el('div','mp-tag');tag.id='mpTag';tag.hidden=true;
 const endBtn=el('button','mp-end');endBtn.id='mpEnd';endBtn.hidden=true;endBtn.type='button';
 endBtn.innerHTML='<b>Передать ход</b><small></small>';
-endBtn.onclick=()=>{if(myTurn()&&rolled&&!moving)finishTurn();};
+endBtn.onclick=()=>{if(myTurn()&&!moving)finishTurn();};   // кнопка видна только после броска; сорвавшийся бросок не держит ход (замечание «Геймплея» 02.10)
 const clock=el('div','mp-clock');clock.id='mpClock';clock.hidden=true;
 // Предложение о покупке твоей клетки — висит, пока не ответишь (в свой ход тап открывает ответ).
 const offerBadge=el('button','mp-offer-badge');offerBadge.id='mpOffer';offerBadge.type='button';offerBadge.hidden=true;
@@ -1027,12 +1110,29 @@ lotBadge.onclick=()=>{
   $('card').querySelectorAll('.mp-lot-open').forEach(b=>b.onclick=()=>closeModal('lot:'+b.dataset.id));
   pending.then(v=>{if(typeof v==='string'&&v.startsWith('lot:'))setTimeout(()=>bidWindow(v.slice(4)),180);});
 };
+// Новый лот — окно ставок само открывается у всех, кроме продавца (плейтест 02.10: лот Сани никто не заметил,
+// точка ушла банку). Занят окном или фишка идёт — покажем, как освободится; закрыл — дальше только плашка.
+let lotQueue=[];const lotShown=new Set();
+function lotAlert(tile){lotQueue.push(tile);lotPump();}
+function lotPump(){
+  if(!lotQueue.length||!view||view.phase!=='play')return;
+  if(!$('modal').hidden||moving||document.querySelector('.minigame-layer')||document.getElementById('onboard')){setTimeout(lotPump,600);return;}
+  const tile=lotQueue.shift(),lot=(view.lots||[]).find(l=>l.tile===tile);
+  if(!lot||lot.seller===PID||lotShown.has(lot.id)){lotPump();return;}
+  lotShown.add(lot.id);bidWindow(lot.id);
+}
+// «Перебить» вместо «Ставка», когда ставка уже есть: так понятно, что торги идут и кто-то лидирует.
+new MutationObserver(()=>{
+  const c=$('card');if(!c||$('modal').hidden)return;
+  c.querySelectorAll('.mp-lot').forEach(box=>{const head=box.querySelector('p');if(!head||!/Лучшая ставка/.test(head.textContent))return;
+    box.querySelectorAll('.mp-bid').forEach(b=>{if(b.dataset.relabel)return;b.dataset.relabel='1';const sk=b.querySelector('.enamel-label')||b;sk.innerHTML=sk.innerHTML.replace('Ставка','Перебить');});});
+}).observe($('card'),{childList:true,subtree:true});
 function lotBadgeSync(){
   const lots=view&&view.phase==='play'&&view.lots||[];lotBadge.hidden=!lots.length;if(!lots.length)return;
   const l=lots[0],t=S&&S.tiles&&S.tiles[l.tile],mine=l.seller===PID,lead=l.bestBy===PID;
   const what=`«${esc(t?titleOf(t):'клетка')}»`+(lots.length>1?` <em>+${lots.length-1}</em>`:'');
-  const state=l.best?`${lead?'твоя ставка':'ставка'} ${money(l.best)}`:`от ${money(l.min)}`;
-  const html=`<i>🔨</i><span><b>Торги</b> ${what} · ${state}</span><u>${mine?'смотреть':lead?'лидируешь':'ставить'}</u>`;
+  const state=l.best?`${money(l.best)} · ${lead?'лидируешь ты':'лидирует '+esc(nameOf(l.bestBy))}`:`от ${money(l.min)} · ставок нет`;
+  const html=`<i>🔨</i><span><b>Торги</b> ${what} · ${state}</span><u>${mine?'смотреть':lead?'смотреть':l.best?'перебить':'ставить'}</u>`;
   if(lotBadge._h!==html){lotBadge._h=html;lotBadge.innerHTML=html;lotBadge.style.setProperty('--c',colorOf(l.seller));}
 }
 function offerBadgeSync(){
@@ -1095,7 +1195,8 @@ function updateUi(){
   if(view.win){
     const me=playerOf(PID),goal=view.players.filter(p=>p.win),lead=goal.slice().sort((a,b)=>(b.win.value||0)-(a.win.value||0))[0];
     const meTxt=me&&me.win?me.win.text:'',leadTxt=lead&&lead.pid!==PID&&lead.win&&(lead.win.value||0)>((me&&me.win&&me.win.value)||0)?` · лидер ${lead.name}: ${lead.win.text}`:'';
-    const html=`<b>🏆 ${esc(view.win.name)}</b><span>ты: ${esc(meTxt)}${esc(leadTxt)}</span>`;
+    // Компактно (плейтест 02.10: «верх перегружен»): название условия; прогресс — в подсказке и по тапу.
+    const html=`<b>🏆 ${esc(view.win.name)}</b>`;winEl.title=`ты: ${meTxt}${leadTxt}`;
     if(winEl._h!==html){winEl._h=html;winEl.innerHTML=html;}
   }
   winEl.hidden=!view.win;
@@ -1104,7 +1205,7 @@ function updateUi(){
   bar.classList.toggle('tight',view.players.length>2);   // трое-четверо: компактные фишки, круг и пауза — второй строкой
   chipsEl.innerHTML=view.players.map(p=>`<span data-pid="${esc(p.pid)}" class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.pid===PID?' me':''}" style="--c:${p.color}">
       <i>${esc(p.name.slice(0,1).toUpperCase())}</i><span class="mp-nm">${esc(p.pid===PID?'Ты':p.name)}</span>
-      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} ${view.players.length>2?'вл.':plural(own(p),'владение','владения','владений')}</span></span>
+      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} вл.</span></span>
       ${p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
   tick();
 }
@@ -1153,13 +1254,15 @@ function tick(){
   let y=(($('top')&&$('top').getBoundingClientRect().bottom)||60)+6;
   {const n=$('mapTasks');if(n&&n.offsetParent){const q=n.getBoundingClientRect();if(q.height&&q.top<y+30)y=Math.max(y,q.bottom+6);}}
   const by=y+'px';if(bar.style.top!==by)bar.style.top=by;
-  let under=Math.round(bar.getBoundingClientRect().bottom+6);
+  // Полоса игроков — колонкой у правого края; плашки предложения и торгов, события и журнал — слева под шапкой.
+  let under=Math.round(y);
   const ob=offerBadge.hidden?'':under+'px';if(offerBadge.style.top!==ob)offerBadge.style.top=ob;
   if(!offerBadge.hidden)under=Math.round(offerBadge.getBoundingClientRect().bottom+6);
   const lb=lotBadge.hidden?'':under+'px';if(lotBadge.style.top!==lb)lotBadge.style.top=lb;
   if(!lotBadge.hidden)under=Math.round(lotBadge.getBoundingClientRect().bottom+6);
   setVar('--mp-under',under+'px');
-  {const tt=under+'px';if(ticker.style.top!==tt)ticker.style.top=tt;}
+  // события — под журналом (они слева в одной колонке)
+  {const j=$('moneyJournal'),jr=j&&j.offsetParent&&j.getBoundingClientRect();const tt=(jr&&jr.height?Math.max(under,Math.round(jr.bottom+6)):under)+'px';if(ticker.style.top!==tt)ticker.style.top=tt;}
   // Окно открыто — карточка начинается под строкой денег: кошелёк виден (плейтест 01.10, все окна).
   const wr=!$('modal').hidden&&document.querySelector('#top .bar1');
   document.body.classList.toggle('mp-modal',!!wr);
@@ -1192,6 +1295,36 @@ function playersWindow(){
       <strong>${money(p.cash)}</strong></div>`;}).join('');
   const pot=`<p class="t mp-pl-pot">🐷 Копилка стола: <b>${money(view.pot||0)}</b> — сюда падают штрафы всех; заберёт тот, кто встанет на копилку.</p>`;
   modal(`<h2>👥 Игроки</h2>${view.win?`<p class="t">Как победить — <b>${esc(view.win.name)}</b>: ${esc(view.win.text)}</p>`:''}${rows}${pot}`,[{t:'Закрыть',v:0,cls:'sec'}]);
+}
+
+// ---- выбор своих клеток на карте: подсветка, группы, тап — выбрать/снять (плейтест 02.10) ----
+// cands: [{i,title,price,bank}]; opts: {title, preset:Set, sum:sel=>текст}. Возвращает Set выбранных или null («Назад»).
+let pick=null;
+function mapPick(cands,opts){
+  return new Promise(res=>{
+    const sel=new Set(opts.preset||[]),byI=new Map(cands.map(c=>[c.i,c]));
+    const own=i=>{const t=S.tiles[(i+40)%40];return !!t&&!!t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t);};
+    const ui=el('div','mp-pick');
+    ui.innerHTML=`<b>${esc(opts.title||'Выбери клетки')}</b><small>Тап по своей клетке — выбрать или снять. 🔗 — группа: без соседа рента ниже.</small><p class="mp-pick-sum"></p><div><button type="button" class="sec" data-v="0">Назад</button><button type="button" class="ok" data-v="1">Готово</button></div>`;
+    const rings=new Map();
+    for(const c of cands){const r=el('div','mp-pick-ring',layer);r.innerHTML=`<span>${esc(c.title)}<b>${money(c.price)}</b></span>${own(c.i-1)||own(c.i+1)?'<i>🔗</i>':''}`;rings.set(c.i,r);}
+    const paint=()=>{for(const [i,r] of rings)r.classList.toggle('on',sel.has(i));const sm=ui.querySelector('.mp-pick-sum');if(sm)sm.textContent=`Выбрано: ${sel.size}${opts.sum?' · '+opts.sum(sel):''}`;};
+    const cv=$('board');let down=null;
+    const pd=e=>{down={x:e.clientX,y:e.clientY};};
+    const pu=e=>{if(!down)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y);down=null;if(moved>8)return;
+      let best=null,bd=56;for(const c of cands){const p=screenOfTile(c.i),d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<bd){bd=d;best=c;}}
+      if(!best)return;e.stopImmediatePropagation();if(sel.has(best.i))sel.delete(best.i);else sel.add(best.i);paint();
+      try{navigator.vibrate&&navigator.vibrate(20);}catch(x){}};
+    cv.addEventListener('pointerdown',pd,true);cv.addEventListener('pointerup',pu,true);
+    document.body.classList.add('mp-picking');
+    try{MobileHost.send({action:'overview'});}catch(e){}
+    const done=v=>{cv.removeEventListener('pointerdown',pd,true);cv.removeEventListener('pointerup',pu,true);
+      for(const [,r] of rings)r.remove();ui.remove();pick=null;document.body.classList.remove('mp-picking');
+      try{MobileHost.send({action:'home'});}catch(e){}res(v?new Set(sel):null);};
+    ui.querySelectorAll('button').forEach(b=>b.onclick=()=>done(b.dataset.v==='1'));
+    if(typeof enamelButton==='function')ui.querySelectorAll('button').forEach(b=>enamelButton(b));
+    pick={rings};paint();
+  });
 }
 
 // ---- фишки соперников и флажки их клеток поверх поля ----
@@ -1234,6 +1367,7 @@ function onEvt(from,e){
   const mine=e.to===PID,amount=e.amount==null?null:Math.round(e.amount);
   try{dispatchEvent(new CustomEvent('mp:event',{detail:{kind:e.kind,who:p.name,color:p.color,text:e.text,amount,tile:e.tile==null?null:e.tile,mine}}));}catch(x){}
   if(e.tile!=null&&amount)floatAt(e.tile,(amount>0?'+':'−')+money(Math.abs(amount)),amount>0?'#2f6b35':'#a92720');
+  if(e.kind==='lot'&&from!==PID&&e.tile!=null)lotAlert(e.tile);
   if(from!==PID){
     if(e.to&&amount&&(e.kind==='rent'||e.kind==='sale'))flyBetween(amount<0?from:e.to,amount<0?e.to:from,amount);
     // плашка — если событие не про меня (про меня уже есть крупная плашка денег)
@@ -1258,7 +1392,9 @@ function onEvt(from,e){
   // Инкассатор соперника: монеты разлетаются по полю и у остальных — видно, куда легли (плейтест 01.10).
   if(e.kind==='scatter'&&from!==PID&&Array.isArray(e.drops)&&e.drops.length){
     plate(`🚚 ${p.name}: мешок лопнул`,0,`${e.cash?money(e.cash)+' ':''}разлетелось по клеткам — заберёт тот, кто встанет`);
-    if(MobileHost.ready)MobileHost.request('scatter',{from:e.tile==null?0:e.tile,drops:e.drops},15000).catch(()=>{});
+    // Разлёт показываем, когда фишка соперника дошла до клетки инкассатора (плейтест 02.10: прилетал за 3 с до броска)
+    (async()=>{for(let i=0;i<40;i++){const tk=tokens.get(from);if(!tk||tk.pos==null||tk.pos===e.tile)break;await wait(100);}
+      if(MobileHost.ready)MobileHost.request('scatter',{from:e.tile==null?0:e.tile,drops:e.drops},15000).catch(()=>{});})();
   }
 }
 // Деньги между игроками — монеты летят от фишки плательщика к фишке получателя в полосе (плейтест 01.10).
@@ -1298,7 +1434,7 @@ function plate(title,amount,sub){
 }
 // Камера в чужой ход ведёт фишку того, кто ходит: поле само плавно держит в кадре точку между клетками
 // ('focus' — src/board/main.js). Раньше — сдвигом 'pan' каждый кадр: камера дёргалась и уезжала по инерции.
-let focusSent='',focusAt=0;
+let focusSent='',focusAt=0,rivalsSent='';
 function followRival(now){
   let key='';
   const k=view&&view.phase==='play'&&!myTurn()&&MobileHost.ready&&tokens.get(view.turn.pid);
@@ -1325,6 +1461,13 @@ function frame(now){
     k.el.style.transform=`translate(${x}px,${y}px)`;
   }
   for(const [,f] of flags){const p=screenOfTile(f.i);f.el.style.transform=`translate(${p.x}px,${p.y-26}px)`;}
+  if(pick)for(const [i,r] of pick.rings){const p=screenOfTile(i);r.style.transform=`translate(${p.x}px,${p.y}px)`;}
+  // Поле умеет рисовать фишки само (src/board/rivals.js) — отдаём ему, HTML-жетоны прячем: так буквы не лезут
+  // поверх карточек и не дрожат при прокрутке (плейтест 02.10). Старое поле без этого — HTML, как раньше.
+  const inScene=!!(MobileHost.sceneState&&MobileHost.sceneState.rivals);layer.classList.toggle('mp-in-scene',inScene);
+  if(inScene){const list=[];for(const [pid,k] of tokens){const pl=playerOf(pid);if(!pl||!k.seg)continue;
+      list.push({pid,color:pl.color,letter:pl.name.slice(0,1),a:k.seg.a,b:k.seg.b,k:Math.round(k.seg.k*100)/100,seat:k.seat||0,on:!!(view.turn&&view.turn.pid===pid),off:!pl.online});}
+    const key=JSON.stringify(list);if(key!==rivalsSent){rivalsSent=key;try{MobileHost.send({action:'rivals',list});}catch(e){}}}
   followRival(now);
   tick();
 }
@@ -1384,10 +1527,12 @@ function renderLobby(force){
     <div class="mp-seats">${seats.map((p,i)=>p?`<div class="mp-seat" style="--c:${p.color}"><i>${esc(p.name.slice(0,1).toUpperCase())}</i><b>${esc(p.name)}${p.pid===PID?' · ты':''}</b><small>${p.pid===T.host?'хозяин стола':C.COLOR_NAMES[i]}</small>${host&&p.pid!==PID?`<button class="mp-kick" data-pid="${esc(p.pid)}" aria-label="Убрать">✕</button>`:''}</div>`
       :`<div class="mp-seat empty" style="--c:${C.COLORS[i]}"><i></i><b>свободно</b><small>${C.COLOR_NAMES[i]}</small></div>`).join('')}</div>
     ${host?'':'<p class="mp-guest-note">🔒 Настраивает хозяин стола — ты видишь, что он выбрал</p>'}
-    <div class="mp-set"><span>Длина партии<small>минут на всех; потом — последний раунд</small></span>${opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>
     <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>esc((C.WIN_OPTIONS.find(w=>w.id===v)||{}).name||v))}</div>
+    ${C.timed(T)?`<div class="mp-set mp-set-mode"><span>Длина партии<small>${C.modeOf(T)==='laps'?'кругов лидера; потом — последний раунд':'минут на всех; потом — последний раунд'}</small></span>${opt('mode',C.MODE_OPTIONS,C.modeOf(T),v=>v==='laps'?'По кругам':'По времени')}
+      ${C.modeOf(T)==='laps'?opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>v+' кр.'):opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>`
+    :`<div class="mp-set"><span>Длина партии<small>миссия — без лимита, играем до выполнения</small></span></div>`}
     <div class="mp-set"><span>Время на ход<small>${T.settings.turnSec?'мини-игра часы не тратит':'без лимита — ход передаётся кнопкой'}</small></span>${opt('turnSec',C.TURN_OPTIONS,T.settings.turnSec,v=>v?v+' с':'∞')}</div>
-    <p class="mp-est">${n>=2?`${T.settings.minutes} мин на ${n} ${plural(n,'игрока','игроков','игроков')} · ${esc(C.winOf(T).name)}: ${esc(C.winOf(T).text)}`:'Нужно минимум двое'}</p>
+    <p class="mp-est">${n>=2?`${C.modeOf(T)==='time'?T.settings.minutes+' мин':C.modeOf(T)==='laps'?T.settings.rounds+' '+plural(T.settings.rounds,'круг','круга','кругов'):'без лимита'} на ${n} ${plural(n,'игрока','игроков','игроков')} · ${esc(C.winOf(T).name)}: ${esc(C.winOf(T).text)} · очерёдность разыграется случайно`:'Нужно минимум двое'}</p>
     ${window.MPRules?'<button class="sec mp-rules-btn" id="mpRulesBtn" type="button">📖 Как играть</button>':''}
     ${host?`<button class="mp-big" id="mpStart" ${C.canStart(T)?'':'disabled'}>Начать</button>`:'<p class="mp-lead mp-waithost">Ждём, когда хозяин стола начнёт…</p>'}
     <a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Выйти</a>`);
@@ -1396,7 +1541,8 @@ function renderLobby(force){
   const st=$('mpStart');if(st)st.onclick=()=>net.send({t:'start'});
   {const rb=$('mpRulesBtn');if(rb)rb.onclick=()=>MPRules.open();}
   // Правила — сами один раз на телефоне, когда впервые сел за стол (плейтест 01.10: «обучение перед партией»).
-  if(window.MPRules&&!rulesAuto){rulesAuto=true;setTimeout(()=>MPRules.once(),400);}
+  // Хозяину сначала нужно позвать друзей — ему сама не открывается (плейтест 02.10); гостю — один раз.
+  if(window.MPRules&&!rulesAuto&&!host){rulesAuto=true;setTimeout(()=>MPRules.once(),400);}
   $('mpShare').onclick=async()=>{const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${T.room}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);};
   $('mpCopy').onclick=()=>copy(link());
   drawQr();
@@ -1418,7 +1564,8 @@ function showOver(v){
   const rank=ps.slice().sort((a,b)=>b.total-a.total||b.cash-a.cash||a.seat-b.seat);
   const r=v.result||{},win=r.winner?ps.find(p=>p.pid===r.winner)||rank[0]:rank[0];
   const laps=r.laps||v.settings.rounds;
-  const sub=r.why==='early'?`Досрочно — условие «${esc((v.win||{}).name||'')}» выполнено.`:`${r.finalBy?esc(nameOf(r.finalBy))+' первым прошёл':'Пройдено'} ${laps} ${plural(laps,'круг','круга','кругов')}. Считаем, кто сильнейший.`;
+  const sub=r.why==='early'?`Досрочно — условие «${esc((v.win||{}).name||'')}» выполнено.`:r.finalBy==='time'||r.mode==='time'?`Время вышло${r.extended?' (после продления)':''}. Считаем, кто сильнейший.`:`${r.finalBy?esc(nameOf(r.finalBy))+' первым прошёл':'Пройдено'} ${laps} ${plural(laps,'круг','круга','кругов')}. Считаем, кто сильнейший.`;
+  const canExtend=net&&net.host&&r.why!=='early'&&r.mode&&r.mode!=='none';
   const lines=p=>[
     p.points?{k:'pts',t:`Точки ×${p.points}`,s:`сумма уровней ${p.levels}`,v:p.ptsInv}:null,
     p.biz?{k:'biz',t:`Бизнесы ×${p.biz}`,v:p.bizInv}:null,
@@ -1433,11 +1580,12 @@ function showOver(v){
       <div class="mp-card-h"><i>${esc(p.name.slice(0,1).toUpperCase())}</i><b>${esc(p.name)}${p.pid===PID?' · ты':''}</b><strong class="mp-sum">$0</strong></div>
       <div class="mp-lines">${lines(p).map(l=>`<div class="mp-line${l.v<0?' neg':''}" data-v="${l.v}"><span>${l.t}${l.s?` <small>${l.s}</small>`:''}</span><b>${l.v<0?'−':''}$0</b></div>`).join('')}</div>
       <div class="mp-crown">👑 Хозяин Сан-Франциско</div></div>`).join('')}</div>
-    <div class="mp-after" hidden>${net&&net.host?'<button class="mp-big" id="mpAgain">Ещё партию</button>':'<p class="mp-lead mp-waithost">Хозяин стола может начать ещё партию.</p>'}
+    <div class="mp-after" hidden>${net&&net.host?`${canExtend?`<button class="mp-big sec" id="mpExtend">⏱ Ещё время · +${r.mode==='laps'?C.EXTEND_LAPS+' '+plural(C.EXTEND_LAPS,'круг','круга','кругов'):C.EXTEND_MINUTES+' мин'}</button>`:''}<button class="mp-big" id="mpAgain">Ещё партию</button>`:'<p class="mp-lead mp-waithost">Хозяин стола может продлить партию или начать новую.</p>'}
     <a class="mp-solo" href="index.html?map=sf${Q.has('mute')?'&mute':''}">Играть одному</a></div>
     <button class="mp-skip" id="mpSkip">Пропустить ▸</button></div>`;
   over.hidden=false;
   const a=$('mpAgain');if(a)a.onclick=()=>net.send({t:'again'});
+  {const x=$('mpExtend');if(x)x.onclick=()=>{x.disabled=true;net.send({t:'extend'});};}
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let skip=reduced;const seq=++showSeq,cancelledNow=()=>seq!==showSeq||over.hidden;
   $('mpSkip').onclick=()=>{skip=true;};
@@ -1478,6 +1626,7 @@ async function enter(){
   if(ROOM&&myName&&ss('abmp_joined_'+ROOM)){renderWait(`Садимся за стол ${ROOM}…`);connectAsClient(ROOM,false);return;}
   renderEntry();
 }
-window.MP={get view(){return view;},get pid(){return PID;},finishTurn,rentOf:t=>rentOf(t),invested,owners};
+async function shareLink(){const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${ROOM}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);}
+window.MP={get view(){return view;},get pid(){return PID;},finishTurn,rentOf:t=>rentOf(t),invested,owners,share:shareLink,extend:()=>net&&net.host&&net.send({t:'extend'})};
 setTimeout(enter,0);
 })();

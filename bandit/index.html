@@ -988,18 +988,24 @@ function symbols(o,rng){
  if(o.count===2){const x=o.symbol||pick(['seven','gem','coin','cherry']);return shuffle([x,x,pick(SYMBOLS.filter(s=>s!==x))],rng);}
  return shuffle(SYMBOLS.slice(),rng).slice(0,3);
 }
+// Мультиплеер (rollCash>0, плейтест 02.10: $970 за визит решали партию): P — прибыль за круг, но не выше MP_P_CAP;
+// денежные призы — доли MP_PAY; джекпот — касса стола + 2 кристалла; кубики — 6 и 2 курса rollCash.
+const MP_P_CAP=400,MP_PAY={coin3:.6,cherry3:.3,pair:.15,dice3:6,dice2:2,jackpotGem:2};
+const isMP=s=>s.rollCash>0;
+// Прокрутки за кристаллы дорожают с каждым визитом: 1 → 2 → 3 (мультиплеер, плейтест 02.10); соло — 1.
+function packPrice(s){return isMP(s)?Math.min(3,Math.max(1,integer(s.visits,0,99))):1;}
 function award(s,o,syms){
- const P=Math.max(s.P,15*s.day),p={id:o.id,syms,cash:0,gem:0,move:0,restock:null};
+ const mp=isMP(s),P=mp?Math.min(MP_P_CAP,Math.max(s.P,15*s.day)):Math.max(s.P,15*s.day),p={id:o.id,syms,cash:0,gem:0,move:0,restock:null};
  switch(o.id){
- case 'jackpot':p.cash=s.pot;p.gem=5;break;
+ case 'jackpot':p.cash=s.pot;p.gem=mp?MP_PAY.jackpotGem:5;break;
  case 'gem3':p.gem=3;break;
- case 'dice3':if(s.rollCash>0)p.cash=10*s.rollCash;else p.move=10;break;
- case 'coin3':p.cash=Math.round(1.5*P);break;
+ case 'dice3':if(mp)p.cash=MP_PAY.dice3*s.rollCash;else p.move=10;break;
+ case 'coin3':p.cash=Math.round((mp?MP_PAY.coin3:1.5)*P);break;
  case 'box3':p.restock='all';break;
- case 'cherry3':p.cash=Math.round(.5*P);break;
- case 'dice2':if(s.rollCash>0)p.cash=3*s.rollCash;else p.move=3;break;
+ case 'cherry3':p.cash=Math.round((mp?MP_PAY.cherry3:.5)*P);break;
+ case 'dice2':if(mp)p.cash=MP_PAY.dice2*s.rollCash;else p.move=3;break;
  case 'box2':p.restock='one';break;
- case 'pair':p.cash=Math.round(.25*P);break;
+ case 'pair':p.cash=Math.round((mp?MP_PAY.pair:.25)*P);break;
  default:break; // разнобой — мимо
  }
  return p;
@@ -1008,7 +1014,7 @@ function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.
 class Game {
  constructor(raw,rng=Math.random){this.state=restore(raw);this.rng=rng;this.busy=false;}
  available(){return this.state.paidSpins+(this.state.freeSpins||0);}
- buyPack(){const s=this.state;if(this.busy||s.gem<1||this.available()>0)return false;s.gem--;s.paidSpins+=5;return true;}
+ buyPack(){const s=this.state,price=packPrice(s);if(this.busy||s.gem<price||this.available()>0)return false;s.gem-=price;s.paidSpins+=5;return true;}
  begin(forced){
   const s=this.state;if(this.busy||s.pending||s.closed||this.available()<1)return null;
   this.busy=true;s.lastPrize=null;if(s.freeSpins>0)s.freeSpins--;else s.paidSpins--;s.freeSpin=s.freeSpins>0;
@@ -1037,7 +1043,7 @@ class Game {
  close(){if(this.busy)return false;this.collect();this.state.closed=true;return true;}
  snapshot(){return clone(this.state);}
 }
-const API={Game,OUTCOMES,SYMBOLS,initial,restore,award,symbols,choose,describe,money,integer};
+const API={Game,OUTCOMES,SYMBOLS,initial,restore,award,symbols,choose,describe,money,integer,packPrice,MP_PAY,MP_P_CAP};
 if(typeof module!=='undefined')module.exports=API;else root.SlotEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 
@@ -1148,7 +1154,8 @@ root.SlotIdle={createIdle};
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
-const {Game,OUTCOMES,SYMBOLS:ORDER,describe,money,integer}=SlotEngine;
+const {Game,OUTCOMES,SYMBOLS:ORDER,describe,money,integer,packPrice,MP_PAY,MP_P_CAP}=SlotEngine;
+const mp=()=>S.rollCash>0,price=()=>packPrice(S),PP=()=>mp()?Math.min(MP_P_CAP,Math.max(S.P,15*S.day)):Math.max(S.P,15*S.day);
 const KEY='one-armed-bandit-v2'+(new URLSearchParams(location.search).has('qa')?'-qa':'');let stored=null,canSave=true;
 try{if(!window.BanditHost)stored=JSON.parse(localStorage.getItem(KEY));}catch(e){canSave=false;}
 let game=new Game(stored),S=game.state,modal=null,returnFocus=null;
@@ -1163,7 +1170,7 @@ const rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)];
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
 const phrasesBase={jackpot:'Джонни, пакуй чемодан!',gem3:'Блеск! Джонни одобряет.',dice3:'Десять ходов — гуляем!',coin3:'Вот это улов!',box3:'Костко приехал сам!',cherry3:'Вишенка на торте.',dice2:'Три хода сверху.',box2:'Коробка на точку.',pair:'Парочка — уже неплохо.',none:'Мимо. Крути ещё!'};
 // Мультиплеер (rollCash>0): кубики платят налом — и фразы про ходы тоже про деньги.
-const phrases=new Proxy(phrasesBase,{get(o,k){if(S&&S.rollCash>0){if(k==='dice3')return `${money(10*S.rollCash)} наличными — гуляем!`;if(k==='dice2')return `${money(3*S.rollCash)} сверху.`;}return o[k];}});
+const phrases=new Proxy(phrasesBase,{get(o,k){if(S&&S.rollCash>0){if(k==='dice3')return `${money(MP_PAY.dice3*S.rollCash)} наличными — гуляем!`;if(k==='dice2')return `${money(MP_PAY.dice2*S.rollCash)} сверху.`;}return o[k];}});
 const names={seven:'семёрка',gem:'кристалл',dice:'кубики',coin:'монеты',box:'коробка',cherry:'вишня'};
 function save(){if(window.BanditHost){BanditHost.save();return;}try{localStorage.setItem(KEY,JSON.stringify(game.snapshot()));canSave=true;}catch(e){canSave=false;}updateNote();}
 function updateNote(){$('sessionNote').textContent=canSave?'Демо · прогресс сохраняется в этом браузере':'Демо · сохранение в этом браузере недоступно';}
@@ -1198,9 +1205,9 @@ function renderActions(){
  a.hidden=false;
  $('spinStock').hidden=false;
  $('spinCount').textContent=String(available).padStart(2,'0');drawSpinCount();
- $('buyLabel').innerHTML=`5 спинов<small>1 ${svg('gem')}</small>`;
- a.disabled=game.busy||available>0||S.gem<1;
- a.title=available?'Сначала используй спины в запасе':S.gem<1?'Нужен 1 кристалл для 5 спинов':'Купить 5 спинов за 1 кристалл';
+ $('buyLabel').innerHTML=`5 спинов<small>${price()} ${svg('gem')}</small>`;
+ a.disabled=game.busy||available>0||S.gem<price();
+ a.title=available?'Сначала используй спины в запасе':S.gem<price()?`Нужно ${price()} 💎 для 5 спинов`:`Купить 5 спинов за ${price()} 💎`;
  $('bClose').disabled=game.busy;
  $('lever').disabled=game.busy||!available||S.closed;
  $('lever').setAttribute('aria-disabled',String($('lever').disabled));
@@ -1211,10 +1218,10 @@ function renderActions(){
 function renderRows(){
  const P=Math.max(S.P,15*S.day),spec=[
  ['jackpot',['seven','seven','seven'],'Касса + 5 💎'],['gem3',['gem','gem','gem'],'3 💎'],
- ['dice3',['dice','dice','dice'],S.rollCash>0?money(10*S.rollCash):'+10 ходов'],['coin3',['coin','coin','coin'],money(1.5*P)],
- ['cherry3',['cherry','cherry','cherry'],money(.5*P)],['box3',['box','box','box'],'Во все точки'],
- ['dice2',['dice','dice','·'],S.rollCash>0?money(3*S.rollCash):'+3 хода'],['box2',['box','box','·'],'В лучшую точку'],
- ['pair',null,money(.25*P)],['none',null,'—']];
+ ['dice3',['dice','dice','dice'],mp()?money(MP_PAY.dice3*S.rollCash):'+10 ходов'],['coin3',['coin','coin','coin'],money((mp()?MP_PAY.coin3:1.5)*PP())],
+ ['cherry3',['cherry','cherry','cherry'],money((mp()?MP_PAY.cherry3:.5)*PP())],['box3',['box','box','box'],'Во все точки'],
+ ['dice2',['dice','dice','·'],mp()?money(MP_PAY.dice2*S.rollCash):'+3 хода'],['box2',['box','box','·'],'В лучшую точку'],
+ ['pair',null,money((mp()?MP_PAY.pair:.25)*PP())],['none',null,'—']];
  $('colL').innerHTML='';$('colR').innerHTML='';
  spec.forEach(([id,syms,value],i)=>{const d=document.createElement('div');d.className='row';d.dataset.row=id;
  d.classList.toggle('hit',!game.busy&&(S.pending||S.lastPrize)?.id===id);
@@ -1290,7 +1297,7 @@ function renderReceipt(p){
  $('receiptText').textContent=p?`${p.stocked.length?(p.restock==='all'?'Все точки заполнены':'Заполнена самая прибыльная точка — '+p.stocked[0].n+' (+'+p.stocked[0].add+')'):describe({...p,restock:null})}. ${p.refund?'Все точки полные — товар заменён деньгами.':phrases[p.id]}`:'Бесплатный спин ждёт на следующей остановке. Купленные спины остаются у тебя.';
  $('bReturn').textContent=game.available()?`Вернуться · ${game.available()} ${spinWord(game.available())}`:'Вернуться к автомату';
 }
-function returnToGame(){S.closed=false;save();render();setRadius();if(S.pending)result(describe(S.pending),phrases[S.pending.id]);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',game.available()?'Или нажми «Крутить»':'5 спинов за 1 кристалл');$('bMain').focus();}
+function returnToGame(){S.closed=false;save();render();setRadius();if(S.pending)result(describe(S.pending),phrases[S.pending.id]);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',game.available()?'Или нажми «Крутить»':`5 спинов за ${price()} 💎`);$('bMain').focus();}
 function pressButton(id){
  if(reduced())return;
  const cap=$(id).querySelector('.button-plunger');
@@ -1301,7 +1308,7 @@ function buySpins(){
  if(game.busy||modal||S.closed||game.available()||!game.buyPack())return;
  clearWin();save();render();
  result('Добавлено 5 спинов','Нажми «Крутить» или дёрни рычаг');
- log('Куплено 5 спинов за 1 кристалл.');sound.button();pressButton('bAgain');
+ log(`Куплено 5 спинов за ${price()} 💎.`);sound.button();pressButton('bAgain');
 }
 
 function land(){if(game.busy)return;game.land();clearWin();save();render();setRadius();result('Дёрни рычаг!','Этот спин бесплатный');log('Остановка на клетке 10: бесплатный спин.');}
@@ -1434,7 +1441,7 @@ function dialog(title,html,actions=[['Понятно',()=>{}]]){
  actions.forEach(([label,fn])=>{const b=document.createElement('button');b.className='cbtn';b.textContent=label;b.onclick=()=>{d.close();fn();};d.querySelector('.dialog-actions').append(b);});
  d.addEventListener('close',()=>{d.remove();modal=null;idle.refresh();returnFocus?.focus();});d.addEventListener('click',e=>{if(e.target===d)d.close();});document.body.append(d);modal=d;idle.quiet();d.showModal();
 }
-function help(){const P=Math.max(S.P,15*S.day),values={jackpot:money(S.pot)+' + 5 💎',gem3:'3 💎',dice3:S.rollCash>0?money(10*S.rollCash):'+10 ходов',coin3:money(1.5*P),box3:'Товар во все точки',cherry3:money(.5*P),dice2:S.rollCash>0?money(3*S.rollCash):'+3 хода',box2:'Товар в лучшую точку',pair:money(.25*P),none:'ничего'};
+function help(){const P=Math.max(S.P,15*S.day),values={jackpot:money(S.pot)+(mp()?` + ${MP_PAY.jackpotGem} 💎`:' + 5 💎'),gem3:'3 💎',dice3:mp()?money(MP_PAY.dice3*S.rollCash):'+10 ходов',coin3:money((mp()?MP_PAY.coin3:1.5)*PP()),box3:'Товар во все точки',cherry3:money((mp()?MP_PAY.cherry3:.5)*PP()),dice2:mp()?money(MP_PAY.dice2*S.rollCash):'+3 хода',box2:'Товар в лучшую точку',pair:money((mp()?MP_PAY.pair:.25)*PP()),none:'ничего'};
  dialog('Каждый спин с призом',`<p>На клетке — один бесплатный спин. Считается только средняя линия между золотыми стрелками.</p><table class="odds"><thead><tr><th>Комбинация</th><th>Приз</th><th>Шанс</th></tr></thead><tbody>${OUTCOMES.map(o=>`<tr><td aria-label="${o.symbol?names[o.symbol]+' ×'+o.count:o.label}">${o.symbol?svg(o.symbol):''}${o.symbol?' ×'+o.count:o.label}</td><td>${values[o.id]}</td><td>${o.chance}%</td></tr>`).join('')}</tbody></table><p><strong>1 кристалл = 5 спинов.</strong> Цена постоянная. Покупка только добавляет спины, вращение запускается отдельно. Купленные спины сохраняются между остановками. Все призы начисляются автоматически после остановки барабанов. Кнопка «Крутить» и рычаг запускают следующий спин. Рычаг можно нажать или потянуть вниз.</p><p>Коробки пополняют запас точек. Одна коробочная пара выбирает самую прибыльную незаполненную точку. Если всё заполнено, выдаются деньги.</p><p class="fine">Денежные призы зависят от прибыли за круг. Таблица показывает суммы для текущих параметров демо.</p>`);
 }
 function toggleSound(){S.sound=!S.sound;sound.stop();save();render();if(S.sound)sound.button();}
@@ -1478,7 +1485,7 @@ for(const [id,key] of [['inP','P'],['inDay','day'],['inCash','cash'],['inGem','g
 window.addEventListener('resize',setRadius);
 new ResizeObserver(setRadius).observe($('stage'));
 $('poster').classList.add('ready');render();setRadius();showSymbols(S.pending?.syms||S.lastPrize?.syms||['seven','gem','cherry']);
-if(S.pending)settle(false);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',S.freeSpins>0?`${S.freeSpins} ${spinWord(S.freeSpins)} за счёт заведения`:game.available()?'Или нажми «Крутить»':'5 спинов за 1 кристалл');
+if(S.pending)settle(false);else result(game.available()?'Дёрни рычаг!':'Ещё пять попыток?',S.freeSpins>0?`${S.freeSpins} ${spinWord(S.freeSpins)} за счёт заведения`:game.available()?'Или нажми «Крутить»':`5 спинов за ${price()} 💎`);
 if(S.closed)renderReceipt(null);save();document.fonts?.ready.then(setRadius);
 })();
 </script></body></html>

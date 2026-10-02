@@ -49,10 +49,12 @@ function slides(){
 function open(){
   return new Promise(resolve=>{
     document.getElementById('onboard')?.remove();
-    const list=slides(),root=document.createElement('div');
+    // В лобби стол должен оставаться под рукой: код и «поделиться» — прямо в листалке (плейтест 02.10).
+    const list=slides(),root=document.createElement('div'),share=window.MP&&MP.view&&MP.view.phase==='lobby'&&MP.share?MP.view.room:'';
     root.id='onboard';root.className='mp-rules';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Правила партии');
     root.innerHTML=`<div class="ob-card">
       <button class="ob-skip" type="button">Закрыть</button>
+      ${share?`<button class="mpr-share" type="button">🔗 Стол <b>${esc(share)}</b> — поделиться ссылкой</button>`:''}
       <div class="ob-track">${list.map((s,i)=>`<section class="ob-slide" data-i="${i}" aria-hidden="${i?'true':'false'}">
         <div class="ob-step">${i+1} из ${list.length}</div><div class="ob-art">${s.a}</div>
         <h2 class="ob-title">${esc(s.t)}</h2><p class="ob-text">${esc(s.x)}</p></section>`).join('')}</div>
@@ -65,10 +67,12 @@ function open(){
     const show=i=>{at=Math.max(0,Math.min(slidesEl.length-1,i));
       slidesEl.forEach((s,k)=>{s.classList.toggle('on',k===at);s.setAttribute('aria-hidden',String(k!==at));});
       dots.forEach((d,k)=>d.classList.toggle('on',k===at));
-      next.textContent=at===slidesEl.length-1?'Понятно':'Дальше';prev.disabled=at===0;};
+      // Первый слайд: вместо «Назад» — «Пропустить» (плейтест 02.10: обучение «нельзя закрыть до конца»).
+      next.textContent=at===slidesEl.length-1?'Понятно':'Дальше';prev.textContent=at===0?'Пропустить':'Назад';};
     const finish=()=>{root.classList.add('out');setTimeout(()=>{root.remove();resolve();},220);};
     next.onclick=()=>at===slidesEl.length-1?finish():show(at+1);
-    prev.onclick=()=>show(at-1);
+    prev.onclick=()=>at===0?finish():show(at-1);
+    {const sh=root.querySelector('.mpr-share');if(sh)sh.onclick=()=>MP.share();}
     root.querySelector('.ob-skip').onclick=finish;
     dots.forEach(d=>d.onclick=()=>show(+d.dataset.i));
     let x0=null;

@@ -9,7 +9,7 @@ function mobileSync(){
   mobileCheckCash();
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,lvl:t.owner?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?S.pot:0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
+    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,   // уровень и у чужих клеток в партии (башенки соперников, плейтест 02.10)pot:t.type==='pot'?S.pot:0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?(window.MinigameRotation&&MinigameRotation.current(S.minigames)==='dice21'?'':'$'+((S.slot&&S.slot.pot)||0)):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -203,7 +203,9 @@ function panMap(dx,dy){
   MobileHost.send({action:'pan',dx,dy,input_width:$('board-frame').getBoundingClientRect().width});
 }
 cv.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY};tapMoved=false;cv.setPointerCapture(e.pointerId);});
-cv.addEventListener('pointermove',e=>{if(!gesture||pinchDistance)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>2)tapMoved=true;panMap(dx,dy);gesture={x:e.clientX,y:e.clientY};});
+// Мышь: кнопку отпустили, а pointerup не дошёл (захват потерян, курсор ушёл в окно поля) — карта больше не тянется за курсором
+// (плейтест 02.10, «камера залипает после перетаскивания»).
+cv.addEventListener('pointermove',e=>{if(gesture&&e.pointerType==='mouse'&&!e.buttons){gesture=null;return;}if(!gesture||pinchDistance)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>2)tapMoved=true;panMap(dx,dy);gesture={x:e.clientX,y:e.clientY};});
 cv.addEventListener('pointerup',e=>{
   gesture=null;if(tapMoved||moving||trainingPending()||!$('modal').hidden)return;
   const r=$('board-frame').getBoundingClientRect();
@@ -219,6 +221,8 @@ cv.addEventListener('pointerup',e=>{
   else if(t.type==='bank'&&S.day>=CFG.BANK_DAY)bank();
 });
 cv.addEventListener('pointercancel',()=>{gesture=null;});
+cv.addEventListener('lostpointercapture',()=>{gesture=null;});
+addEventListener('blur',()=>{gesture=null;});
 cv.addEventListener('wheel',e=>{
   e.preventDefault();
   const unit=e.deltaMode===1?16:e.deltaMode===2?cv.getBoundingClientRect().height:1;
