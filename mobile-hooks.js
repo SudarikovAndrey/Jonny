@@ -440,14 +440,14 @@ function placeDiceResult(el){
   el.style.transform='translateX(-50%)';
 }
 
-// Карта поля (board.html?map=…): Бруклин по умолчанию, остальные — для просмотра.
+// Карта поля (board.html?map=…): Канзас — игровая арена по умолчанию (01.10), остальные — по выбору.
 // Список синхронен с src/board/sites.js.
-const BOARD_MAPS=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['kansas','Канзас'],['vegas','Лас-Вегас'],['paloalto','Пало-Альто'],['sanfrancisco','Сан-Франциско'],['losangeles','Лос-Анджелес'],['manhattan','Манхэттен'],['liberty','Остров Свободы']];
-function boardMap(){try{return localStorage.getItem('americanboy_board_map')||'brooklyn';}catch(e){return 'brooklyn';}}
+const BOARD_MAPS=[['kansas','Канзас'],['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['vegas','Лас-Вегас'],['paloalto','Пало-Альто'],['sanfrancisco','Сан-Франциско'],['losangeles','Лос-Анджелес'],['manhattan','Манхэттен'],['liberty','Остров Свободы']];
+function boardMap(){try{return localStorage.getItem('americanboy_board_map')||'kansas';}catch(e){return 'kansas';}}
 function setBoardMap(id){
   try{localStorage.setItem('americanboy_board_map',id);}catch(e){}
   const f=$('board-frame'),u=new URL(f.src,location.href);
-  if(id==='brooklyn')u.searchParams.delete('map');else u.searchParams.set('map',id);
+  u.searchParams.set('map',id);
   // поле перезагрузится и заново попросит состояние через sceneReady
   MobileHost.ready=false;document.body.classList.remove('engine-ready');
   f.src=u.pathname.split('/').pop()+u.search;

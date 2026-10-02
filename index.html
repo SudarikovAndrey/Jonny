@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'05827a11'+(m&&m!=="brooklyn"?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'d77fb612'+(m?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -2499,14 +2499,14 @@ function placeDiceResult(el){
   el.style.transform='translateX(-50%)';
 }
 
-// Карта поля (board.html?map=…): Бруклин по умолчанию, остальные — для просмотра.
+// Карта поля (board.html?map=…): Канзас — игровая арена по умолчанию (01.10), остальные — по выбору.
 // Список синхронен с src/board/sites.js.
-const BOARD_MAPS=[['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['kansas','Канзас'],['vegas','Лас-Вегас'],['paloalto','Пало-Альто'],['sanfrancisco','Сан-Франциско'],['losangeles','Лос-Анджелес'],['manhattan','Манхэттен'],['liberty','Остров Свободы']];
-function boardMap(){try{return localStorage.getItem('americanboy_board_map')||'brooklyn';}catch(e){return 'brooklyn';}}
+const BOARD_MAPS=[['kansas','Канзас'],['brooklyn','Бруклин'],['mainstreet','Мейн-стрит'],['vegas','Лас-Вегас'],['paloalto','Пало-Альто'],['sanfrancisco','Сан-Франциско'],['losangeles','Лос-Анджелес'],['manhattan','Манхэттен'],['liberty','Остров Свободы']];
+function boardMap(){try{return localStorage.getItem('americanboy_board_map')||'kansas';}catch(e){return 'kansas';}}
 function setBoardMap(id){
   try{localStorage.setItem('americanboy_board_map',id);}catch(e){}
   const f=$('board-frame'),u=new URL(f.src,location.href);
-  if(id==='brooklyn')u.searchParams.delete('map');else u.searchParams.set('map',id);
+  u.searchParams.set('map',id);
   // поле перезагрузится и заново попросит состояние через sceneReady
   MobileHost.ready=false;document.body.classList.remove('engine-ready');
   f.src=u.pathname.split('/').pop()+u.search;
