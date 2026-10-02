@@ -42,6 +42,20 @@ function schedule(){
   const hv=H.view;if(autoMe&&hv&&hv.phase==='play'&&hv.turn&&hv.turn.pid===H.PID&&!hv.paused&&!$('onboard')){pendingT=setTimeout(()=>{pendingT=0;playTurn(H.PID);},dly(1200));}
 }
 setInterval(schedule,700);
+// После перезагрузки страницы хозяина стол поднимается из localStorage (mp.js, hostTable), а боты жили только
+// в памяти этой страницы — их ходы больше никто не делал, стол вставал. На первом же хабе (это и есть
+// восстановленный стол) возвращаем ботов по pid из T.players: ping снова делает их online и подключает ответы
+// (hub.handle, case 'ping'), дальше view и ходы — как обычно. Один раз на хаб: убранные вручную не воскресают.
+const seenHubs=new WeakSet();
+function adoptRestored(){
+  const hub=H.hub,T=hub&&hub.T;if(!T||!Array.isArray(T.players)||seenHubs.has(hub))return;
+  seenHubs.add(hub);
+  for(const p of T.players){if(!/^bot\d/.test(p.pid)||bots.has(p.pid))continue;
+    const b={pid:p.pid,name:p.name,view:null};bots.set(p.pid,b);
+    hubSend(p.pid,{t:'ping'});b.ping=setInterval(()=>hubSend(p.pid,{t:'ping'}),2500);
+    trace.push(p.name+': вернулся за стол после перезагрузки');}
+}
+setInterval(adoptRestored,500);
 // Сторож: сцена не ответила (вкладка в фоне) — снимаем флаг движения и закрываем окна, иначе стол встанет.
 function unstick(){try{if(typeof moving!=='undefined')moving=false;}catch(e){}H.closeAll();const l=document.querySelector('.minigame-layer');if(l){try{l.remove();}catch(e){}}console.warn('bot: ход застрял, сторож снял движение');trace.push('сторож');}
 async function settle(max=250){
@@ -229,8 +243,24 @@ function landHidden(t,ctx){
       else{S.jail=CFG.POLICE.attempts;S.jailFine=0;emit({kind:'jail',text:'сел в участок',amount:null,tile:t.i});}break;}
     case 'slot':slotHidden(t,ctx);break;
     case 'pot':{const m=Math.round(v.pot||0);if(m>0){S.cash+=m;credit(null,0,{potTake:true});emit({kind:'minigame',text:'сорвал копилку',amount:m,tile:t.i});}break;}
-    default:break;   // старт, банк, инкассатор, инспектор — бот не трогает
+    case 'scatter':scatterHidden(t,ctx);break;
+    default:break;   // старт, банк, инспектор — бот не трогает
   }
+}
+// Инкассатор у бота: мешок лопается так же, как у игрока (scatter() в web/index.html — «мешок лопается всегда»):
+// сначала закрытые клетки, мало — любые точки и бизнесы. Находки ложатся на клетки среза и уходят столу вместе
+// с полем; событие 'scatter' отыгрывает разлёт на поле хозяина, как у живого соперника (mp.js, flyDrops/onEvt).
+function scatterHidden(t,{emit}){
+  const c=CFG.SCATTER,sc=S.day||1,ok=x=>x.i!==S.pos&&x.i!==0&&!x.drop;
+  let spots=S.tiles.filter(x=>!unlocked(x)&&ok(x));
+  if(spots.length<c.drops){const more=S.tiles.filter(x=>unlocked(x)&&ok(x)&&(x.type==='kiosk'||x.type==='biz')).sort(()=>Math.random()-0.5);spots=spots.concat(more.slice(0,c.drops-spots.length));}
+  spots.sort(()=>Math.random()-0.5);
+  const drops=[];let cash=0;
+  for(const x of spots.slice(0,c.drops)){const r=Math.random();let d;
+    if(r<c.hardChance)d={hard:1};else if(r<c.hardChance+c.rollsChance)d={rolls:2};
+    else{const m=(c.min+Math.floor(Math.random()*(c.max-c.min)))*sc;d={cash:m};cash+=m;}
+    x.drop=typeof mergeDrop==='function'?mergeDrop(x.drop,d):d;drops.push({to:x.i,drop:d});}
+  if(drops.length)emit({kind:'scatter',text:'растерял мешок инкассатора',amount:null,tile:t.i,cash,drops});
 }
 function rentHidden(t,{credit,emit,v}){
   const n=v.turn.n;if(t.insp||(t.frozen&&t.frozen>n)||(S.mpShieldN&&n<=S.mpShieldN))return;
@@ -264,7 +294,7 @@ function inspHidden(t,{emit}){
 // Автомат в фоне: бесплатные спины тем же движком и таблицей выплат; на поле — только результат.
 function slotHidden(t,{credit,emit,v}){
   const E=window.SlotEngine;if(!E)return;
-  const st={P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:H.rollCash(),visits:1};
+  const st={P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:window.MP_ROLL_CASH?window.MP_ROLL_CASH():H.rollCash(),mp:true,visits:1};
   let cash=0,potD=10,gem=0;
   for(let i=0;i<3;i++){const o=E.choose(Math.random),p=E.award(st,o,[]);
     if(o.id==='jackpot'){cash+=p.cash;gem+=p.gem;potD-=st.pot;st.pot=0;}

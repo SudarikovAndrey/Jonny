@@ -46,7 +46,9 @@ async function mapPicker(){
   $('card').querySelectorAll('.mp-map-pick').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal('map:'+b.dataset.id);});
   const v=await pending;if(typeof v==='string'&&v.startsWith('map:'))net.send({t:'map',id:v.slice(4)});
 }
-window.MP_ROLL_CASH=()=>rollCash();   // автомат: кубики платят налом по этому курсу (src/bandit/engine.js)
+// Автомат в партии: кубики платят по среднему доходу стола, как и остальные призы — одна таблица для всех игроков
+// (продюсер 02.10: «у одного огромные выигрыши, у другого мелочь»: курс шёл от своего дохода).
+window.MP_ROLL_CASH=()=>Math.max(10,r5((window.MP_LAP_P?window.MP_LAP_P():lapCash())/6));   // автомат: кубики платят налом по этому курсу (src/bandit/engine.js)
 // Призы автомата в партии — от стадии игры: средний по игрокам доход за круг (решение продюсера 02.10), а не от своего.
 window.MP_LAP_P=()=>{if(!view||!view.tiles||!view.players||!view.players.length)return 0;let sum=0;
   for(const t of view.tiles){if(!t.owner||!(t.type==='kiosk'||t.type==='biz'))continue;try{sum+=t.type==='biz'?fee(t):(t.base&&!t.lot?sales(t)*marginOf(t.good):0);}catch(e){}}
@@ -782,6 +784,7 @@ function slotPotFlush(before){const d=slotPotNow()-before;if(d&&myTurn()){credit
 window.MPSlotHooks={
   active:()=>!!(view&&view.phase==='play'),
   canPlay:()=>myTurn()&&!ending&&landedHere(),
+  landKey:()=>`${view.match}:${view.turn.n}:${S.pos}`,
   deny:()=>toast(myTurn()?'Мини-игра — только в тот ход, когда на неё встал':`Сейчас ходит ${nameOf(view.turn.pid)}`,2400),
   async wrap(run,landing){syncSlotPot();if(landing&&S.tiles[S.pos]&&S.tiles[S.pos].type==='slot'){S.slot.pot+=10;if(S.slot.bandit)S.slot.bandit.pot=S.slot.pot;}   // визит любого игрока — +$10 в общую кассу
     const before=Math.round((view.slotPot||0));const r=await run();slotPotFlush(before);return r;},

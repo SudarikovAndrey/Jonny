@@ -347,7 +347,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'db38dfa9'+(m?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'c2f0ab33'+(m?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -3836,7 +3836,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='ea48068192';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='54f1d701d9';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -5479,7 +5479,8 @@ function initial(){return {version:2,P:600,day:2,cash:1250,gem:5,move:12,pot:180
  points:[{n:'Candy Stand',cap:14,q:6,buy:2,profit:28},{n:'Soda Cart',cap:8,q:0,buy:4,profit:48},{n:'Music Stall',cap:22,q:22,buy:10,profit:110}]};}
 function restore(raw){
  const s=initial();if(!raw||raw.version!==2)return s;
- for(const k of ['P','cash','gem','move','pot','paidSpins','visits','totalSpins','rollCash'])s[k]=integer(raw[k]);   // rollCash>0 — мультиплеер: ходы не копятся, кубики платят налом
+ for(const k of ['P','cash','gem','move','pot','paidSpins','visits','totalSpins','rollCash','stopPacks'])s[k]=integer(raw[k]);
+ s.mp=raw.mp===true;   // stopPacks — пакеты, купленные в эту остановку (партия)   // rollCash>0 — мультиплеер: ходы не копятся, кубики платят налом
  s.day=integer(raw.day,1,7);s.freeSpins=integer(raw.freeSpins,0,99);if(!s.freeSpins&&raw.freeSpin===true)s.freeSpins=1;s.freeSpin=s.freeSpins>0;s.closed=raw.closed===true;s.sound=raw.sound===true;
  s.points.forEach((p,i)=>{p.q=integer(raw.points?.[i]?.q,0,p.cap);});
  for(const key of ['pending','lastPrize']){
@@ -5503,19 +5504,23 @@ function symbols(o,rng){
 // денежные призы — доли MP_PAY; джекпот — касса стола + 2 кристалла; кубики — 6 и 2 курса rollCash.
 const MP_P_CAP=Infinity,   // 02.10 вечер: потолка нет — P в партии уже средний доход за круг по игрокам (стадия игры)
       MP_PAY={coin3:.6,cherry3:.3,pair:.15,dice3:6,dice2:2,jackpotGem:2};
-const isMP=s=>s.rollCash>0;
+const isMP=s=>s.mp===true||s.rollCash>0;   // явный признак партии (web/slot.js), rollCash — запасной
 // Прокрутки за кристаллы дорожают с каждым визитом: 1 → 2 → 3 (мультиплеер, плейтест 02.10); соло — 1.
-function packPrice(s){return isMP(s)?Math.min(3,Math.max(1,integer(s.visits,0,99))):1;}
+// Партия (решение продюсера 02.10): за одну остановку пакеты стоят 1 → 2 → 3 💎, больше MP_PACK_LIMIT нельзя; новая остановка — с 1.
+// Раньше цена росла по номеру визита, а пакетов за остановку не было предела — при запасе кристаллов автомат крутился без конца.
+const MP_PACK_LIMIT=3;
+function packPrice(s){return isMP(s)?Math.min(MP_PACK_LIMIT,integer(s.stopPacks,0,99)+1):1;}
+function packLocked(s){return isMP(s)&&integer(s.stopPacks,0,99)>=MP_PACK_LIMIT;}
 function award(s,o,syms){
  const mp=isMP(s),P=mp?Math.min(MP_P_CAP,Math.max(s.P,15*s.day)):Math.max(s.P,15*s.day),p={id:o.id,syms,cash:0,gem:0,move:0,restock:null};
  switch(o.id){
  case 'jackpot':p.cash=s.pot;p.gem=mp?MP_PAY.jackpotGem:5;break;
  case 'gem3':p.gem=3;break;
- case 'dice3':if(mp)p.cash=MP_PAY.dice3*s.rollCash;else p.move=10;break;
+ case 'dice3':if(mp)p.cash=MP_PAY.dice3*Math.max(10,s.rollCash||0);else p.move=10;break;
  case 'coin3':p.cash=Math.round((mp?MP_PAY.coin3:1.5)*P);break;
  case 'box3':p.restock='all';break;
  case 'cherry3':p.cash=Math.round((mp?MP_PAY.cherry3:.5)*P);break;
- case 'dice2':if(mp)p.cash=MP_PAY.dice2*s.rollCash;else p.move=3;break;
+ case 'dice2':if(mp)p.cash=MP_PAY.dice2*Math.max(10,s.rollCash||0);else p.move=3;break;
  case 'box2':p.restock='one';break;
  case 'pair':p.cash=Math.round((mp?MP_PAY.pair:.25)*P);break;
  default:break; // разнобой — мимо
@@ -5526,7 +5531,7 @@ function describe(p){return [p.cash?money(p.cash):'',p.gem?`${p.gem} 💎`:'',p.
 class Game {
  constructor(raw,rng=Math.random){this.state=restore(raw);this.rng=rng;this.busy=false;}
  available(){return this.state.paidSpins+(this.state.freeSpins||0);}
- buyPack(){const s=this.state,price=packPrice(s);if(this.busy||s.gem<price||this.available()>0)return false;s.gem-=price;s.paidSpins+=5;return true;}
+ buyPack(){const s=this.state,price=packPrice(s);if(this.busy||packLocked(s)||s.gem<price||this.available()>0)return false;s.gem-=price;s.paidSpins+=5;if(isMP(s))s.stopPacks=integer(s.stopPacks,0,99)+1;return true;}
  begin(forced){
   const s=this.state;if(this.busy||s.pending||s.closed||this.available()<1)return null;
   this.busy=true;s.lastPrize=null;if(s.freeSpins>0)s.freeSpins--;else s.paidSpins--;s.freeSpin=s.freeSpins>0;
@@ -5551,11 +5556,11 @@ class Game {
   return clone(s.lastPrize);
  }
  // Попадание на клетку даёт три бесплатные крутки (решение продюсера 30.09.2026, было пять).
- land(){if(this.busy)return false;this.collect();this.state.freeSpins=FREE_SPINS;this.state.freeSpin=true;this.state.visits++;this.state.closed=false;return true;}
+ land(){if(this.busy)return false;this.collect();this.state.freeSpins=FREE_SPINS;this.state.freeSpin=true;this.state.visits++;this.state.stopPacks=0;this.state.closed=false;return true;}
  close(){if(this.busy)return false;this.collect();this.state.closed=true;return true;}
  snapshot(){return clone(this.state);}
 }
-const API={Game,OUTCOMES,SYMBOLS,initial,restore,award,symbols,choose,describe,money,integer,packPrice,MP_PAY,MP_P_CAP};
+const API={Game,OUTCOMES,SYMBOLS,initial,restore,award,symbols,choose,describe,money,integer,packPrice,packLocked,isMP,MP_PACK_LIMIT,MP_PAY,MP_P_CAP};
 if(typeof module!=='undefined')module.exports=API;else root.SlotEngine=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
 
@@ -5597,6 +5602,7 @@ function context(){return {
  P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),   // партия: средний доход за круг по игрокам
 day:S.day,cash:S.cash,gem:S.hard,move:S.rolls,pot:st().pot||0,
  rollCash:typeof window.MP_ROLL_CASH==='function'?Math.max(0,Math.round(window.MP_ROLL_CASH())):0,   // мультиплеер: кубики платят налом
+ mp:typeof window.MP_LAP_P==='function',   // явный признак партии: таблица призов, цены пакетов и лимит — партийные
  sound:!GameFeedback.muted,
  points:myKiosks().map(t=>({id:t.i,n:pointName(t),cap:cap(t),q:t.goods,good:t.good,buy:buyPrice(t.good),profit:sales(t)*(sellPrice(t.good)-buyPrice(t.good))})),
 };}
@@ -5634,7 +5640,7 @@ function open(opts={}){
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Однорукий бандит');
  const loading=document.createElement('div');loading.className='sl-loading';loading.textContent='Открываем автомат…';
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
- const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=7e4ae5ca81ec#'+encodeURIComponent(token);
+ const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=cf95a85e9a96#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
  current={promise,session,frame,token,layer,closing:false,resolve,events:window.MinigameEvents?.begin('slot',{landing:opts.free!==false&&opts.landing===true})};
  const finish=()=>{
@@ -5667,6 +5673,8 @@ function openTile({landing=false}={}){
  // Мультиплеер (web/mp.js, MPSlotHooks): мини-игра — только в ход остановки; касса автомата общая на стол.
  const H=window.MPSlotHooks&&window.MPSlotHooks.active()?window.MPSlotHooks:null;
  if(H&&!landing&&!H.canPlay()){H.deny();return Promise.resolve();}
+ // Бесплатные спины — один раз за остановку: повторный вызов «остановки» в тот же ход на той же клетке их не выдаёт заново.
+ if(H&&landing&&H.landKey){const k=H.landKey();if(st().landKey===k)landing=false;else st().landKey=k;}
  if(landing){S.minigames=MinigameRotation.advance(S.minigames);save();}
  const run=()=>MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
  return H?H.wrap(run,landing):run();
@@ -6281,5 +6289,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=428d4433";</script><script src="shipment-event.js?v=5d979d76"></script><script src="parcel-fill.js?v=0d8f0894"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=7de4130d"></script><script type="module" src="roll-button.js?v=c35e2ff8"></script><script src="money-journal.js?v=fc318bc8"></script></body>
+<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=428d4433";</script><script src="shipment-event.js?v=5d979d76"></script><script src="parcel-fill.js?v=0d8f0894"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=7de4130d"></script><script type="module" src="roll-button.js?v=7cd84172"></script><script src="money-journal.js?v=fc318bc8"></script></body>
 </html>

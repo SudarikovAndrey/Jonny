@@ -1,0 +1,10 @@
+{
+  "plate": [
+    1536,
+    1024
+  ],
+  "note": "Fresh v9 draft. No unregistered v4 proxy geometry. Traffic occlusion uses surveyed raster silhouettes.",
+  "prisms": [],
+  "rounds": [],
+  "lamps": []
+}

@@ -9,6 +9,7 @@ function context(){return {
  P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),   // партия: средний доход за круг по игрокам
 day:S.day,cash:S.cash,gem:S.hard,move:S.rolls,pot:st().pot||0,
  rollCash:typeof window.MP_ROLL_CASH==='function'?Math.max(0,Math.round(window.MP_ROLL_CASH())):0,   // мультиплеер: кубики платят налом
+ mp:typeof window.MP_LAP_P==='function',   // явный признак партии: таблица призов, цены пакетов и лимит — партийные
  sound:!GameFeedback.muted,
  points:myKiosks().map(t=>({id:t.i,n:pointName(t),cap:cap(t),q:t.goods,good:t.good,buy:buyPrice(t.good),profit:sales(t)*(sellPrice(t.good)-buyPrice(t.good))})),
 };}
@@ -79,6 +80,8 @@ function openTile({landing=false}={}){
  // Мультиплеер (web/mp.js, MPSlotHooks): мини-игра — только в ход остановки; касса автомата общая на стол.
  const H=window.MPSlotHooks&&window.MPSlotHooks.active()?window.MPSlotHooks:null;
  if(H&&!landing&&!H.canPlay()){H.deny();return Promise.resolve();}
+ // Бесплатные спины — один раз за остановку: повторный вызов «остановки» в тот же ход на той же клетке их не выдаёт заново.
+ if(H&&landing&&H.landKey){const k=H.landKey();if(st().landKey===k)landing=false;else st().landKey=k;}
  if(landing){S.minigames=MinigameRotation.advance(S.minigames);save();}
  const run=()=>MinigameRotation.current(S.minigames)==='dice21'?Dice21.open({landing}):open({free:landing,landing});
  return H?H.wrap(run,landing):run();

@@ -5,7 +5,6 @@
   ],
   "note": "Fresh v5 draft. No unregistered v4 proxy geometry. Traffic occlusion uses surveyed raster silhouettes.",
   "prisms": [],
-  "cylinders": [],
-  "lamps": [],
-  "rounds": []
+  "rounds": [],
+  "lamps": []
 }
