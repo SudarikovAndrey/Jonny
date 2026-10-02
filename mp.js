@@ -5,6 +5,7 @@
 // Связь — через публичные MQTT-брокеры (по умолчанию), напрямую — &net=p2p (PeerJS), в одном браузере — &net=local.
 (function(){
 const Q=new URLSearchParams(location.search);
+const TEST=Q.get('test')==='1';   // тестовый стол (решение продюсера 02.10): боты и панель механик — web/mp-test.js; у живых столов ничего этого нет
 if(!Q.has('mp'))return;
 if(Q.get('map')!=='sf'){Q.set('map','sf');location.replace(location.pathname+'?'+Q.toString());return;}
 const C=window.MPCore;if(!C){console.error('MPCore не загружен');return;}
@@ -191,7 +192,7 @@ function Hub(room,restored){
     tlog.push(Object.assign({type,t:now,at:TL.isoLocal(now),sec:T.startedAt?Math.round((now-T.startedAt)/100)/10:null,room,match:T.match,
       turnN:T.turn?T.turn.n:null,round:T.turn?T.turn.round:null},d||{}));
     if(tlog.length>=10)tsend();}
-  function tsum(){const s={kind:'mp_table',runId:`mp-${room}-m${T.match}-table`,player:`стол ${room} · хозяин ${pname(PID)}`,
+  function tsum(){const s={kind:'mp_table',test:TEST||undefined,runId:`mp-${room}-m${T.match}-table`,player:`стол ${room} · хозяин ${pname(PID)}`,
       version:typeof VERSION!=='undefined'?VERSION:'',build:TL.build,mpBuild:window.AB_MP_BUILD||null,
       startedAt:T.startedAt||null,startedAtISO:T.startedAt?TL.isoLocal(T.startedAt):null,updatedAtISO:TL.isoLocal(Date.now()),
       tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){return '';}})(),
@@ -252,6 +253,10 @@ function Hub(room,restored){
       case 'state':if(C.applyState(T,pid,msg.pack,Date.now())){C.checkEarly(T);soon();}return;
       case 'end':if(C.endTurn(T,pid,msg.n,Date.now(),msg.pack||null)){C.checkEarly(T);soon();}return;
       case 'extend':if(pid!==PID)return;if(C.extend(T,Date.now()))soon();return;   // «Ещё время» на итоге — хозяин стола
+      case 'debug':if(!TEST||pid!==PID||T.phase!=='play')return;   // тестовый стол: промотать к последнему раунду или итогу
+        if(msg.op==='final'){T.finalRound=T.turn.round;T.finalBy='time';}
+        else if(msg.op==='over'){C.finish(T,'rounds');}
+        soon();return;
       case 'pause':if(C.pause(T,pid,!!msg.on,Date.now()))soon();return;
       case 'hit':if(C.applyHit(T,pid,msg.h))soon();return;                        // карта «Шанса» против соперника
       case 'lot':if(C.listLot(T,pid,+msg.tile,msg.min,msg.kind))soon();return;     // выставить клетку на торги
@@ -413,7 +418,7 @@ const playerOf=pid=>view&&view.players.find(p=>p.pid===pid);
 const nameOf=pid=>(playerOf(pid)||{}).name||'соперник';
 const colorOf=pid=>(playerOf(pid)||{}).color||'#6b5f52';
 // Для логов (web/telemetry.js): код стола, место, имя, число игроков, время хозяина — в каждой записи игрока.
-window.MPTele={hostNow,info(){const me=view&&playerOf(PID);return {room:ROOM,match:view?view.match:null,pid:PID,seat:me?me.seat:null,
+window.MPTele={hostNow,info(){const me=view&&playerOf(PID);return {test:TEST||undefined,room:ROOM,match:view?view.match:null,pid:PID,seat:me?me.seat:null,
   name:(me&&me.name)||myName,host:!!(net&&net.host),players:view?view.players.length:0,names:view?view.players.map(p=>p.name):[],
   rounds:view?view.settings.rounds:null,turnSec:view?view.settings.turnSec:null,startedAt:view?view.startedAt:null,phase:view?view.phase:null,
   turnN:view&&view.turn?view.turn.n:null,round:view&&view.turn?view.turn.round:null,clockOff,hostNow,mpBuild:window.AB_MP_BUILD||null};}};
@@ -441,6 +446,7 @@ function onMessage(m){
   }
 }
 function onView(v,now){
+  if(window.MPBots&&MPBots.acting()){MPBots.holdHostView(v,now);return;}   // пока ходит бот, свой вид откладываем
   if(now)clockOff=now-Date.now();
   const prev=view;view=v;
   if(document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');
@@ -746,8 +752,8 @@ const MP_CHANCE=[
   {id:'blackout',ok:()=>!!bestRivalTile(),f:()=>{const t=bestRivalTile();hit({k:'freeze',tile:t.i});return {text:`❄️ Отключили свет: «${titleOf(t)}» (${nameOf(t.rival)}) круг не берёт ренту.`,amount:null,tile:t.i};}},
 ];
 window.MP_CHANCE=MP_CHANCE;
-async function mpChance(){
-  const deck=MP_CHANCE.filter(c=>!c.ok||c.ok()),c=deck[Math.floor(Math.random()*deck.length)];
+async function mpChance(forceId){
+  const deck=MP_CHANCE.filter(c=>!c.ok||c.ok()),c=(forceId&&MP_CHANCE.find(x=>x.id===forceId))||deck[Math.floor(Math.random()*deck.length)];
   const r=c.f();if(r.amount>0)S.stat.earned=(S.stat.earned||0)+r.amount;
   track('mp_chance',{card:c.id,amount:r.amount||0});log(`🎴 ${r.text}`);
   emit({kind:'chance',text:r.text,amount:r.amount,tile:r.tile!=null?r.tile:S.pos});
@@ -948,15 +954,19 @@ async function rivalWindow(t){
   const m=await pending;
   if(m==='force'){forceBuy(t);return;}
   if(typeof m==='string'&&m.startsWith('bid:')){placeBid(lot&&lot.id,+m.slice(4));return;}
-  if(!m||!OFFER_MULTS.includes(m)||!isRival(t)||t.mpOffer||!myTurn()||S.pos!==t.i)return;
-  const amount=Math.round(inv*m);if(S.cash<amount)return;
+  if(!m||!OFFER_MULTS.includes(m))return;
+  placeOffer(t,m);
+}
+function placeOffer(t,m){
+  if(!isRival(t)||t.mpOffer||!myTurn()||S.pos!==t.i||lotOn(t.i))return false;
+  const owner=t.rival,who=nameOf(owner),title=titleOf(t),amount=Math.round(invested(t)*m);if(S.cash<amount)return false;
   S.cash-=amount;S.mpEscrow=(S.mpEscrow||0)+amount;
   t.mpOffer={from:PID,amount,mult:m,n:view.turn.n};
   track('mp_offer',{tile:t.i,to:owner,amount,mult:m});
   log(`💼 Предложил ${who} ${money(amount)} за «${title}» (×${m}).`);
   plate(`💼 Предложение · ${who}`,-amount,'деньги в резерве до ответа');
   emit({kind:'offer',text:`предлагает ${money(amount)} за «${title}»`,amount:null,tile:t.i,to:owner});
-  save();render();push();
+  save();render();push();return true;
 }
 
 // Принудительный выкуп ×10 (решение продюсера 01.10): хозяин получает деньги сразу, клетка переходит с товаром.
@@ -1628,5 +1638,22 @@ async function enter(){
 }
 async function shareLink(){const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${ROOM}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);}
 window.MP={get view(){return view;},get pid(){return PID;},finishTurn,rentOf:t=>rentOf(t),invested,owners,share:shareLink,extend:()=>net&&net.host&&net.send({t:'extend'})};
+// ---- тестовый стол (?test=1): внутренности для ботов и панели механик (web/mp-test.js). У живых столов этого объекта нет ----
+if(TEST){
+  window.__MP={
+    get PID(){return PID;},set PID(v){PID=v;},get view(){return view;},set view(v){view=v;},get hub(){return hub;},get net(){return net;},get S(){return S;},
+    adopt,onView,finishTurn,placeOffer,forceBuy,placeBid,startLot,mpChance,landedHere,isRival,invested,rentOf,forceReady,lotOn,myLots,
+    roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,
+    setTurn(o){mine=!!o.mine;rolled=!!o.rolled;landed=!!o.landed;ending=false;autoEnding=false;credits=[];},
+    get flags(){return {mine,rolled,landed,ending,curTurn};},set curTurn(n){curTurn=n;},
+    C,MP_CHANCE,
+  };
+  // Заданный бросок из панели: window.MP_FORCE_DICE={a,b} — на один следующий бросок. Кубики кидает 3D-сцена,
+  // поэтому просим её «учебный» бросок с нужными гранями, а результат отдаём как обычный.
+  (function(){const base=mobileDice;mobileDice=async function(planned){const f=window.MP_FORCE_DICE;
+    if(f&&f.a>=1&&f.b>=1){window.MP_FORCE_DICE=null;const r=await base.call(this,{a:f.a|0,b:f.b|0,lesson:true});return Object.assign({},r,{a:f.a|0,b:f.b|0,lesson:false});}
+    if(window.MPBots&&MPBots.instant()){const a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);return {a,b,lesson:false};}   // мгновенный бот: без физики кубиков
+    return base.apply(this,arguments);};})();
+}
 setTimeout(enter,0);
 })();

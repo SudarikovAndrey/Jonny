@@ -1,0 +1,4 @@
+Built-in image_gen precise-object-edit of plate-square-railway.webp.
+Remove ONLY the gray diamond asphalt road and curb surrounding the farm, and the diagonal railroad, all rails, ties and gravel ballast. Replace these surfaces with contiguous natural warm ochre earth, subtle painted dirt texture and sparse irregular dry grass. No straight stripes or parallel repeated grass rows. Preserve exact position, shape, scale, color and lighting of every other object: buildings, text, windows, silos, fences, trees, wheat, cows, river and bridge. Do not move or erase the large tree below-right of the railroad or riverside trees. No added objects. Flat empty soil for game overlays. Square output, same framing, no cropping.
+
+Stored WebP quality 92. Sampled in extended square UV, only through old-road and railway-corridor masks. Rails, sleepers and ballast remain a separate narrow sample of the original plate. No stretching of original-frame edge pixels.

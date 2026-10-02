@@ -1,0 +1,4 @@
+Built-in image_gen edit of road-earth-v1.webp.
+Remove ONLY the diagonal railway in the lower right: all metal rails, ties and gravel ballast. Seamlessly fill that narrow strip with natural warm ochre bare earth and sparse irregular dry grass matching surrounding ground. No straight parallel stripes, no tracks, no road, no systematic rows of grass in the fill. Background for separately rendered rails. Keep everything else and all existing object positions unchanged: buildings, silos, trees, terrain, windows, river, fences, tractor, wheat, palette, lighting, perspective and full-image framing. Preserve empty earth for the board tiles. Same aspect, no cropping; entire map.
+
+WebP quality 92. Rendered only through the old road matte and a bounded railway corridor. Original rail artwork remains a separate masked sample; the whole generated image never replaces the map.

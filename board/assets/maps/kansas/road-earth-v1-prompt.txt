@@ -1,0 +1,5 @@
+Built-in image_gen, precise-object-edit. Source: plate-railway.webp.
+Remove ONLY the broad gray asphalt diamond/ring road and its pale curb surrounding the central farm. Replace every gray road surface and curb with matching warm ochre bare Kansas soil, sparse fine dry grass and subtle painted dirt texture continuous with adjacent terrain. Keep this newly filled strip mostly flat and empty for game tiles overlay. Preserve exact composition, pixel positions, dimensions/aspect ratio, camera, perspective, every building, silo, trees, tractor, river, railroad and all existing art outside the removed asphalt road. Keep all railway rails untouched. No new objects, no new roads, no tiles. Same vintage painted game art, same lighting/colors. Output entire image at same framing, no crop.
+
+Output stored as WebP (quality 92); sampled ONLY through road-mask-v1.png.
+Outside that technical mask the renderer uses the original artwork, preserving registration.

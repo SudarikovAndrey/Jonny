@@ -1,0 +1,5 @@
+{
+  "frame": "projection.json square 1254x1254",
+  "description": "Kansas has one river, in the lower-left corner. Blue vehicles and roofs are land props.",
+  "polygons": [[[0,800],[500,1050],[500,1254],[0,1254]]]
+}
