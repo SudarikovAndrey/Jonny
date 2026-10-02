@@ -1,6 +1,7 @@
 /* Мост в пределах одного origin: прототип владеет состоянием игры, веб-поле (board.html) — 3D-сценой. */
 window.MobileHost = (() => {
-  let callback=null, nextId=1;
+  let callback=null, nextId=1, lastSign=Date.now();
+  const bootAt=Date.now();
   const pending=new Map();
   const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)");
   const api={
@@ -9,6 +10,7 @@ window.MobileHost = (() => {
     frameState(json){api.sceneState=JSON.parse(json);},
     sceneReady(fn){callback=fn;api.ready=true;document.body.classList.add('engine-ready');window.MobileGame?.ready();api.send({action:"ambience",on:!reducedMotion.matches});},
     progress(percent){
+      lastSign=Date.now();
       const el=document.getElementById('loadProgress');
       if(el)el.textContent=percent?'Загружаем поле · '+percent+'%':'Загружаем поле…';
       const bar=document.getElementById('loadBar');
@@ -31,8 +33,15 @@ window.MobileHost = (() => {
     diceDone(id,a,b){api.complete(id,{a,b});},
     positions(json){api.points=JSON.parse(json);}
   };
-  // Страховка: веб-поле не ответило за 15 секунд — показываем ошибку.
-  setTimeout(()=>{const frame=document.getElementById('board-frame');if(!api.ready&&frame&&/board\.html/.test(frame.src))api.failed('нет ответа за 15 с');},15000);
+  // Страховка: веб-поле молчит — показываем ошибку. Считаем от последнего шага загрузки, а не от старта:
+  // на холодном кэше Канзас грузится дольше 15 с, хотя исправно шлёт проценты (02.10, «Графика»).
+  // Ошибка — если 20 с нет ни одного процента или поле не поднялось за 90 с.
+  const watch=setInterval(()=>{
+    if(api.ready){clearInterval(watch);return;}
+    const frame=document.getElementById('board-frame'),now=Date.now();
+    if(!frame||!/board\.html/.test(frame.src))return;
+    if(now-lastSign>20000||now-bootAt>90000){clearInterval(watch);api.failed(now-bootAt>90000?'поле не поднялось за 90 с':'загрузка поля встала на 20 с');}
+  },2000);
   reducedMotion.addEventListener("change",()=>api.send({action:"ambience",on:!reducedMotion.matches}));
   return api;
 })();
