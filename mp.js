@@ -631,7 +631,8 @@ async function debtWindow(fromEnd){
   if(!myTurn()||S.cash>=0)return;
   const laps=S.mpDebtLaps||0,lotsN=mpBankList().length,sv=stockValue(),micro=canMicro()?microAmount():0;
   const warn=laps>=DEBT_LAPS?'Второй круг в минусе — клетки идут на торги.':laps===1?'Ты прошёл старт в минусе. Ещё один проход — и клетки уйдут на торги.':'Играть можно и в минусе, но покупок нет. Пройдёшь старт в минусе дважды — клетки уйдут на торги.';
-  const v=await modal(`<h2>💸 Ты в минусе: ${money(S.cash)}</h2><p class="t">${warn}</p>
+  // Без await: кнопки строк вешаются, пока окно открыто (иначе «Взять» и «Продать» не нажимались — плейтест 02.10).
+  const v=modal(`<h2>💸 Ты в минусе: ${money(S.cash)}</h2><p class="t">${warn}</p>
     ${micro?`<div class="row"><span class="n">Микрозайм<small>${Math.round(MICRO_RATE*100)}% за каждый проход банка, гасится в банке</small></span><button type="button" class="sm mp-debt-micro buy-btn buy-ok">Взять · ${money(micro)}</button></div>`:''}
     ${sv>0?`<div class="row"><span class="n">Продать весь товар с точек<small>за полцены закупки</small></span><button type="button" class="sm mp-debt-stock buy-btn buy-ok">Продать · ${money(sv)}</button></div>`:''}
     ${lotsN?`<div class="row"><span class="n">Выставить клетку на торги<small>стартовая цена — рыночная</small></span><button type="button" class="sm mp-debt-lots buy-btn buy-ok">Выбрать</button></div>`:''}`,
@@ -641,6 +642,8 @@ async function debtWindow(fromEnd){
     if(m)m.onclick=()=>closeModal('micro');if(st)st.onclick=()=>closeModal('stock');if(lo)lo.onclick=()=>closeModal('lots');}
   const r=await v;
   if(r==='micro')microLoan();else if(r==='stock')sellStock();else if(r==='lots'){await mpBankWindow(false);return;}
+  // Взял займ или продал товар, а минус остался и есть чем ещё закрыть — окно снова, с оставшимися вариантами.
+  if((r==='micro'||r==='stock')&&S.cash<0&&(canMicro()||stockValue()>0||mpBankList().length)){await wait(250);return debtWindow(fromEnd);}
   if(fromEnd&&S.cash>=0){toast('Минус закрыт',1800);}
   if(fromEnd)finishTurn();
 }

@@ -313,7 +313,8 @@ window.MPBots={trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>bu
 // ---- панель механик ----
 const CHANCE_LABELS={birthday:'🎂 День рождения',treat:'🍻 Проставился',raid:'🚔 Облава',mtv:'📺 Сюжет на MTV',complaint:'📋 Жалоба соседей',stash:'💰 Заначка общака',parking:'🚗 Штраф за парковку',sneakers:'👟 Кроссовки',robin:'🤑 Робин Гуд',roof:'🛡 Крыша',roadwork:'🚧 Ремонт дороги',snitch:'🚔 Донос',queue:'⏳ Очередь в ЖЭК',blackout:'❄️ Отключили свет'};
 const css=document.createElement('style');css.textContent=`
-.mp-test{position:fixed;left:8px;top:110px;z-index:10000;background:#f7ecd2;color:#2a221a;font:600 12px/1.3 system-ui,sans-serif;border:2px solid #7a5a2a;border-radius:8px;max-width:232px;box-shadow:0 4px 14px #0006}
+.mp-test{position:fixed;right:8px;left:auto;bottom:calc(150px + env(safe-area-inset-bottom));top:auto;   /* справа у дока: слева под шапкой журнал денег, слева у дока — склад */
+z-index:10000;background:#f7ecd2;color:#2a221a;font:600 12px/1.3 system-ui,sans-serif;border:2px solid #7a5a2a;border-radius:8px;max-width:232px;box-shadow:0 4px 14px #0006}
 .mp-test summary{cursor:pointer;padding:5px 8px;list-style:none}.mp-test summary::-webkit-details-marker{display:none}
 .mp-test-body{padding:4px 8px 8px;display:flex;flex-wrap:wrap;gap:4px;max-height:60vh;overflow:auto}
 .mp-test-body b{flex-basis:100%;margin-top:4px;color:#7a5a2a;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
