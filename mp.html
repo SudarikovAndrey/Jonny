@@ -17,8 +17,7 @@
     const [html,core,mp]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js')]);
     const anchor='const startAskName=askName',i=html.indexOf(anchor);
     if(i<0)throw new Error('в index.html нет точки запуска партии');
-    let h=5381;const src=core+mp;for(let k=0;k<src.length;k++)h=((h<<5)+h+src.charCodeAt(k))|0;   // версия мультиплеера — для логов
-    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";\n'+html.slice(i));document.close();
+    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\n'+html.slice(i));document.close();
   }catch(e){document.getElementById('mpBoot').textContent='Не удалось открыть стол: '+e.message;console.error(e);}
 })();
 </script></body></html>
