@@ -55,7 +55,7 @@ function canStart(T){return T.phase==='lobby'&&T.players.length>=MIN_PLAYERS;}
 // tiles — общее поле (владелец = pid), slice(p) — стартовый срез состояния игрока.
 function start(T,tiles,slice,now){
   if(!canStart(T))return false;
-  T.phase='play';T.match++;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
+  T.phase='play';T.match++;T.startedAt=now;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
   T.players.forEach(p=>{p.s=slice(p);});
   T.paused=null;
   T.turn={idx:0,pid:T.players[0].pid,n:1,round:1,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
@@ -192,7 +192,7 @@ function backToLobby(T){
 // Что уходит конкретному игроку: общее поле, публичные сводки всех и полный срез его самого.
 function viewFor(T,pid,valuer){
   const me=T.players.find(p=>p.pid===pid);
-  return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,turn:T.turn,result:T.result,
+  return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
     tiles:T.tiles,log:T.log.slice(-6),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
       pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,
