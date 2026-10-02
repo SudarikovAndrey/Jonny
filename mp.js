@@ -604,7 +604,23 @@ function lotButton(t){
 function mpBankList(){
   const busy=new Set((view&&view.lots||[]).map(l=>l.tile));
   return S.tiles.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t)&&!busy.has(t.i))
-    .map(t=>({i:t.i,title:titleOf(t),price:Math.round(invested(t)),bank:Math.round(invested(t)*BANK_SELL)})).sort((a,b)=>a.price-b.price);
+    .map(t=>({i:t.i,title:titleOf(t),price:Math.round(invested(t)),bank:Math.round(invested(t)*BANK_SELL),group:groupOf(t.i)})).sort((a,b)=>a.i-b.i);
+}
+// Группа клетки: подряд стоящие по кругу свои точки и бизнесы (как надбавка к ренте). Окно торгов за долги
+// показывает клетки по порядку на поле, сгруппированными (продюсер 02.10: видно, какую группу ломаешь).
+function groupOf(i){
+  const own=j=>{const t=S.tiles[(j+40)%40];return !!t&&!!t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t);};
+  let a=i,b=i;while(own(a-1)&&a-1>i-40)a--;while(own(b+1)&&b+1<a+40)b++;
+  return {from:(a+40)%40,to:(b+40)%40,size:b-a+1};
+}
+function bankRowsHtml(list){
+  let out='',key='';
+  for(const x of list){
+    const g=x.group,k=g.from+'-'+g.to;
+    if(k!==key){key=k;out+=g.size>1?`<p class="t mp-bank-group" style="margin:14px 0 2px;font-weight:700;color:#7a5a2a">Группа · клетки ${g.from}–${g.to} · рента +${Math.round(GROUP_BONUS*100)}% за каждого соседа</p>`:`<p class="t mp-bank-group" style="margin:14px 0 2px;font-weight:700;color:#7a5a2a">Отдельно · клетка ${g.from}</p>`;}
+    out+=`<div class="row mp-bank-row${g.size>1?' grp':''}"><span class="n">${esc(x.title)} <small>клетка ${x.i} · банк без ставок даст ${money(x.bank)}</small></span><button type="button" class="sm mp-bank-pick buy-btn buy-ok" data-i="${x.i}">Выставить · ${money(x.price)}</button></div>`;
+  }
+  return out;
 }
 // Принудительно — только со второго прохода старта в минусе (S.mpDebtLaps); до этого в минусе играешь дальше.
 const bankruptNeed=()=>S.cash>=0||(S.mpDebtLaps||0)<DEBT_LAPS?0:Math.max(0,-S.cash-myLots().filter(l=>l.kind==='bankrupt').reduce((a,l)=>a+l.bank,0));
@@ -653,7 +669,7 @@ async function mpBankWindow(forced=true){
   while(myTurn()&&(forced?bankruptNeed()>0:S.cash<0)){
     const list=mpBankList(),need=forced?bankruptNeed():-S.cash;if(!list.length)return;
     const picked=new Set();
-    const rows=list.map(x=>`<div class="row mp-bank-row"><span class="n">${esc(x.title)}<small>старт — рыночная цена, банк без ставок даст ${money(x.bank)}</small></span><button type="button" class="sm mp-bank-pick buy-btn buy-ok" data-i="${x.i}">Выставить · ${money(x.price)}</button></div>`).join('');
+    const rows=bankRowsHtml(list);
     const pending=modal(`<h2>🏦 Ты в минусе: ${money(S.cash)}</h2><button type="button" class="sec mp-bank-map">🗺 Выбрать на карте</button><p class="t">${forced?`Второй круг в минусе: ход не передать, пока банковская цена выставленных клеток не покроет ${money(need)}.`:`Выбери, что выставить на торги за долги.`} Соперники ставят до твоего следующего хода; что не продалось — уходит банку за половину.</p>${rows}<p class="t mp-bank-sum">Банк даст: <b>$0</b> из ${money(need)}</p>`,
       forced?[{t:'Выставить и передать ход',v:1,cls:'ok'}]:[{t:'Выставить',v:1,cls:'ok'},{t:'Назад',v:0,cls:'sec'}],{sticky:forced});
     const sumEl=$('card').querySelector('.mp-bank-sum b');
@@ -817,7 +833,7 @@ async function autoFinish(){
   }
   // Время вышло на втором круге в минусе — клетки выставляются на торги сами, с самого дешёвого.
   S.mpDebtAskN=view.turn.n;
-  if(bankruptNeed()>0){let acc=0;for(const x of mpBankList()){if(acc>=bankruptNeed())break;startLot(x.i,x.price,'bankrupt',x.bank);acc+=x.price;}
+  if(bankruptNeed()>0){let acc=0;for(const x of mpBankList().sort((a,b)=>a.price-b.price)){if(acc>=bankruptNeed())break;startLot(x.i,x.price,'bankrupt',x.bank);acc+=x.price;}
     for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await wait(100);}
   finishTurn();
 }
