@@ -21,6 +21,10 @@ const GROUP_BONUS=0.25;     // соседняя клетка того же хо�
 const BANK_SELL=0.5;        // банкротство: стартовая цена торгов и цена банка — половина вложенного
 const FORCE_LAPS=2;         // выкуп ×10 — не чаще раза в два своих круга (решение продюсера 01.10)
 window.MP_ROLL_CASH=()=>rollCash();   // автомат: кубики платят налом по этому курсу (src/bandit/engine.js)
+// Призы автомата в партии — от стадии игры: средний по игрокам доход за круг (решение продюсера 02.10), а не от своего.
+window.MP_LAP_P=()=>{if(!view||!view.tiles||!view.players||!view.players.length)return 0;let sum=0;
+  for(const t of view.tiles){if(!t.owner||!(t.type==='kiosk'||t.type==='biz'))continue;try{sum+=t.type==='biz'?fee(t):(t.base&&!t.lot?sales(t)*marginOf(t.good):0);}catch(e){}}
+  return Math.round(sum/view.players.length);};
 // Инспектор в партии: не по кругам, а с трёх владений (решение продюсера 01.10).
 CFG.INSP.fromLap=0;CFG.INSP.minOwn=3;
 CFG.HARD.bail=1;            // выход из участка — 1 кристалл вместо 3 (плейтест 02.10)
@@ -113,6 +117,22 @@ function makeValuer(tiles){
   return v;
 }
 // Группа: соседние клетки (i±1) того же хозяина поднимают ренту на 25% каждая.
+// Сеть бизнесов (решение продюсера 02.10, только мультиплеер): бизнесы одного хозяина бустят друг друга, где бы ни стояли.
+// Множитель к «за проход» и «за остановку» (и к ренте с соперников): 1 — ×1, 2 — ×1,33, 3 — ×1,67, 4 и больше — ×2.
+const bizSetMult=n=>Math.min(2,1+(Math.max(1,n)-1)/3);
+const fmtMult=m=>'×'+(Math.round(m*100)/100).toString().replace('.',',');
+function bizCountOf(t){
+  if(!S||!S.tiles||!t)return 1;
+  if(t.owner&&t.owner!=='you'&&view&&view.tiles)return view.tiles.filter(x=>x.type==='biz'&&x.owner===t.owner).length||1;   // общее поле (owner = pid)
+  if(t.owner)return S.tiles.filter(x=>x.type==='biz'&&x.owner).length||1;
+  if(t.rival)return S.tiles.filter(x=>x.type==='biz'&&x.rival===t.rival).length||1;
+  return 1;
+}
+let noBizSet=0;
+(function(){const base=fee;fee=function(t){const f=base.apply(this,arguments);
+  if(noBizSet||!t||t.type!=='biz'||!view||view.phase!=='play')return f;const m=bizSetMult(bizCountOf(t));return m>1?Math.max(1,Math.round(f*m)):f;};})();
+// Цена прокачки бизнеса — от сбора без сети, иначе прирост считался бы от завышенной базы.
+(function(){const base=bizUpCost;bizUpCost=function(){noBizSet++;try{return base.apply(this,arguments);}finally{noBizSet--;}};})();
 function groupMult(sh,t,owner){const nb=[sh[(t.i+39)%40],sh[(t.i+1)%40]].filter(x=>x&&x.owner===owner&&(x.type==='kiosk'||x.type==='biz')).length;return 1+GROUP_BONUS*nb;}
 function rentOf(t){
   if(t.frozen&&view&&view.turn&&t.frozen>view.turn.n)return 0;                      // карта «Шанса»: клетка заморожена на круг
@@ -462,6 +482,7 @@ function onView(v,now){
     if(isMine){reclaimOffers();yourTurn();}else rivalTurn(v.turn.pid);   // в чужой ход камера ведёт фишку того, кто ходит (followRival)
     mgReset();
   } else if(v.phase==='play'&&!isMine){adopt(v);}
+  else if(v.phase==='play'&&isMine&&v.mine&&S){const h=v.mine.mpHold||0,sh=S.mpHold||0;if(h!==sh){S.cash-=(h-sh);S.mpHold=h;render();}}   // резерв ставок ведёт стол: перебили — вернулся, поставил — снят
   if(v.phase==='play'&&prev&&prev.phase==='over'){shownOver=null;hideOver();curTurn=null;toast('⏱ Партия продлена — играем дальше',2600);}   // «Ещё время»
   if(v.phase==='over'){mine=false;if(shownOver!==v.match){shownOver=v.match;closeAll();adopt(v);showOver(v);try{flush(true);}catch(e){}}}
   for(const e of v.events||[])if(e.id>lastEvId){lastEvId=e.id;try{onEvt(e.from,e);}catch(x){console.error(x);}}
@@ -574,7 +595,16 @@ async function lotWindow(i){
 }
 // Своя клетка в свой ход: кнопка «на торги» в окне точки или бизнеса (функциональная; вёрстка — «Интерфейс»).
 (function(){const base=kioskWindow;kioskWindow=function(t){const r=base.apply(this,arguments);lotButton(t);return r;};})();
-(function(){const base=bizWindow;bizWindow=function(t){const r=base.apply(this,arguments);lotButton(t);return r;};})();
+(function(){const base=bizWindow;bizWindow=function(t){const r=base.apply(this,arguments);lotButton(t);bizSetLine(t);return r;};})();
+function bizSetLine(t){
+  if(!t||!t.owner||!view||view.phase!=='play')return;
+  setTimeout(()=>{const c=$('card');if(!c||$('modal').hidden||c.querySelector('.mp-biz-set'))return;
+    const n=bizCountOf(t),m=bizSetMult(n),next=n<4?fmtMult(bizSetMult(n+1)):null;
+    const d=document.createElement('p');d.className='t mp-biz-set';d.style.cssText='margin:8px 0 0;font-weight:700;color:#2f6b35';
+    d.textContent=`🏢 Сеть бизнесов: ${n} — сбор ${fmtMult(m)} у каждого, где бы ни стояли${next?` · следующий бизнес — ${next}`:' · максимум'}`;
+    const body=c.querySelector('.property-body')||c.querySelector('.ev-body');if(body){body.append(d);return;}
+    const anchor=c.querySelector('.mbtns');(anchor&&anchor.parentNode?anchor.parentNode.insertBefore(d,anchor):c.append(d));},90);   // внутрь карточки, не под неё
+}
 // Своя точка в партии: строка «Прибыль за круг» повторяла блок прокачки — на её месте «Гость платит»
 // (плейтест 02.10: «нигде нет, сколько платит гость»). Нет блока прокачки (максимум) — строка добавляется.
 function guestRentRow(t){
@@ -818,6 +848,7 @@ function finishTurn(){
   if(S.cash<0&&S.mpDebtAskN!==view.turn.n&&(mpBankList().length||stockValue()>0||canMicro())){S.mpDebtAskN=view.turn.n;debtWindow(true);return;}   // в минусе — сразу предложить выход
   // Не ответил на предложение до конца хода — отказ, деньги покупателю возвращаются.
   for(const t of S.tiles)if(t.owner&&t.mpOffer)declineOffer(t,true);
+  for(const t of S.tiles)if(t.owner&&t.mpSwap)declineSwap(t,true);
   ending=true;closeAll();clearTimeout(pushT);pushT=0;S.rolls=999;
   net.send({t:'end',n:view.turn.n,pack:makePack()});updateUi();   // последний срез — внутри «конца хода», чтобы его не обогнать
 }
@@ -958,6 +989,7 @@ async function rivalWindow(t){
   const rows=[
     biz?['Уровень',t.level]:['Уровень',t.salesLvl],
     biz?['За остановку',money(fee(t)*CFG.BIZ.landMult)]:['Прибыль хозяина за круг',money(sales(t)*marginOf(t.good))],
+    biz?['Сеть бизнесов хозяина',`${bizCountOf(t)} · сбор ${fmtMult(bizSetMult(bizCountOf(t)))}`]:null,
     ['Рента с тебя',money(rentOf(t))],
     biz?null:['Товар в точке',`${t.goods||0} шт`],
     ['Вложено хозяином',money(inv)],
@@ -965,6 +997,7 @@ async function rivalWindow(t){
   const opts=OFFER_MULTS.map(m=>{const a=Math.round(inv*m),ok=canOffer&&S.cash>=a;
     return `<button type="button" class="mp-mult buy-btn ${ok?'buy-ok':'buy-no'}" data-m="${m}" ${ok?'':'disabled'}><b>×${String(m).replace('.',',')}</b><span>${money(a)}</span></button>`;}).join('');
   const lot=lotOn(t.i),forceAmt=Math.round(inv*FORCE_MULT),canForce=myTurn()&&here&&!ending&&!lot&&forceReady()&&S.cash>=forceAmt;
+  const swapHtml=here&&!ending&&!lot&&myTurn()?swapBlock(t):'';
   if(t.frozen&&view.turn&&t.frozen>view.turn.n)rows.push(['Заморожена','ренты нет до следующего хода хозяина']);
   const pending=modal(`<h2>${biz?bizIcon(t):g.icon} ${esc(title)}</h2>
     <p class="t mp-owner"><i style="background:${col}">${esc(who.slice(0,1).toUpperCase())}</i> Хозяин — <b style="color:${col}">${esc(who)}</b></p>
@@ -975,16 +1008,86 @@ async function rivalWindow(t){
        <p>Сумма — от того, что ${esc(who)} вложил. ${esc(who)} решит в начале своего хода: согласится — ${biz?'бизнес':'точка'} твоя${biz?'':' вместе с товаром'}, откажет — деньги вернутся.</p>
        <div class="mp-mults">${opts}</div></div>`}
     ${lot?lotHtml(lot):''}
+    ${swapHtml}
     ${here&&!ending&&!lot?`<div class="mp-choice mp-force-box"><b>Или выкупить сразу, без согласия ${esc(who)}:</b><button type="button" class="mp-force buy-btn ${canForce?'buy-ok':'buy-no'}" ${canForce?'':'disabled'}>${forceReady()?`Выкупить ×${FORCE_MULT} · ${money(forceAmt)}`:`Выкуп ×${FORCE_MULT} — через ${forceWait()} ${plural(forceWait(),'круг','круга','кругов')}`}</button></div>`:''}`,
     [{t:'Уйти',v:0,cls:'sec'}]);
   $('card').querySelectorAll('.mp-mult').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal(+b.dataset.m);});
   {const f=$('card').querySelector('.mp-force');if(f)f.onclick=()=>{if(!f.disabled)closeModal('force');};}
   wireBids();
+  {const sb=$('card').querySelector('.mp-swap-go');if(sb)sb.onclick=()=>{if(sb.disabled)return;const g=+$('card').querySelector('.mp-swap-give').value,pay=+$('card').querySelector('.mp-swap-pay').value;closeModal('swap:'+g+':'+pay);};}
   const m=await pending;
   if(m==='force'){forceBuy(t);return;}
+  if(typeof m==='string'&&m.startsWith('swap:')){const [,g,pay]=m.split(':');placeSwap(t,+g,+pay);return;}
   if(typeof m==='string'&&m.startsWith('bid:')){placeBid(lot&&lot.id,+m.slice(4));return;}
   if(!m||!OFFER_MULTS.includes(m))return;
   placeOffer(t,m);
+}
+// ---- обмен клетками с доплатой (решение продюсера 02.10: «делай») ----
+// Стоя на чужой клетке, предлагаешь хозяину свою клетку в обмен; доплата −$500…+$500 (плюс — платишь ты, минус — он).
+// Хозяин отвечает в начале своего хода; товар остаётся в клетках. Один обмен на пару игроков за партию (метка mpSwapPair на клетках).
+const SWAP_PAYS=[-500,-300,-200,-100,-50,0,50,100,200,300,500];
+const pairKey=(a,b)=>[a,b].sort().join('|');
+const swappedWith=pid=>!!(view&&view.tiles||[]).some(x=>x.mpSwapPair===pairKey(PID,pid));
+function myTradeTiles(){return S.tiles.filter(x=>x.owner&&(x.type==='kiosk'||x.type==='biz')&&!sfIsLot(x)&&!lotOn(x.i)&&!x.mpOffer);}
+function swapBlock(t){
+  const owner=t.rival,who=nameOf(owner),mine=myTradeTiles();
+  if(t.mpSwap)return t.mpSwap.from===PID?`<div class="mp-choice mp-swap"><b>Твоё предложение обмена ждёт ответа ${esc(who)}</b></div>`:'';
+  if(t.mpOffer||!mine.length)return '';
+  if(swappedWith(owner))return `<div class="mp-choice mp-swap"><b>Обмен с ${esc(who)} уже был</b><p>Один обмен на пару игроков за партию.</p></div>`;
+  const opts=mine.map(x=>`<option value="${x.i}">${esc(titleOf(x))} · клетка ${x.i} · вложено ${money(invested(x))}</option>`).join('');
+  const pays=SWAP_PAYS.map(v=>`<option value="${v}" ${v===0?'selected':''}>${v>0?'ты доплачиваешь '+money(v):v<0?esc(who)+' доплачивает '+money(-v):'без доплаты'}</option>`).join('');
+  return `<div class="mp-choice mp-swap"><b>Или предложи обмен на свою клетку:</b>
+    <p>${esc(who)} ответит в начале своего хода. Товар остаётся в клетках. Твою доплату держим в резерве до ответа.</p>
+    <select class="mp-swap-give">${opts}</select><select class="mp-swap-pay">${pays}</select>
+    <button type="button" class="mp-swap-go buy-btn buy-ok">Предложить обмен</button></div>`;
+}
+function placeSwap(t,give,pay){
+  const g=S.tiles[give];
+  if(!isRival(t)||t.mpSwap||t.mpOffer||!myTurn()||S.pos!==t.i||lotOn(t.i)||!g||!g.owner||lotOn(give)||swappedWith(t.rival))return false;
+  if(pay>0){if(S.cash<pay){toast(`На доплату ${money(pay)} нет денег`);return false;}S.cash-=pay;S.mpEscrow=(S.mpEscrow||0)+pay;}
+  const who=nameOf(t.rival);t.mpSwap={from:PID,give,pay,n:view.turn.n};
+  track('mp_swap_offer',{tile:t.i,give,pay,to:t.rival});
+  log(`🔁 Предложил ${who} обмен: «${titleOf(g)}» на «${titleOf(t)}»${pay?`, доплата ${pay>0?'моя':'его'} ${money(Math.abs(pay))}`:''}.`);
+  plate(`🔁 Обмен · ${who}`,pay>0?-pay:0,'ответ — в начале его хода');
+  emit({kind:'swap',text:`предлагает обмен «${titleOf(g)}» на «${titleOf(t)}»${pay?` с доплатой ${money(Math.abs(pay))}`:''}`,amount:null,tile:t.i,to:t.rival});
+  save();render();push();return true;
+}
+async function answerSwap(t){
+  if(!myTurn()||ending||!t||!t.mpSwap||!t.owner)return;
+  const o=t.mpSwap,who=nameOf(o.from),g=S.tiles[o.give];
+  if(!g||g.rival!==o.from){declineSwap(t,true);return;}
+  const need=o.pay<0?-o.pay:0;
+  const v=await modal(`<h2>🔁 ${esc(who)} предлагает обмен</h2>
+    <div class="row"><span class="n">Отдаёшь «${esc(titleOf(t))}»<small>клетка ${t.i} · вложено ${money(invested(t))} · рента ${money(rentOfMine(t))}</small></span></div>
+    <div class="row"><span class="n">Получаешь «${esc(titleOf(g))}»<small>клетка ${g.i} · вложено ${money(invested(g))}${g.type==='kiosk'?` · товар ${g.goods||0} шт`:''}</small></span></div>
+    <div class="row"><span class="n">Доплата</span><span class="v">${o.pay>0?`${esc(who)} платит тебе ${money(o.pay)}`:o.pay<0?`ты платишь ${money(-o.pay)}`:'без доплаты'}</span></div>
+    <p class="t">Не ответишь до конца хода — отказ.</p>`,
+    [{t:'Обменять',v:1,cls:'ok',dis:S.cash<need},{t:'Отказать',v:0,cls:'sec'}]);
+  if(!t.mpSwap||t.mpSwap!==o||!myTurn())return;
+  if(v===1)acceptSwap(t);else if(v===0)declineSwap(t,false);
+  updateUi();
+}
+function acceptSwap(t){
+  const o=t.mpSwap,g=S.tiles[o.give],who=nameOf(o.from);if(!g||g.rival!==o.from){declineSwap(t,true);return;}
+  if(o.pay<0&&S.cash<-o.pay){toast('На доплату не хватает');return;}
+  const key=pairKey(PID,o.from),invT=invested(t),invG=invested(g);
+  if(o.pay>0){S.cash+=o.pay;credit(o.from,0,`${esc(S.player)} принял обмен`,-o.pay);}
+  else if(o.pay<0){S.cash+=o.pay;credit(o.from,-o.pay,`${esc(S.player)} принял обмен, доплата ${money(-o.pay)}`);}
+  // Вложено после обмена: полученная клетка ± доплата (не ниже нуля).
+  t.mpPrem=Math.max(-baseInv(t),(t.mpPrem||0)+Math.max(0,o.pay));g.mpPrem=Math.max(-baseInv(g),(g.mpPrem||0)-Math.max(0,o.pay));
+  delete t.mpSwap;delete t.mpOffer;delete g.mpOffer;delete g.mpSwap;
+  t.owner=null;t.rival=o.from;g.owner='you';delete g.rival;t.mpSwapPair=key;g.mpSwapPair=key;
+  track('mp_swap',{tile:t.i,give:g.i,pay:o.pay,with:o.from});
+  log(`🔁 Обменял «${titleOf(t)}» на «${titleOf(g)}» с ${who}.`);
+  plate(`🔁 Обмен · ${who}`,o.pay,`«${titleOf(g)}» теперь твоя`);
+  emit({kind:'swapped',text:`обменял «${titleOf(t)}» на «${titleOf(g)}»`,amount:null,tile:g.i,to:o.from});
+  save();render();push();
+}
+function declineSwap(t,silent){
+  const o=t.mpSwap;if(!o)return;delete t.mpSwap;
+  if(o.pay>0)credit(o.from,o.pay,`${esc(S.player)} отказал в обмене`,-o.pay);
+  emit({kind:'decline',text:`отказал в обмене на «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});
+  if(!silent){log(`✋ Отказал ${nameOf(o.from)} в обмене.`);save();render();}push();
 }
 function placeOffer(t,m){
   if(!isRival(t)||t.mpOffer||!myTurn()||S.pos!==t.i||lotOn(t.i))return false;
@@ -1037,10 +1140,11 @@ async function answerOne(t){
 }
 async function answerOffers(){
   if(!myTurn()||ending||!S||!S.tiles)return;
-  for(const t of S.tiles.filter(x=>x.owner&&x.mpOffer)){
+  for(const t of S.tiles.filter(x=>x.owner&&(x.mpOffer||x.mpSwap))){
     if(!myTurn()||ending)return;
     while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);
-    await answerOne(t);
+    if(t.mpOffer)await answerOne(t);
+    if(t.mpSwap){while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);await answerSwap(t);}
   }
 }
 function rentOfMine(t){const keep=t.rival;t.rival=PID;t.owner=null;const r=rentOf(t);t.owner='you';if(keep)t.rival=keep;else delete t.rival;return r;}
@@ -1065,6 +1169,7 @@ function declineOffer(t,silent){
 function reclaimOffers(){
   if(!myTurn())return;let back=0;
   for(const t of S.tiles)if(t.rival&&t.mpOffer&&t.mpOffer.from===PID&&t.mpOffer.n<view.turn.n){back+=t.mpOffer.amount;delete t.mpOffer;}
+  for(const t of S.tiles)if(t.rival&&t.mpSwap&&t.mpSwap.from===PID&&t.mpSwap.n<view.turn.n){if(t.mpSwap.pay>0)back+=t.mpSwap.pay;delete t.mpSwap;}
   if(back>0){S.cash+=back;S.mpEscrow=Math.max(0,(S.mpEscrow||0)-back);toast(`💼 Ответа не было — ${money(back)} вернулись из резерва`,2600);push();}
 }
 (function(){const base=kioskWindow;kioskWindow=function(t){return isRival(t)?rivalWindow(t):base.apply(this,arguments);};})();
@@ -1175,10 +1280,11 @@ function lotBadgeSync(){
   if(lotBadge._h!==html){lotBadge._h=html;lotBadge.innerHTML=html;lotBadge.style.setProperty('--c',colorOf(l.seller));}
 }
 function offerBadgeSync(){
-  const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&x.mpOffer):[];
+  const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&(x.mpOffer||x.mpSwap)):[];
   offerBadge.hidden=!list.length;if(!list.length)return;
-  const o=list[0].mpOffer,more=list.length>1?` <em>+${list.length-1}</em>`:'';
-  const html=`<i>💼</i><span><b>${esc(nameOf(o.from))}</b> предлагает <b>${money(o.amount)}</b> · ×${String(o.mult).replace('.',',')}${more}</span><u>${myTurn()&&!ending?'ответить':'ответ в свой ход'}</u>`;
+  const sw=!list[0].mpOffer,o=list[0].mpOffer||list[0].mpSwap,more=list.length>1?` <em>+${list.length-1}</em>`:'';
+  const html=sw?`<i>🔁</i><span><b>${esc(nameOf(o.from))}</b> предлагает обмен${o.pay?` · доплата ${money(Math.abs(o.pay))}`:''}${more}</span><u>${myTurn()&&!ending?'ответить':'ответ в свой ход'}</u>`
+    :`<i>💼</i><span><b>${esc(nameOf(o.from))}</b> предлагает <b>${money(o.amount)}</b> · ×${String(o.mult).replace('.',',')}${more}</span><u>${myTurn()&&!ending?'ответить':'ответ в свой ход'}</u>`;
   if(offerBadge._h!==html){offerBadge._h=html;offerBadge.innerHTML=html;offerBadge.style.setProperty('--c',colorOf(o.from));}
 }
 const statusEl=el('div','mp-status');statusEl.id='mpStatus';statusEl.hidden=true;
@@ -1417,6 +1523,8 @@ function onEvt(from,e){
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
   if(mine&&e.kind==='sale')plate(`🤝 ${p.name} согласился`,-amount,e.text.replace(/^продал /,'')+' теперь твоя');
   if(mine&&e.kind==='decline')plate(`✋ ${p.name} отказал`,0,'деньги вернулись из резерва');
+  if(mine&&e.kind==='swap')plate(`🔁 Обмен · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
+  if(mine&&e.kind==='swapped')plate(`🔁 ${p.name} согласился на обмен`,0,e.text.replace(/^обменял /,''));
   // События стола (торги, удары из «Шанса», пропуски) — приходят всем, включая автора.
   const tileName=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile]?titleOf(S.tiles[e.tile]):'клетка';
   if(e.kind==='hit'&&mine)plate(`🎴 ${p.name}`,0,e.text);
@@ -1672,7 +1780,7 @@ if(TEST){
   window.__MP={
     get PID(){return PID;},set PID(v){PID=v;},get view(){return view;},set view(v){view=v;},get hub(){return hub;},get net(){return net;},get S(){return S;},
     adopt,onView,finishTurn,placeOffer,forceBuy,placeBid,startLot,mpChance,landedHere,isRival,invested,rentOf,forceReady,lotOn,myLots,
-    roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,dblCash,rollCash,titleOf,sellOf,
+    roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,dblCash,rollCash,titleOf,sellOf,baseInv,pairKey,
     setTurn(o){mine=!!o.mine;rolled=!!o.rolled;landed=!!o.landed;ending=false;autoEnding=false;credits=[];},
     get flags(){return {mine,rolled,landed,ending,curTurn};},set curTurn(n){curTurn=n;},
     C,MP_CHANCE,

@@ -94,7 +94,8 @@ function applyState(T,pid,pack,now){
   if(T.phase!=='play'||!T.turn||T.turn.pid!==pid||!pack)return false;
   if(pack.n!=null&&pack.n!==T.turn.n)return false;           // запоздалый пакет прошлого хода
   const p=active(T);
-  if(pack.s)p.s=pack.s;
+  // Резерв под лидирующие ставки (mpHold) ведёт ядро: клиент мог не успеть узнать о нём — сверяем нал по резерву стола.
+  if(pack.s){const h=(p.s&&p.s.mpHold)||0,ph=pack.s.mpHold||0;if(h!==ph){pack.s.cash=(pack.s.cash||0)-(h-ph);pack.s.mpHold=h;}p.s=pack.s;}
   // Кто-то первым прошёл старт в N-й раз — доигрываем текущий раунд стола (у всех поровну ходов) и считаем итог.
   if(modeOf(T)==='laps'&&!T.finalRound&&lapsOf(p)>=T.settings.rounds){T.finalRound=T.turn.round;T.finalBy=p.pid;}
   if(pack.tiles)T.tiles=mergeTiles(T.tiles,pack.tiles,pid,pack.credits||[]);
@@ -127,12 +128,18 @@ function applyState(T,pid,pack,now){
 // клетка переходит, только если в этом же пакете есть проводка старому хозяину с пометкой force за эту клетку.
 function mergeTiles(cur,next,pid,credits){
   if(!cur||!Array.isArray(next))return next;
+  // Обмен клетками (решение продюсера 02.10): хозяин клетки t, принимая обмен, забирает клетку give у предложившего.
+  const swapGive=new Set();
+  for(const c of cur)if(c&&c.owner===pid&&c.mpSwap){const g=cur[c.mpSwap.give];if(g&&g.owner===c.mpSwap.from&&next[c.i]&&next[c.i].owner===c.mpSwap.from)swapGive.add(c.mpSwap.give);}
   return cur.map((t,i)=>{const n=next[i];if(!n)return t;
     if(!t.owner||t.owner===pid)return n;                         // свободная или своя — верим целиком
+    if(swapGive.has(i)&&n.owner===pid)return n;                  // обмен принят: клетка предложившего — хозяину
     if(n.owner===pid&&(credits||[]).some(c=>c&&c.force&&c.tile===i&&c.to===t.owner&&+c.cash>0))return n;   // выкуп ×10 оплачен
     const o=Object.assign({},t);if('drop' in n)o.drop=n.drop;if('insp' in n)o.insp=n.insp;   // чужая: только находки и проверки
     if(n.mpOffer&&n.mpOffer.from===pid)o.mpOffer=n.mpOffer;                                    // своё предложение хозяину
     else if(t.mpOffer&&t.mpOffer.from===pid&&!n.mpOffer)delete o.mpOffer;                     // забрал резерв / отозвал
+    if(n.mpSwap&&n.mpSwap.from===pid)o.mpSwap=n.mpSwap;                                        // своё предложение обмена
+    else if(t.mpSwap&&t.mpSwap.from===pid&&!n.mpSwap)delete o.mpSwap;
     return o;});
 }
 // Мини-игра (бандит, 21…) останавливает часы хода: «за 30 секунд я должен быстро тыкать — фатально».
@@ -198,6 +205,8 @@ const pnameOf=(T,pid)=>(T.players.find(p=>p.pid===pid)||{}).name||'соперн�
 // победитель платит при закрытии, даже в минус (тогда действует правило банкротства).
 // lotApi.baseInv(t) — вложено по ценам движка, lotApi.toLot(t) — клетка снова пустырь; задаёт хозяин стола (mp.js).
 const lotApi={baseInv:null,toLot:null,valuer:null};
+// Резерв под ставку (решение продюсера 02.10): лидирующая ставка снимается с нала в mpHold; перебили — возвращается.
+function hold(T,pid,delta){const p=T.players.find(x=>x.pid===pid);if(!p||!p.s||!delta)return;p.s.cash=(p.s.cash||0)-delta;p.s.mpHold=Math.max(0,(p.s.mpHold||0)+delta);}
 function listLot(T,pid,tile,min,kind,bank){
   if(T.phase!=='play'||!T.turn||T.turn.pid!==pid)return null;
   const t=T.tiles&&T.tiles[tile];if(!t||t.owner!==pid||!(t.type==='kiosk'||t.type==='biz'))return null;
@@ -215,8 +224,10 @@ function bid(T,pid,lotId,amount){
   amount=Math.round(+amount||0);
   if(amount<lot.min||amount<=lot.best)return false;
   if(lot.bids[pid]===amount)return false;                                   // повтор той же ставки (двойной тап) не считается
-  const committed=(T.lots||[]).filter(l=>l!==lot&&l.bestBy===pid).reduce((a,l)=>a+l.best,0);
-  if((p.s.cash||0)-committed<amount)return false;
+  const own=lot.bestBy===pid?lot.best:0;                     // поднимает свою же ставку — её резерв возвращается
+  if((p.s.cash||0)+own<amount)return false;                  // нал уже без резерва под другие лидирующие ставки
+  if(lot.bestBy)hold(T,lot.bestBy,-lot.best);
+  hold(T,pid,amount);
   lot.best=amount;lot.bestBy=pid;lot.bids[pid]=amount;
   event(T,{from:pid,kind:'bid',text:`ставка $${amount} на торгах`,amount:null,tile:lot.tile,to:lot.seller,lot:lot.id});
   return true;
@@ -228,11 +239,11 @@ function resolveLots(T){
   const n=T.turn.n,keep=[];
   for(const lot of T.lots){
     const t=T.tiles[lot.tile],seller=T.players.find(p=>p.pid===lot.seller);
-    if(!t||t.owner!==lot.seller){out.push({lot,result:'void'});continue;}
+    if(!t||t.owner!==lot.seller){if(lot.bestBy)hold(T,lot.bestBy,-lot.best);out.push({lot,result:'void'});continue;}
     if(n<lot.endsN){keep.push(lot);continue;}
     const buyer=lot.bestBy?T.players.find(p=>p.pid===lot.bestBy):null;
     if(buyer&&buyer.s){
-      buyer.s.cash=(buyer.s.cash||0)-lot.best;if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+lot.best;
+      hold(T,lot.bestBy,-lot.best);buyer.s.cash=(buyer.s.cash||0)-lot.best;if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+lot.best;   // резерв уходит продавцу
       const base=lotApi.baseInv?lotApi.baseInv(t):0;t.owner=lot.bestBy;t.mpPrem=lot.best-base;delete t.mpOffer;
       event(T,{from:lot.bestBy,kind:'won',text:`купил клетку на торгах у ${pnameOf(T,lot.seller)} за $${lot.best}`,amount:-lot.best,tile:lot.tile,to:lot.seller,lot:lot.id,paid:lot.best});
       out.push({lot,result:'sold',to:lot.bestBy,amount:lot.best});continue;
@@ -295,7 +306,7 @@ function tick(T,now){
 // Раскладка для полосы игроков и итогового шоу: точки и бизнесы (вложено, уровни), лицензии,
 // товар, нал и долг. Кредит — пассив: на плейтесте игрок с кредитом вышел «сильнейшим».
 function capital(T,pid,valuer){
-  const p=T.players.find(x=>x.pid===pid);const cash=Math.round(p&&p.s?(p.s.cash||0)+(p.s.mpEscrow||0):0);   // резерв под предложение — те же деньги
+  const p=T.players.find(x=>x.pid===pid);const cash=Math.round(p&&p.s?(p.s.cash||0)+(p.s.mpEscrow||0)+(p.s.mpHold||0):0);   // резерв под предложение — те же деньги
   let ptsInv=0,bizInv=0,goods=0,points=0,biz=0,levels=0;
   for(const t of T.tiles||[]){if(t.owner!==pid)continue;const v=valuer(t,pid)||{};goods+=v.goods||0;
     if(t.type==='biz'){biz++;bizInv+=v.inv||0;levels+=t.level||1;}else{points++;ptsInv+=v.inv||0;levels+=t.salesLvl||1;}}

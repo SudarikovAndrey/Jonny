@@ -37,7 +37,7 @@ function removeBots(){for(const b of bots.values()){clearInterval(b.ping);hubSen
 function schedule(){
   if(acting||pendingT)return;
   if(busy)return;
-  for(const b of bots.values()){const v=b.view;if(v&&v.phase==='play'&&v.turn&&v.turn.pid===b.pid&&!v.paused){pendingT=setTimeout(()=>{pendingT=0;botTurnHidden(b.pid);},dly(1500));return;}}
+  for(const b of bots.values()){const v=b.view;if(v&&v.phase==='play'&&v.turn&&v.turn.pid===b.pid&&!v.paused&&v.turn.n!==b.lastN){pendingT=setTimeout(()=>{pendingT=0;botTurnHidden(b.pid);},dly(1500));return;}}
   // «Авто-ход за меня»: свой ход страница играет тем же драйвером — так партию можно прогнать до конца одному.
   const hv=H.view;if(autoMe&&hv&&hv.phase==='play'&&hv.turn&&hv.turn.pid===H.PID&&!hv.paused&&!$('onboard')){pendingT=setTimeout(()=>{pendingT=0;playTurn(H.PID);},dly(1200));}
 }
@@ -134,7 +134,8 @@ const canUp=t=>t.capLvl<capTab(t).length||t.salesLvl<salTab(t).length;
 function fillGoods(t,share){const need=cap(t)-(t.goods||0);if(need<=0)return 0;const price=buyPrice(t.good),can=Math.floor(Math.max(0,S.cash*share)/price),n=Math.min(need,can);if(n<=0)return 0;S.cash-=n*price;t.goods=(t.goods||0)+n;return n;}
 async function botTurnHidden(pid){
   const b=bots.get(pid);if(!b||busy||acting)return;const v=b.view;if(!v||v.phase!=='play'||v.turn.pid!==pid)return;
-  busy=true;
+  if(v.turn.n===b.lastN)return;   // этот ход уже сыгран: вид стола ещё не обновился (на мгновенной скорости бот ходил дважды)
+  b.lastN=v.turn.n;busy=true;
   const S0=S,view0=H.view,pid0=H.PID,n=v.turn.n,players=v.players.length;
   const credits=[],evts=[],after=[];let seq=0,dice=null;
   const credit=(to,cash,extra)=>credits.push(Object.assign({id:`${pid}:${n}:b:${++seq}`,to,cash:Math.round(cash||0)},extra||{}));
@@ -146,6 +147,13 @@ async function botTurnHidden(pid){
       if(o.amount>=inv*2||rnd(.35)){S.cash+=o.amount;credit(o.from,0,{escrow:-o.amount});t.mpPrem=o.amount-(inv-(t.mpPrem||0));t.owner=null;t.rival=o.from;delete t.mpOffer;
         emit({kind:'sale',text:`продал «${titleOf(t)}»`,amount:o.amount,tile:t.i,to:o.from});trace.push(b.name+': продал по предложению');}
       else{delete t.mpOffer;credit(o.from,o.amount,{escrow:-o.amount});emit({kind:'decline',text:`отказал в продаже «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
+    // 1б. Ответы на предложения обмена: согласен, если получает не дешевле (с доплатой), иначе изредка
+    for(const t of S.tiles.filter(x=>x.owner&&x.mpSwap)){const o=t.mpSwap,g=S.tiles[o.give];
+      const ok=g&&g.rival===o.from&&(o.pay>=0||S.cash>=-o.pay)&&(H.invested(g)+o.pay>=H.invested(t)*0.9||rnd(.25));
+      if(ok){const key=H.pairKey(pid,o.from);if(o.pay>0){S.cash+=o.pay;credit(o.from,0,{escrow:-o.pay});}else if(o.pay<0){S.cash+=o.pay;credit(o.from,-o.pay);}
+        delete t.mpSwap;t.owner=null;t.rival=o.from;g.owner='you';delete g.rival;t.mpSwapPair=key;g.mpSwapPair=key;
+        emit({kind:'swapped',text:`обменял «${titleOf(t)}» на «${titleOf(g)}»`,amount:null,tile:g.i,to:o.from});trace.push(b.name+': принял обмен');}
+      else{delete t.mpSwap;if(o.pay>0)credit(o.from,o.pay,{escrow:-o.pay});emit({kind:'decline',text:`отказал в обмене на «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
     // 2. Бросок и движение
     const a=1+Math.floor(Math.random()*6),bb=1+Math.floor(Math.random()*6),sum=a+bb,dbl=a===bb;dice={a,b:bb};
     if(S.jail>0){if(dbl){S.jail=0;trace.push(b.name+': дубль — вышел из участка');}else{S.jail--;trace.push(b.name+': в участке, попыток '+S.jail);}}
@@ -191,6 +199,10 @@ function collectHidden(t,{credit,emit}){
 function landHidden(t,ctx){
   const {credit,emit,v,after,bot}=ctx;if(!t)return;const n=v.turn.n;
   collectHidden(t,ctx);
+  // Инспектор (продюсер 02.10: «бот реагирует так же, как игрок»): клетка инспектора рассылает проверки по его точкам,
+  // своя точка под проверкой — бот платит штраф, если есть деньги, и снимает проверку.
+  if(t.type==='hazard'){inspHidden(t,ctx);return;}
+  if(t.owner&&t.insp){const fine=typeof inspFine==='function'?inspFine():50;if(S.cash>=fine){S.cash-=fine;credit(null,0,{pot:fine});t.insp=false;emit({kind:'fine',text:`снял проверку с «${titleOf(t)}»`,amount:-fine,tile:t.i});}}
   switch(t.type){
     case 'kiosk':{
       if(t.rival){rentHidden(t,ctx);break;}
@@ -238,10 +250,21 @@ function chanceHidden({credit,emit,v,after}){
   else{amount=60;S.cash+=60;text='👟 Нашёл в старых кроссовках $60.';}
   emit({kind:'chance',text,amount,tile:S.pos});
 }
+function inspHidden(t,{emit}){
+  const own=S.tiles.filter(x=>(x.type==='kiosk'||x.type==='biz')&&x.owner&&unlocked(x));
+  if(own.length<(CFG.INSP.minOwn||0)){emit({kind:'insp',text:'инспектору пока некого проверять',amount:null,tile:t.i});return;}
+  const active=own.filter(x=>x.insp).length,lapCap=1+Math.floor(Math.max(0,(S.laps||0)-(CFG.INSP.fromLap||0))/(CFG.INSP.lapStep||3));
+  const free=Math.min((CFG.INSP.limit||3)-active,lapCap-active);if(free<=0)return;
+  const spots=own.filter(x=>!x.insp&&x.i!==S.pos).sort(()=>Math.random()-.5);
+  const want=1+(CFG.INSP.steps||[3,7]).filter(x=>own.length>x).length,n=Math.min(free,spots.length,want);
+  const hit=spots.slice(0,n);hit.forEach(x=>{x.insp=true;});
+  if(n)emit({kind:'insp',text:`инспектор проверяет ${n===1?'точку':n+' точки'}: ${hit.map(titleOf).join(', ')}`,amount:null,tile:t.i});
+  trace.push('бот: инспектор, проверок '+n);
+}
 // Автомат в фоне: бесплатные спины тем же движком и таблицей выплат; на поле — только результат.
 function slotHidden(t,{credit,emit,v}){
   const E=window.SlotEngine;if(!E)return;
-  const st={P:Math.max(0,Math.round(lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:H.rollCash(),visits:1};
+  const st={P:Math.max(0,Math.round(typeof window.MP_LAP_P==='function'?window.MP_LAP_P():lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:H.rollCash(),visits:1};
   let cash=0,potD=10,gem=0;
   for(let i=0;i<3;i++){const o=E.choose(Math.random),p=E.award(st,o,[]);
     if(o.id==='jackpot'){cash+=p.cash;gem+=p.gem;potD-=st.pot;st.pot=0;}

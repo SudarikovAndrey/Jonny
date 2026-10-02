@@ -988,9 +988,10 @@ function symbols(o,rng){
  if(o.count===2){const x=o.symbol||pick(['seven','gem','coin','cherry']);return shuffle([x,x,pick(SYMBOLS.filter(s=>s!==x))],rng);}
  return shuffle(SYMBOLS.slice(),rng).slice(0,3);
 }
-// Мультиплеер (rollCash>0, плейтест 02.10: $970 за визит решали партию): P — прибыль за круг, но не выше MP_P_CAP;
+// Мультиплеер (rollCash>0, плейтест 02.10: $970 за визит решали партию): P — средний по игрокам доход за круг (передаёт web/slot.js);
 // денежные призы — доли MP_PAY; джекпот — касса стола + 2 кристалла; кубики — 6 и 2 курса rollCash.
-const MP_P_CAP=400,MP_PAY={coin3:.6,cherry3:.3,pair:.15,dice3:6,dice2:2,jackpotGem:2};
+const MP_P_CAP=Infinity,   // 02.10 вечер: потолка нет — P в партии уже средний доход за круг по игрокам (стадия игры)
+      MP_PAY={coin3:.6,cherry3:.3,pair:.15,dice3:6,dice2:2,jackpotGem:2};
 const isMP=s=>s.rollCash>0;
 // Прокрутки за кристаллы дорожают с каждым визитом: 1 → 2 → 3 (мультиплеер, плейтест 02.10); соло — 1.
 function packPrice(s){return isMP(s)?Math.min(3,Math.max(1,integer(s.visits,0,99))):1;}

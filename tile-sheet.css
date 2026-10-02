@@ -32,3 +32,7 @@ body:not(.missions-peek) #top #qrow{opacity:0;translate:0 -8px;pointer-events:no
 /* Невысокий экран (667 px): строка «Прибыль за круг» повторяет блок прокачки «18 → 24» под ней — убираем повтор,
    чтобы карточка под кошельком влезла целиком, без наезда кнопки «Улучшить». */
 @media (max-height:740px){body.tile-sheet #card.print-property .property-body>.box:has(+.uup){display:none}}
+/* Ряд миссий шире экрана (задачи SF) раздувал страницу на телефоне на 8 px — фишки и кнопки справа обрезались.
+   Режем по ширине; в мультиплеере миссий нет — ряда нет совсем. */
+#top #qrow{overflow-x:clip;width:auto;max-width:calc(100% - 16px);box-sizing:border-box}
+.mp-mode #top #qrow{display:none}
