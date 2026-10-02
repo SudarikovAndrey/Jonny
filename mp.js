@@ -56,6 +56,8 @@ for(const css of ['mp.css','mp-ui.css']){const l=document.createElement('link');
 // ---- движок: соло-обвязка выключается ----
 CFG.ROLLS_PER_DAY=999;
 askName=async()=>{};intro=async()=>{};
+// Подсказки обучения соло («Ты попал на точку, которую можно купить…») в мультиплеере не показываем (плейтест 01.10).
+hint=function(){};hintHtml=function(){return '';};
 load=function(){return false;};                 // партия живёт у хозяина стола, не в сохранении браузера
 let BASE=null;                                  // чистый срез после newGame — стартовое состояние каждого игрока
 function patchSolo(s){
@@ -455,6 +457,7 @@ function mpLeader(){
 function adopt(v){
   if(!v.mine||!v.tiles)return;
   const s=clone(v.mine);s.tiles=toLocal(v.tiles);S=s;
+  S.pot=Math.round(v.pot||0);   // копилка общая на стол: своя цифра в срезе — только для отрисовки
   const lead=mpLeader();CFG.INSP.limit=lead?4:3;CFG.INSP.fineShare=lead?.75:.5;
   if(lead!==wasLead){wasLead=lead;if(lead)toast('📋 Ты в отрыве — инспекторов больше и штрафы выше',3000);}
   try{render();}catch(e){console.error(e);}
@@ -574,10 +577,10 @@ window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,op
 
 // ---- общая копилка стола: штрафы всех — в одну; забирает вставший ----
 function potDelta(fn){return function(){const before=S.pot||0;const r=fn.apply(this,arguments);const d=Math.round((S.pot||0)-before);
-  if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=before;pushSoon();}return r;};}
+  if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;pushSoon();}return r;};}   // S.pot — как будет у стола, чтобы табличка на клетке не отставала
 pay=potDelta(pay);payFine=potDelta(payFine);
 (function(){const base=lapDone;lapDone=async function(){const before=S.pot||0;const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
-  if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=before;}return r;};})();
+  if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;}return r;};})();
 (function(){const base=potTile;potTile=async function(){
   S.pot=(view&&view.pot)||0;const r=await base.apply(this,arguments);
   if(myTurn())credit(null,0,null,0,{potTake:true});push();return r;};})();
@@ -920,15 +923,20 @@ function reclaimOffers(){
 // =====================================================================
 const el=(tag,cls,parent=document.body)=>{const e=document.createElement(tag);if(cls)e.className=cls;parent.append(e);return e;};
 const bar=el('div','mp-bar');bar.id='mpBar';bar.hidden=true;
-const roundEl=el('span','mp-round',bar);roundEl.title='Круг — проход через старт. Партия кончается, когда кто-то первым пройдёт последний круг';
-roundEl.innerHTML='Круг <b class="mp-rn"></b>';
+const roundEl=el('span','mp-round',bar);roundEl.title='Сколько осталось до конца партии. Время вышло — доигрываем круг стола, потом итог';
+roundEl.innerHTML='<i>⏱</i><b class="mp-rn"></b>';
 const chipsEl=el('span','mp-chips',bar);
+// Условие победы — строкой под фишками: ты и лидер; тап — правило и прогресс всех (плейтест 01.10).
+const winEl=el('button','mp-win',bar);winEl.type='button';
+winEl.onclick=()=>{if(!view||!view.win||!$('modal').hidden)return;
+  const rows=view.players.map(p=>`<div class="row"><span class="n"><i class="mp-dot" style="background:${p.color}"></i>${esc(p.pid===PID?'Ты':p.name)}</span><span class="v">${esc(p.win?p.win.text:'')}</span></div>`).join('');
+  modal(`<h2>🏆 ${esc(view.win.name)}</h2><p class="t">${esc(view.win.text)}</p>${rows}`,[{t:'Понятно',v:0,cls:'ok'}]);};
 const pauseBtn=el('button','mp-pausebtn',bar);pauseBtn.type='button';pauseBtn.title='Пауза для всех';pauseBtn.setAttribute('aria-label','Пауза');pauseBtn.textContent='⏸';
 pauseBtn.onclick=()=>{if(view&&view.phase==='play'&&!view.paused)net.send({t:'tpause',on:true});};
 const pauseEl=el('div','mp-pause');pauseEl.hidden=true;
 pauseEl.innerHTML='<div class="mp-pause-card"><b>Пауза</b><small></small><button type="button" class="mp-big">Продолжить</button></div>';
 pauseEl.querySelector('button').onclick=()=>net.send({t:'tpause',on:false});
-let lastRound=0,finalShown=null;
+let finalShown=null;
 const tag=el('div','mp-tag');tag.id='mpTag';tag.hidden=true;
 const endBtn=el('button','mp-end');endBtn.id='mpEnd';endBtn.hidden=true;endBtn.type='button';
 endBtn.innerHTML='<b>Передать ход</b><small></small>';
@@ -981,25 +989,28 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();
+  offerBadgeSync();playersDock();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
-  // Круг стола: цифра меняется тем же барабаном, что уровень точки при прокачке (NumberDrum).
-  // Круг — проход через старт (решение продюсера 01.10). В полосе — круг лидера: по нему кончается партия.
-  const M=view.settings.rounds,lead=Math.max(0,...view.players.map(p=>p.laps||0));
-  const rn=roundEl.querySelector('.mp-rn'),round=Math.min(lead+1,M),txt=`${round}/${M}`;
+  // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
+  // Старые столы без часов — круг лидера, как раньше. Цифры идут в tick().
   roundEl.classList.toggle('final',!!view.finalRound);
   if(view.finalRound&&finalShown!==view.match){finalShown=view.match;
-    plate('🏁 Последний раунд',0,`${view.finalBy===PID?'Ты прошёл':(nameOf(view.finalBy)+' прошёл')} старт в ${M}-й раз — доигрываем раунд, потом итог`);}
-  if(round!==lastRound){const before=lastRound?`${lastRound}/${view.settings.rounds}`:'';rn.textContent=txt;delete rn.dataset.drumValue;
-    if(before&&round>lastRound){try{window.NumberDrum&&NumberDrum.update(rn,before);}catch(e){}
-      roundEl.classList.remove('bump');void roundEl.offsetWidth;roundEl.classList.add('bump');}
-    lastRound=round;}
+    plate('🏁 Последний круг',0,view.finalBy==='time'?'Время партии вышло — доигрываем круг стола, потом итог'
+      :`${view.finalBy===PID?'Ты прошёл':(nameOf(view.finalBy)+' прошёл')} старт в ${view.settings.rounds}-й раз — доигрываем круг, потом итог`);}
+  if(view.win){
+    const me=playerOf(PID),goal=view.players.filter(p=>p.win),lead=goal.slice().sort((a,b)=>(b.win.value||0)-(a.win.value||0))[0];
+    const meTxt=me&&me.win?me.win.text:'',leadTxt=lead&&lead.pid!==PID&&lead.win&&(lead.win.value||0)>((me&&me.win&&me.win.value)||0)?` · лидер ${lead.name}: ${lead.win.text}`:'';
+    const html=`<b>🏆 ${esc(view.win.name)}</b><span>ты: ${esc(meTxt)}${esc(leadTxt)}</span>`;
+    if(winEl._h!==html){winEl._h=html;winEl.innerHTML=html;}
+  }
+  winEl.hidden=!view.win;
   // На плейтесте число капитала (538, 899) никто не опознал — в полосе нал и число точек.
+  const own=p=>p.cap?p.cap.points+p.cap.biz:0;   // точки и бизнесы вместе — «владения» (плейтест 01.10: «точек» путало)
   bar.classList.toggle('tight',view.players.length>2);   // трое-четверо: компактные фишки, круг и пауза — второй строкой
   chipsEl.innerHTML=view.players.map(p=>`<span class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.pid===PID?' me':''}" style="--c:${p.color}">
       <i>${esc(p.name.slice(0,1).toUpperCase())}</i><span class="mp-nm">${esc(p.pid===PID?'Ты':p.name)}</span>
-      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${p.cap?p.cap.points+p.cap.biz:0}${view.players.length>2?' т.':' точ.'}</span></span>
+      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} ${view.players.length>2?'вл.':plural(own(p),'владение','владения','владений')}</span></span>
       ${p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
   tick();
 }
@@ -1011,6 +1022,12 @@ function tick(){
   const total=(view.turn.landed?view.settings.turnSec*500:view.settings.turnSec*1000)||1;
   const late=!paused&&!noLimit&&left<10000;document.body.classList.toggle('mp-late',late&&myTurn()&&!ending);
   const u=bar.querySelector('.mp-chip.on u');if(u)u.style.width=noLimit?'100%':Math.max(0,Math.min(100,left/Math.max(total,left)*100))+'%';
+  {const rn=roundEl.querySelector('.mp-rn');let t;
+    if(view.finalRound)t='последний круг';
+    else if(view.deadline){const at=tablePaused&&view.paused.at?view.paused.at:hostNow();t=mmss(view.deadline-at);}
+    else t='круг '+Math.min(Math.max(0,...view.players.map(p=>p.laps||0))+1,view.settings.rounds);
+    if(rn.textContent!==t)rn.textContent=t;
+    roundEl.classList.toggle('late',!view.finalRound&&!!view.deadline&&view.deadline-hostNow()<60000);}
   const me=myTurn();
   // Окно открыто: кнопка и плашка уходят под него, время хода — часами на углу карточки.
   const card=!$('modal').hidden&&$('card').getBoundingClientRect();
@@ -1053,6 +1070,31 @@ function tick(){
 }
 const vars={};
 function setVar(k,v){if(vars[k]===v)return;vars[k]=v;document.documentElement.style.setProperty(k,v);}
+
+// ---- «Игроки» вместо билета Джонни (плейтест 01.10): у кого сколько денег, владений, что за клетки ----
+{const b=$('bJohnny');if(b){
+  b.classList.add('mp-players');b.setAttribute('aria-label','Игроки');b.title='Игроки';
+  b.addEventListener('click',e=>{if(!view||view.phase!=='play')return;e.stopImmediatePropagation();e.preventDefault();playersWindow();},true);}}
+function playersDock(){
+  const b=$('bJohnny');if(!b||!view||!view.players)return;
+  // Разметку дока соло один раз переписывают при запуске — ставим свою, когда её нет (подписи в доке скрыты: значок — фишки игроков).
+  let box=b.querySelector('.mp-dk-pl');if(!box){b.innerHTML='<em class="mp-dk-pl"></em>';box=b.firstChild;}
+  const html=view.players.slice().sort((a,b)=>a.seat-b.seat).map(p=>`<i style="--c:${p.color}">${esc(p.name.slice(0,1).toUpperCase())}</i>`).join('');
+  if(box._h!==html){box._h=html;box.innerHTML=html;}
+}
+function playersWindow(){
+  if(!view||view.phase!=='play'||!$('modal').hidden||moving)return;
+  const tiles=view.tiles||[];
+  const rows=view.players.slice().sort((a,b)=>a.seat-b.seat).map(p=>{
+    const own=tiles.filter(t=>t.owner===p.pid&&(t.type==='kiosk'||t.type==='biz'));
+    const names=own.map(t=>{try{return esc(t.type==='biz'?bizName(t):pointName(t));}catch(e){return '';}}).filter(Boolean).join(' · ');
+    return `<div class="mp-pl" style="--c:${p.color}"><i>${esc(p.name.slice(0,1).toUpperCase())}</i>
+      <div><b>${esc(p.name)}${p.pid===PID?' · ты':''}${p.online?'':' <em>офлайн</em>'}</b>
+        <small>${own.length} ${plural(own.length,'владение','владения','владений')}${p.cap?' · капитал '+money(p.cap.total):''}</small>
+        ${names?`<p>${names}</p>`:''}${p.win&&view.win&&view.win.id!=='capital'?`<p class="mp-pl-win">🏆 ${esc(p.win.text)}</p>`:''}</div>
+      <strong>${money(p.cash)}</strong></div>`;}).join('');
+  modal(`<h2>👥 Игроки</h2>${view.win?`<p class="t">Как победить — <b>${esc(view.win.name)}</b>: ${esc(view.win.text)}</p>`:''}${rows}`,[{t:'Закрыть',v:0,cls:'sec'}]);
+}
 
 // ---- фишки соперников и флажки их клеток поверх поля ----
 const layer=el('div','mp-layer');layer.id='mpLayer';
