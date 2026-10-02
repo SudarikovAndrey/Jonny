@@ -156,7 +156,57 @@ function Hub(room,restored){
     persist();dirty=false;
   }
   const soon=()=>{if(!dirty){dirty=true;setTimeout(()=>{if(dirty)broadcast();},60);}};
+  // ---- журнал стола (хозяин): очередь ходов, броски, рента и кому, предложения, итог ----
+  // Отдельная «партия» в таблице: runId mp-<КОД>-m<матч>-table. Время — часы хозяина: at (с поясом), t, sec от старта.
+  const TL=window.ABTelemetry,tlog=[];let tlast=null,tRollN=null;
+  const pname=id=>(T.players.find(p=>p.pid===id)||{}).name||id;
+  function tev(type,d){if(!TL)return;const now=Date.now();
+    tlog.push(Object.assign({type,t:now,at:TL.isoLocal(now),sec:T.startedAt?Math.round((now-T.startedAt)/100)/10:null,room,match:T.match,
+      turnN:T.turn?T.turn.n:null,round:T.turn?T.turn.round:null},d||{}));
+    if(tlog.length>=10)tsend();}
+  function tsum(){const s={kind:'mp_table',runId:`mp-${room}-m${T.match}-table`,player:`стол ${room} · хозяин ${pname(PID)}`,
+      version:typeof VERSION!=='undefined'?VERSION:'',build:TL.build,mpBuild:window.AB_MP_BUILD||null,
+      startedAt:T.startedAt||null,startedAtISO:T.startedAt?TL.isoLocal(T.startedAt):null,updatedAtISO:TL.isoLocal(Date.now()),
+      tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){return '';}})(),
+      phase:T.phase,settings:T.settings,finalRound:T.finalRound||null,result:T.result||null,
+      players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,laps:p.s?p.s.laps||0:0,cash:p.s?Math.round(p.s.cash||0):0})),
+      mp:{room,match:T.match,host:true,players:T.players.length},finished:T.phase==='over'};
+    try{if(T.tiles)s.ranking=C.ranking(T,makeValuer(T.tiles)).map(r=>({pid:r.pid,name:r.name,seat:r.seat,total:Math.round(r.total||0),cash:Math.round(r.cash||0)}));}catch(e){}
+    return s;}
+  function tsend(force){if(!TL||!T.match||(!tlog.length&&!force))return;TL.enqueue(tsum(),tlog.splice(0,tlog.length));TL.pump();}
+  addEventListener('abtm:flush',e=>tsend(e.detail&&e.detail.final&&T.phase!=='lobby'));
+  function observe(){
+    const tr=T.turn,snap={phase:T.phase,n:tr?tr.n:null,paused:!!T.paused,final:T.finalRound||null,
+      online:T.players.map(p=>p.pid+(p.online?'+':'-')).join(',')};
+    if(!tlast){tlast=snap;return;}
+    if(snap.phase!==tlast.phase){
+      if(snap.phase==='play')tev('match_start',{players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color})),rounds:T.settings.rounds,turnSec:T.settings.turnSec});
+      if(snap.phase==='over'){tev('match_over',{result:T.result,durationSec:T.startedAt?Math.round((Date.now()-T.startedAt)/1000):null});tsend(true);}
+    }
+    if(snap.phase==='play'&&snap.n!==tlast.n&&tr)tev('turn',{pid:tr.pid,name:pname(tr.pid),seat:(T.players.find(p=>p.pid===tr.pid)||{}).seat,timedOutPrev:!!(tlast.n&&tr.timedOut)});
+    if(snap.paused!==tlast.paused)tev('pause',snap.paused?{on:true,by:T.paused.by,name:T.paused.name||pname(T.paused.by)}:{on:false});
+    if(snap.final!==tlast.final&&snap.final)tev('final_round',{round:snap.final,by:T.finalBy,name:pname(T.finalBy)});
+    if(snap.online!==tlast.online)tev('presence',{players:T.players.map(p=>({pid:p.pid,name:p.name,online:p.online}))});
+    tlast=snap;
+  }
   function handle(pid,msg,send){
+    // Что пришло от игрока — в журнал стола до и после применения правил.
+    const known=T.applied?new Set(Object.keys(T.applied)):new Set();
+    const r=handle0(pid,msg,send);
+    try{
+      if(msg&&msg.t==='state'&&msg.pack&&T.phase==='play'){
+        const pk=msg.pack;
+        if(pk.dice&&tRollN!==T.turn.n&&T.turn.pid===pid){tRollN=T.turn.n;tev('roll',{pid,name:pname(pid),a:pk.dice.a,b:pk.dice.b,sum:pk.dice.a+pk.dice.b,double:pk.dice.a===pk.dice.b,pos:pk.s?pk.s.pos:null});}
+        for(const c of pk.credits||[])if(c&&c.id&&T.applied&&T.applied[c.id]&&!known.has(c.id))
+          tev(c.escrow?'offer':'credit',{from:pid,fromName:pname(pid),to:c.to,toName:pname(c.to),cash:c.cash,escrow:c.escrow||0,note:c.note||''});
+      }
+      if(msg&&msg.t==='evt'&&msg.e&&T.turn&&T.turn.pid===pid)tev('evt',Object.assign({from:pid,name:pname(pid)},msg.e));
+      if(msg&&msg.t==='settings'&&pid===PID)tev('settings',{settings:T.settings});
+      observe();
+    }catch(e){console.warn('mp table log',e);}
+    return r;
+  }
+  function handle0(pid,msg,send){
     if(!msg||typeof msg!=='object')return;
     const p=T.players.find(x=>x.pid===pid);if(p)p.seenAt=Date.now();
     switch(msg.t){
@@ -196,8 +246,9 @@ function Hub(room,restored){
     for(const p of T.players)if(p.pid!==PID&&p.online&&p.seenAt&&now-p.seenAt>9000){C.leave(T,p.pid);links.delete(p.pid);p.offAt=now;dirty=false;soon();}
     if(T.phase==='lobby')for(const p of T.players.slice())if(p.pid!==PID&&!p.online&&now-(p.offAt||0)>15000){T.players=T.players.filter(x=>x!==p);soon();}
     const r=C.tick(T,now);
-    if(r==='timeout'){const send=links.get(T.turn.pid);send&&send({t:'timeout',n:T.turn.n});}
+    if(r==='timeout'){const send=links.get(T.turn.pid);send&&send({t:'timeout',n:T.turn.n});try{tev('timeout',{pid:T.turn.pid,name:pname(T.turn.pid)});}catch(e){}}
     if(r){C.checkEarly(T);soon();}
+    try{observe();}catch(e){}
   },250);
   setInterval(broadcast,3000);      // заодно пульс: клиенты по нему видят, что связь жива
   return {T,handle,drop,room};
@@ -323,6 +374,11 @@ const myTurn=()=>!!view&&view.phase==='play'&&view.turn&&view.turn.pid===PID;
 const playerOf=pid=>view&&view.players.find(p=>p.pid===pid);
 const nameOf=pid=>(playerOf(pid)||{}).name||'соперник';
 const colorOf=pid=>(playerOf(pid)||{}).color||'#6b5f52';
+// Для логов (web/telemetry.js): код стола, место, имя, число игроков, время хозяина — в каждой записи игрока.
+window.MPTele={hostNow,info(){const me=view&&playerOf(PID);return {room:ROOM,match:view?view.match:null,pid:PID,seat:me?me.seat:null,
+  name:(me&&me.name)||myName,host:!!(net&&net.host),players:view?view.players.length:0,names:view?view.players.map(p=>p.name):[],
+  rounds:view?view.settings.rounds:null,turnSec:view?view.settings.turnSec:null,startedAt:view?view.startedAt:null,phase:view?view.phase:null,
+  turnN:view&&view.turn?view.turn.n:null,round:view&&view.turn?view.turn.round:null,clockOff,hostNow,mpBuild:window.AB_MP_BUILD||null};}};
 
 function onMessage(m){
   lastMsgAt=Date.now();
@@ -361,7 +417,7 @@ function onView(v,now){
     if(isMine){reclaimOffers();yourTurn();}else followUntil=performance.now()+1600;   // камера — к фишке того, кто ходит
     mgReset();
   } else if(v.phase==='play'&&!isMine){adopt(v);}
-  if(v.phase==='over'){mine=false;if(shownOver!==v.match){shownOver=v.match;closeAll();adopt(v);showOver(v);}}
+  if(v.phase==='over'){mine=false;if(shownOver!==v.match){shownOver=v.match;closeAll();adopt(v);showOver(v);try{flush(true);}catch(e){}}}
   syncTokens(v);syncFlags();updateUi();
 }
 function adopt(v){
@@ -409,7 +465,7 @@ function push(){
   if(!myTurn())return;
   clearTimeout(pushT);pushT=0;
   rollsToCash(landed||!rolled?999:998);
-  net.send({t:'state',pack:{n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed}});
+  net.send({t:'state',pack:{n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,dice:lastDice&&!lastDice.lesson?{a:lastDice.a,b:lastDice.b}:null}});
 }
 function pushSoon(){if(myTurn()&&!pushT)pushT=setTimeout(push,150);}
 save=function(){pushSoon();};       // сохранение партии — у хозяина стола
