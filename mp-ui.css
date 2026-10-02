@@ -95,3 +95,20 @@
 #card .mp-bank-pick.on{background:#4f7c4a!important;color:#fff6de!important;box-shadow:0 0 0 2px #25221c,0 3px 0 #25221c!important}
 #card .mp-bank-sum{margin:10px 0 2px;padding:8px 10px;border:2px dashed var(--mp-red);border-radius:9px 12px 8px 11px;text-align:center;font-size:14px}
 #card .mp-bank-sum b{font:800 20px var(--mp-num);font-variant-numeric:tabular-nums;color:var(--mp-red)}
+
+/* Подписи: хозяин чужой клетки — в его цвет; копилка в окне «Игроки» */
+#tilebar .mp-tb-owner{display:inline-block;margin-left:4px;padding:1px 7px;border-radius:7px 9px 6px 8px;background:var(--c);color:#fbf0d4;
+  border:1.5px solid #25221c;font-weight:800;font-size:.9em;line-height:1.3}
+#card .mp-pl-pot{margin:10px 0 0;padding-top:8px;border-top:1px dashed #25221c40;font-size:13px}
+
+/* Пауза: сколько осталось (две на партию, дальше раз в 5 минут); ☰ меню партии */
+.mp-pausebtn{position:relative}
+.mp-pausebtn sup{position:absolute;right:-5px;top:-6px;min-width:14px;padding:0 3px;border-radius:7px;background:#25221c;color:#f2e3bd;font:800 9px/14px var(--mp-num)}
+.mp-pausebtn.spent{opacity:.6}
+.mp-pausebtn.spent sup{background:var(--mp-red)}
+.mp-menubtn{font-size:14px}
+.mp-paused .mp-menubtn{visibility:hidden}
+/* лобби у гостя: настройки — только посмотреть */
+.mp-guest-note{margin:0 0 8px;padding:6px 10px;font-size:12px;color:#4a3f31;background:#25221c12;border-radius:8px 10px 7px 9px}
+.mp-guest-note~.mp-set .mp-seg{border-style:dashed;opacity:.85}
+.mp-guest-note~.mp-set .mp-seg button:disabled:not(.on){opacity:.35}

@@ -22,7 +22,10 @@ const FORCE_LAPS=2;         // выкуп ×10 — не чаще раза в д�
 window.MP_ROLL_CASH=()=>rollCash();   // автомат: кубики платят налом по этому курсу (src/bandit/engine.js)
 // Инспектор в партии: не по кругам, а с трёх владений (решение продюсера 01.10).
 CFG.INSP.fromLap=0;CFG.INSP.minOwn=3;
-const STEP_MS=170;        // шаг чужой фишки по клетке
+const STEP_MS=170;
+// Ручная пауза (плейтест 01.10: её спамили): две на игрока за партию, дальше — одна раз в 5 минут.
+const PAUSE_FREE=2,PAUSE_CD_MS=5*60000;
+const pauseWait=(u,now)=>!u||u.n<PAUSE_FREE?0:Math.max(0,u.at+PAUSE_CD_MS-now);        // шаг чужой фишки по клетке
 // Дубль и награды ходами привязаны к обороту игрока (формулы «Американ Геймплей», 01.10): lapPotential —
 // прибыль всех своих точек за круг при полном запасе плюс сборы бизнесов.
 const lapCash=()=>{try{return lapPotential()||0;}catch(e){return 0;}};
@@ -248,7 +251,10 @@ function Hub(room,restored){
       case 'hit':if(C.applyHit(T,pid,msg.h))soon();return;                        // карта «Шанса» против соперника
       case 'lot':if(C.listLot(T,pid,+msg.tile,msg.min,msg.kind))soon();return;     // выставить клетку на торги
       case 'bid':if(C.bid(T,pid,String(msg.id||''),msg.amount))soon();return;
-      case 'tpause':if(p&&C.tablePause(T,pid,!!msg.on,Date.now(),p.name))soon();return;   // ручная пауза — любой игрок
+      case 'tpause':{if(!p)return;const now=Date.now();   // ручная пауза — любой игрок, но не чаще PAUSE_FREE/PAUSE_CD_MS
+        if(msg.on){const use=T.pauseUse=T.pauseUse||{},u=use[pid];const w=pauseWait(u,now);if(w>0){send&&send({t:'pausedeny',wait:w});return;}
+          if(C.tablePause(T,pid,true,now,p.name)){use[pid]={n:(u?u.n:0)+1,at:now};soon();}return;}
+        if(C.tablePause(T,pid,false,now,p.name))soon();return;}
       // Действие игрока (стройка, рента, мини-игра…) — остальным, для журнала и всплытий над клеткой.
       case 'evt':if(T.phase!=='play'||!T.turn||T.turn.pid!==pid||!msg.e)return;
         for(const q of T.players){if(q.pid===pid)continue;const s2=links.get(q.pid);if(s2)s2({t:'evt',from:pid,e:msg.e});}return;
@@ -260,7 +266,7 @@ function Hub(room,restored){
       case 'start':if(pid!==PID)return;
         {// поле стола — с чистого листа: цена стройки не должна зависеть от точек хозяина в прошлой партии
          const keep=S;S=Object.assign({},keep||{},{tiles:[]});let tiles;try{tiles=buildTiles().map(t=>Object.assign(t,{owner:null}));}finally{S=keep;}
-         if(C.start(T,tiles,pl=>makeSlice(pl.name),Date.now()))soon();}return;
+         if(C.start(T,tiles,pl=>makeSlice(pl.name),Date.now())){T.pauseUse={};soon();}}return;
       case 'again':if(pid!==PID||T.phase!=='over')return;C.backToLobby(T);soon();return;
       case 'kick':if(pid!==PID||T.phase!=='lobby'||msg.pid===PID)return;{const s=links.get(msg.pid);s&&s({t:'deny',error:'kicked'});}links.delete(msg.pid);C.leave(T,msg.pid);soon();return;
     }
@@ -423,6 +429,7 @@ function onMessage(m){
     case 'rehello':if(net.stopped)return;net.send({t:'hello',pid:PID,name:myName});return;
     case 'pong':if(!net.host&&document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');return;
     case 'timeout':if(myTurn()&&m.n===view.turn.n)autoFinish();return;
+    case 'pausedeny':toast(`⏸ Паузы кончились — следующая через ${mmss(m.wait||0)}`,2600);return;
     case 'view':onView(m.v,m.now);return;
     case 'evt':onEvt(m.from,m.e);return;
   }
@@ -460,6 +467,7 @@ function adopt(v){
   if(!v.mine||!v.tiles)return;
   const s=clone(v.mine);s.tiles=toLocal(v.tiles);S=s;
   S.pot=Math.round(v.pot||0);   // копилка общая на стол: своя цифра в срезе — только для отрисовки
+  syncSlotPot();
   const lead=mpLeader();CFG.INSP.limit=lead?4:3;CFG.INSP.fineShare=lead?.75:.5;
   if(lead!==wasLead){wasLead=lead;if(lead)toast('📋 Ты в отрыве — инспекторов больше и штрафы выше',3000);}
   try{render();}catch(e){console.error(e);}
@@ -582,14 +590,25 @@ window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,op
 function potDelta(fn){return function(){const before=S.pot||0;const r=fn.apply(this,arguments);const d=Math.round((S.pot||0)-before);
   if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;pushSoon();}return r;};}   // S.pot — как будет у стола, чтобы табличка на клетке не отставала
 pay=potDelta(pay);payFine=potDelta(payFine);
-(function(){const base=lapDone;lapDone=async function(){const before=S.pot||0;const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
-  if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;}return r;};})();
+(function(){const base=lapDone;lapDone=async function(){const before=S.pot||0,slot0=slotPotNow();const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
+  if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;}
+  slotPotFlush(slot0);return r;};})();
+
+// ---- касса «Однорукого бандита» — общая на стол (решение продюсера 01.10): цифра у всех одна ----
+// Правила роста прежние (+$10 за круг, 10% денежных призов, джекпот обнуляет) плюс +$10 за каждый визит любого игрока.
+// Своя копия в срезе (S.slot.pot и снимок автомата) — только для отрисовки и работы движка; разницу шлём проводкой slot.
+const slotPotNow=()=>S&&S.slot?Math.round(S.slot.pot||0):0;
+function syncSlotPot(){if(!view||view.phase!=='play'||!S)return;const v=Math.round(view.slotPot||0);S.slot=S.slot||{pot:0,visits:0};S.slot.pot=v;if(S.slot.bandit)S.slot.bandit.pot=v;}
+function slotPotFlush(before){const d=slotPotNow()-before;if(d&&myTurn()){credit(null,0,null,0,{slot:d});pushSoon();}}
 (function(){const base=potTile;potTile=async function(){
   S.pot=(view&&view.pot)||0;const r=await base.apply(this,arguments);
   if(myTurn())credit(null,0,null,0,{potTake:true});push();return r;};})();
 
 // ---- функциональные клетки — только в ход, когда на них встал (плейтест: 15 прокруток автомата за два хода) ----
-if(window.Slot&&Slot.openTile){const b=Slot.openTile;Slot.openTile=function(o){if(view&&view.phase==='play'&&!(o&&o.landing)&&!landedHere()){toast('Мини-игра — только в тот ход, когда на неё встал',2400);return Promise.resolve();}return b.apply(this,arguments);};}
+if(window.Slot&&Slot.openTile){const b=Slot.openTile;Slot.openTile=async function(o){if(view&&view.phase==='play'&&!(o&&o.landing)&&!landedHere()){toast('Мини-игра — только в тот ход, когда на неё встал',2400);return;}
+  if(view&&view.phase==='play'){syncSlotPot();if(o&&o.landing&&S.tiles[S.pos]&&S.tiles[S.pos].type==='slot'){S.slot.pot+=10;if(S.slot.bandit)S.slot.bandit.pot=S.slot.pot;}   // визит любого игрока — +$10 в общую кассу
+    const before=Math.round((view.slotPot||0));const r=await b.apply(this,arguments);slotPotFlush(before);return r;}
+  return b.apply(this,arguments);};}
 (function(){const base=bank;bank=async function(remote){
   if(view&&view.phase==='play'&&!landedHere()){toast('Банк — только в тот ход, когда на него встал',2400);return;}
   return base.apply(this,arguments);};})();
@@ -720,7 +739,14 @@ function onRebuild(t){if(!t)return;delete t.mpPrem;if(t.owner&&t.mpOffer)decline
 (function(){const base=track;track=function(type,d){if(myTurn()&&d&&d.tile!=null&&(type==='sf_rebuild'||type==='sf_build'))onRebuild(S.tiles[d.tile]);
   const r=base.apply(this,arguments);
   if(myTurn())setTimeout(()=>{try{trackToEvt(type,d||{});}catch(e){}},0);return r;};})();
+// Построил точку на пустыре — карточка не закрывается, а открывается её сторона прокачки, как в основной игре (плейтест 01.10).
+function reopenAfterBuild(type,d){
+  if((type!=='sf_build'&&type!=='sf_rebuild')||d.tile==null)return;
+  setTimeout(()=>{const t=S.tiles[d.tile];if(!myTurn()||ending||moving||!t||!t.owner||!$('modal').hidden)return;
+    try{(t.type==='biz'?bizWindow:kioskWindow)(t);}catch(e){}},650);
+}
 function trackToEvt(type,d){
+  reopenAfterBuild(type,d);
   const t=d.tile!=null?S.tiles[d.tile]:null,nm=t?(t.type==='biz'?bizName(t):pointName(t)):'';
   if(type==='sf_build')emit({kind:'build',text:`построил ${nm}`,amount:-(d.price||0),tile:d.tile});
   else if(type==='sf_rebuild')emit({kind:'build',text:`перестроил точку: теперь ${nm}`,amount:-(d.price||0)+(d.refund||0),tile:d.tile});
@@ -935,7 +961,29 @@ winEl.onclick=()=>{if(!view||!view.win||!$('modal').hidden)return;
   const rows=view.players.map(p=>`<div class="row"><span class="n"><i class="mp-dot" style="background:${p.color}"></i>${esc(p.pid===PID?'Ты':p.name)}</span><span class="v">${esc(p.win?p.win.text:'')}</span></div>`).join('');
   modal(`<h2>🏆 ${esc(view.win.name)}</h2><p class="t">${esc(view.win.text)}</p>${rows}`,[{t:'Понятно',v:0,cls:'ok'}]);};
 const pauseBtn=el('button','mp-pausebtn',bar);pauseBtn.type='button';pauseBtn.title='Пауза для всех';pauseBtn.setAttribute('aria-label','Пауза');pauseBtn.textContent='⏸';
-pauseBtn.onclick=()=>{if(view&&view.phase==='play'&&!view.paused)net.send({t:'tpause',on:true});};
+let myPause={match:null,n:0,at:0,seen:null};
+function pauseSync(){
+  if(!view||view.phase!=='play')return;
+  if(myPause.match!==view.match)myPause={match:view.match,n:0,at:0,seen:null};
+  const pz=view.paused;if(pz&&pz.by===PID&&pz.at!==myPause.seen){myPause.seen=pz.at;myPause.n++;myPause.at=pz.at;}
+  const w=pauseWait(myPause,hostNow()),left=Math.max(0,PAUSE_FREE-myPause.n);
+  const html=`⏸<sup>${left?left:w>0?mmss(w):1}</sup>`;if(pauseBtn._h!==html){pauseBtn._h=html;pauseBtn.innerHTML=html;}
+  pauseBtn.classList.toggle('spent',!left&&w>0);
+}
+pauseBtn.onclick=()=>{if(!view||view.phase!=='play'||view.paused)return;
+  const w=pauseWait(myPause,hostNow());if(w>0){toast(`⏸ Паузы кончились — следующая через ${mmss(w)}`,2400);return;}
+  net.send({t:'tpause',on:true});};
+// ☰ Меню партии (плейтест 01.10): продолжить, правила, выйти из-за стола, сыграть одному.
+const menuBtn=el('button','mp-pausebtn mp-menubtn',bar);menuBtn.type='button';menuBtn.title='Меню партии';menuBtn.setAttribute('aria-label','Меню партии');menuBtn.textContent='☰';
+menuBtn.onclick=async()=>{
+  if(!view||!$('modal').hidden||moving)return;const host=!!(net&&net.host);
+  const v=await modal(`<h2>☰ Партия · стол ${esc(ROOM)}</h2>
+    ${host?'<p class="t mp-warn">Ты хозяин стола: если выйдешь, партия остановится у всех.</p>':'<p class="t">Выйдешь — твоё место останется, вернуться можно по коду стола.</p>'}`,
+    [{t:'Продолжить',v:0,cls:'ok'},view.win?{t:'Как победить',v:3,cls:'sec'}:null,{t:'Выйти из-за стола',v:1,cls:'sec'},{t:'Играть одному',v:2,cls:'sec'}].filter(Boolean));
+  if(v===3)winEl.click();
+  if(v===1||v===2){try{if(!net.host)net.send({t:'bye'});}catch(e){}
+    location.href=v===1?`mp.html?map=sf&mp${Q.has('mute')?'&mute':''}`:`index.html?map=sf${Q.has('mute')?'&mute':''}`;}
+};
 const pauseEl=el('div','mp-pause');pauseEl.hidden=true;
 pauseEl.innerHTML='<div class="mp-pause-card"><b>Пауза</b><small></small><button type="button" class="mp-big">Продолжить</button></div>';
 pauseEl.querySelector('button').onclick=()=>net.send({t:'tpause',on:false});
@@ -987,10 +1035,20 @@ function mpRender(){
   const t=S&&S.tiles&&S.tiles[S.pos],tb=$('tilebar');
   if(tb&&isRival(t)&&!moving){
     tb.hidden=false;tb.disabled=false;tb.classList.remove('poor','off');
-    $('tbText').textContent=`${t.type==='biz'?bizIcon(t):good(t.good).icon} ${t.type==='biz'?bizName(t):pointName(t)} · хозяин ${nameOf(t.rival)}`;
+    // «хозяин X» — плашкой в цвет хозяина (плейтест 01.10: серую подпись не замечали).
+    $('tbText').innerHTML=`${t.type==='biz'?bizIcon(t):good(t.good).icon} ${esc(t.type==='biz'?bizName(t):pointName(t))} <span class="mp-tb-owner" style="--c:${colorOf(t.rival)}">${esc(nameOf(t.rival))}</span>`;
     const b=tb.querySelector('b');if(b)b.textContent='открыть';
   }
+  // Копилка: что она копит (плейтест 01.10: «копилка +0» никто не понял).
+  if(tb&&t&&t.type==='pot'&&!moving&&!tb.hidden)$('tbText').textContent=`🐷 Копилка ${money((view&&view.pot)||0)} — штрафы всех; встал — забрал`;
+  hubLabel();
 }
+// «Сан-Франциско 0/6» в шапке — это свои категории товара (каждая +6% к ценам). Шапку перерисовывает top-hud.js — подпись ставим заново.
+function hubLabel(){
+  const st=document.querySelector('#bHub .hud-map-heading strong');
+  if(st&&st.textContent!=='Твои категории'){st.textContent='Твои категории';$('bHub').setAttribute('aria-label','Твои категории товара: каждая — плюс к ценам продаж');}
+}
+{const h=$('bHub');if(h)new MutationObserver(()=>hubLabel()).observe(h,{childList:true,subtree:true});}
 // Экран не гаснет, пока идёт партия: у хозяина стола погасший экран останавливает часы всего стола.
 let wake=null;
 function keepAwake(on){
@@ -1010,7 +1068,7 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();lotBadgeSync();playersDock();
+  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
@@ -1116,7 +1174,8 @@ function playersWindow(){
         <small>${own.length} ${plural(own.length,'владение','владения','владений')}${p.cap?' · капитал '+money(p.cap.total):''}</small>
         ${names?`<p>${names}</p>`:''}${p.win&&view.win&&view.win.id!=='capital'?`<p class="mp-pl-win">🏆 ${esc(p.win.text)}</p>`:''}</div>
       <strong>${money(p.cash)}</strong></div>`;}).join('');
-  modal(`<h2>👥 Игроки</h2>${view.win?`<p class="t">Как победить — <b>${esc(view.win.name)}</b>: ${esc(view.win.text)}</p>`:''}${rows}`,[{t:'Закрыть',v:0,cls:'sec'}]);
+  const pot=`<p class="t mp-pl-pot">🐷 Копилка стола: <b>${money(view.pot||0)}</b> — сюда падают штрафы всех; заберёт тот, кто встанет на копилку.</p>`;
+  modal(`<h2>👥 Игроки</h2>${view.win?`<p class="t">Как победить — <b>${esc(view.win.name)}</b>: ${esc(view.win.text)}</p>`:''}${rows}${pot}`,[{t:'Закрыть',v:0,cls:'sec'}]);
 }
 
 // ---- фишки соперников и флажки их клеток поверх поля ----
@@ -1285,6 +1344,7 @@ function renderLobby(force){
     </div>
     <div class="mp-seats">${seats.map((p,i)=>p?`<div class="mp-seat" style="--c:${p.color}"><i>${esc(p.name.slice(0,1).toUpperCase())}</i><b>${esc(p.name)}${p.pid===PID?' · ты':''}</b><small>${p.pid===T.host?'хозяин стола':C.COLOR_NAMES[i]}</small>${host&&p.pid!==PID?`<button class="mp-kick" data-pid="${esc(p.pid)}" aria-label="Убрать">✕</button>`:''}</div>`
       :`<div class="mp-seat empty" style="--c:${C.COLORS[i]}"><i></i><b>свободно</b><small>${C.COLOR_NAMES[i]}</small></div>`).join('')}</div>
+    ${host?'':'<p class="mp-guest-note">🔒 Настраивает хозяин стола — ты видишь, что он выбрал</p>'}
     <div class="mp-set"><span>Длина партии<small>минут на всех; потом — последний раунд</small></span>${opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>
     <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>esc((C.WIN_OPTIONS.find(w=>w.id===v)||{}).name||v))}</div>
     <div class="mp-set"><span>Время на ход<small>${T.settings.turnSec?'мини-игра часы не тратит':'без лимита — ход передаётся кнопкой'}</small></span>${opt('turnSec',C.TURN_OPTIONS,T.settings.turnSec,v=>v?v+' с':'∞')}</div>

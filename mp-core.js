@@ -45,7 +45,7 @@ function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings
 const winOf=T=>WIN_OPTIONS.find(w=>w.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0];
 function newTable(room,settings){
   return {room,phase:'lobby',settings:Object.assign({},DEFAULTS,settings||{}),players:[],tiles:null,
-          turn:null,applied:{},result:null,match:0,log:[],pot:0,rent:{},lots:[],events:[],evSeq:0};
+          turn:null,applied:{},result:null,match:0,log:[],pot:0,slotPot:0,rent:{},lots:[],events:[],evSeq:0};
 }
 // Садится за стол или возвращается на своё место. Вернувшегося узнаём по pid, а если вкладку
 // закрыли и pid потерян — по имени среди отвалившихся.
@@ -71,7 +71,7 @@ function canStart(T){return T.phase==='lobby'&&T.players.length>=MIN_PLAYERS;}
 function start(T,tiles,slice,now){
   if(!canStart(T))return false;
   T.phase='play';T.match++;T.startedAt=now;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
-  T.pot=0;T.rent={};T.lots=[];T.events=[];T.evSeq=0;T.deadline=now+(T.settings.minutes||DEFAULTS.minutes)*60000;   // часы партии — у хозяина стола
+  T.pot=0;T.slotPot=0;T.rent={};T.lots=[];T.events=[];T.evSeq=0;T.deadline=now+(T.settings.minutes||DEFAULTS.minutes)*60000;   // часы партии — у хозяина стола
   T.players.forEach(p=>{p.s=slice(p);p.skip=0;});
   T.paused=null;
   T.turn={idx:0,pid:T.players[0].pid,n:1,round:1,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
@@ -93,6 +93,8 @@ function applyState(T,pid,pack,now){
     // Общая копилка стола (решение продюсера 01.10): штрафы всех — в одну; забирает тот, кто встал (нал уже в его срезе).
     if(+c.pot){T.pot=Math.max(0,(T.pot||0)+Math.round(+c.pot));T.applied[c.id]=true;continue;}   // минус — карта «Шанса» забрала часть копилки
     if(c.potTake){T.pot=0;T.applied[c.id]=true;continue;}
+    // Касса «Однорукого бандита» — тоже общая (решение продюсера 01.10): +$10 за круг любого, +$10 за визит, 10% денежных призов; джекпот обнуляет.
+    if(+c.slot){T.slotPot=Math.max(0,(T.slotPot||0)+Math.round(+c.slot));T.applied[c.id]=true;continue;}
     const to=T.players.find(x=>x.pid===c.to);if(!to||!to.s)continue;
     to.s.cash=(to.s.cash||0)+(+c.cash||0);T.applied[c.id]=true;
     if(c.rent&&+c.cash>0)T.rent[c.to]=(T.rent[c.to]||0)+(+c.cash);           // сколько ренты собрал — для условия «Рантье»
@@ -324,14 +326,14 @@ function finish(T,why,winner){
   T.result={why,winner:winner||null,round:T.turn?T.turn.round:0,laps,finalBy:T.finalBy||null,win:winOf(T).id};
 }
 function backToLobby(T){
-  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];
+  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.slotPot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];
   T.players=T.players.filter(p=>p.online);T.players.forEach(p=>{p.s=null;});autoRounds(T);
 }
 // Что уходит конкретному игроку: общее поле, публичные сводки всех и полный срез его самого.
 function viewFor(T,pid,valuer){
   const me=T.players.find(p=>p.pid===pid);
   return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
-    tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
+    tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),slotPot:Math.round(T.slotPot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
       pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,skip:p.skip||0,
       cap:T.tiles&&valuer?capital(T,p.pid,valuer):null,chain:T.tiles?sfChain(T,p.pid):null,win:T.tiles?winProgress(T,p.pid,valuer):null})),
