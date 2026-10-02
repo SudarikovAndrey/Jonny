@@ -55,6 +55,8 @@ for(const css of ['mp.css','mp-ui.css']){const l=document.createElement('link');
 
 // ---- движок: соло-обвязка выключается ----
 CFG.ROLLS_PER_DAY=999;
+// Ходов в партии нет: инкассатор не роняет «+2 🎲» (плейтест 01.10: «что значит плюс два кубика?») — только монеты и кристаллы.
+if(CFG.SCATTER)CFG.SCATTER.rollsChance=0;
 askName=async()=>{};intro=async()=>{};
 // Подсказки обучения соло («Ты попал на точку, которую можно купить…») в мультиплеере не показываем (плейтест 01.10).
 hint=function(){};hintHtml=function(){return '';};
@@ -543,7 +545,8 @@ function lotButton(t){
   setTimeout(()=>{const c=$('card');if(!c||$('modal').hidden||c.querySelector('.mp-lot-btn'))return;
     const lot=lotOn(t.i),b=document.createElement('button');b.type='button';b.className='sm sec mp-lot-btn';
     b.textContent=lot?`🔨 Торги идут · ${lot.best?'ставка '+money(lot.best):'от '+money(lot.min)}`:'🔨 Выставить на торги';b.disabled=!!lot;
-    b.onclick=()=>{closeModal();lotWindow(t.i);};(c.querySelector('.mbtns')||c).append(b);},80);
+    // В карточке точки — строкой под прокачкой, в простом окне — под кнопками (вёрстка «Интерфейса»).
+    b.onclick=()=>{closeModal();lotWindow(t.i);};(c.querySelector('.property-body')||c.querySelector('.mbtns')||c).append(b);},80);
 }
 
 // ---- банкротство: в минусе ход не передать, пока не выставил клетки на торги на сумму долга ----
@@ -951,6 +954,24 @@ offerBadge.onclick=()=>{
   if(!$('modal').hidden)closeModal();
   setTimeout(()=>answerOne(t),$('modal').hidden?0:180);
 };
+// Торги за столом — плашкой под полосой у всех: ставить можно в любой момент (решение продюсера 01.10).
+const lotBadge=el('button','mp-offer-badge mp-lot-badge');lotBadge.id='mpLots';lotBadge.type='button';lotBadge.hidden=true;
+lotBadge.onclick=()=>{
+  const lots=(view&&view.lots)||[];if(!lots.length||!$('modal').hidden||moving)return;
+  if(lots.length===1){bidWindow(lots[0].id);return;}
+  const rows=lots.map(l=>{const t=S.tiles[l.tile];return `<div class="row mp-lot-row"><span class="n"><b>${esc(t?titleOf(t):'клетка')}</b><small>${esc(nameOf(l.seller))}${l.kind==='bankrupt'?' · за долги':''} · ${l.best?'ставка '+money(l.best)+(l.bestBy===PID?' (твоя)':''):'от '+money(l.min)}</small></span><button type="button" class="sm sec mp-lot-open" data-id="${esc(l.id)}">${l.seller===PID?'смотреть':'ставка'}</button></div>`;}).join('');
+  const pending=modal(`<h2>🔨 Торги</h2><p class="t">Ставки — до следующего хода продавца. Кто дал больше, тот и хозяин.</p>${rows}`,[{t:'Закрыть',v:0,cls:'sec'}]);
+  $('card').querySelectorAll('.mp-lot-open').forEach(b=>b.onclick=()=>closeModal('lot:'+b.dataset.id));
+  pending.then(v=>{if(typeof v==='string'&&v.startsWith('lot:'))setTimeout(()=>bidWindow(v.slice(4)),180);});
+};
+function lotBadgeSync(){
+  const lots=view&&view.phase==='play'&&view.lots||[];lotBadge.hidden=!lots.length;if(!lots.length)return;
+  const l=lots[0],t=S&&S.tiles&&S.tiles[l.tile],mine=l.seller===PID,lead=l.bestBy===PID;
+  const what=`«${esc(t?titleOf(t):'клетка')}»`+(lots.length>1?` <em>+${lots.length-1}</em>`:'');
+  const state=l.best?`${lead?'твоя ставка':'ставка'} ${money(l.best)}`:`от ${money(l.min)}`;
+  const html=`<i>🔨</i><span><b>Торги</b> ${what} · ${state}</span><u>${mine?'смотреть':lead?'лидируешь':'ставить'}</u>`;
+  if(lotBadge._h!==html){lotBadge._h=html;lotBadge.innerHTML=html;lotBadge.style.setProperty('--c',colorOf(l.seller));}
+}
 function offerBadgeSync(){
   const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&x.mpOffer):[];
   offerBadge.hidden=!list.length;if(!list.length)return;
@@ -989,7 +1010,7 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();playersDock();
+  offerBadgeSync();lotBadgeSync();playersDock();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
@@ -1062,6 +1083,8 @@ function tick(){
   let under=Math.round(bar.getBoundingClientRect().bottom+6);
   const ob=offerBadge.hidden?'':under+'px';if(offerBadge.style.top!==ob)offerBadge.style.top=ob;
   if(!offerBadge.hidden)under=Math.round(offerBadge.getBoundingClientRect().bottom+6);
+  const lb=lotBadge.hidden?'':under+'px';if(lotBadge.style.top!==lb)lotBadge.style.top=lb;
+  if(!lotBadge.hidden)under=Math.round(lotBadge.getBoundingClientRect().bottom+6);
   setVar('--mp-under',under+'px');
   // Окно открыто — карточка начинается под строкой денег: кошелёк виден (плейтест 01.10, все окна).
   const wr=!$('modal').hidden&&document.querySelector('#top .bar1');
