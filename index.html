@@ -2068,7 +2068,8 @@ function mobileSync(){
   mobileCheckCash();
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
-    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,   // уровень и у чужих клеток в партии (башенки соперников, плейтест 02.10)pot:t.type==='pot'?S.pot:0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
+    // lvl считается и у чужих клеток в партии (t.rival) — башенки соперников (плейтест 02.10)
+    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?S.pot:0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+S.pot:t.type==='slot'?(window.MinigameRotation&&MinigameRotation.current(S.minigames)==='dice21'?'':'$'+((S.slot&&S.slot.pot)||0)):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -3835,7 +3836,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='8e5c260c71';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='90a06abf85';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
