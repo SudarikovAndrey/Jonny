@@ -3,9 +3,10 @@
 // Подключается только из web/mp.html при ?test=1 (после web/mp.js); у живых столов этого кода нет.
 //
 // Боты живут внутри страницы хозяина стола как ещё одни клиенты (свой pid, hello/ping/state/end через hub.handle).
-// Ход бота идёт тем же потоком, что и ход игрока: на время хода страница «становится ботом» (PID и view
-// подменяются, срез бота принимается через adopt), бросок — prototypeRoll, клетка — land, окна — те же модалки,
-// на которые отвечает драйвер окон. Потом страница возвращается к своему игроку и применяет отложенный вид.
+// Ход бота считается в фоне, «в закрытую» (решение продюсера 02.10): без окон и без Джонни хозяина — срез бота
+// на миг подставляется вместо S, решения считаются теми же формулами движка (цены стройки, продажи, рента, штрафы,
+// автомат), потом срез уходит хозяину стола как обычный пакет хода. На экране хозяина — только то, что видно при ходе
+// живого соперника: фишка бота, плакат хода, плашки событий. «Авто-ход за меня» — свой ход играет видимый драйвер окон.
 (function(){
 'use strict';
 if(!window.__MP)return;
@@ -13,7 +14,7 @@ const H=window.__MP,C=H.C;
 const NAMES=['Саня-бот','Макс-бот','Вася-бот'];
 const bots=new Map();                 // pid → {pid,name,view,ping}
 const trace=[];                       // последние решения драйвера окон — для отладки в консоли (MPBots.trace)
-let acting=null,heldView=null,heldNow=0,speed=1,force=null,hostPid=null,pendingT=0,clickBusy=false,lastTitle='',sameCount=0,keepAlive=0,autoMe=false;
+let acting=null,heldView=null,heldNow=0,speed=1,force=null,hostPid=null,pendingT=0,clickBusy=false,lastTitle='',sameCount=0,keepAlive=0,autoMe=false,busy=false;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const dly=ms=>speed>=99?30:Math.round(ms/speed);
 const rnd=p=>Math.random()<p;
@@ -35,7 +36,8 @@ function addBot(){
 function removeBots(){for(const b of bots.values()){clearInterval(b.ping);hubSend(b.pid,{t:'bye'});}bots.clear();}
 function schedule(){
   if(acting||pendingT)return;
-  for(const b of bots.values()){const v=b.view;if(v&&v.phase==='play'&&v.turn&&v.turn.pid===b.pid&&!v.paused){pendingT=setTimeout(()=>{pendingT=0;playTurn(b.pid);},dly(1200));return;}}
+  if(busy)return;
+  for(const b of bots.values()){const v=b.view;if(v&&v.phase==='play'&&v.turn&&v.turn.pid===b.pid&&!v.paused){pendingT=setTimeout(()=>{pendingT=0;botTurnHidden(b.pid);},dly(1500));return;}}
   // «Авто-ход за меня»: свой ход страница играет тем же драйвером — так партию можно прогнать до конца одному.
   const hv=H.view;if(autoMe&&hv&&hv.phase==='play'&&hv.turn&&hv.turn.pid===H.PID&&!hv.paused&&!$('onboard')){pendingT=setTimeout(()=>{pendingT=0;playTurn(H.PID);},dly(1200));}
 }
@@ -118,6 +120,164 @@ function playMinigame(layer){
   trace.push((acting||'').slice(0,5)+' мини-игра → '+(b?(b.textContent.trim()||b.getAttribute('aria-label')||'').slice(0,20):'закрыть'));
   if(b)b.click();else H.closeMinigame();
 }
+// ===== Ход бота в фоне =====
+const botLocal=(v,pid)=>v.tiles.map(t=>{const o=clone(t);if(o.owner===pid)o.owner='you';else if(o.owner){o.rival=o.owner;o.owner=null;}return o;});
+const botShared=(tiles,pid)=>tiles.map(t=>{const o=Object.assign({},t);if(o.owner)o.owner=pid;else if(o.rival)o.owner=o.rival;else o.owner=null;delete o.rival;return o;});
+const sliceOfBot=s=>{const o=clone(s);delete o.tiles;if(o.log&&o.log.length>30)o.log=o.log.slice(-30);return o;};
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+// Внутренности режима SF и мультиплеера живут в своих областях видимости — берём через window.SFBuilder и __MP.
+const SFB=()=>window.SFBuilder;
+const titleOf=t=>H.titleOf(t);
+const catOpen=cat=>{const l=(SFB().licenses||[]).find(x=>x.cats.includes(cat));return !l||SFB().hasLic(l.id);};
+const upCost=t=>typeof kioskUpCost==='function'?kioskUpCost(t):(t.salesLvl<salTab(t).length?salesCost(t):0)+(t.capLvl<capTab(t).length?Math.round(t.price*CFG.KIOSK.capUpMult*t.capLvl):0);
+const canUp=t=>t.capLvl<capTab(t).length||t.salesLvl<salTab(t).length;
+function fillGoods(t,share){const need=cap(t)-(t.goods||0);if(need<=0)return 0;const price=buyPrice(t.good),can=Math.floor(Math.max(0,S.cash*share)/price),n=Math.min(need,can);if(n<=0)return 0;S.cash-=n*price;t.goods=(t.goods||0)+n;return n;}
+async function botTurnHidden(pid){
+  const b=bots.get(pid);if(!b||busy||acting)return;const v=b.view;if(!v||v.phase!=='play'||v.turn.pid!==pid)return;
+  busy=true;
+  const S0=S,view0=H.view,pid0=H.PID,n=v.turn.n,players=v.players.length;
+  const credits=[],evts=[],after=[];let seq=0,dice=null;
+  const credit=(to,cash,extra)=>credits.push(Object.assign({id:`${pid}:${n}:b:${++seq}`,to,cash:Math.round(cash||0)},extra||{}));
+  const emit=e=>evts.push(e);
+  try{
+    const s=clone(v.mine);s.tiles=botLocal(v,pid);S=s;H.view=v;H.PID=pid;    // тихая подмена, синхронно, без render
+    // 1. Ответы на предложения о покупке своих клеток
+    for(const t of S.tiles.filter(x=>x.owner&&x.mpOffer)){const o=t.mpOffer,inv=H.invested(t);
+      if(o.amount>=inv*2||rnd(.35)){S.cash+=o.amount;credit(o.from,0,{escrow:-o.amount});t.mpPrem=o.amount-(inv-(t.mpPrem||0));t.owner=null;t.rival=o.from;delete t.mpOffer;
+        emit({kind:'sale',text:`продал «${titleOf(t)}»`,amount:o.amount,tile:t.i,to:o.from});trace.push(b.name+': продал по предложению');}
+      else{delete t.mpOffer;credit(o.from,o.amount,{escrow:-o.amount});emit({kind:'decline',text:`отказал в продаже «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
+    // 2. Бросок и движение
+    const a=1+Math.floor(Math.random()*6),bb=1+Math.floor(Math.random()*6),sum=a+bb,dbl=a===bb;dice={a,b:bb};
+    if(S.jail>0){if(dbl){S.jail=0;trace.push(b.name+': дубль — вышел из участка');}else{S.jail--;trace.push(b.name+': в участке, попыток '+S.jail);}}
+    else{
+      if(dbl){const c=H.dblCash(sum);S.cash+=c;emit({kind:'double',text:'выбросил дубль',amount:c,tile:S.pos});}
+      const from=S.pos,to=(from+sum)%40;
+      if(to<from)lapHidden({credit,emit});
+      S.pos=to;landHidden(S.tiles[to],{credit,emit,v,after,bot:b});
+    }
+    // 3. Стратегия: предложения, выкуп, ставки, свой лот; приказ из панели
+    strategyHidden({credit,emit,v,after,bot:b});
+    // 4. Долг
+    debtHidden({credit,emit,v,after,bot:b});
+    S.mpLanded={n,i:S.pos};S.rolls=999;
+  }catch(e){console.error('bot hidden',e);}
+  finally{
+    const slice=sliceOfBot(S),shared=botShared(S.tiles,pid);
+    S=S0;H.view=view0;H.PID=pid0;
+    for(const e of evts)hubSend(pid,{t:'evt',e});
+    const pack={n,s:slice,tiles:shared,credits,rolled:true,landed:true,dice};
+    hubSend(pid,{t:'state',pack});
+    for(const m of after)hubSend(pid,m);                 // лоты, ставки, удары — после того, как стол принял клетки
+    await wait(dly(1200));
+    hubSend(pid,{t:'end',n,pack});
+    busy=false;schedule();
+  }
+}
+// Проход старта: продажи с точек по формулам режима, +$10 в кассу автомата, микрозайм — процент, круги в минусе.
+function lapHidden({credit,emit}){
+  S.laps=(S.laps||0)+1;let income=0,units=0;const mult=SFB()&&SFB().priceMult?SFB().priceMult():1;
+  for(const t of myKiosks()){const k=Math.min(sales(t),t.goods||0);if(k<=0)continue;t.goods-=k;units+=k;income+=Math.round(k*H.sellOf(t.good)*mult);}
+  if(income>0){S.cash+=income;S.stat.earned=(S.stat.earned||0)+income;emit({kind:'pass',text:'прошёл старт — продажи',amount:income,tile:0});}
+  credit(null,0,{slot:10});
+  for(const l of (S.loans||[]))if(l.micro){const i=Math.round(l.principal*l.rate);S.cash-=i;}
+  if(S.cash<0)S.mpDebtLaps=(S.mpDebtLaps||0)+1;else S.mpDebtLaps=0;
+}
+function collectHidden(t,{credit,emit}){
+  const d=t.drop;if(!d)return;let got=0;
+  if(d.cash)got+=d.cash;if(d.rolls)got+=d.rolls*H.rollCash();if(d.hard)S.hard=(S.hard||0)+d.hard;
+  if(got){S.cash+=got;emit({kind:'bonus',text:'подобрал находку',amount:got,tile:t.i});}
+  t.drop=null;
+}
+function landHidden(t,ctx){
+  const {credit,emit,v,after,bot}=ctx;if(!t)return;const n=v.turn.n;
+  collectHidden(t,ctx);
+  switch(t.type){
+    case 'kiosk':{
+      if(t.rival){rentHidden(t,ctx);break;}
+      if(!t.owner){   // пустырь: строим, чаще дешёвое, иногда лицензию
+        const cats=Object.keys(SFB().build||{}),open=cats.filter(c=>catOpen(c)&&S.cash>=SFB().price(c)).sort((x,y)=>SFB().price(x)-SFB().price(y));
+        if(!open.length||!rnd(.85))break;
+        if(rnd(.12)){const lic=(SFB().licenses||[]).find(l=>!SFB().hasLic(l.id)&&S.cash>=l.price*1.3);if(lic){S.sf=S.sf||{};S.sf.lic=S.sf.lic||{};S.sf.lic[lic.id]=true;S.cash-=lic.price;emit({kind:'license',text:`купил лицензию «${lic.name}»`,amount:-lic.price,tile:t.i});}}
+        const cat=rnd(.7)?open[0]:pick(open),p=SFB().price(cat);if(S.cash<p)break;
+        S.cash-=p;Object.assign(t,{owner:'you',good:cat,base:cat,lot:false,price:p,price0:p,capLvl:1,salesLvl:1,goods:0,tier:1,insp:false});delete t.mpPrem;
+        S.stat.bought=(S.stat.bought||0)+1;
+        emit({kind:'build',text:`построил «${titleOf(t)}»`,amount:-p,tile:t.i});trace.push(bot.name+': построил '+titleOf(t)+' за $'+p);
+        fillGoods(t,.5);break;}
+      // своя точка: прокачка (50%) и дозакупка
+      if(rnd(.5)&&canUp(t)){const cost=upCost(t);if(S.cash>=cost){S.cash-=cost;if(t.capLvl<capTab(t).length)t.capLvl++;if(t.salesLvl<salTab(t).length)t.salesLvl++;emit({kind:'upgrade',text:`прокачал «${titleOf(t)}»`,amount:-cost,tile:t.i});}}
+      fillGoods(t,.4);break;}
+    case 'biz':{
+      if(t.rival){rentHidden(t,ctx);break;}
+      if(!t.owner&&rnd(.3)&&S.cash>=t.price*1.5){S.cash-=t.price;t.owner='you';t.level=t.level||1;emit({kind:'build',text:`купил бизнес «${titleOf(t)}»`,amount:-t.price,tile:t.i});trace.push(bot.name+': купил бизнес');}
+      break;}
+    case 'wh':for(const k of myKiosks())fillGoods(k,.35);break;
+    case 'chance':chanceHidden(ctx);break;
+    case 'police':{const fine=policeFine();
+      if(S.cash>=fine&&rnd(.7)){S.cash-=fine;credit(null,0,{pot:fine});emit({kind:'fine',text:'заплатил полиции',amount:-fine,tile:t.i});}
+      else{S.jail=CFG.POLICE.attempts;S.jailFine=0;emit({kind:'jail',text:'сел в участок',amount:null,tile:t.i});}break;}
+    case 'slot':slotHidden(t,ctx);break;
+    case 'pot':{const m=Math.round(v.pot||0);if(m>0){S.cash+=m;credit(null,0,{potTake:true});emit({kind:'minigame',text:'сорвал копилку',amount:m,tile:t.i});}break;}
+    default:break;   // старт, банк, инкассатор, инспектор — бот не трогает
+  }
+}
+function rentHidden(t,{credit,emit,v}){
+  const n=v.turn.n;if(t.insp||(t.frozen&&t.frozen>n)||(S.mpShieldN&&n<=S.mpShieldN))return;
+  const r=H.rentOf(t);if(r<=0)return;S.cash-=r;credit(t.rival,r,{rent:true});
+  emit({kind:'rent',text:`заплатил ренту за «${titleOf(t)}»`,amount:-r,tile:t.i,to:t.rival});
+}
+// «Шанс» бота: денежные карты той же колоды плюс изредка пакость (сдвиг, пропуск хода) через удар стола.
+function chanceHidden({credit,emit,v,after}){
+  const rivals=v.players.filter(p=>p.pid!==H.PID),r=rnd;let text,amount=null;
+  const roll=Math.random();
+  if(roll<.2){amount=60;S.cash+=60;text='👟 Нашёл в старых кроссовках $60. Америка!';}
+  else if(roll<.4){amount=-40;S.cash-=40;credit(null,0,{pot:40});text='🚗 Штраф за парковку $40 — в общую копилку.';}
+  else if(roll<.55&&rivals.length){amount=30*rivals.length;S.cash+=amount;for(const p of rivals)credit(p.pid,-30);text='🎂 День рождения! Каждый соперник скидывается по $30.';}
+  else if(roll<.7&&rivals.length){amount=-20*rivals.length;S.cash+=amount;for(const p of rivals)credit(p.pid,20);text='🍻 Проставился пацанам: по $20 каждому.';}
+  else if(roll<.85&&rivals.length){const p=pick(rivals);after.push({t:'hit',h:{k:'move',to:p.pid,d:-3}});text=`🚧 Ремонт дороги: ${p.name} откатывается на 3 клетки назад.`;}
+  else if(rivals.length){const p=pick(rivals);after.push({t:'hit',h:{k:'skip',to:p.pid}});text=`⏳ Очередь в ЖЭК: ${p.name} пропускает следующий ход.`;}
+  else{amount=60;S.cash+=60;text='👟 Нашёл в старых кроссовках $60.';}
+  emit({kind:'chance',text,amount,tile:S.pos});
+}
+// Автомат в фоне: бесплатные спины тем же движком и таблицей выплат; на поле — только результат.
+function slotHidden(t,{credit,emit,v}){
+  const E=window.SlotEngine;if(!E)return;
+  const st={P:Math.max(0,Math.round(lapNet())),day:S.day||1,pot:Math.round(v.slotPot||0),rollCash:H.rollCash(),visits:1};
+  let cash=0,potD=10,gem=0;
+  for(let i=0;i<3;i++){const o=E.choose(Math.random),p=E.award(st,o,[]);
+    if(o.id==='jackpot'){cash+=p.cash;gem+=p.gem;potD-=st.pot;st.pot=0;}
+    else{cash+=p.cash;gem+=p.gem;potD+=Math.round(p.cash*.1);st.pot+=Math.round(p.cash*.1);}
+    if(p.restock){for(const k of myKiosks()){k.goods=cap(k);if(p.restock==='one')break;}}}
+  S.cash+=cash;S.hard=(S.hard||0)+gem;if(potD)credit(null,0,{slot:potD});
+  emit({kind:'minigame',text:cash?'выиграл в автомате':'крутил автомат впустую',amount:cash||null,tile:t.i});
+}
+function strategyHidden({credit,emit,v,after,bot}){
+  const t=S.tiles[S.pos],n=v.turn.n,f=force;force=null;
+  const mine=S.tiles.filter(x=>x.owner&&(x.type==='kiosk'||x.type==='biz')&&!(typeof sfIsLot==='function'?sfIsLot(x):(!x.owner&&(x.lot||x.good==='lot')))&&!H.lotOn(x.i)).sort((a,b)=>H.invested(a)-H.invested(b));
+  const rivalHere=H.isRival(t)&&!H.lotOn(t.i)&&!t.mpOffer;
+  const offer=(tt,m)=>{const amount=Math.round(H.invested(tt)*m);if(S.cash<amount)return false;S.cash-=amount;S.mpEscrow=(S.mpEscrow||0)+amount;tt.mpOffer={from:H.PID,amount,mult:m,n};
+    emit({kind:'offer',text:`предлагает $${amount} за «${titleOf(tt)}»`,amount:null,tile:tt.i,to:tt.rival});trace.push(bot.name+': предложил $'+amount);return true;};
+  const buyout=tt=>{const amount=Math.round(H.invested(tt)*10),ready=(S.mpForceLap==null)||(S.laps||0)>=S.mpForceLap+2;if(!ready||S.cash<amount)return false;
+    S.cash-=amount;credit(tt.rival,amount,{force:true,tile:tt.i});tt.mpPrem=amount-(H.invested(tt)-(tt.mpPrem||0));const who=tt.rival;tt.owner='you';delete tt.rival;delete tt.mpOffer;S.mpForceLap=S.laps||0;
+    emit({kind:'sale',text:`выкупил «${titleOf(tt)}» за ×10`,amount:-amount,tile:tt.i,to:who});trace.push(bot.name+': выкуп ×10');return true;};
+  if(f==='lot'){if(mine.length)after.push({t:'lot',tile:mine[0].i,min:Math.round(H.invested(mine[0])*1.5),kind:'sale'});else toast('🤖 У бота нет клеток для торгов');}
+  else if(f==='offer'||f==='buy'){let r=rivalHere?t:S.tiles.find(x=>H.isRival(x)&&!H.lotOn(x.i)&&!x.mpOffer);
+    if(!r)toast('🤖 Нет чужих клеток — боту нечего предлагать');else{if(S.pos!==r.i)S.pos=r.i;
+      if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;offer(r,1.5);}
+      else{S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;buyout(r);}}}
+  else{
+    if(rivalHere){if(rnd(.05))buyout(t);else if(rnd(.2))offer(t,rnd(.5)?1.5:2);}
+    for(const l of (v.lots||[])){if(l.seller===H.PID||l.bestBy===H.PID)continue;const next=l.best?Math.ceil(l.best*1.1/10)*10:l.min;if(S.cash>=next*1.5&&rnd(.5))after.push({t:'bid',id:l.id,amount:next});}
+    if(rnd(.06)&&mine.length)after.push({t:'lot',tile:mine[0].i,min:Math.round(H.invested(mine[0])*1.5),kind:'sale'});
+  }
+}
+function debtHidden({credit,emit,v,after,bot}){
+  if(S.cash>=0)return;
+  if(!(S.loans||[]).some(l=>l.micro)){const amt=Math.min(500,Math.max(100,Math.ceil((-S.cash+50)/50)*50));S.loans=S.loans||[];S.loans.push({tier:0,micro:true,name:'Микрозайм',principal:amt,rate:.25,strikes:0,maxStrikes:99});S.cash+=amt;emit({kind:'loan',text:`взял микрозайм $${amt}`,amount:amt,tile:S.pos});trace.push(bot.name+': микрозайм $'+amt);}
+  if(S.cash<0){let v2=0;for(const k of myKiosks()){v2+=Math.round((k.goods||0)*buyPrice(k.good)*.5);k.goods=0;}if(v2>0){S.cash+=v2;emit({kind:'sale',text:`продал товар с точек за $${v2}`,amount:v2,tile:S.pos});}}
+  if(S.cash<0&&(S.mpDebtLaps||0)>=2){let need=-S.cash;const mine=S.tiles.filter(x=>x.owner&&(x.type==='kiosk'||x.type==='biz')&&!(typeof sfIsLot==='function'?sfIsLot(x):(!x.owner&&(x.lot||x.good==='lot')))&&!H.lotOn(x.i)).sort((a,b)=>H.invested(a)-H.invested(b));
+    for(const x of mine){if(need<=0)break;const inv=Math.round(H.invested(x));after.push({t:'lot',tile:x.i,min:inv,kind:'bankrupt',bank:Math.round(inv*.5)});need-=Math.round(inv*.5);}}
+}
+
 // Стратегия после остановки: предложения, выкуп, ставки на торгах, иногда свой лот. force — приказ из панели.
 async function act(){
   const v=H.view;if(!v||v.turn.pid!==acting)return;
@@ -143,7 +303,7 @@ async function doForce(f,t){
   if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;H.placeOffer(r,1.5);}
   if(f==='buy'){S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;H.forceBuy(r);}
 }
-window.MPBots={trace,add:addBot,clear:removeBots,acting:()=>!!acting,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
+window.MPBots={trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
   holdHostView(v,now){heldView=v;heldNow=now;if(acting===H.PID)H.view=v;if(v&&v.phase!=='play'&&acting)unstick();},   // свой авто-ход: вид свежий, применим в конце; партия кончилась — ход бота обрываем
   get speed(){return speed;},set speed(x){speed=+x||1;},
   get force(){return force;},set force(f){force=f;},

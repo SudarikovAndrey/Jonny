@@ -1643,7 +1643,7 @@ if(TEST){
   window.__MP={
     get PID(){return PID;},set PID(v){PID=v;},get view(){return view;},set view(v){view=v;},get hub(){return hub;},get net(){return net;},get S(){return S;},
     adopt,onView,finishTurn,placeOffer,forceBuy,placeBid,startLot,mpChance,landedHere,isRival,invested,rentOf,forceReady,lotOn,myLots,
-    roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,
+    roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,dblCash,rollCash,titleOf,sellOf,
     setTurn(o){mine=!!o.mine;rolled=!!o.rolled;landed=!!o.landed;ending=false;autoEnding=false;credits=[];},
     get flags(){return {mine,rolled,landed,ending,curTurn};},set curTurn(n){curTurn=n;},
     C,MP_CHANCE,
