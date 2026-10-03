@@ -1253,7 +1253,7 @@ async function answerSale(t){
   const o=t.mpSale;if(!o||o.to!==PID||!myTurn()||ending)return;
   const v=await modal(`<h2>🏷 ${esc(nameOf(o.from))} продаёт «${esc(titleOf(t))}»</h2>
     <div class="mp-offer-big"><strong>${money(o.amount)}</strong><small>вложено ${money(invested(t))}${t.type==='kiosk'?` · товар ${t.goods||0} шт`:''}</small></div>
-    <p class="t">Купишь — клетка твоя${t.type==='kiosk'?' вместе с товаром':''}. Не ответишь до конца хода — отказ.</p>`,
+    <p class="t">Купишь — клетка твоя${t.type==='kiosk'?' вместе с товаром':''}. Не ответишь до конца хода — отказ.</p>${S.cash<o.amount?`<p class="t mp-hand-why">Не хватает ${money(o.amount-S.cash)} — купить нельзя. Можно отказать.</p>`:''}`,
     [{t:`Купить · ${money(o.amount)}`,v:1,cls:'ok',dis:S.cash<o.amount},{t:'Отказать',v:0,cls:'sec'}]);
   if(!t.mpSale||t.mpSale!==o||!myTurn())return;
   if(v===1&&S.cash>=o.amount)acceptSale(t);else if(v===0)declineSale(t,false);updateUi();
@@ -1499,6 +1499,8 @@ const clock=el('div','mp-clock');clock.id='mpClock';clock.hidden=true;
 // Предложение о покупке твоей клетки — висит, пока не ответишь (в свой ход тап открывает ответ).
 const offerBadge=el('button','mp-offer-badge');offerBadge.id='mpOffer';offerBadge.type='button';offerBadge.hidden=true;
 offerBadge.onclick=()=>{
+  if(offerBadge._sale!=null){if(!myTurn()||ending){toast('Ответишь в свой ход — предложение ждёт',2400);return;}if(moving)return;if(!$('modal').hidden)closeModal();
+    const si=offerBadge._sale;setTimeout(()=>MPSell.answerWindow(si),$('modal').hidden?0:180);return;}
   const t=S&&S.tiles&&S.tiles.find(x=>x.owner&&x.mpOffer);if(!t)return;
   if(!myTurn()||ending){toast(`Ответишь в свой ход — предложение ${nameOf(t.mpOffer.from)} ждёт`,2400);return;}
   if(moving){toast('Дождись, пока Джонни дойдёт');return;}
@@ -1571,17 +1573,30 @@ async function handCard(i){
     can?[{t:'Сыграть — выбрать соперника',v:1,cls:'ok'},{t:'Оставить',v:0,cls:'sec'}]:[{t:'Закрыть',v:0,cls:'sec'}]);
   if(v!==1)return;
   if(c.targets.length===1&&c.leader){MPHand.play(i,c.targets[0]);return;}
-  handPick={i,targets:new Set(c.targets)};document.body.classList.add('mp-hand-picking');
-  const banner=el('div','mp-hand-pick');banner.innerHTML=`<b>Кого бьём «${esc(c.name.replace(/^\S+\s/,''))}»?</b><span>тапни по фишке соперника справа</span><button type="button">Отмена</button>`;
-  banner.querySelector('button').onclick=()=>handPickEnd();handPick.banner=banner;updateUi();
+  chipPick(c.targets,`Кого бьём «${c.name.replace(/^\S+\s/,'')}»?`).then(pid=>{if(pid)MPHand.play(i,pid);});
 }
-function handPickEnd(){if(!handPick)return;handPick.banner&&handPick.banner.remove();handPick=null;document.body.classList.remove('mp-hand-picking');updateUi();}
+// Выбор соперника тапом по его фишке в полосе (карты из руки, продажа игроку): подходящие фишки мигают.
+function chipPick(targets,title){
+  handPickEnd();
+  return new Promise(res=>{
+    handPick={targets:new Set(targets),res};document.body.classList.add('mp-hand-picking');
+    const banner=el('div','mp-hand-pick');banner.innerHTML=`<b>${esc(title)}</b><span>тапни по фишке соперника справа</span><button type="button">Отмена</button>`;
+    banner.querySelector('button').onclick=()=>handPickEnd();handPick.banner=banner;updateUi();
+  });
+}
+function handPickEnd(pid){if(!handPick)return;const P=handPick;P.banner&&P.banner.remove();handPick=null;document.body.classList.remove('mp-hand-picking');P.res&&P.res(pid||null);updateUi();}
 chipsEl.addEventListener('click',e=>{if(!handPick)return;const ch=e.target.closest('.mp-chip');if(!ch)return;e.stopImmediatePropagation();e.preventDefault();
-  const pid=ch.dataset.pid;if(!handPick.targets.has(pid)){toast('Против этого игрока карта не сработает');return;}const i=handPick.i;handPickEnd();MPHand.play(i,pid);},true);
+  const pid=ch.dataset.pid;if(!handPick.targets.has(pid)){toast('Этого игрока выбрать нельзя');return;}handPickEnd(pid);},true);
 // Такси до склада — кнопкой у кубика в свой ход до броска (было только в ☰).
 const taxiBtn=el('button','mp-taxi');taxiBtn.type='button';taxiBtn.hidden=true;taxiBtn.innerHTML='🚕<small>на склад · 💎1</small>';
 taxiBtn.onclick=()=>{if(window.MPTaxi)MPTaxi.go();};
 function offerBadgeSync(){
+  // входящая продажа (m5-sellto) — первой: «🏷 Вася продаёт «X» за $N», висит до ответа
+  const sales=view&&view.phase==='play'&&window.MPSell?MPSell.pending():[];
+  if(sales.length){const o=sales[0];offerBadge.hidden=false;offerBadge._sale=o.i;
+    const html=`<i>🏷</i><span><b>${esc(nameOf(o.from))}</b> продаёт «${esc(o.title)}» за <b>${money(o.price)}</b>${sales.length>1?` <em>+${sales.length-1}</em>`:''}</span><u>${myTurn()&&!ending?(S.cash>=o.price?'купить?':'не хватает'):'ответ в свой ход'}</u>`;
+    if(offerBadge._h!==html){offerBadge._h=html;offerBadge.innerHTML=html;offerBadge.style.setProperty('--c',colorOf(o.from));}return;}
+  offerBadge._sale=null;
   const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&(x.mpOffer||x.mpSwap)):[];
   offerBadge.hidden=!list.length;if(!list.length)return;
   const sw=!list[0].mpOffer,o=list[0].mpOffer||list[0].mpSwap,more=list.length>1?` <em>+${list.length-1}</em>`:'';
@@ -1759,6 +1774,22 @@ function playersDock(){
   const html=view.players.slice().sort((a,b)=>a.seat-b.seat).map(p=>`<i style="--c:${p.color}">${esc(p.name.slice(0,1).toUpperCase())}</i>`).join('');
   if(box._h!==html){box._h=html;box.innerHTML=html;}
 }
+// ---- «Продать игроку» (m5-sellto, логика «Геймплея» MPSell): выбор покупателя тапом по фишке, цена с шагами ----
+async function sellFlow(i){
+  const t=S.tiles[i];if(!t||!t.owner||!window.MPSell)return;
+  const pid=await chipPick(rivalsOf().map(p=>p.pid),`Кому продаёшь «${titleOf(t)}»?`);if(!pid)return;await wait(150);
+  const inv=Math.round(invested(t)),buyer=playerOf(pid),biz=t.type==='biz';let rent=0;try{rent=rentOfMine(t);}catch(e){}
+  const pending=modal(`<h2>🏷 Продать · ${esc(buyer?buyer.name:'')}</h2>
+    <div class="mp-swap-cmp"><div class="mp-swap-card"><em>${biz?bizIcon(t):(good(t.good)||{}).icon||'🏪'}</em><b>${esc(titleOf(t))}</b><small>ур. ${(biz?t.level:t.salesLvl)||1} · вложено ${money(inv)} · 🏠 ${money(rent)}</small></div>
+      <span>→</span><div class="mp-swap-card"><em><i class="mp-dot" style="background:${buyer?buyer.color:'#888'};width:28px;height:28px;margin:0"></i></em><b>${esc(buyer?buyer.name:'')}</b><small>нал ${money(buyer?buyer.cash:0)}</small></div></div>
+    <div class="mp-offer-own"><span>Цена — твоя, от $10. Ответит в начале своего хода; молчание — отказ.</span><span class="mp-offer-steps"><button type="button" class="mp-offer-step" data-d="-50">−50</button><button type="button" class="mp-offer-step" data-d="-10">−10</button><input type="number" class="mp-sell-amount" min="10" step="10" value="${Math.ceil(inv*1.5/10)*10}"><button type="button" class="mp-offer-step" data-d="10">+10</button><button type="button" class="mp-offer-step" data-d="50">+50</button></span><small class="mp-offer-x"></small></div>`,
+    [{t:'Предложить продажу',v:1,cls:'ok'},{t:'Передумал',v:0,cls:'sec'}]);
+  const inp=$('card').querySelector('.mp-sell-amount'),hint=$('card').querySelector('.mp-offer-x');
+  const upd=()=>{const a=+inp.value||0;hint.textContent=`×${inv?(a/inv).toFixed(1).replace('.',','):'—'} к вложенному${buyer&&a>buyer.cash?` · у ${buyer.name} сейчас ${money(buyer.cash)} — может не хватить`:''}`;};
+  $('card').querySelectorAll('.mp-offer-step').forEach(b=>b.onclick=()=>{inp.value=Math.max(10,(+inp.value||0)+(+b.dataset.d));upd();});inp.oninput=upd;upd();
+  const v=await pending;if(v!==1)return;
+  const a=Math.max(10,Math.round(+inp.value||0));if(!MPSell.offer(i,pid,a))toast('Продажу сейчас не предложить: одно предложение за ход, клетка не на торгах');
+}
 // ---- «Мои владения»: все свои клетки по группам соседей, в порядке поля (плейтест 4, 02.10: «я много раз говорил — по группам») ----
 // Строка: значок товара, название, уровень, вложено, рента за остановку. Действия: на торги (в свой ход), выбрать для обмена.
 function myGroups(){
@@ -1770,10 +1801,10 @@ function myGroups(){
 }
 function holdRow(i,opts){
   const t=S.tiles[i],biz=t.type==='biz',icon=biz?bizIcon(t):(good(t.good)||{}).icon||'🏪',lvl=biz?t.level:t.salesLvl;
-  const lot=lotOn(i),busy=lot?'🔨 на торгах':t.mpOffer?'💼 предложение':t.mpSwap?'🔁 обмен':'';
+  const lot=lotOn(i),busy=lot?'🔨 на торгах':t.mpSale?`🏷 продаётся → ${esc(nameOf(t.mpSale.to))} · ждёт ответа`:t.mpOffer?'💼 предложение':t.mpSwap?'🔁 обмен':'';
   let rent=0;try{rent=rentOfMine(t);}catch(e){}
   const act=opts.pick?`<button type="button" class="sm mp-hold-pick buy-btn ${busy?'buy-no':'buy-ok'}" data-i="${i}" ${busy?'disabled':''}>${esc(opts.pickLabel||'Выбрать')}</button>`
-    :myTurn()&&!ending&&!busy?`<span class="mp-hold-acts"><button type="button" class="sm sec mp-hold-lot" data-i="${i}">🔨 На торги</button>${proposedThisTurn()?'':`<button type="button" class="sm sec mp-hold-swap" data-i="${i}">🔁 Обменять</button>`}</span>`:'';
+    :myTurn()&&!ending&&!busy?`<span class="mp-hold-acts"><button type="button" class="sm sec mp-hold-lot" data-i="${i}">🔨 На торги</button>${proposedThisTurn()?'':`<button type="button" class="sm sec mp-hold-swap" data-i="${i}">🔁 Обменять</button><button type="button" class="sm sec mp-hold-sell" data-i="${i}">🏷 Продать игроку</button>`}</span>`:'';
   return `<div class="mp-hold-row"><em>${icon}</em><div><b>${esc(titleOf(t))}</b><small>клетка ${i} · ур. ${lvl||1} · вложено ${money(invested(t))} · 🏠 ${money(rent)}${busy?` · ${busy}`:''}</small></div>${act}</div>`;
 }
 async function holdingsWindow(opts={}){
@@ -1785,9 +1816,11 @@ async function holdingsWindow(opts={}){
   $('card').querySelectorAll('.mp-hold-pick').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal('pick:'+b.dataset.i);});
   $('card').querySelectorAll('.mp-hold-lot').forEach(b=>b.onclick=()=>closeModal('lot:'+b.dataset.i));
   $('card').querySelectorAll('.mp-hold-swap').forEach(b=>b.onclick=()=>closeModal('swap:'+b.dataset.i));
+  $('card').querySelectorAll('.mp-hold-sell').forEach(b=>b.onclick=()=>closeModal('sell:'+b.dataset.i));
   const v=await pending;
   if(typeof v==='string'&&v.startsWith('lot:')){setTimeout(()=>lotWindow(+v.slice(4)),180);return null;}
   if(typeof v==='string'&&v.startsWith('pick:'))return +v.slice(5);
+  if(typeof v==='string'&&v.startsWith('sell:')){await wait(180);sellFlow(+v.slice(5));return null;}
   // Обменять свою клетку: выбрать чужую на карте (кольца над клетками соперников), дальше — доплата.
   if(typeof v==='string'&&v.startsWith('swap:')){const give=+v.slice(5);
     const cands=S.tiles.filter(x=>isRival(x)&&!x.mpOffer&&!x.mpSwap&&!lotOn(x.i)&&!swappedWith(x.rival)).map(x=>({i:x.i,title:`${titleOf(x)} · ${nameOf(x.rival)}`,price:invested(x),bank:0}));
