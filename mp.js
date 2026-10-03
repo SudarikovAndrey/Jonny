@@ -1647,6 +1647,7 @@ function lotBadgeSync(){
 // ---- карты «Шанса» в партии — матовой картой соло (chance-depth.css): картон, штамп, иллюстрация, наклон за пальцем ----
 // Андрей 03.10: «карточки случая крупнее, красивее, как разрабатывали ранее». Тон рамки: синяя — тебе в плюс, серая — в минус,
 // фиолетовая — пакость против соперника, золотая — против лидера.
+// «i:» — значки карт 512 px (web/assets/icons/card, design/иконки-карт-шанса), а не мелкие значки интерфейса.
 const MPC_ART={wholesale:'v:cargo',promo:'i:percent',gathering:'i:coins',raid:'s:police',mtv:'s:tv',complaint:'s:inspector',stash:'v:cash',
   parking:'i:money',robin:'i:cap',roof:'s:home',roadwork:'s:lot',snitch:'s:police',queue:'i:clock',blackout:'e:❄️',dumping:'i:percent',
   spoiled:'i:box',levy:'v:cash',audit:'s:inspector',strike:'e:✊'};
@@ -1657,7 +1658,7 @@ const MPC_TONE={raid:'grey',parking:'grey'};
 function mpcArt(id){const a=MPC_ART[id]||'s:chance',[k,v]=[a.slice(0,1),a.slice(2)];
   if(k==='v')return {cls:'cu-vignette art-'+v,html:''};
   if(k==='e')return {cls:'mp-cu-emoji',html:`<b>${v}</b>`};
-  return {cls:'',html:`<img src="${k==='i'?'assets/icons/'+v+'.webp':'board/assets/symbols/'+v+'.svg'}" alt="">`};}
+  return {cls:'',html:`<img src="${k==='i'?'assets/icons/card/'+v+'.webp':'board/assets/symbols/'+v+'.svg'}" alt="">`};}
 // o: {id, title?, cap, stamp, tone?, cls?} → html карты; tone — grey|blue|purple|gold.
 function mpCardHTML(o){
   const h=HAND[o.id],tone=o.tone||(h?(h.leader?'gold':'purple'):MPC_TONE[o.id]||'blue'),art=mpcArt(o.id),cap=String(o.cap||'');

@@ -14,6 +14,10 @@ const chip=(t,c)=>`<span class="mpr-chip" style="--c:${c}">${esc(t)}</span>`;
 
 function slides(){
   const v=window.MP&&MP.view,min=(v&&v.settings&&v.settings.minutes)||20,win=v&&v.win;
+  // Длина партии: миссии — без лимита (до цели), «Богатейший» — минуты или круги через старт (сверка бэклога 03.10).
+  const laps=v&&v.settings&&v.settings.mode==='laps',rounds=(v&&v.settings&&v.settings.rounds)||10,mission=!!(win&&win.id&&win.id!=='capital');
+  const lenText=mission?'Миссия идёт без лимита времени — до того, как кто-то выполнит цель.':laps?`Партия — ${rounds} кругов через старт. Кто-то прошёл старт ${rounds}-й раз — доигрываем круг стола, потом итог.`:`Партия — ${min} минут. Время вышло — доигрываем круг стола, потом итог.`;
+  const lenArt=mission?'🎯':laps?`🔁 ${rounds}`:`⏱ ${min}:00`,lenSub=mission?'до цели':'потом — последний круг';
   return [
     {t:'Ходим по очереди',x:'Бросок — фишка идёт — дела на клетке — «Передать ход». Дубль даёт бонус налом, а не лишний бросок. Время хода видно над кубиком.',
       a:art('assets/start/johnny-v2.webp',[sym('die')])},
@@ -43,8 +47,8 @@ function slides(){
       a:`<div class="mpr-art mpr-row"><img src="${sym('chance')}" alt=""><b>🎂 🚔 ❄️ 🛡</b></div>`},
     {t:'В минусе',x:'В минусе играешь дальше, но покупок нет. Прошёл старт в минусе — предупреждение: можно взять микрозайм или продать товар за полцены. Второй раз на старте в минусе — клетки на торги на сумму долга, без ставок их берёт банк.',
       a:art('assets/icons/money.webp',[sym('bank')])},
-    {t:'Время партии',x:`Партия — ${min} минут. Время вышло — доигрываем круг стола, потом итог.`,
-      a:`<div class="mpr-art mpr-big"><b>⏱ ${min}:00</b><small>потом — последний круг</small></div>`},
+    {t:mission?'Длина партии':laps?'Круги партии':'Время партии',x:lenText,
+      a:`<div class="mpr-art mpr-big"><b>${lenArt}</b><small>${lenSub}</small></div>`},
     {t:win?`Победа: ${win.name}`:'Как победить',x:win?win.text:'Условие победы выбирает хозяин стола в лобби — оно видно в полосе игроков.',
       a:`<div class="mpr-art mpr-big">${CROWN}<small>${chip('A','#E06C1E')}${chip('B','#243F4B')}${chip('C','#C99A32')}</small></div>`},
   ];

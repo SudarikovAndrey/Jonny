@@ -64,7 +64,7 @@ function adoptRestored(){
   const hub=H.hub,T=hub&&hub.T;if(!T||!Array.isArray(T.players)||seenHubs.has(hub))return;
   seenHubs.add(hub);
   for(const p of T.players){if(!/^bot\d/.test(p.pid)||bots.has(p.pid))continue;
-    const b={pid:p.pid,name:p.name,view:null};bots.set(p.pid,b);
+    const k=+((p.pid.match(/^bot(\d)/)||[])[1]||1),b={pid:p.pid,name:p.name,view:null,profile:PROFILE_ORDER[(k-1)%PROFILE_ORDER.length]};bots.set(p.pid,b);   // стратегия — по номеру места бота в pid, как в addBot
     hubSend(p.pid,{t:'ping'});b.ping=setInterval(()=>hubSend(p.pid,{t:'ping'}),2500);
     trace.push(p.name+': вернулся за стол после перезагрузки');}
 }
