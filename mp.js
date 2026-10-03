@@ -1665,7 +1665,7 @@ function lotBadgeSync(){
 // фиолетовая — пакость против соперника, золотая — против лидера.
 // «i:» — значки карт 512 px (web/assets/icons/card, design/иконки-карт-шанса), а не мелкие значки интерфейса.
 const MPC_ART={wholesale:'v:cargo',promo:'i:percent',gathering:'i:coins',raid:'s:police',mtv:'s:tv',complaint:'s:inspector',stash:'v:cash',
-  parking:'i:money',robin:'i:cap',roof:'e:🛡️',roadwork:'s:lot',snitch:'s:police',queue:'i:clock',blackout:'e:❄️',dumping:'i:percent',
+  parking:'i:money',robin:'i:cap',roof:'i:roof',roadwork:'s:lot',snitch:'s:police',queue:'i:clock',blackout:'e:❄️',dumping:'i:percent',
   spoiled:'i:box',levy:'v:cash',audit:'s:inspector',strike:'e:✊'};
 const MPC_TITLE={wholesale:'Оптовый завоз',promo:'Акция',gathering:'Сходка',raid:'Облава',mtv:'Сюжет на MTV',complaint:'Жалоба соседей',
   stash:'Заначка общака',parking:'Штраф за парковку',robin:'Робин Гуд',roof:'Крыша',roadwork:'Ремонт дороги',snitch:'Донос',queue:'Очередь в ЖЭК',
