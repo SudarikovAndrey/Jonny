@@ -1561,6 +1561,7 @@ const clock=el('div','mp-clock');clock.id='mpClock';clock.hidden=true;
 // Предложение о покупке твоей клетки — висит, пока не ответишь (в свой ход тап открывает ответ).
 const offerBadge=el('button','mp-offer-badge');offerBadge.id='mpOffer';offerBadge.type='button';offerBadge.hidden=true;
 offerBadge.onclick=()=>{
+  if(offerBadge._swap!=null){if(moving)return;if(!$('modal').hidden)closeModal();const id=offerBadge._swap;setTimeout(()=>swapAnswerMode(id),$('modal').hidden?0:180);return;}
   if(offerBadge._sale!=null){if(!myTurn()||ending){toast('Ответишь в свой ход — предложение ждёт',2400);return;}if(moving)return;if(!$('modal').hidden)closeModal();
     const si=offerBadge._sale;setTimeout(()=>MPSell.answerWindow(si),$('modal').hidden?0:180);return;}
   const t=S&&S.tiles&&S.tiles.find(x=>x.owner&&x.mpOffer);
@@ -1659,8 +1660,13 @@ function offerBadgeSync(){
   if(sales.length){const o=sales[0];offerBadge.hidden=false;offerBadge._sale=o.i;
     const html=`<i>🏷</i><span><b>${esc(nameOf(o.from))}</b> продаёт «${esc(o.title)}» за <b>${money(o.price)}</b>${sales.length>1?` <em>+${sales.length-1}</em>`:''}</span><u>${myTurn()&&!ending?(S.cash>=o.price?'купить?':'не хватает'):'ответ в свой ход'}</u>`;
     if(offerBadge._h!==html){offerBadge._h=html;offerBadge.innerHTML=html;offerBadge.style.setProperty('--c',colorOf(o.from));}return;}
-  offerBadge._sale=null;
-  const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&(x.mpOffer||(x.mpSwap&&x.mpSwap.to===PID))):[];   // свои исходящие обмены — не входящие
+  offerBadge._sale=null;offerBadge._swap=null;
+  // входящий обмен на карте (m5-swapmap) — тап открывает режим обмена с ответом
+  const sws=view&&view.phase==='play'&&SW()?(SW().incoming()||[]):[];
+  if(sws.length&&!swapUI){const o=sws[0];offerBadge.hidden=false;offerBadge._swap=o.id;
+    const html=`<i>🔁</i><span><b>${esc(nameOf(o.from))}</b> меняет ${o.get.length}↔${o.give.length}${o.pay?` · ${o.pay<0?'доплатит':'просит'} ${money(Math.abs(o.pay))}`:''}${sws.length>1?` <em>+${sws.length-1}</em>`:''}</span><u>${myTurn()&&!ending?'посмотреть':'ответ в свой ход'}</u>`;
+    if(offerBadge._h!==html){offerBadge._h=html;offerBadge.innerHTML=html;offerBadge.style.setProperty('--c',colorOf(o.from));}return;}
+  const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&(x.mpOffer||(x.mpSwap&&x.mpSwap.to===PID&&!SW()))):[];   // обмены с MPSwap — плашкой выше
   offerBadge.hidden=!list.length;if(!list.length)return;
   const sw=!list[0].mpOffer,o=list[0].mpOffer||list[0].mpSwap,more=list.length>1?` <em>+${list.length-1}</em>`:'';
   const html=sw?`<i>🔁</i><span><b>${esc(nameOf(o.from))}</b> предлагает обмен${o.pay?` · доплата ${money(Math.abs(o.pay))}`:''}${more}</span><u>${myTurn()&&!ending?'ответить':'ответ в свой ход'}</u>`
@@ -1730,7 +1736,7 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();handSync();
+  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();handSync();swapSync();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
@@ -1853,6 +1859,121 @@ async function sellFlow(i){
   const v=await pending;if(v!==1)return;
   const a=Math.max(10,Math.round(+inp.value||0));if(!MPSell.offer(i,pid,a))toast('Продажу сейчас не предложить: одно предложение за ход, клетка не на торгах');
 }
+// ===== Обмен на карте (m5-swapmap, design/ЗАДАЧА-обмен-на-карте.md): до 2↔2, цепочки, «сейчас / после» =====
+// Слой поверх поля, как mapPick: свои клетки и клетки соперника подсвечены, тап кладёт в «Отдаёшь»/«Получаешь».
+// Правила, рента «до/после», подбор и отправка — window.MPSwap «Геймплея». Система координат — моя:
+// give — мои клетки, get — клетки соперника, pay>0 — доплачиваю я.
+let swapUI=null;
+const SW=()=>window.MPSwap||null;
+// С кем меняться: один соперник — сразу он, иначе тап по его фишке в полосе игроков.
+function swapRivalPick(){const rs=rivalsOf().map(p=>p.pid);return rs.length===1?Promise.resolve(rs[0]):chipPick(rs,'С кем меняешься?');}
+function swOwnersAfter(U){const o={};toShared(S.tiles).forEach(t=>{if(t.owner)o[t.i]=t.owner;});
+  U.give.forEach(i=>o[i]=U.rival);U.get.forEach(i=>o[i]=PID);return o;}
+function swapMode(o){
+  const A=SW();if(!A||!view||view.phase!=='play'||!MobileHost.ready)return;
+  if(swapUI)swapClose();if(!$('modal').hidden)closeModal();
+  const rival=o.rival;if(!rival||!playerOf(rival))return;
+  swapUI={rival,give:new Set(o.give||[]),get:new Set(o.get||[]),pay:o.pay||0,after:false,incoming:o.incoming||null,rings:new Map(),chains:[],sugK:0};
+  document.body.classList.add('mp-swapping');
+  swapUI.veil=el('div','mp-sw-veil',layer);
+  const tray=el('div','mp-sw-tray');swapUI.tray=tray;
+  tray.addEventListener('click',e=>{const b=e.target.closest('[data-sw]');if(!b||b.disabled)return;swapAct(b.dataset.sw,b.dataset.v);});
+  const cv=$('board');let down=null;
+  swapUI.pd=e=>{down={x:e.clientX,y:e.clientY};};
+  swapUI.pu=e=>{const d=down;down=null;if(!d||!swapUI||Math.hypot(e.clientX-d.x,e.clientY-d.y)>8)return;
+    let best=-1,bd=44;for(const [i] of swapUI.rings){const q=screenOfTile(i),dd=Math.hypot(e.clientX-q.x,e.clientY-q.y);if(dd<bd){bd=dd;best=i;}}
+    if(best<0)return;e.stopImmediatePropagation();if(!swapUI.incoming)swapTap(best);};
+  if(cv){cv.addEventListener('pointerdown',swapUI.pd,true);cv.addEventListener('pointerup',swapUI.pu,true);}
+  swapPaint();
+  // Всё поле в кадре, низ кадра — над лотком (как mapPick: обзор на входе, «к Джонни» на выходе).
+  try{MobileHost.send({action:'overview'});swapFrame();}catch(e){}
+}
+function swapFrame(){const U=swapUI;if(!U)return;const app=$('app').getBoundingClientRect(),h=app.height||innerHeight,top=$('top').getBoundingClientRect().bottom;
+  const bottom=(app.bottom-U.tray.getBoundingClientRect().top+8)/h;try{MobileHost.send({action:'layout',top:(top-app.top)/h,bottom});}catch(e){}}
+function swapTap(i){
+  const U=swapUI,A=SW(),own=toShared(S.tiles)[i].owner,side=own===PID?'give':own===U.rival?'get':null;if(!side||!A)return;
+  const set=U[side];if(set.has(i)){set.delete(i);swapPaint();return;}
+  if(!A.free(i,U.counter)){toast(A.freeReason?`Не обменять: ${A.freeReason(i)}`:'Эту клетку сейчас не обменять');return;}
+  if(set.size>=(A.max||2)){toast(`Не больше ${A.max||2} клеток с каждой стороны`);return;}
+  set.add(i);try{navigator.vibrate&&navigator.vibrate(15);}catch(e){}swapPaint();
+}
+function swapClose(){
+  if(!swapUI)return;const U=swapUI;swapUI=null;const cv=$('board');
+  if(cv){cv.removeEventListener('pointerdown',U.pd,true);cv.removeEventListener('pointerup',U.pu,true);}
+  U.veil.remove();U.tray.remove();for(const [,r] of U.rings)r.remove();U.chains.forEach(c=>c.el.remove());
+  document.body.classList.remove('mp-swapping');try{syncFlags();}catch(e){}
+  try{MobileHost.send({action:'home'});mobileLastLayout='';mobileLayout();}catch(e){}
+  try{offerBadgeSync();}catch(e){}if(U.done)U.done();
+}
+function swapRow(i){const t=S.tiles[i],biz=t.type==='biz';let r=0;try{r=t.owner==='you'?rentOfMine(t):rentOf(t);}catch(e){}
+  return `<div class="mp-sw-item"><em>${biz?bizIcon(t):(good(t.good)||{}).icon||'🏪'}</em><span><b>${esc(titleOf(t))}</b><small>ур. ${(biz?t.level:t.salesLvl)||1} · вложено ${money(invested(t))} · 🏠 ${money(r)}</small></span></div>`;}
+function swapPaint(){
+  const U=swapUI,A=SW();if(!U||!A)return;
+  const sh=toShared(S.tiles),now={};sh.forEach(t=>{if(t.owner)now[t.i]=t.owner;});
+  const own=U.after?swOwnersAfter(U):now,give=[...U.give],get=[...U.get];
+  const loners=new Set(A.loners(PID));
+  // кольца: мои клетки и клетки соперника, которые можно положить в обмен (и уже лежащие)
+  const sid=U.counter||(U.incoming&&U.incoming.id)||undefined;
+  const want=new Set(sh.filter(t=>(t.owner===PID||t.owner===U.rival)&&(A.free(t.i,sid)||U.give.has(t.i)||U.get.has(t.i))).map(t=>t.i));
+  for(const [i,r] of U.rings)if(!want.has(i)){r.remove();U.rings.delete(i);}
+  for(const i of want){let r=U.rings.get(i);if(!r){r=el('div','mp-sw-ring',layer);U.rings.set(i,r);}
+    const inGive=U.give.has(i),inGet=U.get.has(i),single=now[i]===PID&&loners.has(i)&&!inGive;
+    r.className='mp-sw-ring'+(inGive?' give':inGet?' get':'')+(single?' single':'')+(own[i]===PID?' mine':'');
+    r.style.setProperty('--c',colorOf(own[i]));
+    r.innerHTML=inGive?'<b>отдаёшь</b>':inGet?'<b>получаешь</b>':single?'<b>одна</b>':'';}
+  // скобки цепочек «+25%» — для меня и соперника, сейчас или после
+  U.chains.forEach(c=>c.el.remove());U.chains=[];
+  for(const pid of [PID,U.rival]){
+    const ch=U.after?A.chains(pid,give,get,U.rival):A.chains(pid);
+    for(const c of ch||[]){const ts=c.tiles||[];for(let k=0;k+1<ts.length;k++){
+      const e=el('div','mp-sw-chain'+(pid===PID?' mine':''),layer);e.style.setProperty('--c',colorOf(pid));e.textContent=`+${Math.round(GROUP_BONUS*100)}%`;U.chains.push({el:e,a:ts[k],b:ts[k+1]});}}}
+  try{syncFlags();}catch(e){}
+  // лоток
+  const who=nameOf(U.rival),ready=give.length&&get.length;
+  const pv=ready?A.preview({to:U.rival,give,get,pay:U.pay,counter:sid,accept:!!U.incoming}):null;
+  const d=(x)=>{if(!x)return '—';const df=Math.round(x.after-x.before);return `<em>${money(x.before)} → <b>${money(x.after)}</b> <i class="${df>=0?'up':'down'}">${df>=0?'+':'−'}${money(Math.abs(df))}</i></em>`;};
+  // Доплата в моей системе: pay>0 — плачу я (−), pay<0 — платит соперник мне (+).
+  const pays=(A.pays||SWAP_PAYS).map(v=>`<button type="button" data-sw="pay" data-v="${v}" class="${v<0?'in':v>0?'out':''}${v===U.pay?' on':''}">${v===0?'0':v<0?'+'+money(-v):'−'+money(v)}</button>`).join('');
+  const payNote=U.pay<0?`${esc(who)} доплатит тебе <b>${money(-U.pay)}</b>`:U.pay>0?`Ты доплатишь <b>${money(U.pay)}</b> — уйдёт в резерв до ответа`:'Без доплаты';
+  const inc=U.incoming,canSend=ready&&pv&&pv.ok;
+  const cnt=(n)=>`${n}/${A.max||2}`;
+  U.tray.innerHTML=`<div class="mp-sw-head"><b>🔁 ${inc?`${esc(who)} предлагает`:`Обмен · ${esc(who)}`}</b><span class="mp-sw-tabs"><button type="button" data-sw="now" class="${U.after?'':'on'}">Сейчас</button><button type="button" data-sw="after" class="${U.after?'on':''}">После</button></span></div>
+    <div class="mp-sw-cols"><div><p>Отдаёшь <small>${cnt(give.length)}</small></p>${give.map(swapRow).join('')||'<small class="mp-sw-hint">тапни свою клетку</small>'}</div>
+      <div><p>Получаешь <small>${cnt(get.length)}</small></p>${get.map(swapRow).join('')||`<small class="mp-sw-hint">тапни клетку ${esc(who)}</small>`}</div></div>
+    ${pv?`<div class="mp-sw-rent"><p><span>Твоя рента</span>${d(pv.mine)}</p><p><span>Рента ${esc(who)}</span>${d(pv.theirs)}</p><p class="inv"><span>Вложено</span><em>отдаёшь ${money(pv.invGive)} · получаешь ${money(pv.invGet)}</em></p>${pv.ok||inc?'':`<p class="why">${esc(pv.reason||'Обмен сейчас невозможен')}</p>`}</div>`:''}
+    ${inc?(U.pay?`<p class="mp-sw-paynote">${U.pay>0?`Ты доплатишь <b>${money(U.pay)}</b>`:`${esc(who)} доплатит тебе <b>${money(-U.pay)}</b>`}</p>`:''):`<p class="mp-sw-paynote">Доплата: ${payNote}</p><div class="mp-sw-pays">${pays}</div>`}
+    <div class="mp-sw-btns">${inc&&!(myTurn()&&!ending)?`<button type="button" data-sw="close" style="grid-column:1/-1">Ответишь в свой ход · Закрыть</button>`:inc?`<button type="button" data-sw="accept" class="ok">Принять</button><button type="button" data-sw="edit">Изменить</button><button type="button" data-sw="decline" class="no">Отказать</button>`
+      :`<button type="button" data-sw="suggest">Подобрать обмен</button><button type="button" data-sw="propose" class="ok" ${canSend?'':'disabled'}>${U.counter?'Встречное':'Предложить'}</button><button type="button" data-sw="close">Назад</button>`}</div>`;
+}
+function swapAct(a,v){
+  requestAnimationFrame(swapFrame);
+  const U=swapUI,A=SW();if(!U||!A)return;
+  if(a==='close'){swapClose();return;}
+  if(a==='now'||a==='after'){U.after=a==='after';swapPaint();return;}
+  if(a==='pay'){U.pay=+v;swapPaint();return;}
+  if(a==='suggest'){const r=A.suggest(U.rival,U.sugK%3);U.sugK++;
+    if(!r){if(U.sugK>1){U.sugK=0;const r0=A.suggest(U.rival,0);if(r0){swapApply(r0);return;}}toast('Выгодного обоим обмена нет — выбери клетки сам');return;}
+    swapApply(r);return;}
+  if(a==='propose'){const draft={give:[...U.give],get:[...U.get],pay:U.pay};
+    const ok=U.counter?A.counter(U.counter,draft):A.propose(Object.assign({to:U.rival},draft));
+    if(ok){toast(`🔁 ${U.counter?'Встречное':'Обмен'} ушёл ${nameOf(U.rival)} — ответит в свой ход`,2200);swapClose();}
+    else toast(`Не отправить: ${A.lastError||'проверь клетки'}`,2400);return;}
+  if(a==='accept'){if(A.accept(U.incoming.id)){swapClose();}else{toast(`Не вышло: ${A.lastError||'клетки сменили хозяина'}`,2400);swapClose();}return;}
+  if(a==='decline'){A.decline(U.incoming.id);toast('Отказал');swapClose();return;}
+  if(a==='edit'){U.counter=U.incoming.id;U.incoming=null;U.sugK=0;swapPaint();return;}
+}
+// Стол поменялся под открытым режимом (ход, хозяева, ответ соперника) — перерисовать; партия кончилась — закрыть.
+function swapSync(){const U=swapUI;if(!U)return;
+  if(!view||view.phase!=='play'||!playerOf(U.rival)){swapClose();return;}
+  if(U.incoming&&!(SW().incoming()||[]).some(x=>x.id===U.incoming.id)){swapClose();return;}
+  const key=[view.turn&&view.turn.n,myTurn(),ending,S.cash,proposedThisTurn(),(view.tiles||[]).map(t=>t.owner||'').join(',')].join('|');
+  if(key!==U.key){U.key=key;swapPaint();}}
+function swapApply(r){const U=swapUI;U.give=new Set(r.give);U.get=new Set(r.get);U.pay=r.pay||0;U.after=true;swapPaint();}
+// Входящее: окно получателя — этот же режим (MPSwap.answerWindow).
+function swapAnswerMode(id){const A=SW();if(!A)return Promise.resolve();const o=(A.incoming()||[]).find(x=>x.id===id)||(A.incoming()||[])[0];if(!o)return Promise.resolve();
+  swapMode({rival:o.from,give:o.give,get:o.get,pay:o.pay,incoming:o});
+  return new Promise(res=>{if(swapUI)swapUI.done=res;else res();});}
+{const hook=()=>{const A=SW();if(A&&!A._ui){A._ui=1;A.answerWindow=id=>swapAnswerMode(id);A.mapMode=swapMode;}};hook();setTimeout(hook,0);addEventListener('load',hook);}
 // ---- «Мои владения»: все свои клетки по группам соседей, в порядке поля (плейтест 4, 02.10: «я много раз говорил — по группам») ----
 // Строка: значок товара, название, уровень, вложено, рента за остановку. Действия: на торги (в свой ход), выбрать для обмена.
 function myGroups(){
@@ -1875,16 +1996,19 @@ async function holdingsWindow(opts={}){
   const gs=myGroups();
   if(!gs.length){toast('Своих клеток пока нет');return null;}
   const body=gs.map(g=>`<div class="mp-hold-group"><p class="mp-hold-head">${g.length>1?`🔗 Группа · клетки ${g[0]}–${g[g.length-1]} · рента +25% за каждого соседа`:`Отдельно · клетка ${g[0]}`}</p>${g.map(i=>holdRow(i,opts)).join('')}</div>`).join('');
-  const pending=modal(`<h2>🏠 ${esc(opts.title||'Мои владения')}</h2>${opts.lead?`<p class="t">${opts.lead}</p>`:'<p class="t">По порядку на поле, соседи — группой: продашь или отдашь клетку из группы — у соседей рента ниже.</p>'}${body}`,[{t:opts.pick?'Назад':'Закрыть',v:0,cls:'sec'}]);
+  const pending=modal(`<h2>🏠 ${esc(opts.title||'Мои владения')}</h2>${!opts.pick&&SW()&&myTurn()&&!ending&&!proposedThisTurn()?'<button type="button" class="sec mp-hold-swapnew">🔁 Обмен на карте — выбрать соперника</button>':''}${opts.lead?`<p class="t">${opts.lead}</p>`:'<p class="t">По порядку на поле, соседи — группой: продашь или отдашь клетку из группы — у соседей рента ниже.</p>'}${body}`,[{t:opts.pick?'Назад':'Закрыть',v:0,cls:'sec'}]);
   $('card').querySelectorAll('.mp-hold-pick').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal('pick:'+b.dataset.i);});
   $('card').querySelectorAll('.mp-hold-lot').forEach(b=>b.onclick=()=>closeModal('lot:'+b.dataset.i));
   $('card').querySelectorAll('.mp-hold-swap').forEach(b=>b.onclick=()=>closeModal('swap:'+b.dataset.i));
   $('card').querySelectorAll('.mp-hold-sell').forEach(b=>b.onclick=()=>closeModal('sell:'+b.dataset.i));
+  {const b=$('card').querySelector('.mp-hold-swapnew');if(b)b.onclick=()=>closeModal('swapnew');}
   const v=await pending;
   if(typeof v==='string'&&v.startsWith('lot:')){setTimeout(()=>lotWindow(+v.slice(4)),180);return null;}
   if(typeof v==='string'&&v.startsWith('pick:'))return +v.slice(5);
   if(typeof v==='string'&&v.startsWith('sell:')){await wait(180);sellFlow(+v.slice(5));return null;}
   // Обменять свою клетку: выбрать чужую на карте (кольца над клетками соперников), дальше — доплата.
+  if(typeof v==='string'&&v==='swapnew'){await wait(180);const pid=await swapRivalPick();if(pid)swapMode({rival:pid});return null;}
+  if(typeof v==='string'&&v.startsWith('swap:')&&SW()){const give=+v.slice(5);await wait(180);const pid=await swapRivalPick();if(pid)swapMode({rival:pid,give:[give]});return null;}
   if(typeof v==='string'&&v.startsWith('swap:')){const give=+v.slice(5);
     const cands=S.tiles.filter(x=>isRival(x)&&!x.mpOffer&&!x.mpSwap&&!lotOn(x.i)&&!swappedWith(x.rival)).map(x=>({i:x.i,title:`${titleOf(x)} · ${nameOf(x.rival)}`,price:invested(x),bank:0}));
     if(!cands.length){toast('Меняться не на что: у соперников нет свободных клеток');return null;}
@@ -1912,18 +2036,19 @@ async function swapPay(t,give){
   let pay=0;$('card').querySelectorAll('.mp-swap-p').forEach(b=>b.onclick=()=>{pay=+b.dataset.v;$('card').querySelectorAll('.mp-swap-p').forEach(x=>x.classList.toggle('on',x===b));});
   const v=await pending;if(v===1)placeSwap(t,give,pay);
 }
-// В окне чужой клетки — кнопка «Выбрать, что отдаёшь» вместо двух списков «Геймплея» (swapBlock).
+// В окне чужой клетки — «🔁 Обменять на карте»: клетка сразу ложится в «Получаешь» (m5-swapmap).
 new MutationObserver(()=>{
-  const c=$('card');if(!c||$('modal').hidden)return;const box=c.querySelector('.mp-swap');if(!box||box.dataset.ui)return;
-  const go=box.querySelector('.mp-swap-go');if(!go)return;box.dataset.ui='1';
-  box.querySelectorAll('select').forEach(x=>x.style.display='none');go.style.display='none';
-  const b=document.createElement('button');b.type='button';b.className='mp-swap-open buy-btn buy-ok';b.textContent='🔁 Выбрать, что отдаёшь';
-  b.onclick=()=>{const t=lastRival||S.tiles[S.pos];closeModal(0);setTimeout(()=>swapFlow(t),200);};box.append(b);
+  const c=$('card');if(!c||$('modal').hidden||!lastRival||c.querySelector('.mp-swap-open'))return;
+  if(![...c.querySelectorAll('.row')].some(r=>/Вложено хозяином/.test(r.textContent)))return;
+  const t=lastRival,A=SW();if(!A||!isRival(t)||!myTurn()||ending||proposedThisTurn()||!A.free(t.i))return;
+  const b=document.createElement('button');b.type='button';b.className='mp-swap-open sec';b.textContent='🔁 Обменять на свои клетки';
+  b.onclick=()=>{closeModal(0);setTimeout(()=>swapMode({rival:t.rival,get:[t.i]}),200);};
+  const at=c.querySelector('.mbtns');if(at)at.before(b);else c.append(b);
 }).observe($('card'),{childList:true,subtree:true});
 // ---- тап по чужой клетке на карте — её окно: рента, предложить цену или обмен (плейтест 5) ----
 {const cv=$('board');let down=null;
   if(cv){cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};},true);
-    cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||pick||!view||view.phase!=='play'||!$('modal').hidden||moving)return;
+    cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||pick||swapUI||!view||view.phase!=='play'||!$('modal').hidden||moving)return;
       if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>8||!MobileHost.ready)return;
       let best=-1,bd=40;for(let i=0;i<40;i++){const q=screenOfTile(i),dd=Math.hypot(e.clientX-q.x,e.clientY-q.y);if(dd<bd){bd=dd;best=i;}}
       const t=best>=0&&S.tiles[best];if(!t||!isRival(t))return;
@@ -2034,7 +2159,10 @@ function syncFlags(){
 }
 // Кто чем владеет: {клетка: {pid, color, name, mine}} — для заливки клеток в цвет хозяина.
 let lastOwners='';
-function owners(){const o={};if(view&&view.tiles&&view.phase!=='lobby')for(const t of view.tiles)if(t.owner&&(t.type==='kiosk'||t.type==='biz')){const p=playerOf(t.owner);o[t.i]={pid:t.owner,color:p?p.color:'#6b5f52',name:p?p.name:'',mine:t.owner===PID};}return o;}
+function owners(){const o={};if(view&&view.tiles&&view.phase!=='lobby')for(const t of view.tiles)if(t.owner&&(t.type==='kiosk'||t.type==='biz')){const p=playerOf(t.owner);o[t.i]={pid:t.owner,color:p?p.color:'#6b5f52',name:p?p.name:'',mine:t.owner===PID};}
+  // Режим обмена, вкладка «После»: поле перекрашено в будущих хозяев (m5-swapmap).
+  if(swapUI&&swapUI.after){const a=swOwnersAfter(swapUI);for(const i of [...swapUI.give,...swapUI.get]){const p=playerOf(a[i]);if(p&&o[i])o[i]={pid:p.pid,color:p.color,name:p.name,mine:p.pid===PID};}}
+  return o;}
 
 // ---- события соперников: журнал, всплытие над клеткой, плашка «тебе заплатили» ----
 function onEvt(from,e){
@@ -2045,7 +2173,7 @@ function onEvt(from,e){
   if(from!==PID){
     if(e.to&&amount&&(e.kind==='rent'||e.kind==='sale'))flyBetween(amount<0?from:e.to,amount<0?e.to:from,amount);
     // Событие соперника — заметкой у самой клетки на поле (плейтест 4: «понятными плашками на поле»); без клетки — плашкой слева.
-    const big=mine&&['offer','sale','decline','hit','bid','won','bank','unsold'].includes(e.kind);
+    const big=mine&&['offer','sale','decline','hit','bid','won','bank','unsold','swap','swapcounter','swapped','swapdecline','swapvoid'].includes(e.kind);
     if(!big&&e.kind!=='chance'&&e.kind!=='scatter'&&e.kind!=='insp'&&e.text){
       const n=noteOf(p,e,mine,amount);
       if(e.tile!=null&&MobileHost.ready)fieldNote(e.tile,p,n.text,n.amount,(mine&&e.kind==='rent')||n.big);else tickerAdd(p,Object.assign({},e,{text:n.text}),n.amount);
@@ -2054,6 +2182,12 @@ function onEvt(from,e){
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
   if(mine&&e.kind==='sale')plate(`🤝 ${p.name} согласился`,-amount,e.text.replace(/^продал /,'')+' теперь твоя');
   if(mine&&e.kind==='decline')plate(`✋ ${p.name} отказал`,0,'деньги вернулись из резерва');
+  // Обмен на карте (m5-swapmap): «Геймплей» при MPSwap._ui своих плашек не ставит. Клетки в e.give/e.get — в системе автора (e.from).
+  if(mine&&(e.kind==='swap'||e.kind==='swapcounter')&&Array.isArray(e.give)){const pay=e.pay||0;
+    plate(`🔁 ${e.kind==='swap'?'Обмен':'Встречное'} · ${p.name}`,0,`${e.get.length} твоих на ${e.give.length} ${p.name}${pay?` · ${pay>0?`доплатит ${money(pay)}`:`просит ${money(-pay)}`}`:''} · ответ — в начале твоего хода`);}
+  if(mine&&e.kind==='swapped'&&from!==PID)plate(`🔁 ${p.name} согласился на обмен`,0,(e.text||'').replace(/^обмен: /,''));
+  if(mine&&e.kind==='swapdecline'&&from!==PID)plate(`✋ ${p.name} отказал в обмене`,0,e.pay>0?'доплата вернулась из резерва':'клетки остались у вас');
+  if(mine&&e.kind==='swapvoid')plate('🔁 Обмен снят',0,'клетки сменили хозяина или ушли на торги'+(e.pay>0?' · доплата вернулась':''));
   // События стола (торги, удары из «Шанса», пропуски) — приходят всем, включая автора.
   const tileName=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile]?titleOf(S.tiles[e.tile]):'клетка';
   if(e.kind==='hit'&&mine&&!(cardPlateAt[from]&&Date.now()-cardPlateAt[from]<5000))plate(`🎴 ${p.name}`,0,e.text);   // карта из руки уже показана своей плашкой
@@ -2169,6 +2303,8 @@ function frame(now){
   }
   for(const [,f] of flags){const p=screenOfTile(f.i);f.el.style.transform=`translate(${p.x}px,${p.y-26}px)`;}
   if(pick)for(const [i,r] of pick.rings){const p=screenOfTile(i);r.style.transform=`translate(${p.x}px,${p.y}px)`;}
+  if(swapUI){for(const [i,r] of swapUI.rings){const q=screenOfTile(i);r.style.transform=`translate(${q.x}px,${q.y}px)`;}
+    for(const c of swapUI.chains){const a=screenOfTile(c.a),b=screenOfTile(c.b);c.el.style.transform=`translate(${(a.x+b.x)/2}px,${(a.y+b.y)/2-18}px)`;}}
   for(const it of notes){const p=screenOfTile(it.tile);it.el.style.transform=`translate(${p.x}px,${p.y-44-it.stack*40}px)`;}
   // Поле умеет рисовать фишки само (src/board/rivals.js) — отдаём ему, HTML-жетоны прячем: так буквы не лезут
   // поверх карточек и не дрожат при прокрутке (плейтест 02.10). Старое поле без этого — HTML, как раньше.

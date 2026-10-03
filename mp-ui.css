@@ -360,3 +360,60 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 .mp-taxi:active{translate:calc(-100% + 1px) calc(-50% + 2px);box-shadow:1px 1px 0 #25221c}
 @media (prefers-reduced-motion:reduce){.mp-mine:not(.mp-rolled) .mp-hand-card,.mp-bar .mp-chip.mp-target{animation:none}}
 .mp-plate{z-index:62}   /* плашки денег и карт — над плакатом хода, который висит до броска */
+
+/* Обмен на карте (m5-swapmap): кольца своих и чужих клеток, скобки цепочек, лоток снизу ≤40% экрана */
+.mp-swapping #dock,.mp-swapping #tilebar,.mp-swapping .mp-tag,.mp-swapping .mp-end,.mp-swapping .mp-hand,.mp-swapping .mp-taxi,.mp-swapping .mp-offer-badge,
+.mp-swapping .mp-chips,.mp-swapping .mp-lot-badge,.mp-swapping .mp-debt-chip,.mp-swapping #mpTicker{visibility:hidden}   /* фишки игроков справа (HUD Codex) ловили тапы по клеткам */
+.mp-sw-veil{position:absolute;inset:0;background:rgba(37,34,28,.32);pointer-events:none}
+.mp-sw-ring{position:absolute;left:0;top:0;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;pointer-events:none;
+  border:3px solid var(--c,#6b5f52);box-shadow:0 0 0 2px var(--mp-ink),inset 0 0 0 2px #fbf0d4;background:color-mix(in srgb,var(--c,#6b5f52) 22%,transparent)}
+.mp-sw-ring.single{border-style:dashed;box-shadow:0 0 0 2px var(--mp-ink)}
+.mp-sw-ring.give,.mp-sw-ring.get{width:60px;height:60px;margin:-30px 0 0 -30px;border-width:4px;background:color-mix(in srgb,var(--c,#6b5f52) 45%,transparent);animation:mp-pick-pulse 1s steps(4) infinite}
+.mp-sw-ring b{position:absolute;left:50%;top:-24px;transform:translateX(-50%);white-space:nowrap;padding:1px 6px;border-radius:7px 9px 6px 8px;
+  background:var(--mp-paper);border:1.5px solid var(--mp-ink);font:800 10px/1.3 var(--mp-txt);color:var(--mp-ink)}
+.mp-sw-ring.give b{background:var(--mp-red);color:#fbf0d4}
+.mp-sw-ring.get b{background:#2f6b3a;color:#fbf0d4}
+.mp-sw-chain{position:absolute;left:0;top:0;transform-origin:center;margin:-10px 0 0 -20px;width:40px;text-align:center;pointer-events:none;
+  font:800 11px/18px var(--mp-num);color:#fbf0d4;background:var(--c,#6b5f52);border:1.5px solid var(--mp-ink);border-radius:9px 7px 9px 8px;box-shadow:2px 2px 0 rgba(37,34,28,.8)}
+.mp-sw-tray{position:fixed;left:6px;right:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:42;max-height:40vh;overflow:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:4px;padding:6px 9px 7px;background:var(--mp-paper) url(assets/paper-grain.svg);color:var(--mp-ink);
+  border:2.5px solid var(--mp-ink);border-radius:12px 15px 11px 14px;box-shadow:4px 5px 0 rgba(37,34,28,.85);font-family:var(--mp-txt)}
+.mp-sw-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.mp-sw-head>b{font:800 15px var(--mp-num);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-sw-tabs{display:flex;flex:none;border:2px solid var(--mp-ink);border-radius:8px;overflow:hidden}
+.mp-sw-tabs button{padding:4px 8px;font:800 12px var(--mp-num);background:#f2e3bd;color:var(--mp-ink);border:0}
+.mp-sw-tabs button.on{background:var(--mp-ink);color:#fbf0d4}
+.mp-sw-cols{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mp-sw-cols>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.mp-sw-cols p{margin:0;font:800 12px var(--mp-num)}.mp-sw-cols p small{opacity:.6}
+.mp-sw-cols>div:first-child p{color:var(--mp-red)}.mp-sw-cols>div:last-child p{color:#2f6b3a}
+.mp-sw-item{display:flex;gap:5px;align-items:center;padding:3px 5px;background:#fbf0d4;border:1.5px solid var(--mp-ink);border-radius:7px 9px 7px 8px}
+.mp-sw-item em{font-style:normal;font-size:17px;flex:none}
+.mp-sw-item span{min-width:0;display:flex;flex-direction:column}
+.mp-sw-item b{font:800 12px/1.15 var(--mp-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-sw-item small{font-size:10px;line-height:1.2;color:#5b4c35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-sw-hint{font-size:11.5px;color:#5b4c35;padding:4px 0}
+.mp-sw-rent{display:flex;flex-direction:column;gap:0;padding:3px 6px;background:#f2e3bd;border-radius:7px}
+.mp-sw-rent p{margin:0;display:flex;justify-content:space-between;gap:6px;font:700 12px/1.3 var(--mp-num)}
+.mp-sw-rent p span{font-family:var(--mp-txt);font-weight:700;color:#5b4c35}
+.mp-sw-rent i{font-style:normal;margin-left:3px}.mp-sw-rent i.up{color:#2f6b3a}.mp-sw-rent i.down{color:var(--mp-red)}
+.mp-sw-rent p.inv{font-size:11px}.mp-sw-rent p.why{color:var(--mp-red);justify-content:flex-start}
+.mp-sw-pays{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.mp-sw-pays::-webkit-scrollbar{display:none}
+.mp-sw-pays button{flex:none;padding:4px 7px;font:700 11.5px var(--mp-num);background:#fbf0d4;color:var(--mp-ink);border:1.5px solid var(--mp-ink);border-radius:7px}
+.mp-sw-pays button.on{background:var(--mp-ink);color:#fbf0d4}
+.mp-sw-paynote{margin:0;font:600 12px var(--mp-txt)}
+.mp-sw-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.mp-sw-btns button{padding:7px 4px;font:800 13px var(--mp-num);background:#f2e3bd;color:var(--mp-ink);border:2px solid var(--mp-ink);border-radius:9px 8px 10px 8px;box-shadow:2px 2px 0 rgba(37,34,28,.8)}
+.mp-sw-btns button.ok{background:#2f6b3a;color:#fbf0d4}
+.mp-sw-btns button.no{background:var(--mp-red);color:#fbf0d4}
+.mp-sw-btns button:disabled{opacity:.45;box-shadow:none}
+#card .mp-hold-swapnew{display:block;width:100%;margin:2px 0 8px}
+@media (prefers-reduced-motion:reduce){.mp-sw-ring{animation:none!important}}
+.mp-swapping .mp-poster{display:none}
+.mp-sw-pays button.in{color:#2f6b3a}.mp-sw-pays button.out{color:var(--mp-red)}
+.mp-sw-pays button.on{color:#fbf0d4}
+.mp-sw-paynote b{font-family:var(--mp-num)}
+/* «сыграна в этот ход» — над картами, а не справа: в раскладке Codex рука у правого края и подпись уезжала за экран */
+.mp-hand-used{position:absolute;right:0;bottom:calc(100% + 4px)}
+.mp-sw-rent em{font-style:normal;white-space:nowrap}
