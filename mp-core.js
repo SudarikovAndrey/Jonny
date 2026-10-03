@@ -140,10 +140,13 @@ function mergeTiles(cur,next,pid,credits){
   return cur.map((t,i)=>{const n=next[i];if(!n)return t;
     if(!t.owner||t.owner===pid)return n;                         // свободная или своя — верим целиком
     if(swapGive.has(i)&&n.owner===pid)return n;                  // обмен принят: клетка предложившего — хозяину
+    // Продажа конкретному сопернику (02.10): покупатель забирает клетку, если в пакете есть оплата продавцу не меньше цены.
+    if(t.mpSale&&t.mpSale.to===pid&&n.owner===pid&&(credits||[]).some(c=>c&&c.sale&&c.tile===i&&c.to===t.owner&&+c.cash>=t.mpSale.amount)){const o=Object.assign({},n);delete o.mpSale;return o;}
     if(n.owner===pid&&(credits||[]).some(c=>c&&c.force&&c.tile===i&&c.to===t.owner&&+c.cash>0))return n;   // выкуп ×10 оплачен
     const o=Object.assign({},t);if('drop' in n)o.drop=n.drop;if('insp' in n)o.insp=n.insp;   // чужая: только находки и проверки
     if(n.mpOffer&&n.mpOffer.from===pid)o.mpOffer=n.mpOffer;                                    // своё предложение хозяину
     else if(t.mpOffer&&t.mpOffer.from===pid&&!n.mpOffer)delete o.mpOffer;                     // забрал резерв / отозвал
+    if(t.mpSale&&t.mpSale.to===pid&&!n.mpSale)delete o.mpSale;                                 // покупатель отказал
     if(n.mpSwap&&n.mpSwap.from===pid)o.mpSwap=n.mpSwap;                                        // своё предложение обмена
     else if(t.mpSwap&&t.mpSwap.from===pid&&!n.mpSwap)delete o.mpSwap;
     return o;});
@@ -286,8 +289,18 @@ function applyHit(T,pid,h){
       event(T,{from:pid,kind:'hit',text:k?`урезал ${to.name} продажи на старте вдвое`:`устроил ${to.name} забастовку — проход старта без продаж`,amount:null,tile:null,to:to.pid});return true;}
     case 'spoil':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||!(t.goods>0))return false;const lost=Math.ceil(t.goods/2);t.goods-=lost;
       event(T,{from:pid,kind:'hit',text:`испортил ${lost} шт товара у ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
-    case 'levy':{if(!rival)return false;const x=Math.min(300,Math.round(Math.max(0,to.s.cash||0)*0.1));if(x<=0)return false;to.s.cash-=x;T.pot=(T.pot||0)+x;
+    case 'levy':{if(!rival)return false;const x=Math.round(Math.max(0,to.s.cash||0)*0.3);if(x<=0)return false;to.s.cash-=x;T.pot=(T.pot||0)+x;   // 30% нала, без потолка (продюсер 02.10)
       event(T,{from:pid,kind:'hit',text:`наслал на ${to.name} налоговую: $${x} в копилку`,amount:null,tile:null,to:to.pid});return true;}
+    // «Ремонт дороги» (продюсер 02.10): соперник едет вперёд до первой чужой для него клетки и платит там ренту хозяину.
+    // Хозяин — активный игрок: ренту он прибавляет у себя сам (его срез придёт пакетом), стол её не дублирует.
+    case 'push':{if(!rival)return false;const t=T.tiles&&T.tiles[h.tile];if(!t)return false;to.s.pos=t.i;const rent=Math.max(0,Math.round(+h.rent||0)),own=t.owner;
+      if(rent&&own&&own!==to.pid){to.s.cash=(to.s.cash||0)-rent;if(own!==pid){const o=T.players.find(x=>x.pid===own);if(o&&o.s)o.s.cash=(o.s.cash||0)+rent;}T.rent[own]=(T.rent[own]||0)+rent;}
+      event(T,{from:pid,kind:'hit',text:`отправил ${to.name} вперёд на «чужую» клетку${rent?` — рента $${rent}`:''}`,amount:null,tile:t.i,to:to.pid});return true;}
+    // «Просрочка»: портится и пропадает половина запаса во всех точках соперника.
+    case 'spoilAll':{if(!rival)return false;let lost=0;for(const t of T.tiles||[])if(t.owner===to.pid&&t.type==='kiosk'&&t.goods>0){const k=Math.ceil(t.goods/2);t.goods-=k;lost+=k;}
+      if(!lost)return false;event(T,{from:pid,kind:'hit',text:`у ${to.name} испортилось ${lost} шт товара`,amount:null,tile:null,to:to.pid});return true;}
+    // «Сходка»: сам пропускаешь следующий ход (плата за карту).
+    case 'rest':{const me=T.players.find(x=>x.pid===pid);if(!me)return false;me.skip=(me.skip||0)+1;event(T,{from:pid,kind:'hit',text:`${me.name} пропустит следующий ход — сходка`,amount:null,tile:null,to:pid});return true;}
     case 'insp':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||t.insp)return false;t.insp=true;
       event(T,{from:pid,kind:'hit',text:`натравил инспектора на точку ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
   }

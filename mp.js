@@ -799,12 +799,23 @@ window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,op
 
 // ---- проход старта в партии (плейтест 5): +$100 всем сверх продаж; карта соперника урезала продажи ----
 const MP_START_BONUS=100,MP_WH_CONSOLATION=20;
+// Пособие отстающему (решение продюсера 02.10, вариант 1 из догоняющих). Параметры — под автотесты:
+// gap — отстающий: последний по капиталу и капитал не больше gap × средний по столу; share — доля бонуса старта.
+const MP_UNDERDOG={gap:0.75,share:0.5};
+function isUnderdog(){if(!view||!view.players||view.players.length<2)return false;
+  const v=view.players.map(p=>({pid:p.pid,c:p.cap?p.cap.total:p.cash})).sort((a,b)=>a.c-b.c),avg=v.reduce((a,x)=>a+x.c,0)/v.length;
+  return v[0].pid===PID&&v[1].c>v[0].c&&v[0].c<=avg*MP_UNDERDOG.gap;}
+const underdogBonus=()=>Math.round(MP_START_BONUS*MP_UNDERDOG.share);
+window.MP_IS_UNDERDOG=()=>isUnderdog();window.MP_UNDERDOG_BONUS=underdogBonus;window.MP_UNDERDOG=MP_UNDERDOG;
 function lapExtras(earned0){
   if(S.mpLapCut!=null){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),loss=Math.round(inc*(1-S.mpLapCut));
     if(loss>0){S.cash-=loss;S.stat.earned-=loss;plate(S.mpLapCut===0?'✊ Забастовка':'📉 Демпинг конкурента',-loss,S.mpLapCut===0?'продаж на этом проходе нет':'продажи на этом проходе вдвое меньше');log(`📉 Карта соперника: продажи на старте −${money(loss)}.`);}
     delete S.mpLapCut;}
-  S.cash+=MP_START_BONUS;S.stat.earned=(S.stat.earned||0)+MP_START_BONUS;
-  plate('🏁 Старт',MP_START_BONUS,'каждый проход старта');log(`🏁 Проход старта: +${money(MP_START_BONUS)}.`);
+  if(S.mpLapBoost){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),add=Math.round(inc*(S.mpLapBoost-1));if(add>0){S.cash+=add;S.stat.earned+=add;plate('🏷 Акция',add,'продажи ×1,5');}delete S.mpLapBoost;}
+  // Пособие отстающему (продюсер 02.10): последний по капиталу получает на старте +50% бонуса.
+  const extra=isUnderdog()?underdogBonus():0;if(extra)emit({kind:'underdog',text:`пособие отстающему ${money(extra)}`,amount:extra,tile:0});
+  S.cash+=MP_START_BONUS+extra;S.stat.earned=(S.stat.earned||0)+MP_START_BONUS+extra;
+  plate('🏁 Старт',MP_START_BONUS+extra,extra?'+50% — пособие отстающему':'каждый проход старта');log(`🏁 Проход старта: +${money(MP_START_BONUS)}${extra?` и пособие отстающему +${money(extra)}`:''}.`);
 }
 // ---- такси до склада за 💎 (плейтест 5): в свой ход до броска, едет на ближайший склад впереди — это и есть ход ----
 async function mpTaxi(){
@@ -904,26 +915,32 @@ const bestRivalTile=()=>S.tiles.filter(t=>isRival(t)&&t.type==='kiosk'&&!t.insp&
 function hit(h){if(!(myTurn()&&net))return;const t=h.tile!=null&&S.tiles[h.tile];
   if(t){if(h.k==='insp')t.insp=true;else if(h.k==='freeze')t.frozen=view.turn.n+view.players.length;else if(h.k==='spoil'&&t.goods>0)t.goods-=Math.ceil(t.goods/2);}
   net.send({t:'hit',h});}
+// Суммы карт — от среднего дохода стола за круг (продюсер 02.10: «привязывать к усреднённому обороту, а не к фиксу»).
+const chanceU=()=>Math.max(50,r5(window.MP_LAP_P?window.MP_LAP_P():lapCash()));
+const pct=k=>Math.max(10,r5(chanceU()*k));
 const MP_CHANCE=[
-  {id:'birthday',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),a=30;for(const r of rs)credit(r.pid,-a,`${esc(r.name)} → ${esc(S.player)}: ${money(a)} на день рождения`);S.cash+=a*rs.length;return {text:`🎂 День рождения! Каждый соперник скидывается по ${money(a)}.`,amount:a*rs.length};}},
-  {id:'treat',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),a=20;for(const r of rs)credit(r.pid,a,`${esc(S.player)} проставился ${esc(r.name)}: ${money(a)}`);S.cash-=a*rs.length;return {text:`🍻 Проставился пацанам: по ${money(a)} каждому.`,amount:-a*rs.length};}},
-  {id:'raid',f:()=>{const rs=rivalsOf(),a=25;for(const r of rs)credit(r.pid,-a,`облава: ${esc(r.name)} −${money(a)} в копилку`);S.cash-=a;credit(null,0,null,0,{pot:a*(rs.length+1)});return {text:`🚔 Облава на районе: все платят в копилку по ${money(a)}.`,amount:-a};}},
-  {id:'mtv',f:()=>{const mine=S.tiles.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t));if(!mine.length){S.cash+=40;return {text:'📺 Про тебя сняли сюжет на MTV. Точек нет — зато +$40 за интервью.',amount:40};}
+  // Вместо «дня рождения», «проставился» и «кроссовок» (банальные) — три карты с решением или последствием.
+  {id:'wholesale',ok:()=>myKiosks().some(t=>t.goods<cap(t)),f:()=>{let n=0;for(const t of myKiosks()){const add=Math.ceil((cap(t)-t.goods)/2);if(add>0){t.goods+=add;n+=add;}}
+    return {text:`🚚 Оптовый завоз: склад отдал в долг и забыл — твои точки заполнились наполовину бесплатно (+${n} шт).`,amount:null};}},
+  {id:'promo',ok:()=>myKiosks().length>0,f:()=>{S.mpLapBoost=1.5;return {text:'🏷 Акция «Два по цене одного»: на следующем проходе старта продажи ×1,5.',amount:null};}},
+  {id:'gathering',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),a=pct(.3);for(const r of rs)credit(r.pid,-a,`сходка: ${esc(r.name)} → ${esc(S.player)} ${money(a)}`);S.cash+=a*rs.length;hit({k:'rest'});
+    return {text:`🤝 Сходка: каждый соперник заносит тебе ${money(a)}, но ты пропускаешь следующий ход.`,amount:a*rs.length};}},
+  {id:'raid',f:()=>{const rs=rivalsOf(),a=pct(.25);for(const r of rs)credit(r.pid,-a,`облава: ${esc(r.name)} −${money(a)} в копилку`);S.cash-=a;credit(null,0,null,0,{pot:a*(rs.length+1)});return {text:`🚔 Облава на районе: все платят в копилку по ${money(a)}.`,amount:-a};}},
+  {id:'mtv',f:()=>{const mine=S.tiles.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t));if(!mine.length){const a=pct(.4);S.cash+=a;return {text:`📺 Про тебя сняли сюжет на MTV. Точек нет — зато ${money(a)} за интервью.`,amount:a};}
     for(const t of mine)t.boostN=view.turn.n+view.players.length;return {text:'📺 Сюжет на MTV про твои точки: рента с них ×2 до твоего следующего хода.',amount:null};}},
   {id:'complaint',ok:()=>!!bestRivalTile(),f:()=>{const t=bestRivalTile();hit({k:'insp',tile:t.i});return {text:`📋 Жалоба соседей: инспектор идёт в «${titleOf(t)}» (${nameOf(t.rival)}).`,amount:null,tile:t.i};}},
   {id:'stash',ok:()=>(view.pot||0)>=20,f:()=>{const h=Math.floor((view.pot||0)/2);S.cash+=h;credit(null,0,null,0,{pot:-h});return {text:`💰 Нашёл заначку общака: половина копилки, ${money(h)}, твоя.`,amount:h};}},
-  {id:'parking',f:()=>{const a=40;S.cash-=a;credit(null,0,null,0,{pot:a});return {text:`🚗 Штраф за парковку ${money(a)} — в общую копилку.`,amount:-a};}},
-  {id:'sneakers',f:()=>{const a=60;S.cash+=a;return {text:`👟 Нашёл в старых кроссовках ${money(a)}. Америка!`,amount:a};}},
-  {id:'robin',f:()=>{const ps=view.players.slice().sort((a,b)=>b.cash-a.cash),rich=ps[0],poor=ps[ps.length-1],a=50;
+  {id:'parking',f:()=>{const a=pct(.4);S.cash-=a;credit(null,0,null,0,{pot:a});return {text:`🚗 Штраф за парковку ${money(a)} — в общую копилку.`,amount:-a};}},
+  {id:'robin',f:()=>{const ps=view.players.slice().sort((a,b)=>b.cash-a.cash),rich=ps[0],poor=ps[ps.length-1],a=pct(.5);
     if(ps.length<2||rich.cash-poor.cash<a)return {text:'🤑 Робин Гуд посмотрел на ваши кошельки и ушёл: отнимать нечего.',amount:null};
     if(rich.pid===PID)S.cash-=a;else credit(rich.pid,-a,`Робин Гуд: ${esc(rich.name)} −${money(a)}`);
     if(poor.pid===PID)S.cash+=a;else credit(poor.pid,a,`Робин Гуд: ${esc(poor.name)} +${money(a)}`);
     return {text:`🤑 Робин Гуд: ${rich.pid===PID?'ты отдаёшь':rich.name+' отдаёт'} ${money(a)} ${poor.pid===PID?'тебе':poor.name}.`,amount:rich.pid===PID?-a:poor.pid===PID?a:null};}},
   {id:'roof',f:()=>{S.mpShieldN=view.turn.n+view.players.length;return {text:'🛡 Крыша прикрыла: до твоего следующего хода ренту не платишь.',amount:null};}},
-  {id:'roadwork',ok:()=>rivalsOf().length>0,f:()=>{const r=richestRival();hit({k:'move',to:r.pid,d:-3});return {text:`🚧 Ремонт дороги: ${r.name} откатывается на 3 клетки назад.`,amount:null};}},
-  {id:'snitch',ok:()=>rivalsOf().some(p=>!p.jail),f:()=>{const r=rivalsOf().filter(p=>!p.jail).sort((a,b)=>b.cash-a.cash)[0];hit({k:'jail',to:r.pid});return {text:`🚔 Донос: ${r.name} едет в участок — три попытки на дубль.`,amount:null};}},
+  {id:'roadwork',ok:()=>rivalsOf().some(p=>HAND.roadwork.ok(p.pid)),f:()=>{const r=rivalsOf().find(p=>HAND.roadwork.ok(p.pid));return {text:HAND.roadwork.play(r.pid),amount:null};}},
+  {id:'snitch',ok:()=>rivalsOf().some(p=>!p.jail),f:()=>{const r=rivalsOf().filter(p=>!p.jail).sort((a,b)=>b.cash-a.cash)[0];hit({k:'jail',to:r.pid});return {text:`🚔 Донос: ${r.name} едет в участок — две попытки на дубль.`,amount:null};}},
   {id:'queue',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),r=rs[Math.floor(Math.random()*rs.length)];hit({k:'skip',to:r.pid});return {text:`⏳ Очередь в ЖЭК: ${r.name} пропускает следующий ход.`,amount:null};}},
-  {id:'blackout',ok:()=>!!bestRivalTile(),f:()=>{const t=bestRivalTile();hit({k:'freeze',tile:t.i});return {text:`❄️ Отключили свет: «${titleOf(t)}» (${nameOf(t.rival)}) круг не берёт ренту.`,amount:null,tile:t.i};}},
+  {id:'blackout',ok:()=>rivalsOf().some(p=>HAND.blackout.ok(p.pid)),f:()=>{const r=richestRival();const pid=HAND.blackout.ok(r.pid)?r.pid:rivalsOf().find(p=>HAND.blackout.ok(p.pid)).pid;return {text:HAND.blackout.play(pid),amount:null};}},
 ];
 MP_CHANCE.push(
   {id:'dumping',ok:()=>rivalsOf().length>0,f:()=>{const r=richestRival();return {text:HAND.dumping.play(r.pid),amount:null};}},
@@ -939,21 +956,29 @@ const MP_HAND_MAX=2;
 const leaderPid=()=>{const ps=view.players.slice().sort((a,b)=>(b.cap?b.cap.total:b.cash)-(a.cap?a.cap.total:a.cash));return ps[0]&&ps[0].pid;};
 const topTileOf=(pid,f)=>S.tiles.filter(t=>t.rival===pid&&(f?f(t):true)).sort((a,b)=>invested(b)-invested(a))[0];
 const HAND={
-  roadwork:{name:'🚧 Ремонт дороги',text:'соперник откатывается на 3 клетки',play:pid=>{hit({k:'move',to:pid,d:-3});return `🚧 Ремонт дороги: ${nameOf(pid)} откатывается на 3 клетки.`;}},
+  // Объезд: соперник едет вперёд до первой клетки, хозяин которой не он, и платит там ренту (продюсер 02.10).
+  roadwork:{name:'🚧 Ремонт дороги',text:'объезд: соперник едет вперёд до первой чужой клетки и платит там ренту',ok:pid=>!!pushTarget(pid),
+    play:pid=>{const i=pushTarget(pid),t=S.tiles[i],rent=pushRent(t);if(t.owner&&rent>0){S.cash+=rent;S.stat.earned=(S.stat.earned||0)+rent;}
+      hit({k:'push',to:pid,tile:i,rent});return `🚧 Ремонт дороги: ${nameOf(pid)} в объезд — до «${titleOf(t)}»${rent?`, рента ${money(rent)} хозяину`:''}.`;}},
   queue:{name:'⏳ Очередь в ЖЭК',text:'соперник пропускает следующий ход',play:pid=>{hit({k:'skip',to:pid});return `⏳ Очередь в ЖЭК: ${nameOf(pid)} пропускает ход.`;}},
-  blackout:{name:'❄️ Отключили свет',text:'самая дорогая точка соперника круг без ренты',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!(t.frozen>view.turn.n)),
-    play:pid=>{const t=topTileOf(pid,t=>t.type==='kiosk'&&!(t.frozen>view.turn.n));hit({k:'freeze',tile:t.i});return `❄️ Отключили свет: «${titleOf(t)}» (${nameOf(pid)}) круг не берёт ренту.`;}},
+  blackout:{name:'❄️ Отключили свет',text:'20% точек соперника (самые дорогие) круг не берут ренту',ok:pid=>!!topTileOf(pid,t=>(t.type==='kiosk'||t.type==='biz')&&!(t.frozen>view.turn.n)),
+    play:pid=>{const all=S.tiles.filter(t=>t.rival===pid&&(t.type==='kiosk'||t.type==='biz')),n=Math.max(1,Math.ceil(all.length*0.2));
+      const ts=all.filter(t=>!(t.frozen>view.turn.n)).sort((a,b)=>invested(b)-invested(a)).slice(0,n);ts.forEach(t=>hit({k:'freeze',tile:t.i}));
+      return `❄️ Отключили свет: ${ts.map(t=>'«'+titleOf(t)+'»').join(', ')} (${nameOf(pid)}) круг не берут ренту.`;}},
   complaint:{name:'📋 Жалоба соседей',text:'инспектор в самую дорогую точку соперника',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
     play:pid=>{const t=topTileOf(pid,t=>t.type==='kiosk'&&!t.insp);hit({k:'insp',tile:t.i});return `📋 Жалоба соседей: инспектор идёт в «${titleOf(t)}» (${nameOf(pid)}).`;}},
   dumping:{name:'📉 Демпинг',text:'следующий проход старта соперника — продажи вдвое меньше',play:pid=>{hit({k:'cut',to:pid,cut:0.5});return `📉 Демпинг: у ${nameOf(pid)} следующий проход старта — продажи вдвое меньше.`;}},
-  spoiled:{name:'🦠 Просрочка',text:'половина товара в самой полной точке соперника портится',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&t.goods>0),
-    play:pid=>{const t=S.tiles.filter(x=>x.rival===pid&&x.type==='kiosk'&&x.goods>0).sort((a,b)=>b.goods-a.goods)[0];hit({k:'spoil',tile:t.i});return `🦠 Просрочка: половина товара в «${titleOf(t)}» (${nameOf(pid)}) испортилась.`;}},
+  spoiled:{name:'🦠 Просрочка',text:'портится и пропадает половина всего запаса соперника',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&t.goods>0),
+    play:pid=>{let n=0;for(const t of S.tiles)if(t.rival===pid&&t.type==='kiosk'&&t.goods>0){const k=Math.ceil(t.goods/2);t.goods-=k;n+=k;}hit({k:'spoilAll',to:pid});return `🦠 Просрочка: у ${nameOf(pid)} пропала половина запаса — ${n} шт.`;}},
   // Против лидера (идея Сани): цель — лидер по капиталу, сыграть можно, только если лидер не ты.
-  levy:{name:'🧾 Налоговая',text:'лидер платит 10% нала (до $300) в копилку',leader:true,play:pid=>{hit({k:'levy',to:pid});return `🧾 Налоговая к лидеру: ${nameOf(pid)} платит 10% нала в копилку.`;}},
+  levy:{name:'🧾 Налоговая',text:'лидер платит 30% наличных в копилку',leader:true,play:pid=>{hit({k:'levy',to:pid});return `🧾 Налоговая к лидеру: ${nameOf(pid)} платит 30% наличных в копилку.`;}},
   audit:{name:'🔎 Проверка лидера',text:'инспектор в две самые дорогие точки лидера',leader:true,ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
     play:pid=>{const ts=S.tiles.filter(t=>t.rival===pid&&t.type==='kiosk'&&!t.insp).sort((a,b)=>invested(b)-invested(a)).slice(0,2);ts.forEach(t=>hit({k:'insp',tile:t.i}));return `🔎 Проверка лидера: инспектор в ${ts.map(t=>'«'+titleOf(t)+'»').join(' и ')} (${nameOf(pid)}).`;}},
   strike:{name:'✊ Забастовка',text:'следующий проход старта лидера — без продаж',leader:true,play:pid=>{hit({k:'cut',to:pid,cut:0});return `✊ Забастовка: у ${nameOf(pid)} следующий проход старта без продаж.`;}},
 };
+// Первая клетка впереди соперника, хозяин которой — не он (в т.ч. твоя); и рента, которую он там заплатит.
+function pushTarget(pid){const p=playerOf(pid);if(!p||!view.tiles)return null;for(let k=1;k<40;k++){const i=(p.pos+k)%40,t=view.tiles[i];if(t&&t.owner&&t.owner!==pid&&(t.type==='kiosk'||t.type==='biz'))return i;}return null;}
+function pushRent(t){if(!t||t.insp||(t.frozen&&t.frozen>view.turn.n))return 0;try{return t.owner?rentOfMine(t):rentOf(t);}catch(e){return 0;}}
 const handTargets=id=>{const c=HAND[id];if(!c||!view)return [];if(c.leader){const l=leaderPid();return l&&l!==PID&&(!c.ok||c.ok(l))?[l]:[];}return rivalsOf().map(p=>p.pid).filter(pid=>!c.ok||c.ok(pid));};
 function handPlay(idx,pid){
   const id=(S.mpHand||[])[idx],c=HAND[id];if(!c||!myTurn()||ending)return false;
@@ -1019,6 +1044,7 @@ function finishTurn(){
   // Не ответил на предложение до конца хода — отказ, деньги покупателю возвращаются.
   for(const t of S.tiles)if(t.owner&&t.mpOffer)declineOffer(t,true);
   for(const t of S.tiles)if(t.owner&&t.mpSwap)declineSwap(t,true);
+  for(const t of S.tiles)if(t.rival&&t.mpSale&&t.mpSale.to===PID)declineSale(t,true);
   ending=true;closeAll();clearTimeout(pushT);pushT=0;S.rolls=999;
   net.send({t:'end',n:view.turn.n,pack:makePack()});updateUi();   // последний срез — внутри «конца хода», чтобы его не обогнать
 }
@@ -1203,6 +1229,50 @@ async function rivalWindow(t){
   placeOffer(t,m);
 }
 const proposedThisTurn=()=>!!(view&&view.turn&&S&&S.mpProposeN===view.turn.n);
+// ---- предложить продажу своей клетки конкретному сопернику (продюсер 02.10, зеркально предложению цены) ----
+// Хозяин в свой ход выбирает соперника и цену; соперник отвечает в начале своего хода «Купить / Отказать», платит при согласии.
+// Ограничения те же: одно предложение (цена, обмен или продажа) за ход, одно висящее на клетку, не на торгах.
+function placeSale(i,pid,amount){
+  const t=S.tiles[i];amount=Math.round(+amount||0);
+  if(!t||!t.owner||!(t.type==='kiosk'||t.type==='biz')||sfIsLot(t)||t.mpSale||t.mpOffer||lotOn(i)||!myTurn()||ending||proposedThisTurn()||amount<10||!playerOf(pid)||pid===PID)return false;
+  t.mpSale={from:PID,to:pid,amount,n:view.turn.n};S.mpProposeN=view.turn.n;
+  track('mp_sale_offer',{tile:i,to:pid,amount});log(`🏷 Предложил ${nameOf(pid)} купить «${titleOf(t)}» за ${money(amount)}.`);
+  emit({kind:'saleoffer',text:`предлагает купить «${titleOf(t)}» за ${money(amount)}`,amount:null,tile:i,to:pid});
+  plate(`🏷 Продажа · ${nameOf(pid)}`,0,'ответ — в начале его хода');save();render();push();return true;
+}
+async function saleWindow(i){
+  const t=S.tiles[i];if(!t||!t.owner||!myTurn()||ending)return;if(proposedThisTurn()){toast('В этот ход предложение уже было');return;}
+  const inv=Math.round(invested(t)),rs=rivalsOf();
+  const pending=modal(`<h2>🏷 Продать «${esc(titleOf(t))}»</h2><p class="t">Вложено ${money(inv)}. Выбери соперника и цену — он ответит в начале своего хода.</p>
+    <select class="mp-sale-to">${rs.map(p=>`<option value="${esc(p.pid)}">${esc(p.name)} · нал ${money(p.cash)}</option>`).join('')}</select>
+    <input type="number" class="mp-sale-amount" min="10" step="10" value="${Math.ceil(inv*1.5/10)*10}"><button type="button" class="mp-sale-go buy-btn buy-ok">Предложить продажу</button>`,[{t:'Передумал',v:0,cls:'sec'}]);
+  $('card').querySelector('.mp-sale-go').onclick=()=>closeModal('sale:'+$('card').querySelector('.mp-sale-to').value+':'+(+$('card').querySelector('.mp-sale-amount').value||0));
+  const v=await pending;if(typeof v==='string'&&v.startsWith('sale:')){const [,pid,a]=v.split(':');placeSale(i,pid,+a);}
+}
+async function answerSale(t){
+  const o=t.mpSale;if(!o||o.to!==PID||!myTurn()||ending)return;
+  const v=await modal(`<h2>🏷 ${esc(nameOf(o.from))} продаёт «${esc(titleOf(t))}»</h2>
+    <div class="mp-offer-big"><strong>${money(o.amount)}</strong><small>вложено ${money(invested(t))}${t.type==='kiosk'?` · товар ${t.goods||0} шт`:''}</small></div>
+    <p class="t">Купишь — клетка твоя${t.type==='kiosk'?' вместе с товаром':''}. Не ответишь до конца хода — отказ.</p>`,
+    [{t:`Купить · ${money(o.amount)}`,v:1,cls:'ok',dis:S.cash<o.amount},{t:'Отказать',v:0,cls:'sec'}]);
+  if(!t.mpSale||t.mpSale!==o||!myTurn())return;
+  if(v===1&&S.cash>=o.amount)acceptSale(t);else if(v===0)declineSale(t,false);updateUi();
+}
+function acceptSale(t){
+  const o=t.mpSale,seller=o.from;S.cash-=o.amount;credit(seller,o.amount,`${esc(S.player)} купил «${esc(titleOf(t))}» за ${money(o.amount)}`,0,{sale:true,tile:t.i});
+  const base=baseInv(t);delete t.mpSale;t.mpPrem=o.amount-base;t.owner='you';delete t.rival;delete t.mpOffer;
+  track('mp_sale',{tile:t.i,from:seller,amount:o.amount});log(`🏷 Купил «${titleOf(t)}» у ${nameOf(seller)} за ${money(o.amount)}.`);
+  plate(`🏷 Куплено · ${nameOf(seller)}`,-o.amount,`«${titleOf(t)}» теперь твоя`);emit({kind:'salebought',text:`купил «${titleOf(t)}» за ${money(o.amount)}`,amount:null,tile:t.i,to:seller});
+  save();render();push();
+}
+function declineSale(t,silent){const o=t.mpSale;if(!o)return;delete t.mpSale;emit({kind:'decline',text:`отказался купить «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});if(!silent){save();render();}push();}
+function saleAnswer(i,yes){const t=S.tiles[i];if(!t||!t.mpSale||t.mpSale.to!==PID||!myTurn()||ending)return false;
+  if(yes){if(S.cash<t.mpSale.amount)return false;acceptSale(t);return true;}declineSale(t,false);return true;}
+function saleCancel(i){const t=S.tiles[i];if(!t||!t.owner||!t.mpSale||!myTurn())return false;const to=t.mpSale.to;delete t.mpSale;emit({kind:'decline',text:`отозвал продажу «${titleOf(t)}»`,amount:null,tile:i,to});save();render();push();return true;}
+// API для «Интерфейса»: open — моё окно; answer(i,yes) — покупатель в свой ход (false — нет денег); pending — входящие; mine — мои висящие.
+window.MPSell={open:saleWindow,offer:placeSale,answer:saleAnswer,answerWindow:i=>answerSale(S.tiles[i]),cancel:saleCancel,
+  pending:()=>S?S.tiles.filter(t=>t.rival&&t.mpSale&&t.mpSale.to===PID).map(t=>({i:t.i,title:titleOf(t),price:t.mpSale.amount,from:t.mpSale.from})):[],
+  mine:()=>S?S.tiles.filter(t=>t.owner&&t.mpSale).map(t=>({i:t.i,title:titleOf(t),price:t.mpSale.amount,to:t.mpSale.to})):[]};
 // ---- обмен клетками с доплатой (решение продюсера 02.10: «делай») ----
 // Стоя на чужой клетке, предлагаешь хозяину свою клетку в обмен; доплата −$500…+$500 (плюс — платишь ты, минус — он).
 // Хозяин отвечает в начале своего хода; товар остаётся в клетках. Один обмен на пару игроков за партию (метка mpSwapPair на клетках).
@@ -1324,6 +1394,7 @@ async function answerOne(t){
 }
 async function answerOffers(){
   if(!myTurn()||ending||!S||!S.tiles)return;
+  for(const t of S.tiles.filter(x=>x.rival&&x.mpSale&&x.mpSale.to===PID)){if(!myTurn()||ending)return;while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);await answerSale(t);}
   for(const t of S.tiles.filter(x=>x.owner&&(x.mpOffer||x.mpSwap))){
     if(!myTurn()||ending)return;
     while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);
@@ -1354,6 +1425,7 @@ function reclaimOffers(){
   if(!myTurn())return;let back=0;
   for(const t of S.tiles)if(t.rival&&t.mpOffer&&t.mpOffer.from===PID&&t.mpOffer.n<view.turn.n){back+=t.mpOffer.amount;delete t.mpOffer;}
   for(const t of S.tiles)if(t.rival&&t.mpSwap&&t.mpSwap.from===PID&&t.mpSwap.n<view.turn.n){if(t.mpSwap.pay>0)back+=t.mpSwap.pay;delete t.mpSwap;}
+  for(const t of S.tiles)if(t.owner&&t.mpSale&&t.mpSale.n<view.turn.n)delete t.mpSale;   // покупатель так и не ответил — предложение продажи снято
   if(back>0){S.cash+=back;S.mpEscrow=Math.max(0,(S.mpEscrow||0)-back);toast(`💼 Ответа не было — ${money(back)} вернулись из резерва`,2600);push();}
 }
 (function(){const base=kioskWindow;kioskWindow=function(t){return isRival(t)?rivalWindow(t):base.apply(this,arguments);};})();
@@ -1898,6 +1970,9 @@ function onEvt(from,e){
   if(e.kind==='won'&&mine)plate(`🔨 Продано · ${p.name}`,e.paid||0,`«${tileName}»`);
   if(e.kind==='bank'&&mine)plate('🏦 Банк забрал',amount,`«${tileName}» — ставок не было`);
   if(e.kind==='unsold'&&mine)plate('🔨 Торги без ставок',0,`«${tileName}» осталась у тебя`);
+  if(e.kind==='saleoffer'&&mine)plate(`🏷 ${p.name} продаёт`,0,e.text.replace(/^предлагает купить /,'')+' · ответ — в начале твоего хода');
+  if(e.kind==='salebought'&&mine)plate(`🏷 ${p.name} купил`,0,e.text.replace(/^купил /,''));
+  if(e.kind==='underdog'&&from!==PID)plate(`🤝 Пособие ${money(e.amount||0)} — ${p.name}`,0,'отстающему на старте');
   if(e.kind==='hand'&&from!==PID)toast(`🃏 ${p.name} взял карту в руку`,2200);
   if(e.kind==='taxi'&&from!==PID)toast(`🚕 ${p.name} поехал на такси до склада`,2200);
   if(e.kind==='map')plate(`🗺 Карта · ${p.name}`,0,`хозяин стола ${e.text}`);

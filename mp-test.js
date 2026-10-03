@@ -168,6 +168,11 @@ async function botTurnHidden(pid){
         delete t.mpSwap;t.owner=null;t.rival=o.from;g.owner='you';delete g.rival;t.mpSwapPair=key;g.mpSwapPair=key;
         emit({kind:'swapped',text:`обменял «${titleOf(t)}» на «${titleOf(g)}»`,amount:null,tile:g.i,to:o.from});trace.push(b.name+': принял обмен');}
       else{delete t.mpSwap;if(o.pay>0)credit(o.from,o.pay,{escrow:-o.pay});emit({kind:'decline',text:`отказал в обмене на «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
+    // 1в. Предложения продажи боту: берёт, если по карману с запасом и не дороже ×1,5 вложенного
+    for(const t of S.tiles.filter(x=>x.rival&&x.mpSale&&x.mpSale.to===pid)){const o=t.mpSale;
+      if(S.cash>=o.amount*1.2&&o.amount<=H.invested(t)*1.5){S.cash-=o.amount;credit(o.from,o.amount,{sale:true,tile:t.i});t.mpPrem=o.amount-(H.invested(t)-(t.mpPrem||0));t.owner='you';delete t.rival;delete t.mpSale;
+        emit({kind:'salebought',text:`купил «${titleOf(t)}» за $${o.amount}`,amount:null,tile:t.i,to:o.from});trace.push(b.name+': купил по предложению продажи');}
+      else{delete t.mpSale;emit({kind:'decline',text:`отказался купить «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
     // 2. Бросок и движение
     const a=1+Math.floor(Math.random()*6),bb=1+Math.floor(Math.random()*6),sum=a+bb,dbl=a===bb;dice={a,b:bb};
     if(S.jail>0){if(dbl){S.jail=0;trace.push(b.name+': дубль — вышел из участка');}else{S.jail--;trace.push(b.name+': в участке, попыток '+S.jail);}}
@@ -200,7 +205,9 @@ function lapHidden({credit,emit}){
   S.laps=(S.laps||0)+1;let income=0,units=0;const mult=SFB()&&SFB().priceMult?SFB().priceMult():1;
   for(const t of myKiosks()){const k=Math.min(sales(t),t.goods||0);if(k<=0)continue;t.goods-=k;units+=k;income+=Math.round(k*H.sellOf(t.good)*mult);}
   if(S.mpLapCut!=null){income=Math.round(income*S.mpLapCut);delete S.mpLapCut;}   // карта соперника: демпинг или забастовка
+  if(S.mpLapBoost){income=Math.round(income*S.mpLapBoost);delete S.mpLapBoost;}   // своя «Акция»
   income+=100;   // проход старта в партии: +$100 сверх продаж (плейтест 5)
+  if(window.MP_IS_UNDERDOG&&MP_IS_UNDERDOG()){const ex=window.MP_UNDERDOG_BONUS?MP_UNDERDOG_BONUS():50;income+=ex;emit({kind:'underdog',text:`пособие отстающему $${ex}`,amount:ex,tile:0});}
   if(income>0){S.cash+=income;S.stat.earned=(S.stat.earned||0)+income;emit({kind:'pass',text:'прошёл старт — продажи',amount:income,tile:0});}
   credit(null,0,{slot:10});
   for(const l of (S.loans||[]))if(l.micro){const i=Math.round(l.principal*l.rate);S.cash-=i;}
@@ -273,15 +280,16 @@ function rentHidden(t,{credit,emit,v}){
 function chanceHidden({credit,emit,v,after}){
   // Пакость — в руку (до 2 карт), как у игрока; сыграет бот позже в strategyHidden.
   if(window.MPHand&&(S.mpHand||[]).length<MPHand.max&&rnd(.5)){const ids=Object.keys(MPHand.cards);S.mpHand=(S.mpHand||[]).concat(pick(ids));emit({kind:'hand',text:'взял карту в руку',amount:null,tile:S.pos});trace.push('бот: карта в руку');return;}
-  const rivals=v.players.filter(p=>p.pid!==H.PID),r=rnd;let text,amount=null;
+  // Денежные карты бота — те же, что у игрока, и тоже от среднего дохода стола за круг.
+  const rivals=v.players.filter(p=>p.pid!==H.PID);let text,amount=null;
+  const U=Math.max(50,Math.round((window.MP_LAP_P?window.MP_LAP_P():100)/5)*5),k=x=>Math.max(10,Math.round(U*x/5)*5);
   const roll=Math.random();
-  if(roll<.2){amount=60;S.cash+=60;text='👟 Нашёл в старых кроссовках $60. Америка!';}
-  else if(roll<.4){amount=-40;S.cash-=40;credit(null,0,{pot:40});text='🚗 Штраф за парковку $40 — в общую копилку.';}
-  else if(roll<.55&&rivals.length){amount=30*rivals.length;S.cash+=amount;for(const p of rivals)credit(p.pid,-30);text='🎂 День рождения! Каждый соперник скидывается по $30.';}
-  else if(roll<.7&&rivals.length){amount=-20*rivals.length;S.cash+=amount;for(const p of rivals)credit(p.pid,20);text='🍻 Проставился пацанам: по $20 каждому.';}
-  else if(roll<.85&&rivals.length){const p=pick(rivals);after.push({t:'hit',h:{k:'move',to:p.pid,d:-3}});text=`🚧 Ремонт дороги: ${p.name} откатывается на 3 клетки назад.`;}
+  if(roll<.25){const a=k(.4);amount=-a;S.cash-=a;credit(null,0,{pot:a});text=`🚗 Штраф за парковку $${a} — в общую копилку.`;}
+  else if(roll<.45&&myKiosks().length){S.mpLapBoost=1.5;text='🏷 Акция «Два по цене одного»: на следующем проходе старта продажи ×1,5.';}
+  else if(roll<.65&&myKiosks().some(t=>t.goods<cap(t))){let n=0;for(const t of myKiosks()){const add=Math.ceil((cap(t)-t.goods)/2);if(add>0){t.goods+=add;n+=add;}}text=`🚚 Оптовый завоз: точки заполнились наполовину бесплатно (+${n} шт).`;}
+  else if(roll<.8&&rivals.length){const a=k(.25);amount=-a;S.cash-=a;for(const p of rivals)credit(p.pid,-a);credit(null,0,{pot:a*(rivals.length+1)});text=`🚔 Облава на районе: все платят в копилку по $${a}.`;}
   else if(rivals.length){const p=pick(rivals);after.push({t:'hit',h:{k:'skip',to:p.pid}});text=`⏳ Очередь в ЖЭК: ${p.name} пропускает следующий ход.`;}
-  else{amount=60;S.cash+=60;text='👟 Нашёл в старых кроссовках $60.';}
+  else{const a=k(.4);amount=a;S.cash+=a;text=`📺 Сюжет на MTV: $${a} за интервью.`;}
   emit({kind:'chance',text,amount,tile:S.pos});
 }
 function inspHidden(t,{emit}){
