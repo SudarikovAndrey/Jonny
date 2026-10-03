@@ -56,7 +56,16 @@ function setMode(T,m){if(!MODE_OPTIONS.includes(m))return false;T.settings.mode=
 const timed=T=>winOf(T).id==='capital';
 const modeOf=T=>timed(T)?(T.settings.mode==='laps'?'laps':'time'):'none';
 function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings.win=id;return true;}
-const winOf=T=>WIN_OPTIONS.find(w=>w.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0];
+// Пороги под длину партии (решение продюсера 02.10 по прогону «Дебага»): «Миллионер» и «Рантье» — от минут (на 20 минут
+// $2 500 налом и $250 ренты, пропорционально); в режиме кругов минуты оцениваются как круги × minPerLap. «Империя» — по числу игроков.
+const WIN_SCALE={cashPer20:2500,rentPer20:250,minPerLap:2,round:50,empire:{2:12,3:10,4:9}};
+function lengthMinutes(T){const s=T.settings||{};return s.mode==='laps'?(+s.rounds||DEFAULTS.rounds)*WIN_SCALE.minPerLap:(+s.minutes||DEFAULTS.minutes);}
+const r50=x=>Math.max(WIN_SCALE.round,Math.round(x/WIN_SCALE.round)*WIN_SCALE.round);
+function winOf(T){const w=WIN_OPTIONS.find(x=>x.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0],m=lengthMinutes(T),n=Math.max(2,Math.min(4,(T.players||[]).length||2));
+  if(w.id==='cash'){const g=r50(WIN_SCALE.cashPer20*m/20);return Object.assign({},w,{goal:g,text:`Первый, у кого на руках $${g.toLocaleString('ru-RU')} наличными, побеждает сразу.`});}
+  if(w.id==='rent'){const g=r50(WIN_SCALE.rentPer20*m/20);return Object.assign({},w,{goal:g,text:`Первый, кто собрал $${g.toLocaleString('ru-RU')} рентой с соперников, побеждает сразу.`});}
+  if(w.id==='empire'){const g=WIN_SCALE.empire[n];return Object.assign({},w,{goal:g,text:`Первый, у кого ${g} владений (точки и бизнесы вместе), побеждает сразу.`});}
+  return w;}
 function newTable(room,settings){
   return {room,phase:'lobby',settings:Object.assign({},DEFAULTS,settings||{}),players:[],tiles:null,
           turn:null,applied:{},result:null,match:0,log:[],pot:0,slotPot:0,rent:{},lots:[],events:[],evSeq:0};
@@ -411,7 +420,7 @@ function viewFor(T,pid,valuer){
     mine:me&&me.s?me.s:null};
 }
 
-const api={BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+const api={WIN_SCALE,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;

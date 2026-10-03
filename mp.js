@@ -798,14 +798,21 @@ window.MPTrade={open:t=>{t=typeof t==='number'?S.tiles[t]:t;return isRival(t)?ri
 window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,open:lotWindow,bid:placeBid,bidWindow,html:lotHtml};
 
 // ---- проход старта в партии (плейтест 5): +$100 всем сверх продаж; карта соперника урезала продажи ----
-const MP_START_BONUS=100,MP_WH_CONSOLATION=20;
+// Бонус старта (баланс «Дебага», решение продюсера 02.10): по кругам — $100, по времени (и в миссиях) — $50.
+const MP_START_BONUS_BY_MODE={laps:100,time:50},MP_WH_CONSOLATION=20;
+const startBonus=()=>MP_START_BONUS_BY_MODE[(view&&view.settings&&view.settings.mode)==='laps'?'laps':'time'];
+window.MP_START_BONUS_NOW=()=>startBonus();
+// Склад быстрее (то же решение): точка ур. 1 вмещает 8 вместо 12 при тех же 3 продажах за круг; выше — пропорционально (×2/3).
+const MP_CAP_SHARE=2/3;
+(function(){const base=cap;cap=function(t){return Math.max(1,Math.round(base.apply(this,arguments)*MP_CAP_SHARE));};
+  if(typeof kioskAfter==='function'){const ka=kioskAfter;kioskAfter=function(t){const r=ka.apply(this,arguments);if(r&&r.cap)r.cap=Math.max(1,Math.round(r.cap*MP_CAP_SHARE));return r;};}})();
 // Пособие отстающему (решение продюсера 02.10, вариант 1 из догоняющих). Параметры — под автотесты:
 // gap — отстающий: последний по капиталу и капитал не больше gap × средний по столу; share — доля бонуса старта.
 const MP_UNDERDOG={gap:0.75,share:0.5};
 function isUnderdog(){if(!view||!view.players||view.players.length<2)return false;
   const v=view.players.map(p=>({pid:p.pid,c:p.cap?p.cap.total:p.cash})).sort((a,b)=>a.c-b.c),avg=v.reduce((a,x)=>a+x.c,0)/v.length;
   return v[0].pid===PID&&v[1].c>v[0].c&&v[0].c<=avg*MP_UNDERDOG.gap;}
-const underdogBonus=()=>Math.round(MP_START_BONUS*MP_UNDERDOG.share);
+const underdogBonus=()=>Math.round(startBonus()*MP_UNDERDOG.share);
 window.MP_IS_UNDERDOG=()=>isUnderdog();window.MP_UNDERDOG_BONUS=underdogBonus;window.MP_UNDERDOG=MP_UNDERDOG;
 function lapExtras(earned0){
   if(S.mpLapCut!=null){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),loss=Math.round(inc*(1-S.mpLapCut));
@@ -814,8 +821,8 @@ function lapExtras(earned0){
   if(S.mpLapBoost){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),add=Math.round(inc*(S.mpLapBoost-1));if(add>0){S.cash+=add;S.stat.earned+=add;plate('🏷 Акция',add,'продажи ×1,5');}delete S.mpLapBoost;}
   // Пособие отстающему (продюсер 02.10): последний по капиталу получает на старте +50% бонуса.
   const extra=isUnderdog()?underdogBonus():0;if(extra)emit({kind:'underdog',text:`пособие отстающему ${money(extra)}`,amount:extra,tile:0});
-  S.cash+=MP_START_BONUS+extra;S.stat.earned=(S.stat.earned||0)+MP_START_BONUS+extra;
-  plate('🏁 Старт',MP_START_BONUS+extra,extra?'+50% — пособие отстающему':'каждый проход старта');log(`🏁 Проход старта: +${money(MP_START_BONUS)}${extra?` и пособие отстающему +${money(extra)}`:''}.`);
+  const sb=startBonus();S.cash+=sb+extra;S.stat.earned=(S.stat.earned||0)+sb+extra;
+  plate('🏁 Старт',sb+extra,extra?'+50% — пособие отстающему':'каждый проход старта');log(`🏁 Проход старта: +${money(sb)}${extra?` и пособие отстающему +${money(extra)}`:''}.`);
 }
 // ---- такси до склада за 💎 (плейтест 5): в свой ход до броска, едет на ближайший склад впереди — это и есть ход ----
 async function mpTaxi(){
@@ -2232,7 +2239,8 @@ function renderLobby(force){
     <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>esc((C.WIN_OPTIONS.find(w=>w.id===v)||{}).name||v))}</div>
     ${C.timed(T)?`<div class="mp-set mp-set-mode"><span>Длина партии<small>${C.modeOf(T)==='laps'?'кругов лидера; потом — последний раунд':'минут на всех; потом — последний раунд'}</small></span>${opt('mode',C.MODE_OPTIONS,C.modeOf(T),v=>v==='laps'?'По кругам':'По времени')}
       ${C.modeOf(T)==='laps'?opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>v+' кр.'):opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>`
-    :`<div class="mp-set"><span>Длина партии<small>миссия — без лимита, играем до выполнения</small></span></div>`}
+    :`<div class="mp-set mp-set-mode"><span>Темп миссии<small>лимита нет — от длины зависит порог: ${esc(C.winOf(T).text)}</small></span>${opt('mode',C.MODE_OPTIONS,T.settings.mode==='laps'?'laps':'time',v=>v==='laps'?'По кругам':'По времени')}
+      ${T.settings.mode==='laps'?opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>v+' кр.'):opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>`}
     <div class="mp-set"><span>Время на ход<small>${T.settings.turnSec?'мини-игра часы не тратит':'без лимита — ход передаётся кнопкой'}</small></span>${opt('turnSec',C.TURN_OPTIONS,T.settings.turnSec,v=>v?v+' с':'∞')}</div>
     <p class="mp-est">${n>=2?`${C.modeOf(T)==='time'?T.settings.minutes+' мин':C.modeOf(T)==='laps'?T.settings.rounds+' '+plural(T.settings.rounds,'круг','круга','кругов'):'без лимита'} на ${n} ${plural(n,'игрока','игроков','игроков')} · ${esc(C.winOf(T).name)}: ${esc(C.winOf(T).text)} · очерёдность разыграется случайно`:'Нужно минимум двое'}</p>
     ${window.MPRules?'<button class="sec mp-rules-btn" id="mpRulesBtn" type="button">📖 Как играть</button>':''}
