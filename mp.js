@@ -2302,23 +2302,31 @@ function flyBetween(from,to,amount){
 // Клетка — номером (как «Шанс» 7, 22, 36 в правилах); одинаковые названия — один раз; итог цепочки у того, кто её собирает.
 // В событии клетки в системе автора: give — его клетки (уходят второму), get — клетки второго (уходят автору).
 const cellNo=i=>`№${i}`;
-function cellsText(ids){ids=ids||[];if(!ids.length)return '';const ts=ids.map(i=>S.tiles[i]).filter(Boolean),names=[...new Set(ts.map(titleOf))];
-  return names.length===1?`${ids.map(cellNo).join(' и ')} «${names[0]}»`:ts.map(t=>`${cellNo(t.i)} «${titleOf(t)}»`).join(' и ');}
+const cellsText=ids=>cellsTextFull(ids);
+// Бот строит точку и в тот же ход предлагает её — у хозяина стола клетка ещё пустырь: пишем «новая точка».
+const swapTitle=t=>sfIsLot(t)?'новая точка':titleOf(t);
+function cellsTextFull(ids){ids=ids||[];if(!ids.length)return '';const ts=ids.map(i=>S.tiles[i]).filter(Boolean),names=[...new Set(ts.map(swapTitle))];
+  return names.length===1?`${ids.map(cellNo).join(' и ')} «${names[0]}»`:ts.map(t=>`${cellNo(t.i)} «${swapTitle(t)}»`).join(' и ');}
 function swapChains(author,other,give,get){
   const own={};toShared(S.tiles).forEach(t=>{if(t.owner&&(t.type==='kiosk'||t.type==='biz'))own[t.i]=t.owner;});
   (give||[]).forEach(i=>own[i]=other);(get||[]).forEach(i=>own[i]=author);
   const len=i=>{const o=own[i];if(!o)return 0;let n=1;for(let k=1;k<40&&own[(i-k+40)%40]===o;k++)n++;for(let k=1;k<40&&own[(i+k)%40]===o;k++)n++;return Math.min(n,40);};
   const best=(ids)=>Math.max(0,...(ids||[]).map(len));return {[other]:best(give),[author]:best(get)};}
-const whoName=pid=>pid===PID?'тебя':nameOf(pid);
-function chainText(ch){const parts=Object.entries(ch).filter(([,n])=>n>=2).map(([pid,n])=>`у ${whoName(pid)} цепочка из ${n}`);return parts.length?' → '+parts.join(', '):'';}
+function chainText(ch){const parts=Object.entries(ch).filter(([,n])=>n>=2).map(([pid,n])=>pid===PID?`у тебя цепочка из ${n}`:`цепочка из ${n} · ${nameOf(pid)}`);return parts.length?' → '+parts.join(', '):'';}
+// Имена игроков не склоняются — имя ставим отдельно: «обмен · Саня-бот: …», «Макс-бот доплатит $50».
 function swapText(e,emitter){
   const author=e.from,other=(e.kind==='swap'||e.kind==='swapcounter')?e.to:emitter,pay=e.pay||0;
   const ch=chainText(swapChains(author,other,e.give,e.get));
-  const payT=pay?` · доплата ${pay>0?nameOf(author):nameOf(other)} ${money(Math.abs(pay))}`:'';
-  if(e.kind==='swapped')return `поменялся с ${author===PID?'тобой':nameOf(author)}: отдал ${cellsText(e.get)}, взял ${cellsText(e.give)}${ch}`;
-  if(e.kind==='swapdecline')return `отказал ${author===PID?'тебе':nameOf(author)} в обмене ${cellsText(e.get)} на ${cellsText(e.give)}`;
-  if(e.kind==='swapvoid')return `обмен ${cellsText(e.give)} на ${cellsText(e.get)} снят — клетки сменили хозяина`;
-  return `${e.kind==='swapcounter'?'встречное':'предлагает обмен'} ${other===PID?'тебе':nameOf(other)}: ${cellsText(e.give)} на ${other===PID?'твою ':''}${cellsText(e.get)}${payT}${ch}`;
+  // Все клетки обмена с одним названием — номера и название один раз: «№4 на №12, все «Лоток сладостей»».
+  const all=[...(e.give||[]),...(e.get||[])].map(i=>S.tiles[i]).filter(Boolean),one=new Set(all.map(swapTitle)).size===1&&all.length>1;
+  const cellsText=ids=>one?ids.map(cellNo).join(' и '):cellsTextFull(ids),tail=one?`, ${all.length===2?'обе':'все'} «${swapTitle(all[0])}»`:'';
+  const payer=pay>0?author:other,payT=pay?` · ${payer===PID?'ты доплатишь':nameOf(payer)+' доплатит'} ${money(Math.abs(pay))}`:'';
+  const with_=pid=>pid===PID?'с тобой':`· ${nameOf(pid)}`;
+  if(e.kind==='swapped')return `обменялся ${with_(author)}: отдал ${cellsText(e.get)}, взял ${cellsText(e.give)}${tail}${ch}`;
+  if(e.kind==='swapdecline')return `${author===PID?'отказал тебе в обмене':`отказал в обмене · ${nameOf(author)}`}: ${cellsText(e.get)} на ${cellsText(e.give)}${tail}`;
+  if(e.kind==='swapvoid')return `обмен ${cellsText(e.give)} на ${cellsText(e.get)}${tail} снят — клетки сменили хозяина`;
+  const what=e.kind==='swapcounter'?'встречное':'обмен';
+  return `${other===PID?`предлагает тебе ${what}`:`предлагает ${what} · ${nameOf(other)}`}: ${cellsText(e.give)} на ${other===PID?'твою ':''}${cellsText(e.get)}${tail}${payT}${ch}`;
 }
 function noteOf(p,e,mine,amount){
   if(/^swap/.test(e.kind||'')&&Array.isArray(e.give))return {text:swapText(e,p.pid),amount:null};
