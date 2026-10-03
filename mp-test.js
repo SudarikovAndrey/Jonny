@@ -1,6 +1,7 @@
-// ===== Тестовый стол мультиплеера (?test=1): боты и панель механик =====
+// ===== Боты (любой стол, у хозяина) и панель механик (тестовый стол, ?test=1) =====
 // Решение продюсера 02.10: «чтоб тестировать можно было без противников, осмотреть всё, не привлекая людей других».
-// Подключается только из web/mp.html при ?test=1 (после web/mp.js); у живых столов этого кода нет.
+// Подключается из web/mp.html на любом столе (после web/mp.js): ботов сажает хозяин кнопкой «🤖 + Бот» в пустом месте
+// лобби (backlog 02.10). Панель механик, скорость ×3/мгновенно и «Авто-ход за меня» — только при ?test=1 (H.test).
 //
 // Боты живут внутри страницы хозяина стола как ещё одни клиенты (свой pid, hello/ping/state/end через hub.handle).
 // Ход бота считается в фоне, «в закрытую» (решение продюсера 02.10): без окон и без Джонни хозяина — срез бота
@@ -161,13 +162,11 @@ async function botTurnHidden(pid){
       if(o.amount>=inv*2||rnd(.35)){S.cash+=o.amount;credit(o.from,0,{escrow:-o.amount});t.mpPrem=o.amount-(inv-(t.mpPrem||0));t.owner=null;t.rival=o.from;delete t.mpOffer;
         emit({kind:'sale',text:`продал «${titleOf(t)}»`,amount:o.amount,tile:t.i,to:o.from});trace.push(b.name+': продал по предложению');}
       else{delete t.mpOffer;credit(o.from,o.amount,{escrow:-o.amount});emit({kind:'decline',text:`отказал в продаже «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
-    // 1б. Ответы на предложения обмена: согласен, если получает не дешевле (с доплатой), иначе изредка
-    for(const t of S.tiles.filter(x=>x.owner&&x.mpSwap)){const o=t.mpSwap,g=S.tiles[o.give];
-      const ok=g&&g.rival===o.from&&(o.pay>=0||S.cash>=-o.pay)&&(H.invested(g)+o.pay>=H.invested(t)*0.9||rnd(.25));
-      if(ok){const key=H.pairKey(pid,o.from);if(o.pay>0){S.cash+=o.pay;credit(o.from,0,{escrow:-o.pay});}else if(o.pay<0){S.cash+=o.pay;credit(o.from,-o.pay);}
-        delete t.mpSwap;t.owner=null;t.rival=o.from;g.owner='you';delete g.rival;t.mpSwapPair=key;g.mpSwapPair=key;
-        emit({kind:'swapped',text:`обменял «${titleOf(t)}» на «${titleOf(g)}»`,amount:null,tile:g.i,to:o.from});trace.push(b.name+': принял обмен');}
-      else{delete t.mpSwap;if(o.pay>0)credit(o.from,o.pay,{escrow:-o.pay});emit({kind:'decline',text:`отказал в обмене на «${titleOf(t)}»`,amount:null,tile:t.i,to:o.from});}}
+    // 1б. Обмены (m5-swapmap): принимает, если его рента после не ниже, а доплата против него не больше 25% вложенного; встречных не шлёт.
+    if(window.MPSwap){const L=MPSwap._local,bc=(to,cash,x)=>credit(to,cash,{escrow:x&&x.escrow||undefined});
+      for(const inc of MPSwap.incoming()){const o=L.byId(inc.id);if(!o)continue;const pv=MPSwap.preview({to:inc.from,give:inc.give,get:inc.get,pay:inc.pay});
+        const net=pv.invGet-pv.invGive-inc.pay,ok=pv.mine.after>=pv.mine.before&&net>=-0.25*Math.max(1,pv.invGive)&&!(inc.pay>0&&S.cash<inc.pay);
+        if(ok&&L.accept(o,bc,emit))trace.push(b.name+': принял обмен');else{if(MPSwap._local.byId(inc.id))L.decline(o,bc,emit,false);trace.push(b.name+': отказал в обмене');}}}
     // 1в. Предложения продажи боту: берёт, если по карману с запасом и не дороже ×1,5 вложенного
     for(const t of S.tiles.filter(x=>x.rival&&x.mpSale&&x.mpSale.to===pid)){const o=t.mpSale;
       if(S.cash>=o.amount*1.2&&o.amount<=H.invested(t)*1.5){S.cash-=o.amount;credit(o.from,o.amount,{sale:true,tile:t.i});t.mpPrem=o.amount-(H.invested(t)-(t.mpPrem||0));t.owner='you';delete t.rival;delete t.mpSale;
@@ -330,6 +329,9 @@ function strategyHidden({credit,emit,v,after,bot}){
       if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;offer(r,1.5);}
       else{S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;buyout(r);}}}
   else{
+    // Обмен сам: изредка, через «Подобрать обмен», если его рента растёт
+    if(window.MPSwap&&rnd(.15)&&S.mpProposeN!==v.turn.n){const rs=v.players.filter(p=>p.pid!==pid);const r=rs.length?pick(rs):null;const sg=r&&MPSwap.suggest(r.pid,0);
+      if(sg&&!(sg.pay>0&&S.cash<sg.pay)){MPSwap._local.place(sg,emit);trace.push(b.name+': предложил обмен');}}
     if(window.MPHand&&(S.mpHand||[]).length&&rnd(.5)){const l=MPHand.list(),i=l.findIndex(c=>c.targets.length);if(i>=0){MPHand.play(i,pick(l[i].targets));trace.push(bot.name+': сыграл карту из руки');}}
     if(rivalHere){if(rnd(.05))buyout(t);else if(rnd(.2))offer(t,rnd(.5)?1.5:2);}
     for(const l of (v.lots||[])){if(l.seller===H.PID||l.bestBy===H.PID)continue;const next=l.best?Math.ceil(l.best*1.1/10)*10:l.min;if(S.cash>=next*1.5&&rnd(.5))after.push({t:'bid',id:l.id,amount:next});}
@@ -376,7 +378,8 @@ window.MPBots={trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>bu
   get autoMe(){return autoMe;},set autoMe(x){autoMe=!!x;schedule();},
 };
 
-// ---- панель механик ----
+// ---- панель механик: только тестовый стол ----
+if(H.test){
 const CHANCE_LABELS={birthday:'🎂 День рождения',treat:'🍻 Проставился',raid:'🚔 Облава',mtv:'📺 Сюжет на MTV',complaint:'📋 Жалоба соседей',stash:'💰 Заначка общака',parking:'🚗 Штраф за парковку',sneakers:'👟 Кроссовки',robin:'🤑 Робин Гуд',roof:'🛡 Крыша',roadwork:'🚧 Ремонт дороги',snitch:'🚔 Донос',queue:'⏳ Очередь в ЖЭК',blackout:'❄️ Отключили свет'};
 const css=document.createElement('style');css.textContent=`
 .mp-test{position:fixed;right:8px;left:auto;bottom:calc(150px + env(safe-area-inset-bottom));top:auto;   /* справа у дока: слева под шапкой журнал денег, слева у дока — склад */
@@ -423,4 +426,5 @@ panel.addEventListener('click',e=>{
 });
 // Кнопка «+ Бот» рядом с «Начать» в лобби хозяина.
 setInterval(()=>{const st=$('mpStart');if(st&&!$('mpBotBtn')){const b=document.createElement('button');b.id='mpBotBtn';b.className='sec mp-botbtn';b.type='button';b.textContent='🤖 + Бот';b.onclick=addBot;st.before(b);}},700);
+}
 })();

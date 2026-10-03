@@ -16,8 +16,8 @@
   const sig={},sigOf=r=>r.headers.get('etag')||((r.headers.get('last-modified')||'')+'/'+(r.headers.get('content-length')||''));
   const get=u=>fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u+' '+r.status);sig[u]=sigOf(r);return r.text();});
   try{
-    const test=q.get('test')==='1';   // тестовый стол: боты и панель механик (web/mp-test.js)
-    const [html,core,mp,rules,tst]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js'),get('mp-rules.js').catch(()=>''),test?get('mp-test.js').catch(()=>''):Promise.resolve('')]);
+    // Боты — на любом столе у хозяина (backlog 02.10: «пропала возможность выбирать ботов»); панель механик в mp-test.js — только при ?test=1.
+    const [html,core,mp,rules,tst]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js'),get('mp-rules.js').catch(()=>''),get('mp-test.js').catch(()=>'')]);
     const anchor='const startAskName=askName',i=html.indexOf(anchor);
     if(i<0)throw new Error('в index.html нет точки запуска партии');
     let h=5381;const src=core+mp;for(let k=0;k<src.length;k++)h=((h<<5)+h+src.charCodeAt(k))|0;   // версия мультиплеера — для логов

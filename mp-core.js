@@ -135,11 +135,16 @@ function applyState(T,pid,pack,now){
 function mergeTiles(cur,next,pid,credits){
   if(!cur||!Array.isArray(next))return next;
   // Обмен клетками (решение продюсера 02.10): хозяин клетки t, принимая обмен, забирает клетку give у предложившего.
-  const swapGive=new Set();
-  for(const c of cur)if(c&&c.owner===pid&&c.mpSwap){const g=cur[c.mpSwap.give];if(g&&g.owner===c.mpSwap.from&&next[c.i]&&next[c.i].owner===c.mpSwap.from)swapGive.add(c.mpSwap.give);}
+  // Обмен на карте (m5-swapmap): o={from,to,give[],get[]} в системе автора. Получатель (pid) принимает — его get уходят автору,
+  // give автора приходят к нему. Пропускаем все клетки разом и только если все клетки у прежних хозяев: атомарно.
+  const swapGive=new Set(),swapHold=new Set(),seenSw=new Set();
+  for(const c of cur){const o=c&&c.mpSwap;if(!o||o.to!==pid||c.owner!==pid||seenSw.has(o.id)||!Array.isArray(o.give)||!Array.isArray(o.get))continue;seenSw.add(o.id);
+    const ok=o.get.every(i=>cur[i]&&cur[i].owner===pid&&next[i]&&next[i].owner===o.from)&&o.give.every(i=>cur[i]&&cur[i].owner===o.from&&next[i]&&next[i].owner===pid);
+    if(ok)o.give.forEach(i=>swapGive.add(i));else o.get.forEach(i=>swapHold.add(i));}   // неполный обмен — свои клетки получателя тоже не уходят
   return cur.map((t,i)=>{const n=next[i];if(!n)return t;
+    if(swapHold.has(i)&&n.owner&&n.owner!==pid)return t;         // половина обмена не проходит — клетка остаётся
     if(!t.owner||t.owner===pid)return n;                         // свободная или своя — верим целиком
-    if(swapGive.has(i)&&n.owner===pid)return n;                  // обмен принят: клетка предложившего — хозяину
+    if(swapGive.has(i)&&n.owner===pid){const o=Object.assign({},n);delete o.mpSwap;return o;}   // обмен принят: клетка автора — получателю
     // Продажа конкретному сопернику (02.10): покупатель забирает клетку, если в пакете есть оплата продавцу не меньше цены.
     if(t.mpSale&&t.mpSale.to===pid&&n.owner===pid&&(credits||[]).some(c=>c&&c.sale&&c.tile===i&&c.to===t.owner&&+c.cash>=t.mpSale.amount)){const o=Object.assign({},n);delete o.mpSale;return o;}
     if(n.owner===pid&&(credits||[]).some(c=>c&&c.force&&c.tile===i&&c.to===t.owner&&+c.cash>0))return n;   // выкуп ×10 оплачен
@@ -148,7 +153,7 @@ function mergeTiles(cur,next,pid,credits){
     else if(t.mpOffer&&t.mpOffer.from===pid&&!n.mpOffer)delete o.mpOffer;                     // забрал резерв / отозвал
     if(t.mpSale&&t.mpSale.to===pid&&!n.mpSale)delete o.mpSale;                                 // покупатель отказал
     if(n.mpSwap&&n.mpSwap.from===pid)o.mpSwap=n.mpSwap;                                        // своё предложение обмена
-    else if(t.mpSwap&&t.mpSwap.from===pid&&!n.mpSwap)delete o.mpSwap;
+    else if(t.mpSwap&&(t.mpSwap.from===pid||t.mpSwap.to===pid)&&!n.mpSwap)delete o.mpSwap;     // автор отозвал или получатель ответил
     return o;});
 }
 // Мини-игра (бандит, 21…) останавливает часы хода: «за 30 секунд я должен быстро тыкать — фатально».
