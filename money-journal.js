@@ -101,7 +101,7 @@
     entries.unshift({ts:Date.now(),amount:d.amount==null?null:+d.amount,cur:'$',label:String(d.text||d.kind||''),
       who:d.who?String(d.who):'',color:d.color||'',mine:!!d.mine,kind:d.kind||''});
     if(entries.length>MAX)entries.length=MAX;
-    changed();
+    changed(!!d.who);
   }
 
   // ---------- вид ----------
@@ -131,13 +131,14 @@
   function paint(){
     if(!root)return;
     root.dataset.mode=mode;
-    const e=entries[0];
-    pill.innerHTML=e?`<span class="mj-sum ${e.amount>0?'plus':e.amount<0?'minus':''}">${money(e.amount,e.cur)}</span> ${esc((e.who?e.who+' · ':'')+textOf(e))}`:'Журнал';
+    // Свёрнутый — только свои деньги: события соперников теперь в ленте слева (backlog 03.10: был повтор). В развёрнутом — всё.
+    const e=entries.find(x=>!x.who);
+    pill.innerHTML=e?`<span class="mj-sum ${e.amount>0?'plus':e.amount<0?'minus':''}">${money(e.amount,e.cur)}</span> ${esc(textOf(e))}`:'Журнал';
     list.innerHTML=entries.slice(0,MAX).map(rowHtml).join('');
     root.classList.toggle('empty',!entries.length);
   }
-  function changed(){
-    if(root){paint();if(mode==='min'){root.classList.remove('ping');void root.offsetWidth;root.classList.add('ping');}}
+  function changed(rival){
+    if(root){paint();if(mode==='min'&&!rival){root.classList.remove('ping');void root.offsetWidth;root.classList.add('ping');}}
     clearTimeout(saveTimer);saveTimer=setTimeout(()=>store.set(LOG_KEY,JSON.stringify(entries.slice(0,MAX))),300);
   }
 

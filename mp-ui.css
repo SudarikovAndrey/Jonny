@@ -482,3 +482,5 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
   background:var(--mp-paper);border:3px solid var(--c);box-shadow:0 0 0 2px var(--mp-ink),2px 3px 0 rgba(37,34,28,.6);pointer-events:none}
 .mp-ping b{font-size:19px;line-height:1}
 @media (prefers-reduced-motion:reduce){.mp-feed .mp-tick{animation:none}}
+/* плашки денег и карт про тебя — ниже ленты событий и плаката хода (03.10) */
+.mp-plate{top:60%}

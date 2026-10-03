@@ -946,7 +946,7 @@ const MP_CHANCE=[
     if(rich.pid===PID)S.cash-=a;else credit(rich.pid,-a,`Робин Гуд: ${esc(rich.name)} −${money(a)}`);
     if(poor.pid===PID)S.cash+=a;else credit(poor.pid,a,`Робин Гуд: ${esc(poor.name)} +${money(a)}`);
     return {text:`🤑 Робин Гуд: ${rich.pid===PID?'ты отдаёшь':rich.name+' отдаёт'} ${money(a)} ${poor.pid===PID?'тебе':poor.name}.`,amount:rich.pid===PID?-a:poor.pid===PID?a:null};}},
-  {id:'roof',f:()=>{S.mpShieldN=view.turn.n+view.players.length;return {text:'🛡 Крыша прикрыла: до твоего следующего хода ренту не платишь.',amount:null};}},
+  {id:'roof',f:()=>{S.mpShieldN=view.turn.n+view.players.length;return {text:'🛡 Крыша: тебя прикрыли. Следующий ход — без ренты: встанешь на чужую точку или бизнес, хозяину не платишь.',amount:null};}},
   {id:'roadwork',ok:()=>rivalsOf().some(p=>HAND.roadwork.ok(p.pid)),f:()=>{const r=rivalsOf().find(p=>HAND.roadwork.ok(p.pid));return {text:HAND.roadwork.play(r.pid),amount:null};}},
   {id:'snitch',ok:()=>rivalsOf().some(p=>!p.jail),f:()=>{const r=rivalsOf().filter(p=>!p.jail).sort((a,b)=>b.cash-a.cash)[0];hit({k:'jail',to:r.pid});return {text:`🚔 Донос: ${r.name} едет в участок — две попытки на дубль.`,amount:null};}},
   {id:'queue',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),r=rs[Math.floor(Math.random()*rs.length)];hit({k:'skip',to:r.pid});return {text:`⏳ Очередь в ЖЭК: ${r.name} пропускает следующий ход.`,amount:null};}},
@@ -1649,7 +1649,7 @@ function lotBadgeSync(){
 // фиолетовая — пакость против соперника, золотая — против лидера.
 // «i:» — значки карт 512 px (web/assets/icons/card, design/иконки-карт-шанса), а не мелкие значки интерфейса.
 const MPC_ART={wholesale:'v:cargo',promo:'i:percent',gathering:'i:coins',raid:'s:police',mtv:'s:tv',complaint:'s:inspector',stash:'v:cash',
-  parking:'i:money',robin:'i:cap',roof:'s:home',roadwork:'s:lot',snitch:'s:police',queue:'i:clock',blackout:'e:❄️',dumping:'i:percent',
+  parking:'i:money',robin:'i:cap',roof:'e:🛡️',roadwork:'s:lot',snitch:'s:police',queue:'i:clock',blackout:'e:❄️',dumping:'i:percent',
   spoiled:'i:box',levy:'v:cash',audit:'s:inspector',strike:'e:✊'};
 const MPC_TITLE={wholesale:'Оптовый завоз',promo:'Акция',gathering:'Сходка',raid:'Облава',mtv:'Сюжет на MTV',complaint:'Жалоба соседей',
   stash:'Заначка общака',parking:'Штраф за парковку',robin:'Робин Гуд',roof:'Крыша',roadwork:'Ремонт дороги',snitch:'Донос',queue:'Очередь в ЖЭК',
@@ -2301,7 +2301,10 @@ const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
 function feedAdd(p,kind,text,amount,mine,tile){
-  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':''));text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');n.style.setProperty('--c',p.color);
+  text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');
+  // Одна карта против тебя приходит двумя событиями (chance и hit) — в ленту одно.
+  const key=p.pid+'|'+(kind==='hit'?'chance':kind),now=Date.now();if(feedAdd.last&&feedAdd.last.key===key&&now-feedAdd.last.t<4000&&(kind==='hit'||kind==='chance'))return;feedAdd.last={key,t:now};
+  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':''));n.style.setProperty('--c',p.color);
   n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span><b>${esc(p.name)}</b> ${esc(text)}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
   ticker.prepend(n);const it={el:n,age:0,life:mine?FEED_LIFE_MINE:FEED_LIFE};feed.unshift(it);
   while(feed.length>FEED_MAX){const o=feed.pop();o.el.remove();}
