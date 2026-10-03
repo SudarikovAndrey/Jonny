@@ -2232,11 +2232,12 @@ function onEvt(from,e){
   if(e.kind==='lot'&&from!==PID&&e.tile!=null)lotAlert(e.tile);
   if(from!==PID){
     if(e.to&&amount&&(e.kind==='rent'||e.kind==='sale'))flyBetween(amount<0?from:e.to,amount<0?e.to:from,amount);
-    // Событие соперника — заметкой у самой клетки на поле (плейтест 4: «понятными плашками на поле»); без клетки — плашкой слева.
+    // Событие соперника — в ленту слева (Андрей 03.10), на клетке — короткий пульс с иконкой.
     const big=mine&&['offer','sale','decline','hit','bid','won','bank','unsold','swap','swapcounter','swapped','swapdecline','swapvoid'].includes(e.kind);
-    if(!big&&e.kind!=='chance'&&e.kind!=='scatter'&&e.kind!=='insp'&&e.text){
+    // Всё о сопернике — в ленту, и то, что задело тебя (плашка в центре гаснет через 2 с, в ленте можно дочитать).
+    if(e.kind!=='scatter'&&!(e.kind==='insp'&&Array.isArray(e.drops)&&e.drops.length)&&e.text){
       const n=noteOf(p,e,mine,amount);
-      if(e.tile!=null&&MobileHost.ready)fieldNote(e.tile,p,n.text,n.amount,(mine&&e.kind==='rent')||n.big);else tickerAdd(p,Object.assign({},e,{text:n.text}),n.amount);
+      feedAdd(p,/копилк/.test(e.text||'')?'bonus':e.kind,n.text,n.amount,mine||n.big,e.tile!=null?e.tile:null);
     }
   } else if(e.tile!=null&&amount)floatAt(e.tile,(amount>0?'+':'−')+money(Math.abs(amount)),amount>0?'#2f6b35':'#a92720');
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
@@ -2261,19 +2262,15 @@ function onEvt(from,e){
   if(e.kind==='saleoffer'&&mine)plate(`🏷 ${p.name} продаёт`,0,e.text.replace(/^предлагает купить /,'')+' · ответ — в начале твоего хода');
   if(e.kind==='salebought'&&mine)plate(`🏷 ${p.name} купил`,0,e.text.replace(/^купил /,''));
   if(e.kind==='underdog'&&from!==PID)plate(`🤝 Пособие ${money(e.amount||0)} — ${p.name}`,0,'отстающему на старте');
-  if(e.kind==='hand'&&from!==PID)toast(`🃏 ${p.name} взял карту в руку`,2200);
-  if(e.kind==='taxi'&&from!==PID)toast(`🚕 ${p.name} поехал на такси до склада`,2200);
   if(e.kind==='map')plate(`🗺 Карта · ${p.name}`,0,`хозяин стола ${e.text}`);
-  if(e.kind==='chance'&&!mine&&from!==PID)toast(`🎴 ${p.name}: ${e.text}`,2600);
   if(e.kind==='chance'&&mine&&from!==PID){cardPlateAt[from]=Date.now();const m=String(e.text||'').match(/^(\S+)\s+([^:]+):/);plate(`🃏 ${p.name} сыграл «${m?m[2].trim():'карту'}» против тебя`,e.amount?-Math.abs(e.amount):0,String(e.text||'').replace(/^[^:]*:\s*/,''));}
   // Инкассатор соперника: монеты разлетаются по полю и у остальных — видно, куда легли (плейтест 01.10).
-  if(e.kind==='insp'&&from!==PID&&!(Array.isArray(e.drops)&&e.drops.length))plate(`📋 Инспектор · ${p.name}`,0,e.text);   // бот: без разлёта
   if((e.kind==='scatter'||e.kind==='insp')&&from!==PID&&Array.isArray(e.drops)&&e.drops.length){
     // Разлёт и плашку показываем, когда фишка соперника ДОШЛА до клетки: не только цель (k.pos), но и анимация шагов
     // (очередь пуста, k.cur на клетке). Плейтест 4: k.pos ставился сразу по приходу вида — разлёт обгонял фишку на 2–3 с.
     (async()=>{for(let i=0;i<100;i++){const tk=tokens.get(from);if(!tk||tk.pos==null||(tk.pos===e.tile&&!tk.queue.length&&tk.cur===e.tile))break;await wait(100);}
-      if(e.kind==='insp')plate(`📋 Инспектор · ${p.name}`,0,e.text.replace(/^инспектор пришёл с проверкой: /,'проверка: '));
-      else{const n=noteOf(p,e,false,null);if(MobileHost.ready)fieldNote(e.tile,p,n.text,null,true);else tickerAdd(p,Object.assign({},e,{text:n.text}),null);}   // «Вася попал на инкассатора — разлетелось $40» (плейтест 4)
+      if(e.kind==='insp')feedAdd(p,'insp',e.text.replace(/^инспектор пришёл с проверкой: /,'инспектор проверяет: '),null,mine,e.tile);
+      else{const n=noteOf(p,e,false,null);feedAdd(p,'scatter',n.text,null,true,e.tile);}   // «Вася попал на инкассатора — разлетелось $40» (плейтест 4)
       if(MobileHost.ready)MobileHost.request('scatter',{from:e.tile==null?0:e.tile,drops:e.drops},15000).catch(()=>{});})();
   }
 }
@@ -2293,27 +2290,36 @@ function noteOf(p,e,mine,amount){
 }
 // Заметка у клетки: бумажный ярлык над клеткой, едет вместе с полем, гаснет через 3,5 с; про тебя — крупнее.
 const notes=[];
-function fieldNote(tile,p,text,amount,big){
-  const n=el('div','mp-note'+(big?' big':''),layer);n.style.setProperty('--c',p.color);
-  n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><span><b>${esc(p.name)}</b> ${esc(text)}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
-  const it={el:n,tile};notes.push(it);
-  // заметки на одной клетке — стопкой вверх
-  it.stack=notes.filter(x=>x.tile===tile).length-1;
-  const life=big?6500:5500;   // плейтест 03.10: «прочитать не успеваю» — было 4,5 и 3,5 с
-  n.animate([{opacity:0,scale:.8},{opacity:1,scale:1.06,offset:.06},{opacity:1,scale:1,offset:.1},{opacity:1,offset:.85},{opacity:0}],{duration:life,easing:'ease-out',fill:'forwards'})
-    .finished.then(()=>{n.remove();notes.splice(notes.indexOf(it),1);},()=>{});
-  if(big)try{navigator.vibrate&&navigator.vibrate(50);}catch(x){}
+// ---- лента событий соперников (Андрей 03.10: заметки над клетками «невозможно прочитать, плохо видно, быстро исчезают —
+// пусть появляются в одном месте, с иконками типа события и цветом игрока»). Одна колонка слева под журналом, новое сверху,
+// до трёх карточек; живут 7 с (про тебя — 9 с), пока открыто окно — время стоит. На клетке — только короткий пульс с той же иконкой.
+const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'🔨',bid:'🔨',won:'🔨',unsold:'🔨',bank:'🏦',bankrupt:'🏦',loan:'🏦',
+  offer:'💼',sale:'🤝',saleoffer:'🏷',salebought:'🏷',decline:'✋',chance:'🎴',hand:'🃏',hit:'🎴',skip:'⏳',jail:'🚔',fine:'👮',insp:'📋',
+  scatter:'💰',minigame:'🎰',double:'🎲',pass:'🏁',bonus:'💵',underdog:'🤝',taxi:'🚕',swap:'🔁',swapcounter:'🔁',swapped:'🔁',
+  swapdecline:'🔁',swapvoid:'🔁',map:'🗺'};
+const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
+const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
+const feed=[];
+function feedAdd(p,kind,text,amount,mine,tile){
+  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':''));text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');n.style.setProperty('--c',p.color);
+  n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span><b>${esc(p.name)}</b> ${esc(text)}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
+  ticker.prepend(n);const it={el:n,age:0,life:mine?FEED_LIFE_MINE:FEED_LIFE};feed.unshift(it);
+  while(feed.length>FEED_MAX){const o=feed.pop();o.el.remove();}
+  n.onclick=()=>{n.remove();const k=feed.indexOf(it);if(k>=0)feed.splice(k,1);};   // тап — убрать прочитанное
+  if(tile!=null&&MobileHost.ready)fieldPing(tile,p,icon);
+  if(mine)try{navigator.vibrate&&navigator.vibrate(50);}catch(x){}
 }
-// Короткие плашки событий соперников: кто, что, сколько — сами гаснут, не больше двух сразу.
-const ticker=el('div','mp-ticker');ticker.id='mpTicker';
-function tickerAdd(p,e,amount){
-  const tile=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile],icon=tile?(tile.type==='biz'?bizIcon(tile):tile.good&&good(tile.good)?good(tile.good).icon:''):'';
-  const to=e.to?(e.to===PID?'тебе':nameOf(e.to)):'';
-  const text=e.kind==='rent'&&to?`заплатил ${to} ${e.text.replace(/^заплатил ренту /,'ренту ')}`:e.text;
-  const n=el('div','mp-tick',ticker);n.style.setProperty('--c',p.color);
-  n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><span><b>${esc(p.name)}</b> ${esc(text)}</span>${icon?`<em>${icon}</em>`:''}${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
-  while(ticker.children.length>2)ticker.firstChild.remove();
-  n.animate([{transform:'translateY(-8px) scale(.9)',opacity:0},{transform:'none',opacity:1,offset:.08,easing:'cubic-bezier(.34,1.56,.64,1)'},{opacity:1,offset:.85},{opacity:0}],{duration:3200,fill:'forwards'}).finished.then(()=>n.remove(),()=>n.remove());
+// Возраст считаем сами: под окном (лента скрыта) карточки не стареют, после закрытия окна их видно.
+{let last=performance.now();setInterval(()=>{const now=performance.now(),dt=now-last;last=now;
+  if(document.body.classList.contains('mp-modal')||document.hidden)return;
+  for(const it of feed.slice()){it.age+=dt;if(it.age>it.life-500&&!it.el.classList.contains('out'))it.el.classList.add('out');
+    if(it.age>=it.life){it.el.remove();feed.splice(feed.indexOf(it),1);}}},200);}
+// Пульс на клетке: где это случилось — без текста, его читают в ленте.
+function fieldPing(tile,p,icon){
+  const n=el('div','mp-ping',layer);n.style.setProperty('--c',p.color);n.innerHTML=`<b>${icon}</b>`;
+  const it={el:n,tile,stack:0};notes.push(it);
+  n.animate([{opacity:0,scale:.5},{opacity:1,scale:1.15,offset:.12},{opacity:1,scale:1,offset:.2},{opacity:1,offset:.8},{opacity:0,scale:.9}],{duration:2200,easing:'ease-out',fill:'forwards'})
+    .finished.then(()=>{n.remove();notes.splice(notes.indexOf(it),1);},()=>{});
 }
 function floatAt(i,text,color){
   if(!MobileHost.ready)return;const at=screenOfTile(i),f=el('div','mp-float');f.textContent=text;f.style.color=color;f.style.left=at.x+'px';f.style.top=(at.y-34)+'px';
@@ -2365,7 +2371,7 @@ function frame(now){
   if(pick)for(const [i,r] of pick.rings){const p=screenOfTile(i);r.style.transform=`translate(${p.x}px,${p.y}px)`;}
   if(swapUI){for(const [i,r] of swapUI.rings){const q=screenOfTile(i);r.style.transform=`translate(${q.x}px,${q.y}px)`;}
     for(const c of swapUI.chains){const a=screenOfTile(c.a),b=screenOfTile(c.b);c.el.style.transform=`translate(${(a.x+b.x)/2}px,${(a.y+b.y)/2-18}px)`;}}
-  for(const it of notes){const p=screenOfTile(it.tile);it.el.style.transform=`translate(${p.x}px,${p.y-44-it.stack*40}px)`;}
+  for(const it of notes){const p=screenOfTile(it.tile);it.el.style.transform=`translate(${p.x}px,${p.y-30}px)`;}
   // Поле умеет рисовать фишки само (src/board/rivals.js) — отдаём ему, HTML-жетоны прячем: так буквы не лезут
   // поверх карточек и не дрожат при прокрутке (плейтест 02.10). Старое поле без этого — HTML, как раньше.
   const inScene=!!(MobileHost.sceneState&&MobileHost.sceneState.rivals);layer.classList.toggle('mp-in-scene',inScene);
