@@ -76,12 +76,21 @@ function gainOf(change,V,leader){const sn=snapNow(),o=sn.o,base=sn.base,a=j=>o[(
   if(Object.keys(change).some(k=>sn.cat[+k]))d+=cityWorth(b,sn)-cityWorth(a,sn);
   return d+(V.spite?V.spite*Math.max(0,hurt):0);}
 const PROSP=()=>(window.SFBuilder&&+SFBuilder.prosp)||.06;
-function cityWorth(f,sn){const cats=new Set();let sum=0;for(let i=0;i<40;i++){if(f(i)!==ME||!sn.cat[i])continue;cats.add(sn.cat[i]);sum+=sn.base[i];}
+function cityWorth(f,sn,who=ME){const cats=new Set();let sum=0;for(let i=0;i<40;i++){if(f(i)!==who||!sn.cat[i])continue;cats.add(sn.cat[i]);sum+=sn.base[i];}
   return PROSP()*cats.size*sum;}
 const leaderOf=v=>{const ps=v.players.filter(p=>p.pid!==H.PID).sort((a,b)=>(b.cap?b.cap.total:b.cash)-(a.cap?a.cap.total:a.cash));return ps[0]&&ps[0].pid;};
 const brainLog=(bot,msg)=>trace.push(`${bot?bot.name:'бот'} (${(PROFILES[profKey(H.PID)]||{}).name||''}): ${msg}`);
 // Лучший обмен: до 2 клеток с каждой стороны; соперник по базе клеток не теряет (доплату ставим так, чтобы ему было
 // не обидно), бот выигрывает не меньше запаса профиля. Одинаковое предложение не повторяет 12 кругов стола.
+// Выгода соперника who от смены хозяев — глазами среднего игрока: реальный бонус соседства и категории города.
+// Раньше бот смотрел только, чтобы база соперника не падала, — и звал рвать его улицу: 111 отказов на 117 обменов
+// (прогон «Дебага» 03.10). Теперь зовёт на обмен, выгодный обоим, а соперника в минусе догоняет доплатой.
+const THEIR_MARGIN=.1;
+function theirGain(change,who){const sn=snapNow(),o=sn.o,base=sn.base,a=j=>o[(j+40)%40],b=j=>{j=(j+40)%40;return j in change?change[j]:o[j];};
+  const touched=new Set();for(const k in change){const i=+k;touched.add((i+39)%40);touched.add(i);touched.add((i+1)%40);}
+  let d=0;for(const i of touched)d+=cellWorth(i,b,base,GROUP,who)-cellWorth(i,a,base,GROUP,who);
+  if(Object.keys(change).some(k=>sn.cat[+k]))d+=cityWorth(b,sn,who)-cityWorth(a,sn,who);
+  return d;}
 function bestSwap(V,v,keep){
   const combos=arr=>{const out=[];for(let a=0;a<arr.length;a++){out.push([arr[a]]);for(let c=a+1;c<arr.length;c++)out.push([arr[a],arr[c]]);}return out;};
   const free=i=>MPSwap.free(i);
@@ -96,7 +105,8 @@ function bestSwap(V,v,keep){
     for(const give of combos(mine))for(const get of combos(theirs)){
       const ch={};for(const i of give)ch[i]=p.pid;for(const i of get)ch[i]=ME;
       const g=gainOf(ch,V),bGive=give.reduce((x,i)=>x+baseAt(i),0),bGet=get.reduce((x,i)=>x+baseAt(i),0);
-      const pays=MPSwap.pays.filter(x=>bGive-bGet+x>=0&&(x<=0||S.cash-x>=keep));if(!pays.length)continue;   // pay>0 — доплачивает бот
+      const tg=theirGain(ch,p.pid),need=THEIR_MARGIN*Math.max(50,bGet);   // соперник отдаёт get, получает give и доплату
+      const pays=MPSwap.pays.filter(x=>tg+x>=need&&(x<=0||S.cash-x>=keep));if(!pays.length)continue;   // pay>0 — доплачивает бот
       const pay=Math.min(...pays),net=g-pay;if(net<V.margin*Math.max(50,bGive))continue;
       const key=give.join('.')+'>'+get.join('.')+'@'+p.pid;if(asked[key]!=null&&v.turn.n-asked[key]<12*v.players.length)continue;
       if(!best||net>best.net)best={to:p.pid,give,get,pay,net,key};}}
@@ -484,7 +494,7 @@ async function doForce(f,t){
   if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;H.placeOffer(r,1.5);}
   if(f==='buy'){S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;H.forceBuy(r);}
 }
-window.MPBots={brain:{VALUE,gainOf,bestSwap,freshSnap,ME,leaderOf,cityWorth},trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
+window.MPBots={brain:{VALUE,gainOf,theirGain,bestSwap,freshSnap,ME,leaderOf,cityWorth},trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
   holdHostView(v,now){heldView=v;heldNow=now;if(acting===H.PID)H.view=v;if(v&&v.phase!=='play'&&acting)unstick();},   // свой авто-ход: вид свежий, применим в конце; партия кончилась — ход бота обрываем
   get speed(){return speed;},set speed(x){speed=+x||1;},
   get force(){return force;},set force(f){force=f;},
