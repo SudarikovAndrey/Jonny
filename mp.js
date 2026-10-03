@@ -1931,6 +1931,7 @@ function swapMode(o){
   document.body.classList.add('mp-swapping');
   swapUI.veil=el('div','mp-sw-veil',layer);
   const tray=el('div','mp-sw-tray');swapUI.tray=tray;
+  swapUI.banner=el('div','mp-sw-banner');   // заголовок режима над полем: что за кольца и с кем обмен (Андрей 03.10: «что это за кружок?»)
   tray.addEventListener('click',e=>{const b=e.target.closest('[data-sw]');if(!b||b.disabled)return;swapAct(b.dataset.sw,b.dataset.v);});
   const cv=$('board');let down=null;
   swapUI.pd=e=>{down={x:e.clientX,y:e.clientY};};
@@ -1942,7 +1943,7 @@ function swapMode(o){
   // Всё поле в кадре, низ кадра — над лотком (как mapPick: обзор на входе, «к Джонни» на выходе).
   try{MobileHost.send({action:'overview'});swapFrame();}catch(e){}
 }
-function swapFrame(){const U=swapUI;if(!U)return;const app=$('app').getBoundingClientRect(),h=app.height||innerHeight,top=$('top').getBoundingClientRect().bottom;
+function swapFrame(){const U=swapUI;if(!U)return;const app=$('app').getBoundingClientRect(),h=app.height||innerHeight,top=Math.max($('top').getBoundingClientRect().bottom,U.banner?U.banner.getBoundingClientRect().bottom:0);
   const bottom=(app.bottom-U.tray.getBoundingClientRect().top+8)/h;try{MobileHost.send({action:'layout',top:(top-app.top)/h,bottom});}catch(e){}}
 function swapTap(i){
   const U=swapUI,A=SW(),own=toShared(S.tiles)[i].owner,side=own===PID?'give':own===U.rival?'get':null;if(!side||!A)return;
@@ -1954,7 +1955,7 @@ function swapTap(i){
 function swapClose(){
   if(!swapUI)return;const U=swapUI;swapUI=null;const cv=$('board');
   if(cv){cv.removeEventListener('pointerdown',U.pd,true);cv.removeEventListener('pointerup',U.pu,true);}
-  U.veil.remove();U.tray.remove();for(const [,r] of U.rings)r.remove();U.chains.forEach(c=>c.el.remove());
+  U.veil.remove();U.tray.remove();if(U.banner)U.banner.remove();for(const [,r] of U.rings)r.remove();U.chains.forEach(c=>c.el.remove());
   document.body.classList.remove('mp-swapping');try{syncFlags();}catch(e){}
   try{MobileHost.send({action:'home'});mobileLastLayout='';mobileLayout();}catch(e){}
   try{offerBadgeSync();}catch(e){}if(U.done)U.done();
@@ -1991,7 +1992,11 @@ function swapPaint(){
   const payNote=U.pay<0?`${esc(who)} доплатит тебе <b>${money(-U.pay)}</b>`:U.pay>0?`Ты доплатишь <b>${money(U.pay)}</b> — уйдёт в резерв до ответа`:'Без доплаты';
   const inc=U.incoming,canSend=ready&&pv&&pv.ok;
   const cnt=(n)=>`${n}/${A.max||2}`;
+  U.banner.style.top=Math.round($('top').getBoundingClientRect().bottom+6)+'px';
+  U.banner.innerHTML=inc?`<b>🔁 ${esc(who)} предлагает обмен</b><small>Кольца на поле — клетки из предложения. «После» покажет, что станет.</small>`
+    :`<b>🔁 Обмен с ${esc(who)}: выбери клетки</b><small>Кольцо над клеткой — её можно обменять. Тапни, чтобы выбрать.</small>`;
   U.tray.innerHTML=`<div class="mp-sw-head"><b>🔁 ${inc?`${esc(who)} предлагает`:`Обмен · ${esc(who)}`}</b><span class="mp-sw-tabs"><button type="button" data-sw="now" class="${U.after?'':'on'}">Сейчас</button><button type="button" data-sw="after" class="${U.after?'on':''}">После</button></span></div>
+    <p class="mp-sw-legend"><b>Отдаёшь</b> — твои клетки уйдут ${esc(who)}. <b>Получаешь</b> — клетки ${esc(who)} станут твоими. <b>«одна»</b> — твоя клетка без соседей твоего цвета, её выгоднее отдать.</p>
     <div class="mp-sw-cols"><div><p>Отдаёшь <small>${cnt(give.length)}</small></p>${give.map(swapRow).join('')||'<small class="mp-sw-hint">тапни свою клетку</small>'}</div>
       <div><p>Получаешь <small>${cnt(get.length)}</small></p>${get.map(swapRow).join('')||`<small class="mp-sw-hint">тапни клетку ${esc(who)}</small>`}</div></div>
     ${pv?`<div class="mp-sw-rent"><p><span>Твоя рента</span>${d(pv.mine)}</p><p><span>Рента ${esc(who)}</span>${d(pv.theirs)}</p><p class="inv"><span>Вложено</span><em>отдаёшь ${money(pv.invGive)} · получаешь ${money(pv.invGet)}</em></p>${pv.ok||inc?'':`<p class="why">${esc(pv.reason||'Обмен сейчас невозможен')}</p>`}</div>`:''}
