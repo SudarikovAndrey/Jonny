@@ -30,7 +30,8 @@ window.ShipmentEvent=(()=>{
   const stage=await Promise.race([ready,new Promise(resolve=>{timer=setTimeout(()=>{expired=true;resolve(null);},timeout);})]);
   clearTimeout(timer);return stage;
  }
- if(typeof document!=='undefined')setTimeout(()=>loadStage().then(m=>m.preload()).catch(()=>{}),1200);
+ // Сцена поставки (~140 КБ + атлас контейнера 457 КБ) — после готовности поля, иначе делит с ним полосу (m5-pageload).
+ if(typeof document!=='undefined'){const pre=()=>document.body&&document.body.classList.contains('engine-ready')?setTimeout(()=>loadStage().then(m=>m.preload()).catch(()=>{}),1500):setTimeout(pre,500);setTimeout(pre,1200);}
  // One uninterrupted trajectory: approach the near opening, then settle inside it.
  function cargoPose(index,t,count=18){
   t=clamp(t);const entry=.68,col=index%3,row=Math.floor(index%18/3);

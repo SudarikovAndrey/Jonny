@@ -1,6 +1,14 @@
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
+// Атласы окон (~0,5 МБ) не нужны, пока грузится поле: до готовности поля или первого окна картинка
+// ставится в data-late-href и подменяется потом (m5-pageload: на 400 КБ/с они делили полосу с полем).
+const LATE_ATLAS=new Set(['modal-atlas.webp','windows-kit.webp','windows-scenes.webp']);
+let lateOpen=false;
+function lateFlush(){if(lateOpen)return;lateOpen=true;document.querySelectorAll('image[data-late-href]').forEach(i=>{i.setAttribute('href',i.dataset.lateHref);i.removeAttribute('data-late-href');});}
+{const ready=()=>document.body&&(document.body.classList.contains('engine-ready')||!!document.querySelector('#modal:not([hidden])'));
+  const watch=()=>{if(lateOpen)return;if(ready()){lateFlush();return;}setTimeout(watch,250);};setTimeout(watch,250);setTimeout(lateFlush,25000);}
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.webp',sw=1536,sh=1024){
-  return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" overflow="hidden"><image href="assets/${file}" width="${sw}" height="${sh}"/></svg></svg>`;
+  const href=`assets/${file}`,late=!lateOpen&&LATE_ATLAS.has(file);
+  return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" overflow="hidden"><image ${late?'data-late-href':'href'}="${href}" width="${sw}" height="${sh}"/></svg></svg>`;
 }
 function paperSurface(el){
   if(!el)return;

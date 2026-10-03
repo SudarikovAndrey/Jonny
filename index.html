@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><script>window.AB_BOARD_SRC=function(){var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}return "board.html?v="+'96b94601'+(m?"&map="+m:"")};(function(){var mo=new MutationObserver(function(){var f=document.getElementById("board-frame");if(!f)return;mo.disconnect();setTimeout(function(){if(!f.getAttribute("src"))f.src=window.AB_BOARD_SRC()},0)});mo.observe(document.documentElement,{childList:true,subtree:true})})()</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Америкэн бой</title>
 <style>
@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="mobile.css?v=acc5edbd"><link rel="stylesheet" href="mobile-windows.css?v=637a737d"><link rel="stylesheet" href="battlepass.css?v=786b1943"><link rel="stylesheet" href="warehouse.css?v=4256d303"><link rel="stylesheet" href="card-motion.css?v=994e1ef0"><link rel="stylesheet" href="shop.css?v=03e15d2d"><link rel="stylesheet" href="sf-builder.css?v=00cb37ae"><link rel="stylesheet" href="inspector.css?v=6e0a3da3"><link rel="stylesheet" href="unified-upgrade.css?v=ef7c435f"><link rel="stylesheet" href="meta-tree.css?v=ce106abb"><link rel="stylesheet" href="map1.css?v=14177f5c"><link rel="stylesheet" href="chance-system.css?v=60becebe"><link rel="stylesheet" href="chance-ui.css?v=53727678"><link rel="stylesheet" href="slot.css?v=45c94087"><meta name="theme-color" content="#302d27"><link rel="stylesheet" href="interface-harmony.css?v=1e8368eb"><link rel="stylesheet" href="interface-print.css?v=fd60f92b"><link rel="stylesheet" href="property-layout.css?v=87de3e9e"><link rel="stylesheet" href="interface-world.css?v=0268d065"><link rel="stylesheet" href="chance-depth.css?v=688e5b9b"><link rel="stylesheet" href="chance-print.css?v=f4f421f5"><link rel="stylesheet" href="growth-tree.css?v=d0a967a5"><link rel="stylesheet" href="property-compact.css?v=4a75be3d"><link rel="stylesheet" href="warehouse-compact.css?v=67a5d70e"><link rel="stylesheet" href="property-upgrade-fx.css?v=9f2e9d5c"><link rel="stylesheet" href="number-drum.css?v=0e5f6a71"><link rel="stylesheet" href="start-screen.css?v=76b14c07"><link rel="stylesheet" href="dock-menu.css?v=fbe86f59"><link rel="stylesheet" href="advice-target.css?v=14eef4b5"><link rel="stylesheet" href="top-hud.css?v=3a8636b0"><link rel="stylesheet" href="onboarding-print.css?v=9865ffba"><link rel="stylesheet" href="notice-windows.css?v=22583808"><link rel="stylesheet" href="authority-windows.css?v=f3ad4760"><link rel="stylesheet" href="map-progress.css?v=72222503"><link rel="stylesheet" href="shipment-event.css?v=8898216f"><link rel="stylesheet" href="help-print.css?v=f7e02872"><link rel="stylesheet" href="spot-varnish.css?v=c29b1bb8"><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script><link rel="stylesheet" href="parcel-partial.css?v=7fe4276f"><link rel="stylesheet" href="money-journal.css?v=c58ef725"><link rel="stylesheet" href="tile-sheet.css?v=c72feeeb"><link rel="stylesheet" href="buy-buttons.css?v=8f7f8c04"></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="bundle.css?v=caaa6329"><meta name="theme-color" content="#302d27"></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -350,7 +350,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
     <div class="bar2" id="qrow"><button class="qchip dark" id="sTimer"><span></span></button><button class="qchip" id="q0"><span></span><i></i></button><button class="qchip" id="q1"><span></span><i></i></button></div>
     <span id="sEvent" hidden></span>
   </div>
-  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>var q=new URLSearchParams(location.search).get("map");var m=q==="1"?"mainstreet":q==="sf"?"sanfrancisco":null;/* карта 1 — всегда Мейн-стрит */if(!m)try{m=localStorage.getItem("americanboy_board_map")}catch(e){}document.getElementById("board-frame").src="board.html?v="+'96b94601'+(m?"&map="+m:"")</script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
+  <div id="stage"><iframe id="board-frame" title="Игровое поле" allow="autoplay"></iframe><script>(function(){var f=document.getElementById("board-frame");if(!f.getAttribute("src"))f.src=window.AB_BOARD_SRC()})()</script><script src="chance-depth.js?v=7ea3ab7b"></script><script src="property-art.js?v=26b626e9"></script><canvas id="board"></canvas><div class="map-controls"><button id="mapOverview">Всё поле</button><button id="mapFollow">К Джонни</button></div><div id="diceResult" hidden aria-live="polite"></div><div id="inv" hidden><div id="invList" hidden></div><button id="invBtn"></button></div></div>
   <div id="panel">
     <div id="guide" hidden role="status" aria-live="polite"></div>
     <button id="tilebar" hidden><span id="tbText"></span><b>Открыть</b></button>
@@ -2620,8 +2620,8 @@ function onboardingSlides(){
  const m=onboardUpgradeModel();
  const goal=MAP1?3:CFG.TICKET_PTS;
  return [
-  {title:'Покупай точку',text:'Встал на свободную клетку — открой карточку и купи точку.',art:`<div class="ob-banner"><img src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"></div><div class="ob-chip">Купить · <i class="cash-glyph"></i>60</div>`},
-  {title:'Покупай товар',text:'Закупай на складе. Товар сам разложится по твоим точкам.',art:`<div class="ob-supply"><div class="ob-supply-warehouse"><div class="costco-sign" role="img" aria-label="Склад Costco">${costcoArt(19,10,781,267)}</div><b>Склад</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-goods"><img src="assets/goods/gum.webp" alt="Жвачка"><img src="assets/goods/cola.webp" alt="Кола"><b>Товары</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-points"><img src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"><img src="assets/points/pt_cola_1.webp" alt="Тележка колы"><b>Твои точки</b></div></div>`},
+  {title:'Покупай точку',text:'Встал на свободную клетку — открой карточку и купи точку.',art:`<div class="ob-banner"><img loading="lazy" src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"></div><div class="ob-chip">Купить · <i class="cash-glyph"></i>60</div>`},
+  {title:'Покупай товар',text:'Закупай на складе. Товар сам разложится по твоим точкам.',art:`<div class="ob-supply"><div class="ob-supply-warehouse"><div class="costco-sign" role="img" aria-label="Склад Costco">${costcoArt(19,10,781,267)}</div><b>Склад</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-goods"><img src="assets/goods/gum.webp" alt="Жвачка"><img src="assets/goods/cola.webp" alt="Кола"><b>Товары</b></div><span class="ob-route-arrow" aria-hidden="true">➜</span><div class="ob-supply-points"><img loading="lazy" src="assets/points/pt_gum_1.webp" alt="Лоток жвачки"><img src="assets/points/pt_cola_1.webp" alt="Тележка колы"><b>Твои точки</b></div></div>`},
   {title:'Прошёл старт — касса!',text:'Проходишь клетку с флажком — товар продаётся. Монеты твои!',art:`<div class="ob-field-fragment" role="img" aria-label="Фрагмент настоящей карты: Джонни рядом с красной стартовой клеткой и клетчатым флажком"><i class="ob-start-ring"></i><img class="ob-start-coin" src="assets/icons/soft.webp" alt=""></div><div class="ob-sale"><img src="assets/goods/gum.webp" alt="Товар"><span aria-hidden="true">➜</span><img src="assets/icons/soft.webp" alt="Монеты"><b>Продажи за круг</b></div>`},
   {title:'Прокачивай точку',text:'Нажми «Улучшить». Следующий уровень увеличит выделенный параметр.',art:onboardUpgradeArt(m),upgrade:true},
   MAP1?{title:'Открой следующую карту',text:'Купи точки, прокачай их и продавай товар. Выполни все три задания карты.',art:`<div class="ob-goal-journey ob-map-goal"><img src="assets/icons/hud-johnny.webp" alt="Джонни"><div class="ob-goal-score"><b>3 из 3</b><span>задания карты</span><div class="ob-goal-meter"><i></i></div></div><span class="ob-route-arrow">➜</span><div class="ob-next-map"><img src="assets/start/city-landscape.webp" alt="Новый район"><b>Следующий район</b></div></div>`}:
@@ -2998,8 +2998,16 @@ function streetPassCoin(tile){
 })();
 
 // Sprite windows use the supplied atlas as artwork. All game text remains live DOM.
+// Атласы окон (~0,5 МБ) не нужны, пока грузится поле: до готовности поля или первого окна картинка
+// ставится в data-late-href и подменяется потом (m5-pageload: на 400 КБ/с они делили полосу с полем).
+const LATE_ATLAS=new Set(['modal-atlas.webp','windows-kit.webp','windows-scenes.webp']);
+let lateOpen=false;
+function lateFlush(){if(lateOpen)return;lateOpen=true;document.querySelectorAll('image[data-late-href]').forEach(i=>{i.setAttribute('href',i.dataset.lateHref);i.removeAttribute('data-late-href');});}
+{const ready=()=>document.body&&(document.body.classList.contains('engine-ready')||!!document.querySelector('#modal:not([hidden])'));
+  const watch=()=>{if(lateOpen)return;if(ready()){lateFlush();return;}setTimeout(watch,250);};setTimeout(watch,250);setTimeout(lateFlush,25000);}
 function atlasArt(x,y,w,h,cls='',file='modal-atlas.webp',sw=1536,sh=1024){
-  return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" overflow="hidden"><image href="assets/${file}" width="${sw}" height="${sh}"/></svg></svg>`;
+  const href=`assets/${file}`,late=!lateOpen&&LATE_ATLAS.has(file);
+  return `<svg class="atlas-art ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="${cls==='property-illustration'?'xMidYMid slice':'xMidYMid meet'}" aria-hidden="true"><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" overflow="hidden"><image ${late?'data-late-href':'href'}="${href}" width="${sw}" height="${sh}"/></svg></svg>`;
 }
 function paperSurface(el){
   if(!el)return;
@@ -3842,7 +3850,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='a9ff497700';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='8f8ef634a0';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -6297,5 +6305,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=428d4433";</script><script src="shipment-event.js?v=5d979d76"></script><script src="parcel-fill.js?v=0d8f0894"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=7de4130d"></script><script type="module" src="roll-button.js?v=7cd84172"></script><script src="money-journal.js?v=fc318bc8"></script></body>
+<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=428d4433";</script><script src="shipment-event.js?v=5529f201"></script><script src="parcel-fill.js?v=0d8f0894"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=7de4130d"></script><script>(function(){var done=0;function go(){if(done)return;done=1;var e=document.createElement("script");e.type="module";e.src="roll-button.js?v=7cd84172";document.body.appendChild(e)}function w(){document.body.classList.contains("engine-ready")?go():setTimeout(w,300)}w();setTimeout(go,20000)})()</script><script src="money-journal.js?v=fc318bc8"></script></body>
 </html>
