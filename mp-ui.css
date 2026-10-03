@@ -484,3 +484,8 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 @media (prefers-reduced-motion:reduce){.mp-feed .mp-tick{animation:none}}
 /* плашки денег и карт про тебя — ниже ленты событий и плаката хода (03.10) */
 .mp-plate{top:60%}
+/* «Рента за остановку: сейчас → после улучшения» (Андрей 03.10) */
+#card .mp-guest-rent{gap:6px}
+#card .mp-guest-rent>span{flex:1;min-width:0}
+#card .mp-guest-rent .mp-gr-arrow{font-style:normal;font-weight:800;color:#6d5a3f}
+#card .mp-guest-rent .mp-gr-next{color:var(--mp-green,#2f6b35)}

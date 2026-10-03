@@ -682,17 +682,33 @@ function bizSetLine(t){
 }
 // Своя точка в партии: строка «Прибыль за круг» повторяла блок прокачки — на её месте «Гость платит»
 // (плейтест 02.10: «нигде нет, сколько платит гость»). Нет блока прокачки (максимум) — строка добавляется.
-function guestRentRow(t){
-  if(!t||!t.owner||!view||view.phase!=='play'||sfIsLot(t))return;
-  setTimeout(()=>{const c=$('card');if(!c||$('modal').hidden||c.querySelector('.mp-guest-rent'))return;
-    const body=c.querySelector('.property-body');if(!body)return;
-    let r=0;try{r=rentOfMine(t);}catch(e){return;}
-    const html=`<span>🏠 Рента за остановку</span><b><i class="cash-glyph"></i>${Math.round(r).toLocaleString('en-US')}</b>`;
-    const dup=[...body.querySelectorAll(':scope>.box')].find(b=>/Прибыль за круг/.test(b.textContent)&&b.nextElementSibling&&b.nextElementSibling.classList.contains('uup'));
-    if(dup){dup.classList.add('mp-guest-rent');dup.innerHTML=html;}
-    else{const row=document.createElement('div');row.className='box mp-guest-rent';row.innerHTML=html;(body.querySelector('.uup')||body.lastElementChild||body).before(row);}
-  },60);
+// Андрей 03.10: после прокачки строка пропадала (карточка перерисовывается на месте, без kioskWindow) — а это главный параметр.
+// Теперь строку держит наблюдатель за карточкой и показывает, какой рента станет после следующего улучшения.
+let guestRentTile=null;
+// Рента после следующего улучшения — те же шаги, что у кнопки (unified-upgrade.js kioskUpgradeBoth, бизнес — level+1).
+function rentNextOf(t){
+  try{
+    if(t.type==='biz'){if(!(t.level<CFG.BIZ.maxLevel))return null;const k=t.level;t.level++;try{return rentOfMine(t);}finally{t.level=k;}}
+    if(typeof kioskNextStat==='function'&&!kioskNextStat(t))return null;
+    const c=t.capLvl,sl=t.salesLvl;
+    try{if(typeof capTab==='function'&&t.capLvl<capTab(t).length)t.capLvl++;if(typeof salTab==='function'&&t.salesLvl<salTab(t).length)t.salesLvl++;
+      if(c===t.capLvl&&sl===t.salesLvl)return null;return rentOfMine(t);}finally{t.capLvl=c;t.salesLvl=sl;}
+  }catch(e){return null;}
 }
+function guestRentPaint(){
+  const t=guestRentTile,c=$('card');if(!t||!c||$('modal').hidden){if($('modal').hidden)guestRentTile=null;return;}
+  if(!t.owner||!view||view.phase!=='play'||sfIsLot(t))return;
+  const body=c.querySelector('.property-body');if(!body)return;
+  let r=0;try{r=rentOfMine(t);}catch(e){return;}
+  const nx=rentNextOf(t),fmt=v=>`<i class="cash-glyph"></i>${Math.round(v).toLocaleString('en-US')}`;
+  const html=`<span>🏠 Рента за остановку</span><b>${fmt(r)}</b>${nx!=null&&Math.round(nx)!==Math.round(r)?`<i class="mp-gr-arrow">→</i><b class="mp-gr-next">${fmt(nx)}</b>`:''}`;
+  const have=body.querySelector('.mp-guest-rent');if(have){if(have.dataset.h!==html){have.dataset.h=html;have.innerHTML=html;}return;}
+  const dup=[...body.querySelectorAll(':scope>.box')].find(b=>/Прибыль за круг/.test(b.textContent)&&b.nextElementSibling&&b.nextElementSibling.classList.contains('uup'));
+  const row=dup||document.createElement('div');row.className='box mp-guest-rent';row.dataset.h=html;row.innerHTML=html;
+  if(!dup)(body.querySelector('.uup')||body.lastElementChild||body).before(row);
+}
+function guestRentRow(t){if(!t||!t.owner||sfIsLot(t))return;guestRentTile=t;setTimeout(guestRentPaint,60);}
+new MutationObserver(()=>{if(guestRentTile)guestRentPaint();}).observe($('card'),{childList:true,subtree:true});
 (function(){const base=kioskWindow;kioskWindow=function(t){const r=base.apply(this,arguments);if(!isRival(t))guestRentRow(t);return r;};})();
 (function(){const base=bizWindow;bizWindow=function(t){const r=base.apply(this,arguments);if(!isRival(t))guestRentRow(t);return r;};})();
 function lotButton(t){
