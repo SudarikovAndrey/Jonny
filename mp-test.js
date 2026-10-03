@@ -54,11 +54,12 @@ const profKey=pid=>{const b=bots.get(pid);return (b&&b.profile)||'builder';};
 const valOf=pid=>VALUE[profKey(pid)]||VALUE.builder;
 // Снимок поля на одно решение: хозяева и базы клеток считаются один раз (MP_MARKET не дёшев, а обменов перебираются сотни).
 let snap=null;
-const snapKey=()=>S.tiles.map(t=>(t.owner?1:0)+(t.rival||'')+(t.salesLvl||0)+(t.level||0)+'|'+(t.price||0)).join();
+const snapKey=()=>S.tiles.map(t=>(t.owner?1:0)+(t.rival||'')+(t.salesLvl||0)+(t.level||0)+'|'+(t.price||0)+(t.base||'')).join();
 function freshSnap(){const o=S.tiles.map(t=>tradeOk(t)?(t.owner?ME:(t.rival||null)):null);
   const base=S.tiles.map((t,i)=>{if(!tradeOk(t))return 0;const inv=H.invested(t),own=o[i];if(!own)return inv;
     const nb=(o[(i+39)%40]===own)+(o[(i+1)%40]===own);return Math.max(inv,MV(i)/(1+GROUP*nb));});
-  return snap={o,base,key:snapKey()};}
+  const cat=S.tiles.map(t=>tradeOk(t)&&t.type==='kiosk'&&t.base&&!t.lot?t.base:null);
+  return snap={o,base,cat,key:snapKey()};}
 const snapNow=()=>snap&&snap.key===snapKey()?snap:freshSnap();
 const baseAt=i=>snapNow().base[i];
 const ownersNow=()=>snapNow().o;
@@ -70,7 +71,13 @@ function gainOf(change,V,leader){const sn=snapNow(),o=sn.o,base=sn.base,a=j=>o[(
   const touched=new Set();for(const k in change){const i=+k;touched.add((i+39)%40);touched.add(i);touched.add((i+1)%40);}
   let d=0,hurt=0;for(const i of touched){d+=cellWorth(i,b,base,V.groupW,ME)-cellWorth(i,a,base,V.groupW,ME);
     if(V.spite&&leader)hurt+=cellWorth(i,a,base,GROUP,leader)-cellWorth(i,b,base,GROUP,leader);}
+  // Благосостояние города: каждая своя категория — +prosp ко всем ценам продажи своих точек (SF: +6%).
+  // Без этого бот не видел смысла в напитках или одежде при своих сладостях — и звал только на «Лоток сладостей».
+  if(Object.keys(change).some(k=>sn.cat[+k]))d+=cityWorth(b,sn)-cityWorth(a,sn);
   return d+(V.spite?V.spite*Math.max(0,hurt):0);}
+const PROSP=()=>(window.SFBuilder&&+SFBuilder.prosp)||.06;
+function cityWorth(f,sn){const cats=new Set();let sum=0;for(let i=0;i<40;i++){if(f(i)!==ME||!sn.cat[i])continue;cats.add(sn.cat[i]);sum+=sn.base[i];}
+  return PROSP()*cats.size*sum;}
 const leaderOf=v=>{const ps=v.players.filter(p=>p.pid!==H.PID).sort((a,b)=>(b.cap?b.cap.total:b.cash)-(a.cap?a.cap.total:a.cash));return ps[0]&&ps[0].pid;};
 const brainLog=(bot,msg)=>trace.push(`${bot?bot.name:'бот'} (${(PROFILES[profKey(H.PID)]||{}).name||''}): ${msg}`);
 // Лучший обмен: до 2 клеток с каждой стороны; соперник по базе клеток не теряет (доплату ставим так, чтобы ему было
@@ -473,7 +480,7 @@ async function doForce(f,t){
   if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;H.placeOffer(r,1.5);}
   if(f==='buy'){S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;H.forceBuy(r);}
 }
-window.MPBots={brain:{VALUE,gainOf,bestSwap,freshSnap,ME,leaderOf},trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
+window.MPBots={brain:{VALUE,gainOf,bestSwap,freshSnap,ME,leaderOf,cityWorth},trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
   holdHostView(v,now){heldView=v;heldNow=now;if(acting===H.PID)H.view=v;if(v&&v.phase!=='play'&&acting)unstick();},   // свой авто-ход: вид свежий, применим в конце; партия кончилась — ход бота обрываем
   get speed(){return speed;},set speed(x){speed=+x||1;},
   get force(){return force;},set force(f){force=f;},

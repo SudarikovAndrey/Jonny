@@ -1735,7 +1735,7 @@ function offerBadgeSync(){
   // входящий обмен на карте (m5-swapmap) — тап открывает режим обмена с ответом
   const sws=view&&view.phase==='play'&&SW()?(SW().incoming()||[]):[];
   if(sws.length&&!swapUI){const o=sws[0];offerBadge.hidden=false;offerBadge._swap=o.id;
-    const html=`<i>🔁</i><span><b>${esc(nameOf(o.from))}</b> меняет ${o.get.length}↔${o.give.length}${o.pay?` · ${o.pay<0?'доплатит':'просит'} ${money(Math.abs(o.pay))}`:''}${sws.length>1?` <em>+${sws.length-1}</em>`:''}</span><u>${myTurn()&&!ending?'посмотреть':'ответ в свой ход'}</u>`;
+    const html=`<i>🔁</i><span><b>${esc(nameOf(o.from))}</b> меняет ${esc(o.get.map(cellNo).join('+'))} на твою ${esc(o.give.map(cellNo).join('+'))}${o.pay?` · ${o.pay<0?'доплатит':'просит'} ${money(Math.abs(o.pay))}`:''}${sws.length>1?` <em>+${sws.length-1}</em>`:''}</span><u>${myTurn()&&!ending?'посмотреть':'ответ в свой ход'}</u>`;
     if(offerBadge._h!==html){offerBadge._h=html;offerBadge.innerHTML=html;offerBadge.style.setProperty('--c',colorOf(o.from));}return;}
   const list=view&&view.phase==='play'&&S&&S.tiles?S.tiles.filter(x=>x.owner&&(x.mpOffer||(x.mpSwap&&x.mpSwap.to===PID&&!SW()))):[];   // обмены с MPSwap — плашкой выше
   offerBadge.hidden=!list.length;if(!list.length)return;
@@ -1978,7 +1978,7 @@ function swapClose(){
   try{offerBadgeSync();}catch(e){}if(U.done)U.done();
 }
 function swapRow(i){const t=S.tiles[i],biz=t.type==='biz';let r=0;try{r=t.owner==='you'?rentOfMine(t):rentOf(t);}catch(e){}
-  return `<div class="mp-sw-item"><em>${biz?bizIcon(t):(good(t.good)||{}).icon||'🏪'}</em><span><b>${esc(titleOf(t))}</b><small>ур. ${(biz?t.level:t.salesLvl)||1} · вложено ${money(invested(t))} · 🏠 ${money(r)}</small></span></div>`;}
+  return `<div class="mp-sw-item"><em>${biz?bizIcon(t):(good(t.good)||{}).icon||'🏪'}</em><span><b>${esc(titleOf(t))}</b><small>${cellNo(t.i)} · ур. ${(biz?t.level:t.salesLvl)||1} · вложено ${money(invested(t))} · 🏠 ${money(r)}</small></span></div>`;}
 function swapPaint(){
   const U=swapUI,A=SW();if(!U||!A)return;
   const sh=toShared(S.tiles),now={};sh.forEach(t=>{if(t.owner)now[t.i]=t.owner;});
@@ -2261,8 +2261,9 @@ function onEvt(from,e){
   if(mine&&e.kind==='decline')plate(`✋ ${p.name} отказал`,0,'деньги вернулись из резерва');
   // Обмен на карте (m5-swapmap): «Геймплей» при MPSwap._ui своих плашек не ставит. Клетки в e.give/e.get — в системе автора (e.from).
   if(mine&&(e.kind==='swap'||e.kind==='swapcounter')&&Array.isArray(e.give)){const pay=e.pay||0;
-    plate(`🔁 ${e.kind==='swap'?'Обмен':'Встречное'} · ${p.name}`,0,`${e.get.length} твоих на ${e.give.length} ${p.name}${pay?` · ${pay>0?`доплатит ${money(pay)}`:`просит ${money(-pay)}`}`:''} · ответ — в начале твоего хода`);}
-  if(mine&&e.kind==='swapped'&&from!==PID)plate(`🔁 ${p.name} согласился на обмен`,0,(e.text||'').replace(/^обмен: /,''));
+    const ch=chainText(swapChains(e.from,PID,e.give,e.get));
+    plate(`🔁 ${e.kind==='swap'?'Обмен':'Встречное'} · ${p.name}`,0,`твою ${cellsText(e.get)} на ${cellsText(e.give)}${pay?` · ${pay>0?`доплатит ${money(pay)}`:`просит ${money(-pay)}`}`:''}${ch} · ответ — в начале твоего хода`);}
+  if(mine&&e.kind==='swapped'&&from!==PID)plate(`🔁 ${p.name} согласился на обмен`,0,`ты отдал ${cellsText(e.give)}, взял ${cellsText(e.get)}${chainText(swapChains(e.from,from,e.give,e.get))}`);
   if(mine&&e.kind==='swapdecline'&&from!==PID)plate(`✋ ${p.name} отказал в обмене`,0,e.pay>0?'доплата вернулась из резерва':'клетки остались у вас');
   if(mine&&e.kind==='swapvoid')plate('🔁 Обмен снят',0,'клетки сменили хозяина или ушли на торги'+(e.pay>0?' · доплата вернулась':''));
   // События стола (торги, удары из «Шанса», пропуски) — приходят всем, включая автора.
@@ -2297,7 +2298,30 @@ function flyBetween(from,to,amount){
   try{fly('💵',a,b,flyN(Math.abs(amount)),{onDone:()=>{const c=chipsEl.querySelector(`.mp-chip[data-pid="${CSS.escape(to)}"]`);if(c&&c.animate)c.animate([{transform:'scale(1)'},{transform:'scale(.9,1.1)'},{transform:'scale(1.08,.94)'},{transform:'scale(1)'}],{duration:320,easing:'ease-out'});}});}catch(e){}
 }
 // Текст события по-человечески: «Андрей попал на твою клетку +$30», «Вася попал на инкассатора — разлетелось $40».
+// ---- подпись обмена (backlog 03.10: «Лоток сладостей ↔ Лоток сладостей» читалось как бессмыслица) ----
+// Клетка — номером (как «Шанс» 7, 22, 36 в правилах); одинаковые названия — один раз; итог цепочки у того, кто её собирает.
+// В событии клетки в системе автора: give — его клетки (уходят второму), get — клетки второго (уходят автору).
+const cellNo=i=>`№${i}`;
+function cellsText(ids){ids=ids||[];if(!ids.length)return '';const ts=ids.map(i=>S.tiles[i]).filter(Boolean),names=[...new Set(ts.map(titleOf))];
+  return names.length===1?`${ids.map(cellNo).join(' и ')} «${names[0]}»`:ts.map(t=>`${cellNo(t.i)} «${titleOf(t)}»`).join(' и ');}
+function swapChains(author,other,give,get){
+  const own={};toShared(S.tiles).forEach(t=>{if(t.owner&&(t.type==='kiosk'||t.type==='biz'))own[t.i]=t.owner;});
+  (give||[]).forEach(i=>own[i]=other);(get||[]).forEach(i=>own[i]=author);
+  const len=i=>{const o=own[i];if(!o)return 0;let n=1;for(let k=1;k<40&&own[(i-k+40)%40]===o;k++)n++;for(let k=1;k<40&&own[(i+k)%40]===o;k++)n++;return Math.min(n,40);};
+  const best=(ids)=>Math.max(0,...(ids||[]).map(len));return {[other]:best(give),[author]:best(get)};}
+const whoName=pid=>pid===PID?'тебя':nameOf(pid);
+function chainText(ch){const parts=Object.entries(ch).filter(([,n])=>n>=2).map(([pid,n])=>`у ${whoName(pid)} цепочка из ${n}`);return parts.length?' → '+parts.join(', '):'';}
+function swapText(e,emitter){
+  const author=e.from,other=(e.kind==='swap'||e.kind==='swapcounter')?e.to:emitter,pay=e.pay||0;
+  const ch=chainText(swapChains(author,other,e.give,e.get));
+  const payT=pay?` · доплата ${pay>0?nameOf(author):nameOf(other)} ${money(Math.abs(pay))}`:'';
+  if(e.kind==='swapped')return `поменялся с ${author===PID?'тобой':nameOf(author)}: отдал ${cellsText(e.get)}, взял ${cellsText(e.give)}${ch}`;
+  if(e.kind==='swapdecline')return `отказал ${author===PID?'тебе':nameOf(author)} в обмене ${cellsText(e.get)} на ${cellsText(e.give)}`;
+  if(e.kind==='swapvoid')return `обмен ${cellsText(e.give)} на ${cellsText(e.get)} снят — клетки сменили хозяина`;
+  return `${e.kind==='swapcounter'?'встречное':'предлагает обмен'} ${other===PID?'тебе':nameOf(other)}: ${cellsText(e.give)} на ${other===PID?'твою ':''}${cellsText(e.get)}${payT}${ch}`;
+}
 function noteOf(p,e,mine,amount){
+  if(/^swap/.test(e.kind||'')&&Array.isArray(e.give))return {text:swapText(e,p.pid),amount:null};
   const tile=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile],where=tile?`«${titleOf(tile)}»`:'';
   if(e.kind==='rent')return mine?{text:`попал на твою клетку ${where}`,amount:Math.abs(amount||0)}:{text:`попал на клетку ${nameOf(e.to)} ${where}`,amount:-Math.abs(amount||0)};
   if(e.kind==='scatter')return {text:`попал на инкассатора — разлетелось ${e.cash?money(e.cash):'по клеткам'}`,amount:null};
@@ -2320,7 +2344,7 @@ function feedAdd(p,kind,text,amount,mine,tile){
   text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');
   // Одна карта против тебя приходит двумя событиями (chance и hit) — в ленту одно.
   const key=p.pid+'|'+(kind==='hit'?'chance':kind),now=Date.now();if(feedAdd.last&&feedAdd.last.key===key&&now-feedAdd.last.t<4000&&(kind==='hit'||kind==='chance'))return;feedAdd.last={key,t:now};
-  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':''));n.style.setProperty('--c',p.color);
+  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':'')+(text.length>70?' long':''));n.style.setProperty('--c',p.color);
   n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span><b>${esc(p.name)}</b> ${esc(text)}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
   ticker.prepend(n);const it={el:n,age:0,life:mine?FEED_LIFE_MINE:FEED_LIFE};feed.unshift(it);
   while(feed.length>FEED_MAX){const o=feed.pop();o.el.remove();}
