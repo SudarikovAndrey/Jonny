@@ -1,0 +1,124 @@
+{
+ "board/assets/maps/kansas/plate-railway.webp": {
+  "lo": "board/assets/maps/kansas/plate-railway.lo.webp",
+  "sha1": "e1f4040f4a03f5d82bd569d1e9fced9371be40a8"
+ },
+ "board/assets/maps/kansas/plate-square-railway.webp": {
+  "lo": "board/assets/maps/kansas/plate-square-railway.lo.webp",
+  "sha1": "04ed8a80f75e57e6d483ba7c56742629c9c24545"
+ },
+ "board/assets/maps/kansas/plate-square.webp": {
+  "lo": "board/assets/maps/kansas/plate-square.lo.webp",
+  "sha1": "43e3064b0fef404e875e8ee4c5be2fddbdf5aba0"
+ },
+ "board/assets/maps/kansas/plate.webp": {
+  "lo": "board/assets/maps/kansas/plate.lo.webp",
+  "sha1": "de9c5bea89f73fb8899c81d5f33990024e9eb9ef"
+ },
+ "board/assets/maps/kansas/terrain-clear-square-v3.webp": {
+  "lo": "board/assets/maps/kansas/terrain-clear-square-v3.lo.webp",
+  "sha1": "6677e47988a5650cb988eebce221328fdfac165d"
+ },
+ "board/assets/maps/liberty/plate-square.webp": {
+  "lo": "board/assets/maps/liberty/plate-square.lo.webp",
+  "sha1": "de186ddf21ae019a2b4ddc40b32d0a3096394719"
+ },
+ "board/assets/maps/liberty/plate.webp": {
+  "lo": "board/assets/maps/liberty/plate.lo.webp",
+  "sha1": "67c3e8927370530d6a63c4bb34166f39faf950e8"
+ },
+ "board/assets/maps/losangeles/plate-square.webp": {
+  "lo": "board/assets/maps/losangeles/plate-square.lo.webp",
+  "sha1": "e70bef8bb1c4b53b3f75771c4e6c1a3eedb50123"
+ },
+ "board/assets/maps/losangeles/plate.webp": {
+  "lo": "board/assets/maps/losangeles/plate.lo.webp",
+  "sha1": "ebb2d0d2fb42e7202634f35e627518e9023ddedd"
+ },
+ "board/assets/maps/mainstreet/plate-square.webp": {
+  "lo": "board/assets/maps/mainstreet/plate-square.lo.webp",
+  "sha1": "c68ad3197d6e4ded613f3507caf9a6f746ce383b"
+ },
+ "board/assets/maps/mainstreet/plate.webp": {
+  "lo": "board/assets/maps/mainstreet/plate.lo.webp",
+  "sha1": "ca3e576820e50f2b2f5d8ec597d3a1bc381f65a1"
+ },
+ "board/assets/maps/manhattan/plate-square.webp": {
+  "lo": "board/assets/maps/manhattan/plate-square.lo.webp",
+  "sha1": "bff7a0fa8281c4da0fcffea80bf28900b3a1b711"
+ },
+ "board/assets/maps/manhattan/plate.webp": {
+  "lo": "board/assets/maps/manhattan/plate.lo.webp",
+  "sha1": "005ecb478f8058593021d6ac619ace7ea84d2461"
+ },
+ "board/assets/maps/paloalto/plate-square.webp": {
+  "lo": "board/assets/maps/paloalto/plate-square.lo.webp",
+  "sha1": "0854aaf50fa9890dbc58295b0eaa5133b873dfce"
+ },
+ "board/assets/maps/paloalto/plate.webp": {
+  "lo": "board/assets/maps/paloalto/plate.lo.webp",
+  "sha1": "5168daf87aa14720cfe54ab86e2d8fb7288d50cf"
+ },
+ "board/assets/maps/sanfrancisco/overscan-v9.webp": {
+  "lo": "board/assets/maps/sanfrancisco/overscan-v9.lo.webp",
+  "sha1": "f4541ad56e2cd570f3be4b0fcd66fb848b5e150a"
+ },
+ "board/assets/maps/sanfrancisco/plate-square-v4.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-square-v4.lo.webp",
+  "sha1": "1fbdee8a19b50defa3e8a7aaa913b484f7d4c100"
+ },
+ "board/assets/maps/sanfrancisco/plate-square-v5.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-square-v5.lo.webp",
+  "sha1": "f870c0dbc21a6ec60b2b0b8ff4ad628a7cd624c4"
+ },
+ "board/assets/maps/sanfrancisco/plate-square-v9.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-square-v9.lo.webp",
+  "sha1": "e732e9d37a6343a129c64de46c4f2b92408cc697"
+ },
+ "board/assets/maps/sanfrancisco/plate-square.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-square.lo.webp",
+  "sha1": "358461d211a0e14241bfd0638139398cdce6f3d5"
+ },
+ "board/assets/maps/sanfrancisco/plate-v4.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-v4.lo.webp",
+  "sha1": "5dcdacd28806375c03ce629e79343066e31b1018"
+ },
+ "board/assets/maps/sanfrancisco/plate-v5.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-v5.lo.webp",
+  "sha1": "20da7e442241fa4f6620a31b088eb29389bd5c03"
+ },
+ "board/assets/maps/sanfrancisco/plate-v9.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate-v9.lo.webp",
+  "sha1": "55740283add57ace24ac299b4dec27a0e690799c"
+ },
+ "board/assets/maps/sanfrancisco/plate.webp": {
+  "lo": "board/assets/maps/sanfrancisco/plate.lo.webp",
+  "sha1": "350613f94fa9efe726c8996062b62a04e7104623"
+ },
+ "board/assets/maps/vegas/plate-square.webp": {
+  "lo": "board/assets/maps/vegas/plate-square.lo.webp",
+  "sha1": "cbfe28bcf776a0975272c22c892cb563d2c6c5bb"
+ },
+ "board/assets/maps/vegas/plate.webp": {
+  "lo": "board/assets/maps/vegas/plate.lo.webp",
+  "sha1": "ee1ee144d1d68a6fa4289f72b89b66b0f182981d"
+ },
+ "board/assets/plate-square.webp": {
+  "lo": "board/assets/plate-square.lo.webp",
+  "sha1": "121627a5611c6b771c65fb1a285effcf189ff5a4"
+ },
+ "board/assets/plate.webp": {
+  "lo": "board/assets/plate.lo.webp",
+  "sha1": "dce8c788a2ce00de3288dc3e8e23acb4bd9658f1"
+ },
+ "board/assets/johnny/idle_front.webp": {
+  "lo": "board/assets/johnny/idle_front.lo.webp",
+  "sha1": "47d3c7962d335ea2ffa0990dca537aa920cf3846"
+ },
+ "assets/interface-atlas.webp": {
+  "lo": "board/assets/board-atlas.webp",
+  "sha1": "b8b532285d2a58dce2c5f2390607039b2b02fd2a",
+  "final": true,
+  "regions": "6b310ec58e9c8ecf708fed527920ea4714bb57c9"
+ }
+}

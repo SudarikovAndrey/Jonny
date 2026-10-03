@@ -7,16 +7,27 @@
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  const params=new URLSearchParams(location.search);
  const review=params.get('playtest')==='1'&&params.get('review')==='1'&&!params.has('start');
+ const mpEntry=params.has('mp')||/mp\.html$/.test(location.pathname||'');
+ const friends=document.getElementById('startFriends');
+ if(friends&&params.has('mute'))friends.href='mp.html?mute';
+ // Rules remain a deliberate lobby action. Keep the public open() controller,
+ // suppress only its first-visit automatic presentation in this entry surface.
+ if(mpEntry){
+  const manualRules=rules=>{if(rules)rules.once=()=>Promise.resolve();return rules;};
+  if(window.MPRules)manualRules(window.MPRules);
+  else Object.defineProperty(window,'MPRules',{configurable:true,get(){return undefined;},set(rules){Object.defineProperty(window,'MPRules',{value:manualRules(rules),writable:true,configurable:true});}});
+ }
+ const mpLobbyReady=()=>{const lobby=document.getElementById('mpLobby');return mpEntry&&lobby&&!lobby.hidden;};
  const layers=new Map();
  let entered=false,closing=false;
  function hold(){
-  for(const id of ['app','modal','helpDialog','tip']){
+  for(const id of ['app','modal','helpDialog','tip','mpLobby']){
    const el=document.getElementById(id);
    if(el&&!layers.has(el)){layers.set(el,el.inert);el.inert=true;}
   }
  }
  function enter(){
-  if(!window.MobileHost?.ready||entered||closing)return;
+  if((!window.MobileHost?.ready&&!mpLobbyReady())||entered||closing)return;
   closing=true;boot.classList.add('start-closing');
   setTimeout(()=>{
    entered=true;closing=false;boot.hidden=true;
@@ -31,7 +42,7 @@
   hold();
   const ready=!!window.MobileHost?.ready;
   boot.classList.toggle('start-ready',ready);play.disabled=!ready;
-  if(review&&ready)enter();
+  if((review&&ready)||mpLobbyReady())enter();
  }
  play.addEventListener('click',enter);
  const observer=new MutationObserver(sync);

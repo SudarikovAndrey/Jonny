@@ -73,3 +73,16 @@ body.page-hidden #boot *{animation-play-state:paused!important}
 
 #boot #startPlay,#boot #bootFull{font-family:Bitter,Georgia,serif!important}
 body:has(#boot:not([hidden])) #wideBtn{visibility:hidden;pointer-events:none}
+
+/* Two routes into the same illustrated box: solo play and the friends' table. */
+#boot .start-character{top:29%;height:45%}
+#boot .start-controls{bottom:max(4.5%,calc(env(safe-area-inset-bottom) + 16px));gap:12px}
+#boot .start-loading{min-height:24px}
+#boot.start-ready .start-loading{display:none}
+#boot #startFriends{display:flex;align-items:baseline;justify-content:center;gap:8px;width:100%;max-width:340px;box-sizing:border-box;min-height:47px;padding:10px 14px;color:#fff0cb;background:#243f4b url(assets/print/ink-wear.svg) center/350px;border:2px solid #30261b;border-radius:4px 7px 5px 3px;box-shadow:0 3px #30261b,inset 0 0 0 1px #efdfb7;font:800 20px/1.1 Bitter,Georgia,serif;text-decoration:none}
+#boot #startFriends span{font-size:12px;font-weight:700;white-space:nowrap}
+#boot #startFriends:focus-visible{outline:3px solid #f8e8bf;outline-offset:4px}
+#boot #startFriends:active{translate:0 2px;box-shadow:0 1px #30261b,inset 0 0 0 1px #efdfb7}
+@media(orientation:landscape){#boot .start-character{top:8%;height:82%}#boot .start-controls{bottom:11%}}
+@media(max-height:700px) and (orientation:portrait){#boot .start-title{top:5%}#boot .start-title h1{font-size:clamp(30px,9vw,45px)}#boot .start-title p{font-size:12px;margin-top:10px}#boot .start-character{top:30%;height:40%}#boot .start-controls{bottom:4%;gap:9px}#boot #startPlay{min-height:55px;font-size:27px}#boot #startFriends{min-height:42px;font-size:18px}#boot #bootFull{font-size:11px;min-height:24px}}
+@media(max-height:450px) and (orientation:landscape){#boot .start-controls{bottom:6%;gap:7px}#boot #startFriends{min-height:34px;padding:7px 10px;font-size:16px}#boot #startFriends span{font-size:10px}}

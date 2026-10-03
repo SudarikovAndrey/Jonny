@@ -1283,8 +1283,8 @@ const pairKey=(a,b)=>[a,b].sort().join('|');                        // совм�
 const swappedWith=()=>false;                                           // лимит «один обмен на пару» снят (02.10)
 let swapErr='';
 const tradeable=t=>!!t&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t);
-function swapFreeReason(i){const t=S.tiles[i];if(!tradeable(t))return 'это не точка и не бизнес';if(!t.owner&&!t.rival)return 'клетка ничья';
-  if(lotOn(i))return 'клетка на торгах';if(t.mpOffer)return 'на клетку висит предложение цены';if(t.mpSale)return 'клетка выставлена на продажу';if(t.mpSwap)return 'клетка уже в другом обмене';return '';}
+function swapFreeReason(i,ignoreId){const t=S.tiles[i];if(!tradeable(t))return 'это не точка и не бизнес';if(!t.owner&&!t.rival)return 'клетка ничья';
+  if(lotOn(i))return 'клетка на торгах';if(t.mpOffer)return 'на клетку висит предложение цены';if(t.mpSale)return 'клетка выставлена на продажу';if(t.mpSwap&&t.mpSwap.id!==ignoreId)return 'клетка уже в другом обмене';return '';}   // ignoreId — свой разбираемый обмен (ответ, встречное)
 function myTradeTiles(){return S.tiles.filter(x=>x.owner&&tradeable(x)&&!swapFreeReason(x.i));}
 // Рента клетки на общем поле (owner = pid) — та же формула, что rentOf, но для любого хозяина и гипотетических владельцев.
 function rentShared(sh,t){
@@ -1302,16 +1302,16 @@ function chainsOf(pid,give,get,to){const sh=give||get?sharedWith(swapOver(PID,to
   return out;}
 function lonersOf(pid){pid=pid||PID;const sh=sharedWith();return sh.filter(t=>t.owner===pid&&tradeable(t)&&!(sh[(t.i+39)%40].owner===pid&&tradeable(sh[(t.i+39)%40]))&&!(sh[(t.i+1)%40].owner===pid&&tradeable(sh[(t.i+1)%40]))).map(t=>t.i);}
 function swapCheck(d){
-  const {to,give=[],get=[]}=d,pay=+d.pay||0;
+  const {to,give=[],get=[]}=d,pay=+d.pay||0,ign=typeof d.counter==='string'?d.counter:undefined;
   if(!view||view.phase!=='play')return 'партия не идёт';if(!playerOf(to)||to===PID)return 'нет такого соперника';
   if(!give.length||!get.length||give.length>SWAP_MAX||get.length>SWAP_MAX)return `от 1 до ${SWAP_MAX} клеток с каждой стороны`;
   if(new Set(give.concat(get)).size!==give.length+get.length)return 'клетка выбрана дважды';
   if(!SWAP_PAYS.includes(pay))return 'доплата не из ряда';
-  for(const i of give){if(ownerOf(i)!==PID)return 'отдать можно только свою клетку';const r=swapFreeReason(i);if(r)return r;}
-  for(const i of get){if(ownerOf(i)!==to)return 'клетка не у этого соперника';const r=swapFreeReason(i);if(r)return r;}
+  for(const i of give){if(ownerOf(i)!==PID)return 'отдать можно только свою клетку';const r=swapFreeReason(i,ign);if(r)return r;}
+  for(const i of get){if(ownerOf(i)!==to)return 'клетка не у этого соперника';const r=swapFreeReason(i,ign);if(r)return r;}
   return '';}
 function swapPreview(d){const give=d.give||[],get=d.get||[],to=d.to,b=rentTotals(),a=rentTotals(swapOver(PID,to,give,get));
-  const r=swapCheck(d),turn=!myTurn()?'не твой ход':ending?'ход заканчивается':proposedThisTurn()?'одно предложение за ход':'';
+  const r=swapCheck(d),turn=!myTurn()?'не твой ход':ending?'ход заканчивается':proposedThisTurn()&&!d.accept?'одно предложение за ход':'';
   const pay=+d.pay||0,money_=pay>0&&S.cash<pay?'на доплату не хватает':'';
   return {ok:!r&&!turn&&!money_,reason:r||turn||money_,mine:{before:b[PID]||0,after:a[PID]||0},theirs:{before:b[to]||0,after:a[to]||0},
     invGive:Math.round(give.reduce((x,i)=>x+invested(S.tiles[i]),0)),invGet:Math.round(get.reduce((x,i)=>x+invested(S.tiles[i]),0))};}
@@ -1375,7 +1375,7 @@ function swapCounter(id,d){const o=swapById(id);if(!o||o.to!==PID||!myTurn()||en
   if(o.pay>0)credit(o.from,o.pay,'встречное: резерв вернулся',-o.pay);
   return swapPropose(d2);}
 async function answerSwapWindow(id){
-  const o=swapById(id);if(!o||o.to!==PID||!myTurn()||ending)return;const inc=swapIncoming().find(x=>x.id===id),pv=swapPreview({to:o.from,give:inc.give,get:inc.get,pay:inc.pay});
+  const o=swapById(id);if(!o||o.to!==PID||!myTurn()||ending)return;const inc=swapIncoming().find(x=>x.id===id),pv=swapPreview({to:o.from,give:inc.give,get:inc.get,pay:inc.pay,counter:id,accept:true});
   const ls=a=>a.map(i=>`«${esc(titleOf(S.tiles[i]))}» <small>клетка ${i}</small>`).join(', ');
   const v=await modal(`<h2>🔁 ${esc(nameOf(o.from))} предлагает обмен</h2>
     <div class="row"><span class="n">Отдаёшь<small>${ls(inc.give)}</small></span><span class="v">${money(pv.invGive)}</span></div>
@@ -1388,8 +1388,9 @@ async function answerSwapWindow(id){
 // Совместимость со старым входом «Интерфейса» (1↔1): placeSwap(чужая клетка, моя клетка, доплата).
 function placeSwap(t,give,pay){return swapPropose({to:t.rival,give:[give],get:[t.i],pay:+pay||0});}
 function swapBlock(t){const o=t.mpSwap;if(!o)return '';return o.from===PID?`<div class="mp-choice mp-swap"><b>Твоё предложение обмена ждёт ответа ${esc(nameOf(o.to))}</b></div>`:'';}
+// preview/propose: d.counter = id разбираемого входящего — его метки не считаются «другим обменом»; d.accept=true — смотрим принятие (без лимита хода).
 window.MPSwap={max:SWAP_MAX,pays:SWAP_PAYS,get lastError(){return swapErr;},
-  free:i=>!swapFreeReason(i),freeReason:swapFreeReason,loners:lonersOf,chains:chainsOf,rentTotals,
+  free:(i,ignoreId)=>!swapFreeReason(i,ignoreId),freeReason:swapFreeReason,loners:lonersOf,chains:chainsOf,rentTotals,
   preview:swapPreview,suggest:swapSuggest,propose:swapPropose,incoming:swapIncoming,outgoing:swapOutgoing,
   accept:swapAccept,decline:id=>swapDecline(id,false),counter:swapCounter,
   answer:(id,a)=>a==='accept'?swapAccept(id):swapDecline(id,false),answerWindow:answerSwapWindow,

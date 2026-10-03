@@ -252,3 +252,124 @@
 #card .mp-mult span{font:700 12px var(--mp-num);font-variant-numeric:tabular-nums}
 .mp-round.final{background:var(--mp-red);animation:mp-blink 1s steps(2,jump-none) infinite}
 @media (prefers-reduced-motion:reduce){.mp-round.final{animation:none}}
+
+/* Codex: the lobby is a single printed table invitation, not nested UI cards. */
+body.mp-mode .mp-lobby{box-sizing:border-box;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:#25221cb8;backdrop-filter:blur(4px);overscroll-behavior:contain}
+body.mp-mode .mp-sheet{box-sizing:border-box;width:min(100%,760px);max-height:100%;padding:20px 18px 16px;border:3px solid #30261b;border-radius:14px 10px 15px 11px;box-shadow:0 0 0 3px #eddbb4,0 7px 0 3px #30261b;background:#f2e3bd url(assets/paper-grain.svg);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#897451 transparent}
+body.mp-mode .mp-sheet h2{font:800 24px/1.18 Bitter,Georgia,serif;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid #30261b;overflow-wrap:anywhere}
+body.mp-mode .mp-lead{font-size:14px;line-height:1.45;margin-bottom:15px}
+body.mp-mode .mp-code{font-family:Bitter,Georgia,serif;font-size:28px;border:2px solid #a92720;border-radius:2px 4px 3px 2px;letter-spacing:.13em;padding:2px 7px;white-space:nowrap;background:#eddbb4 url(assets/print/ink-wear.svg)}
+body.mp-mode .mp-sheet button{min-height:42px;font-size:15px;border-radius:5px 7px 4px 6px}
+body.mp-mode .mp-big{font:800 22px/1.15 Bitter,Georgia,serif!important;min-height:53px;padding:12px 16px!important;background:#a92720 url(assets/print/ink-wear.svg)!important;box-shadow:0 4px #30261b;text-transform:none;letter-spacing:0}
+body.mp-mode .mp-big:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px #30261b}
+body.mp-mode .mp-field>span{font:700 13px Bitter,Georgia,serif;letter-spacing:0;text-transform:none}
+body.mp-mode .mp-share{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px;align-items:start;padding:0 0 12px;margin:0 0 12px;border:0;border-radius:0;border-bottom:1px solid #78634677}
+body.mp-mode .mp-qr{width:100px;height:100px;align-self:start;padding:3px;box-sizing:border-box;background:#f2e3bd;border:1px solid #786346}
+body.mp-mode .mp-qr img,body.mp-mode .mp-qr canvas{width:92px;height:92px}
+body.mp-mode .mp-share-t p{font-size:12px;line-height:1.3}
+body.mp-mode .mp-share-t p:first-child{display:none}
+body.mp-mode .mp-share-t button{font-size:14px;line-height:1.2;min-height:40px;padding:7px 9px;margin-bottom:7px}
+body.mp-mode .mp-share-t .mp-host-note{grid-column:1/-1;font-size:11px;line-height:1.3;margin:5px 0 0}
+body.mp-mode .mp-warn{font-size:11px;line-height:1.3}
+body.mp-mode .mp-seats{gap:6px;margin-bottom:16px}
+body.mp-mode .mp-seat{padding:7px 6px;border:0;border-left:5px solid var(--c);border-bottom:1px solid #78634666;border-radius:0;background:#eddbb470;min-height:43px}
+body.mp-mode .mp-seat b{font-size:13px;max-width:100%;padding-right:12px}
+body.mp-mode .mp-seat small{font-size:11px}
+body.mp-mode .mp-seat i{width:26px;height:26px;line-height:23px;font-size:14px;border-width:1.5px}
+body.mp-mode .mp-seat.empty{opacity:.65;border-left-style:dashed}
+body.mp-mode .mp-kick{min-height:28px!important;min-width:24px;font-size:16px!important;top:0;right:0}
+body.mp-mode .mp-set{display:block;margin-bottom:13px;padding-top:8px;border-top:1px solid #78634666}
+body.mp-mode .mp-set>span{display:block;margin-bottom:7px;font:800 16px/1.2 Bitter,Georgia,serif}
+body.mp-mode .mp-set>span small{margin-top:4px;font:600 12px/1.3 Bitter,Georgia,serif}
+body.mp-mode .mp-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%;box-sizing:border-box;border-radius:5px 7px 4px 6px;border-width:1.5px}
+body.mp-mode .mp-seg button{min-height:38px;font-size:13px!important;padding:6px 4px!important;white-space:normal;line-height:1.15}
+body.mp-mode .mp-seg[data-k="win"]{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}
+body.mp-mode .mp-seg[data-k="win"] button{font-size:13px!important;min-height:42px;border-left:0!important;border-top:0!important;padding:7px 5px!important}
+body.mp-mode .mp-seg[data-k="win"] button:nth-child(2n){border-left:1px solid #30261b!important}
+body.mp-mode .mp-seg[data-k="win"] button:nth-child(n+3){border-top:1px solid #30261b!important}
+body.mp-mode .mp-seg:has(button:disabled){border-color:#a39376;background:#d8ceb5}
+body.mp-mode .mp-seg button:disabled{cursor:default;color:#71664f;opacity:1;background:transparent!important}
+body.mp-mode .mp-seg button.on:disabled{background:#b8aa8e!important;color:#30261b!important;box-shadow:inset 0 -3px #a39376}
+body.mp-mode .mp-host-only{font-size:13px;padding:7px 10px;background:#d8ceb5;border-left:3px solid #897451}
+body.mp-mode .mp-est{font-size:12px;line-height:1.4;margin:8px 0 12px;padding-top:8px;border-top:1px solid #78634666}
+body.mp-mode .mp-rules-btn{margin-bottom:9px;min-height:38px;font-size:14px;background:transparent;border:1px solid #786346}
+body.mp-mode .mp-join{gap:6px}
+body.mp-mode .mp-join input{min-width:0;width:40%;font-size:20px!important;letter-spacing:.12em}
+body.mp-mode .mp-join button{font-size:14px;min-height:46px;padding:8px 10px}
+body.mp-mode .mp-solo{font-size:13px;line-height:1.3;margin-top:15px}
+body.mp-mode .mp-sheet button:focus-visible,body.mp-mode .mp-sheet input:focus-visible{outline:3px solid #c99a32;outline-offset:3px}
+/* Existing rules presentation: preserve each illustrated prop's proportions. */
+body.mp-mode #onboard.mp-rules .mpr-art img{object-fit:contain;max-width:100%;height:auto;aspect-ratio:auto}
+body.mp-mode #onboard.mp-rules .mpr-row img{width:74px;height:74px;object-fit:contain}
+body.mp-mode #onboard.mp-rules .mpr-char>img{max-height:150px;width:auto}
+body.mp-mode #onboard.mp-rules .ob-art{overflow:hidden}
+@media(min-width:900px){
+ body.mp-mode .mp-sheet:has(.mp-seats){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:24px}
+ body.mp-mode .mp-sheet:has(.mp-seats)>h2{grid-column:1/-1}
+ body.mp-mode .mp-sheet:has(.mp-seats)>.mp-share,body.mp-mode .mp-sheet:has(.mp-seats)>.mp-seats,body.mp-mode .mp-sheet:has(.mp-seats)>.mp-host-only{grid-column:1}
+ body.mp-mode .mp-sheet:has(.mp-seats)>.mp-set{grid-column:2}
+ body.mp-mode .mp-sheet:has(.mp-seats)>.mp-set:nth-of-type(3){grid-row:2}
+ body.mp-mode .mp-sheet:has(.mp-seats)>.mp-est,body.mp-mode .mp-sheet:has(.mp-seats)>#mpStart,body.mp-mode .mp-sheet:has(.mp-seats)>.mp-rules-btn,body.mp-mode .mp-sheet:has(.mp-seats)>.mp-waithost,body.mp-mode .mp-sheet:has(.mp-seats)>.mp-solo{grid-column:1/-1}
+}
+body.mp-mode .mp-set>span small{display:block;font-weight:600}
+body.mp-mode .mp-share-t{display:contents}
+body.mp-mode .mp-share-t button{grid-column:2}
+body.mp-mode .mp-qr{grid-row:1/span 2}
+body.mp-mode .mp-share-t .mp-warn{grid-column:1/-1}
+body.mp-mode .mp-guest-note{font:700 13px/1.35 Bitter,Georgia,serif;padding:8px 10px;border:1px dashed #897451;background:#e0d4b8}
+
+/* Compact auction choices keep the price and touch target readable. */
+body.mp-mode #card .mp-lot{padding:12px;border:2px solid #A92720;background:#f2e3bd url(assets/paper-grain.svg)}
+body.mp-mode #card .mp-lot>b{font:800 20px/1.15 Bitter,Georgia,serif}
+body.mp-mode #card .mp-lot p{font-size:14px;line-height:1.4}
+body.mp-mode #card .mp-bids{grid-template-columns:1fr;gap:7px}
+body.mp-mode #card .mp-bid{min-height:44px;padding:10px!important;font:800 18px/1.15 Bitter,Georgia,serif!important}
+body.mp-mode #card .mp-lot-btn{min-height:44px;font-size:15px!important;border-style:solid!important}
+/* Two rows of seats leave the centre of the phone for the board. Specificity
+   deliberately wins over the legacy mp-ui.css loaded after this sheet. */
+@media(max-width:600px){
+ body.mp-play .mp-bar,body.mp-play .mp-bar.tight{max-width:none;width:calc(100% - 124px);right:6px}
+ body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:100%}
+ body.mp-play .mp-bar .mp-chip{min-width:0;padding:3px 4px;column-gap:3px}
+ body.mp-play .mp-bar .mp-nm{max-width:65px}
+ body.mp-play .mp-bar .mp-win{min-height:24px}
+ body.mp-play .mp-bar .mp-pausebtn{width:32px;height:28px}
+}
+
+/* Phone ranking: small coloured counters at the edge; details on tap. */
+@media(max-width:600px){
+ body.mp-play .mp-bar,body.mp-play .mp-bar.tight{width:104px;max-width:104px}
+ body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+ body.mp-play .mp-bar .mp-chip,body.mp-play .mp-bar.tight .mp-chip{position:relative;display:grid;place-items:center;width:44px;height:44px;box-sizing:border-box;padding:0;border:2px solid #25221c;border-radius:50%;background:var(--c);overflow:visible;cursor:pointer;box-shadow:0 2px 0 #25221c,inset 0 0 0 2px #f2e3bd}
+ body.mp-play .mp-bar .mp-chip>i{width:auto;height:auto;font:800 19px/1 Bitter,Georgia,serif;border:0;background:none;box-shadow:none;color:#fff0cb}
+ body.mp-play .mp-bar .mp-chip .mp-nm,body.mp-play .mp-bar .mp-chip .mp-cap,body.mp-play .mp-bar .mp-chip em,body.mp-play .mp-bar .mp-chip u{display:none}
+ body.mp-play .mp-bar .mp-chip::after{content:attr(data-place);position:absolute;left:-6px;bottom:-2px;width:16px;height:16px;border:1px solid #25221c;border-radius:50%;background:#f2e3bd;color:#25221c;font:800 10px/16px Bitter,Georgia,serif;text-align:center}
+ body.mp-play .mp-bar .mp-chip.on{box-shadow:0 0 0 2px #f2e3bd,0 0 0 4px var(--c),0 3px 0 #25221c}
+ body.mp-play .mp-bar .mp-win{font-size:10px}
+}
+@media(min-width:900px){
+ body.mp-play .mp-bar,body.mp-play .mp-bar.tight{right:14px;max-width:220px;width:220px;gap:7px}
+ body.mp-play .mp-bar .mp-chip{padding:7px 10px;gap:5px;cursor:pointer}
+ body.mp-play .mp-bar .mp-chip>i{width:28px;height:28px;font-size:15px;line-height:25px}
+ body.mp-play .mp-bar .mp-nm{font-size:14px;max-width:160px}
+ body.mp-play .mp-bar .mp-cap,body.mp-play .mp-bar.tight .mp-cap{font-size:18px}
+ body.mp-play .mp-bar .mp-pts{font-size:12px}
+ body.mp-play .mp-bar .mp-round{font-size:16px;padding:7px 10px}
+ body.mp-play .mp-bar .mp-pausebtn{width:36px;height:36px;font-size:18px}
+ body.mp-play .mp-bar .mp-win b{font-size:14px}
+ body.mp-play #moneyJournal{font-size:14px}
+}
+body.mp-play .mp-chip:focus-visible{outline:3px solid #f2e3bd;outline-offset:4px}
+
+@media(max-width:600px){
+ body.mp-play .mp-bar,body.mp-play .mp-bar.tight{width:120px;max-width:120px}
+ body.mp-play .mp-bar .mp-pausebtn{width:28px;height:28px}
+ body.mp-play .mp-bar .mp-chip>i{grid-area:1/1;grid-row:1;position:static;text-align:center;justify-self:center;align-self:center}
+}
+
+/* Deal dialogs are a single printed sheet. Floating turn/auction badges belong
+   to the board and must never print through or over the sheet. */
+body.mp-play.mp-modal .mp-tag,body.mp-play.mp-modal .mp-end,body.mp-play.mp-modal .mp-bar,
+body.mp-play.mp-modal .mp-offer-badge,body.mp-play.mp-modal .mp-ticker,body.mp-play.mp-modal #moneyJournal{visibility:hidden;pointer-events:none}
+body.mp-play .mp-bar .mp-chip{pointer-events:auto}
+body.mp-play.mp-modal .mp-plate,body.mp-play.mp-modal .mp-bang{visibility:hidden}
