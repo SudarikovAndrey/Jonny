@@ -27,9 +27,9 @@ function inbox(pid,m){const b=bots.get(pid);if(!b||!m)return;
 // ---- стратегии ботов (продюсер 03.10: «боты должны играть по разным стратегиям и прикидывать, к чему приведёт сделка») ----
 // Все решения о покупке и продаже — по рыночной цене (window.MP_MARKET: доход клетки с цепочкой × круги), а не по вложенному.
 const PROFILES={
-  builder:{name:'строитель',build:.95,cheap:.85,upgrade:.6,offer:.10,buyout:.02,bid:.3,list:.03,hand:.4,swap:.10,sellAt:1.3,buyUpTo:1.0,keep:.15},   // ширится дёшево, копит точки
-  chain:{name:'цепочки',build:.85,cheap:.6,upgrade:.4,offer:.35,buyout:.08,bid:.5,list:.02,hand:.4,swap:.45,sellAt:1.8,buyUpTo:1.5,keep:.10},      // собирает соседей, за них платит дороже
-  trader:{name:'делец',build:.6,cheap:.5,upgrade:.5,offer:.25,buyout:.04,bid:.7,list:.12,hand:.3,swap:.20,sellAt:1.1,buyUpTo:1.1,keep:.30},        // держит кассу, продаёт выгодно, ставит на торгах
+  builder:{name:'строитель',build:.9,cheap:.85,upgrade:.6,offer:.10,buyout:.02,bid:.3,list:.03,hand:.4,swap:.10,sellAt:1.3,buyUpTo:1.0,keep:.15},   // ширится дёшево, копит точки
+  chain:{name:'цепочки',build:.8,cheap:.6,upgrade:.4,offer:.35,buyout:.08,bid:.5,list:.02,hand:.4,swap:.45,sellAt:1.8,buyUpTo:1.5,keep:.10},      // собирает соседей, за них платит дороже
+  trader:{name:'делец',build:.8,cheap:.6,upgrade:.6,offer:.25,buyout:.04,bid:.7,list:.12,hand:.3,swap:.20,sellAt:1.1,buyUpTo:1.1,keep:.15},        // держит кассу, продаёт выгодно, ставит на торгах
   saboteur:{name:'пакостник',build:.75,cheap:.7,upgrade:.4,offer:.15,buyout:.10,bid:.4,list:.03,hand:.9,swap:.10,sellAt:1.5,buyUpTo:1.2,keep:.15}, // бьёт лидера картами и выкупом
 };
 const PROFILE_ORDER=['chain','trader','saboteur','builder'];
