@@ -2253,7 +2253,7 @@ function onEvt(from,e){
     // Всё о сопернике — в ленту, и то, что задело тебя (плашка в центре гаснет через 2 с, в ленте можно дочитать).
     if(e.kind!=='scatter'&&!(e.kind==='insp'&&Array.isArray(e.drops)&&e.drops.length)&&e.text){
       const n=noteOf(p,e,mine,amount);
-      feedAdd(p,/копилк/.test(e.text||'')?'bonus':e.kind,n.text,n.amount,mine||n.big,e.tile!=null?e.tile:null);
+      feedAdd(p,/копилк/.test(e.text||'')?'bonus':e.kind,n.text,n.amount,mine||n.big,e.tile!=null?e.tile:null,n);
     }
   } else if(e.tile!=null&&amount)floatAt(e.tile,(amount>0?'+':'−')+money(Math.abs(amount)),amount>0?'#2f6b35':'#a92720');
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
@@ -2314,22 +2314,27 @@ function swapChains(author,other,give,get){
   const best=(ids)=>Math.max(0,...(ids||[]).map(len));return {[other]:best(give),[author]:best(get)};}
 function chainText(ch){const parts=Object.entries(ch).filter(([,n])=>n>=2).map(([pid,n])=>pid===PID?`у тебя цепочка из ${n}`:`цепочка из ${n} · ${nameOf(pid)}`);return parts.length?' → '+parts.join(', '):'';}
 // Имена игроков не склоняются — имя ставим отдельно: «обмен · Саня-бот: …», «Макс-бот доплатит $50».
+// Три части (backlog 03.10: 2↔2 обрезался троеточием): short — номера клеток, влезает в ленту; full — с названиями, по тапу;
+// chain — итог цепочки, в ленте отдельной строкой и не обрезается никогда.
 function swapText(e,emitter){
   const author=e.from,other=(e.kind==='swap'||e.kind==='swapcounter')?e.to:emitter,pay=e.pay||0;
-  const ch=chainText(swapChains(author,other,e.give,e.get));
+  const chain=chainText(swapChains(author,other,e.give,e.get)).replace(/^ → /,'');
   // Все клетки обмена с одним названием — номера и название один раз: «№4 на №12, все «Лоток сладостей»».
   const all=[...(e.give||[]),...(e.get||[])].map(i=>S.tiles[i]).filter(Boolean),one=new Set(all.map(swapTitle)).size===1&&all.length>1;
-  const cellsText=ids=>one?ids.map(cellNo).join(' и '):cellsTextFull(ids),tail=one?`, ${all.length===2?'обе':'все'} «${swapTitle(all[0])}»`:'';
+  const full=ids=>one?ids.map(cellNo).join(' и '):cellsTextFull(ids),tail=one?`, ${all.length===2?'обе':'все'} «${swapTitle(all[0])}»`:'';
+  const nums=ids=>(ids||[]).map(cellNo).join(', ');
   const payer=pay>0?author:other,payT=pay?` · ${payer===PID?'ты доплатишь':nameOf(payer)+' доплатит'} ${money(Math.abs(pay))}`:'';
   const with_=pid=>pid===PID?'с тобой':`· ${nameOf(pid)}`;
-  if(e.kind==='swapped')return `обменялся ${with_(author)}: отдал ${cellsText(e.get)}, взял ${cellsText(e.give)}${tail}${ch}`;
-  if(e.kind==='swapdecline')return `${author===PID?'отказал тебе в обмене':`отказал в обмене · ${nameOf(author)}`}: ${cellsText(e.get)} на ${cellsText(e.give)}${tail}`;
-  if(e.kind==='swapvoid')return `обмен ${cellsText(e.give)} на ${cellsText(e.get)}${tail} снят — клетки сменили хозяина`;
+  const both=(f,c,sh)=>({full:f(full,tail),short:sh?sh(nums):f(nums,''),chain:c?chain:''});
+  if(e.kind==='swapped')return both((C,t)=>`обменялся ${with_(author)}: отдал ${C(e.get)}, взял ${C(e.give)}${t}`,1,N=>`обменялся ${with_(author)}: ${N(e.get)} ⇄ ${N(e.give)}`);
+  if(e.kind==='swapdecline')return both((C,t)=>`${author===PID?'отказал тебе в обмене':`отказал в обмене · ${nameOf(author)}`}: ${C(e.get)} на ${C(e.give)}${t}`,0,N=>`${author===PID?'отказал тебе':`отказал · ${nameOf(author)}`}: ${N(e.get)} ⇄ ${N(e.give)}`);
+  if(e.kind==='swapvoid')return both((C,t)=>`обмен ${C(e.give)} на ${C(e.get)}${t} снят — клетки сменили хозяина`,0);
   const what=e.kind==='swapcounter'?'встречное':'обмен';
-  return `${other===PID?`предлагает тебе ${what}`:`предлагает ${what} · ${nameOf(other)}`}: ${cellsText(e.give)} на ${other===PID?'твою ':''}${cellsText(e.get)}${tail}${payT}${ch}`;
+  return both((C,t)=>`${other===PID?`предлагает тебе ${what}`:`предлагает ${what} · ${nameOf(other)}`}: ${C(e.give)} на ${other===PID?'твою ':''}${C(e.get)}${t}${payT}`,1,
+    N=>`${what} · ${other===PID?'тебе':nameOf(other)}: ${N(e.give)} ⇄ ${N(e.get)}${payT}`);
 }
 function noteOf(p,e,mine,amount){
-  if(/^swap/.test(e.kind||'')&&Array.isArray(e.give))return {text:swapText(e,p.pid),amount:null};
+  if(/^swap/.test(e.kind||'')&&Array.isArray(e.give)){const w=swapText(e,p.pid);return {text:w.short,full:w.full,chain:w.chain,amount:null};}
   const tile=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile],where=tile?`«${titleOf(tile)}»`:'';
   if(e.kind==='rent')return mine?{text:`попал на твою клетку ${where}`,amount:Math.abs(amount||0)}:{text:`попал на клетку ${nameOf(e.to)} ${where}`,amount:-Math.abs(amount||0)};
   if(e.kind==='scatter')return {text:`попал на инкассатора — разлетелось ${e.cash?money(e.cash):'по клеткам'}`,amount:null};
@@ -2348,22 +2353,26 @@ const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'�
 const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
-function feedAdd(p,kind,text,amount,mine,tile){
+function feedAdd(p,kind,text,amount,mine,tile,x){
   text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');
   // Одна карта против тебя приходит двумя событиями (chance и hit) — в ленту одно.
   const key=p.pid+'|'+(kind==='hit'?'chance':kind),now=Date.now();if(feedAdd.last&&feedAdd.last.key===key&&now-feedAdd.last.t<4000&&(kind==='hit'||kind==='chance'))return;feedAdd.last={key,t:now};
   const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':'')+(text.length>70?' long':''));n.style.setProperty('--c',p.color);
-  n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span><b>${esc(p.name)}</b> ${esc(text)}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}`;
+  const full=x&&x.full&&x.full!==text?x.full:'',chain=x&&x.chain||'';
+  n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span class="tx"><b>${esc(p.name)}</b> <span class="t">${esc(text)}</span>${full?'<u> ▾</u>':''}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}${chain?`<small class="ch">→ ${esc(chain)}</small>`:''}`;
+  if(chain)n.classList.add('has-ch');if(/^swap/.test(kind))n.classList.add('long');
   ticker.prepend(n);const it={el:n,age:0,life:mine?FEED_LIFE_MINE:FEED_LIFE};feed.unshift(it);
   while(feed.length>FEED_MAX){const o=feed.pop();o.el.remove();}
-  n.onclick=()=>{n.remove();const k=feed.indexOf(it);if(k>=0)feed.splice(k,1);};   // тап — убрать прочитанное
+  // Тап: есть полный текст — раскрыть (и не гасить, пока раскрыто); второй тап — убрать прочитанное.
+  n.onclick=()=>{if(full&&!n.classList.contains('open')){n.classList.add('open');n.querySelector('.t').textContent=full;const u=n.querySelector('u');u&&u.remove();it.age=0;it.hold=Date.now();return;}
+    n.remove();const k=feed.indexOf(it);if(k>=0)feed.splice(k,1);};
   if(tile!=null&&MobileHost.ready)fieldPing(tile,p,icon);
   if(mine)try{navigator.vibrate&&navigator.vibrate(50);}catch(x){}
 }
 // Возраст считаем сами: под окном (лента скрыта) карточки не стареют, после закрытия окна их видно.
 {let last=performance.now();setInterval(()=>{const now=performance.now(),dt=now-last;last=now;
   if(document.body.classList.contains('mp-modal')||document.hidden)return;
-  for(const it of feed.slice()){it.age+=dt;if(it.age>it.life-500&&!it.el.classList.contains('out'))it.el.classList.add('out');
+  for(const it of feed.slice()){if(it.hold&&now-it.hold<30000)continue;it.age+=dt;   // раскрытая держится до 30 сif(it.age>it.life-500&&!it.el.classList.contains('out'))it.el.classList.add('out');
     if(it.age>=it.life){it.el.remove();feed.splice(feed.indexOf(it),1);}}},200);}
 // Пульс на клетке: где это случилось — без текста, его читают в ленте.
 function fieldPing(tile,p,icon){

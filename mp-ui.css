@@ -490,3 +490,10 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 #card .mp-guest-rent .mp-gr-arrow{font-style:normal;font-weight:800;color:#6d5a3f}
 #card .mp-guest-rent .mp-gr-next{color:var(--mp-green,#2f6b35)}
 .mp-feed .mp-tick.long span{-webkit-line-clamp:3}
+/* лента: короткий текст обмена + итог цепочки отдельной строкой, полный текст — тапом (backlog 03.10) */
+.mp-feed .mp-tick .t{display:inline}
+.mp-feed .mp-tick u{text-decoration:none;color:#8a7350;font-weight:800}
+.mp-feed .mp-tick .ch{grid-column:3/-1;margin-top:-2px;font:800 12.5px/1.2 var(--mp-num);color:#2f6b35;white-space:normal}
+.mp-feed .mp-tick.has-ch{row-gap:2px}
+.mp-feed .mp-tick.has-ch>i,.mp-feed .mp-tick.has-ch>em{grid-row:1/span 2}
+.mp-feed .mp-tick.open .tx{-webkit-line-clamp:unset;display:block}

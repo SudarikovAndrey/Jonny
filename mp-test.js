@@ -453,7 +453,13 @@ function strategyHidden({credit,emit,v,after,bot}){
       const listed=S.botListed||{},fresh=x=>listed[x.i]==null||v.turn.n-listed[x.i]>=8*v.players.length;
       const onTable=i=>!v.tiles||(v.tiles[i]&&v.tiles[i].owner===H.PID);   // на торги — только синхронизированное со столом
       const lone=mine.filter(x=>o[(x.i+39)%40]!==ME&&o[(x.i+1)%40]!==ME&&fresh(x)&&onTable(x.i)).sort((a,c)=>baseAt(a.i)-baseAt(c.i));
-      if(lone.length>(profKey(H.PID)==='builder'?2:0)){const x=lone[0],min=Math.round(Math.max(H.invested(x),-gainOf({[x.i]:null},V))*P.sellAt/10)*10;
+      // Старт — не выше, чем даст самый заинтересованный соперник с деньгами (его выгода глазами среднего игрока с запасом 25%); выставляет
+      // одиночку, только если кто-то даст хотя бы её ценность для бота. Раньше старт был «ценность × наценка профиля»
+      // (×1,1…1,8) — одиночка без соседей покупателю стоит меньше, и 6 лотов из 8 уходили без ставок (Интерфейс, прод 03.10).
+      const demand=i=>Math.max(0,...v.players.filter(p=>p.pid!==H.PID).map(p=>Math.min(theirGain({[i]:p.pid},p.pid)/1.25,(p.cash||0)*.8)));
+      const sale=lone.map(x=>{const loss=Math.max(H.invested(x),-gainOf({[x.i]:null},V)),d=demand(x.i);
+        return {x,loss,min:Math.floor(Math.min(loss*P.sellAt,d)/10)*10};}).filter(e=>e.min>=e.loss*.95);
+      if(lone.length>(profKey(H.PID)==='builder'?2:0)&&sale.length){const {x,min}=sale[0];
         S.botListed=Object.assign(listed,{[x.i]:v.turn.n});
         after.push({t:'lot',tile:x.i,min,kind:'sale'});brainLog(bot,`выставил одиночку «${titleOf(x)}» от $${min}`);}}
   }
