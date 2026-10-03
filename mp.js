@@ -531,7 +531,9 @@ function onMessage(m){
     case 'evt':onEvt(m.from,m.e);return;
   }
 }
+let lastMode=null;
 function onView(v,now){
+  if(v&&v.settings&&v.settings.mode)lastMode=v.settings.mode;   // для бонуса старта вне хода
   if(window.MPBots&&MPBots.acting()){MPBots.holdHostView(v,now);return;}   // пока ходит бот, свой вид откладываем
   if(now)clockOff=now-Date.now();
   const prev=view;view=v;
@@ -800,7 +802,8 @@ window.MPSale={list:()=>(view&&view.lots||[]).slice(),on:lotOn,start:startLot,op
 // ---- проход старта в партии (плейтест 5): +$100 всем сверх продаж; карта соперника урезала продажи ----
 // Бонус старта (баланс «Дебага», решение продюсера 02.10): по кругам — $100, по времени (и в миссиях) — $50.
 const MP_START_BONUS_BY_MODE={laps:100,time:50},MP_WH_CONSOLATION=20;
-const startBonus=()=>MP_START_BONUS_BY_MODE[(view&&view.settings&&view.settings.mode)==='laps'?'laps':'time'];
+// Режим запоминается с последнего вида стола: без вида (лобби, итог, вне хода) бонус не скатывается в $50 «по времени» (Дебаг 03.10).
+const startBonus=()=>{const m=view&&view.settings&&view.settings.mode;if(m)lastMode=m;return MP_START_BONUS_BY_MODE[(m||lastMode)==='laps'?'laps':'time'];};
 window.MP_START_BONUS_NOW=()=>startBonus();
 // Склад быстрее (то же решение): точка ур. 1 вмещает 8 вместо 12 при тех же 3 продажах за круг; выше — пропорционально (×2/3).
 const MP_CAP_SHARE=2/3;
@@ -2290,7 +2293,7 @@ function fieldNote(tile,p,text,amount,big){
   const it={el:n,tile};notes.push(it);
   // заметки на одной клетке — стопкой вверх
   it.stack=notes.filter(x=>x.tile===tile).length-1;
-  const life=big?4500:3500;
+  const life=big?6500:5500;   // плейтест 03.10: «прочитать не успеваю» — было 4,5 и 3,5 с
   n.animate([{opacity:0,scale:.8},{opacity:1,scale:1.06,offset:.06},{opacity:1,scale:1,offset:.1},{opacity:1,offset:.85},{opacity:0}],{duration:life,easing:'ease-out',fill:'forwards'})
     .finished.then(()=>{n.remove();notes.splice(notes.indexOf(it),1);},()=>{});
   if(big)try{navigator.vibrate&&navigator.vibrate(50);}catch(x){}

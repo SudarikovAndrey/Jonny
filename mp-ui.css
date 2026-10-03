@@ -246,16 +246,16 @@ body.mp-mode #card .mp-pl-pot{font-size:16px;line-height:1.35}
 .mp-play .mp-bar .mp-win{display:none!important}
 #bHub.mp-win-hub .hud-map-heading b small{font-size:.62em}
 /* Заметки событий у клетки на поле */
-.mp-note{position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;max-width:230px;padding:4px 8px 4px 4px;translate:-50% -100%;
-  font:600 12px/1.25 var(--mp-txt);color:var(--mp-ink);background:var(--mp-paper) url(assets/paper-grain.svg);border:2px solid var(--c,var(--mp-ink));
+.mp-note{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;max-width:270px;padding:5px 9px 5px 5px;translate:-50% -100%;
+  font:600 14px/1.25 var(--mp-txt);color:var(--mp-ink);background:var(--mp-paper) url(assets/paper-grain.svg);border:2px solid var(--c,var(--mp-ink));
   border-radius:9px 12px 8px 11px;box-shadow:2px 3px 0 rgba(37,34,28,.75);white-space:normal;pointer-events:none}
 .mp-note::after{content:"";position:absolute;left:50%;bottom:-7px;width:10px;height:10px;margin-left:-5px;background:inherit;border:solid var(--c,var(--mp-ink));border-width:0 2px 2px 0;rotate:45deg}
-.mp-note i{flex:none;width:20px;height:20px;border-radius:50%;background:var(--c);border:1.5px solid var(--mp-ink);color:#fbf0d4;font:800 11px/17px var(--mp-num);font-style:normal;text-align:center}
+.mp-note i{flex:none;width:22px;height:22px;border-radius:50%;background:var(--c);border:1.5px solid var(--mp-ink);color:#fbf0d4;font:800 11px/17px var(--mp-num);font-style:normal;text-align:center}
 .mp-note span{min-width:0}.mp-note b{font-weight:800}
-.mp-note strong{flex:none;font:800 14px var(--mp-num);font-variant-numeric:tabular-nums}
+.mp-note strong{flex:none;font:800 16px var(--mp-num);font-variant-numeric:tabular-nums}
 .mp-note strong.plus{color:var(--mp-green)}.mp-note strong.minus{color:var(--mp-red)}
-.mp-note.big{max-width:260px;padding:6px 10px 6px 6px;font-size:14px;border-width:3px;z-index:2}
-.mp-note.big strong{font-size:20px}
+.mp-note.big{max-width:300px;padding:6px 10px 6px 6px;font-size:16px;border-width:3px;z-index:2}
+.mp-note.big strong{font-size:21px}
 .mp-note.big i{width:26px;height:26px;font-size:13px;line-height:23px}
 /* памятка микрозайма в окне долга */
 #card .mp-micro-memo{margin:-2px 0 8px;padding:8px 10px;border:1.5px dashed #a92720;border-radius:9px 12px 8px 11px;background:#a927200d;font-size:13px;line-height:1.35}
