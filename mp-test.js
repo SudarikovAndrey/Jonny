@@ -330,8 +330,8 @@ function strategyHidden({credit,emit,v,after,bot}){
       else{S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;buyout(r);}}}
   else{
     // Обмен сам: изредка, через «Подобрать обмен», если его рента растёт
-    if(window.MPSwap&&rnd(.15)&&S.mpProposeN!==v.turn.n){const rs=v.players.filter(p=>p.pid!==pid);const r=rs.length?pick(rs):null;const sg=r&&MPSwap.suggest(r.pid,0);
-      if(sg&&!(sg.pay>0&&S.cash<sg.pay)){MPSwap._local.place(sg,emit);trace.push(b.name+': предложил обмен');}}
+    if(window.MPSwap&&rnd(.15)&&S.mpProposeN!==v.turn.n){const rs=v.players.filter(p=>p.pid!==H.PID);const r=rs.length?pick(rs):null;const sg=r&&MPSwap.suggest(r.pid,0);
+      if(sg&&!(sg.pay>0&&S.cash<sg.pay)){MPSwap._local.place(sg,emit);trace.push(bot.name+': предложил обмен');}}
     if(window.MPHand&&(S.mpHand||[]).length&&rnd(.5)){const l=MPHand.list(),i=l.findIndex(c=>c.targets.length);if(i>=0){MPHand.play(i,pick(l[i].targets));trace.push(bot.name+': сыграл карту из руки');}}
     if(rivalHere){if(rnd(.05))buyout(t);else if(rnd(.2))offer(t,rnd(.5)?1.5:2);}
     for(const l of (v.lots||[])){if(l.seller===H.PID||l.bestBy===H.PID)continue;const next=l.best?Math.ceil(l.best*1.1/10)*10:l.min;if(S.cash>=next*1.5&&rnd(.5))after.push({t:'bid',id:l.id,amount:next});}
