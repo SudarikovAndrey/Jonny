@@ -46,7 +46,7 @@ function slides(){
     {t:'Время партии',x:`Партия — ${min} минут. Время вышло — доигрываем круг стола, потом итог.`,
       a:`<div class="mpr-art mpr-big"><b>⏱ ${min}:00</b><small>потом — последний круг</small></div>`},
     {t:win?`Победа: ${win.name}`:'Как победить',x:win?win.text:'Условие победы выбирает хозяин стола в лобби — оно видно в полосе игроков.',
-      a:`<div class="mpr-art mpr-big">${CROWN}<small>${chip('A','#A92720')}${chip('B','#243F4B')}${chip('C','#C99A32')}</small></div>`},
+      a:`<div class="mpr-art mpr-big">${CROWN}<small>${chip('A','#E06C1E')}${chip('B','#243F4B')}${chip('C','#C99A32')}</small></div>`},
   ];
 }
 
