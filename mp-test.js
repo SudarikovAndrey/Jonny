@@ -85,7 +85,10 @@ const brainLog=(bot,msg)=>trace.push(`${bot?bot.name:'бот'} (${(PROFILES[prof
 function bestSwap(V,v,keep){
   const combos=arr=>{const out=[];for(let a=0;a<arr.length;a++){out.push([arr[a]]);for(let c=a+1;c<arr.length;c++)out.push([arr[a],arr[c]]);}return out;};
   const free=i=>MPSwap.free(i);
-  const mine=S.tiles.filter(t=>t.owner&&tradeOk(t)&&free(t.i)).map(t=>({i:t.i,k:-gainOf({[t.i]:null},V)})).sort((a,c)=>a.k-c.k).slice(0,8).map(e=>e.i);if(!mine.length)return null;
+  // Отдаёт только то, что было его на начало хода по столу: точка, построенная в этот ход, у хозяина стола ещё
+  // пустырь — обмен на неё выглядел бы как «пустырь в обмен» (нашёл «Интерфейс» 03.10). Со следующего хода — можно.
+  const synced=i=>!v.tiles||(v.tiles[i]&&v.tiles[i].owner===H.PID&&v.tiles[i].base===S.tiles[i].base);
+  const mine=S.tiles.filter(t=>t.owner&&tradeOk(t)&&free(t.i)&&synced(t.i)).map(t=>({i:t.i,k:-gainOf({[t.i]:null},V)})).sort((a,c)=>a.k-c.k).slice(0,8).map(e=>e.i);if(!mine.length)return null;
   const asked=S.botAsked||{},round=Math.floor(v.turn.n/v.players.length),lastTo=S.botSwapTo||{};let best=null;
   for(const p of v.players){if(p.pid===H.PID)continue;
     if(lastTo[p.pid]!=null&&round-lastTo[p.pid]<(V.swapPause||6))continue;   // этому игроку недавно предлагал — не засыпает обменами
@@ -438,7 +441,8 @@ function strategyHidden({credit,emit,v,after,bot}){
     if(!(v.lots||[]).some(l=>l.seller===H.PID)&&S.cash<Math.max(150,keep)){const o=ownersNow();
       // Ту же клетку без покупателей не выставляет снова 8 кругов стола — иначе лот «мигает» каждый ход.
       const listed=S.botListed||{},fresh=x=>listed[x.i]==null||v.turn.n-listed[x.i]>=8*v.players.length;
-      const lone=mine.filter(x=>o[(x.i+39)%40]!==ME&&o[(x.i+1)%40]!==ME&&fresh(x)).sort((a,c)=>baseAt(a.i)-baseAt(c.i));
+      const onTable=i=>!v.tiles||(v.tiles[i]&&v.tiles[i].owner===H.PID);   // на торги — только синхронизированное со столом
+      const lone=mine.filter(x=>o[(x.i+39)%40]!==ME&&o[(x.i+1)%40]!==ME&&fresh(x)&&onTable(x.i)).sort((a,c)=>baseAt(a.i)-baseAt(c.i));
       if(lone.length>(profKey(H.PID)==='builder'?2:0)){const x=lone[0],min=Math.round(Math.max(H.invested(x),-gainOf({[x.i]:null},V))*P.sellAt/10)*10;
         S.botListed=Object.assign(listed,{[x.i]:v.turn.n});
         after.push({t:'lot',tile:x.i,min,kind:'sale'});brainLog(bot,`выставил одиночку «${titleOf(x)}» от $${min}`);}}
