@@ -417,3 +417,36 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 /* «сыграна в этот ход» — над картами, а не справа: в раскладке Codex рука у правого края и подпись уезжала за экран */
 .mp-hand-used{position:absolute;right:0;bottom:calc(100% + 4px)}
 .mp-sw-rent em{font-style:normal;white-space:nowrap}
+
+/* Карты «Шанса» в партии — матовой картой соло (chance-depth.css, chance-print.css). Андрей 03.10: «крупнее, красивее». */
+.mp-cu-stage{display:grid;place-items:center;padding:8px 0 6px;perspective:1100px}
+.mp-cu-stage .cu-card{--w:min(236px,62vw,33vh)}
+.mp-cu .cu-front{justify-content:flex-start}
+.mp-cu .cu-title{margin-top:calc(var(--w)*.15)!important;min-height:1.1em!important}
+.mp-cu .cu-cap{font-size:calc(var(--w)*.062)!important;min-height:0!important;padding-bottom:calc(var(--w)*.02)!important}
+.mp-cu .cu-cap.long{font-size:calc(var(--w)*.054)!important}
+.mp-cu .cu-stamp{left:calc(var(--w)*.08);right:auto!important;font:700 calc(var(--w)*.05)/1.3 Bitter,Georgia,serif!important;letter-spacing:.02em!important;color:#775937}
+.mp-cu.r-purple .cu-stamp{color:#6a4785}.mp-cu.r-gold .cu-stamp{color:#8a6420}.mp-cu.r-grey .cu-stamp{color:#913e2f}
+.mp-cu .mp-cu-emoji{display:grid;place-items:center}
+.mp-cu .mp-cu-emoji b{font-size:calc(var(--w)*.34);line-height:1;filter:drop-shadow(0 2px 0 #6f512455)}
+.mp-cu .cu-art img{max-height:calc(var(--w)*.46)!important}
+/* рубашка: печатная «Шанс» по центру */
+.mp-cu .mp-cu-back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--w)*.04);
+  background:#a92720 repeating-linear-gradient(45deg,#ffffff10 0 6px,transparent 6px 12px)!important;box-shadow:inset 0 0 0 calc(var(--w)*.035) #f1dfb4,inset 0 0 0 calc(var(--w)*.045) #4a3523!important}
+.mp-cu .mp-cu-back img{width:calc(var(--w)*.42);filter:drop-shadow(0 3px 0 #25221c66)}
+.mp-cu .mp-cu-back b{font:900 calc(var(--w)*.13)/1 Bitter,Georgia,serif;color:#fbf0d4;text-shadow:0 2px 0 #25221c88;letter-spacing:.04em}
+#card .mp-cu-sum{text-align:center;font:900 26px var(--mp-num);margin:0 0 4px}
+#card .mp-cu-sum.plus{color:#2f6b35}#card .mp-cu-sum.minus{color:#a92720}
+#card .mp-cu-note{text-align:center;font-size:14px}
+/* рука у кубика — маленькие карты вместо кнопок с эмодзи */
+.mp-hand-card{width:auto;height:auto;padding:0;background:none!important;border:0!important;box-shadow:none!important;border-radius:0}
+.mp-hand-card+.mp-hand-card{margin-left:-12px}
+.mp-hand .cu-card{--w:62px;filter:drop-shadow(2px 3px 0 #25221ccc)}
+.mp-hand .cu-mini .cu-face{padding:5px 4px 4px}
+.mp-hand .cu-mini .cu-title{font:800 9px/1.05 var(--mp-num)!important;margin-top:2px!important;color:#25221c;letter-spacing:0;text-align:center}
+.mp-hand .cu-mini .cu-art{margin:2px 0 0}
+.mp-hand .cu-mini .cu-art img{width:34px;height:34px}
+.mp-hand .cu-mini .cu-vignette{width:54px;height:40px}
+.mp-hand .cu-mini .mp-cu-emoji b{font-size:26px}
+.mp-hand .cu-mini .cu-cap,.mp-hand .cu-mini .cu-stamp,.mp-hand .cu-mini .mp-cu-back{display:none}
+.mp-hand-card.lead .cu-card{filter:drop-shadow(0 0 0 #c99a32) drop-shadow(2px 3px 0 #25221ccc)}

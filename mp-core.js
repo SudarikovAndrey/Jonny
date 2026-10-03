@@ -58,7 +58,7 @@ const modeOf=T=>timed(T)?(T.settings.mode==='laps'?'laps':'time'):'none';
 function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings.win=id;return true;}
 // Пороги под длину партии (решение продюсера 02.10 по прогону «Дебага»): «Миллионер» и «Рантье» — от минут (на 20 минут
 // $2 500 налом и $250 ренты, пропорционально); в режиме кругов минуты оцениваются как круги × minPerLap. «Империя» — по числу игроков.
-const WIN_SCALE={cashPer20:2500,rentPer20:250,minPerLap:2,round:50,empire:{2:12,3:10,4:9}};
+const WIN_SCALE={cashPer20:10000,rentPer20:250,minPerLap:2,round:50,empire:{2:12,3:10,4:9}};
 function lengthMinutes(T){const s=T.settings||{};return s.mode==='laps'?(+s.rounds||DEFAULTS.rounds)*WIN_SCALE.minPerLap:(+s.minutes||DEFAULTS.minutes);}
 const r50=x=>Math.max(WIN_SCALE.round,Math.round(x/WIN_SCALE.round)*WIN_SCALE.round);
 function winOf(T){const w=WIN_OPTIONS.find(x=>x.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0],m=lengthMinutes(T),n=Math.max(2,Math.min(4,(T.players||[]).length||2));
