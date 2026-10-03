@@ -22,15 +22,31 @@ const rnd=p=>Math.random()<p;
 const clone=o=>JSON.parse(JSON.stringify(o));
 function hubSend(pid,msg){if(H.hub)H.hub.handle(pid,clone(msg),m=>inbox(pid,m));}
 function inbox(pid,m){const b=bots.get(pid);if(!b||!m)return;
-  if(m.t==='view'){b.view=m.v;if(acting===pid)H.view=m.v;schedule();}
+  if(m.t==='view'){b.view=m.v;if(acting===pid)H.view=m.v;schedule();watchLots(b);}
 }
+// Живые торги (Дебаг 03.10: 96,5% лотов уходили по стартовой с первой ставки — лот живёт круг стола, а бот ставил только
+// в свой ход и перебитым ответить не мог). Теперь перебитый или заинтересованный бот отвечает на чужую ставку сразу,
+// не дожидаясь хода: +10%, пока цена ниже его ценности клетки с запасом профиля.
+function watchLots(b){const v=b.view;if(!v||v.phase!=='play'||!(v.lots||[]).length)return;b.lotSeen=b.lotSeen||{};
+  for(const l of v.lots){if(!l.bestBy||l.bestBy===b.pid||l.seller===b.pid)continue;const k=l.id+':'+l.best;if(b.lotSeen[k])continue;b.lotSeen[k]=1;
+    setTimeout(()=>counterBid(b.pid,l.id),dly(700+Math.random()*1300));}}
+function counterBid(pid,lotId,tries=0){const b=bots.get(pid),v=b&&b.view;if(!v||v.phase!=='play')return;
+  const l=(v.lots||[]).find(x=>x.id===lotId);if(!l||!l.bestBy||l.bestBy===pid)return;
+  if(busy||acting){if(tries<5)setTimeout(()=>counterBid(pid,lotId,tries+1),dly(600));return;}   // идёт чей-то ход ботом — срез занят
+  const S0=S,view0=H.view,pid0=H.PID;let amount=0;
+  try{const s=clone(v.mine);s.tiles=botLocal(v,pid);S=s;H.view=v;H.PID=pid;
+    const V=valOf(pid),P=profOf(pid),next=Math.ceil(l.best*1.1/10)*10;freshSnap();const g=gainOf({[l.tile]:ME},V,leaderOf(v));
+    if(next*(1+V.margin)<=g&&S.cash-next>=S.cash*P.keep){amount=next;brainLog(b,`перебивает ставку на «${titleOf(S.tiles[l.tile])}»: $${next} (ценность $${Math.round(g)})`);}}
+  catch(e){amount=0;}
+  finally{S=S0;H.view=view0;H.PID=pid0;snap=null;}
+  if(amount)hubSend(pid,{t:'bid',id:lotId,amount});}
 // ---- стратегии ботов (продюсер 03.10: «боты должны играть по разным стратегиям и прикидывать, к чему приведёт сделка») ----
 // Все решения о покупке и продаже — по рыночной цене (window.MP_MARKET: доход клетки с цепочкой × круги), а не по вложенному.
 const PROFILES={
   builder:{name:'строитель',build:.9,cheap:.85,upgrade:.6,offer:.10,buyout:.02,bid:.3,list:.03,hand:.4,swap:.10,sellAt:1.3,buyUpTo:1.0,keep:.15},   // ширится дёшево, копит точки
-  chain:{name:'цепочки',build:.8,cheap:.6,upgrade:.4,offer:.35,buyout:.08,bid:.5,list:.02,hand:.4,swap:.45,sellAt:1.8,buyUpTo:1.5,keep:.10},      // собирает соседей, за них платит дороже
-  trader:{name:'делец',build:.8,cheap:.6,upgrade:.6,offer:.25,buyout:.04,bid:.7,list:.12,hand:.3,swap:.20,sellAt:1.1,buyUpTo:1.1,keep:.15},        // держит кассу, продаёт выгодно, ставит на торгах
-  saboteur:{name:'пакостник',build:.75,cheap:.7,upgrade:.4,offer:.15,buyout:.10,bid:.4,list:.03,hand:.9,swap:.10,sellAt:1.5,buyUpTo:1.2,keep:.15}, // бьёт лидера картами и выкупом
+  chain:{name:'цепочки',build:.92,cheap:.6,upgrade:.4,offer:.35,buyout:.08,bid:.5,list:.02,hand:.4,swap:.45,sellAt:1.8,buyUpTo:1.5,keep:.10},      // собирает соседей, за них платит дороже
+  trader:{name:'делец',build:.75,cheap:.6,upgrade:.6,offer:.25,buyout:.04,bid:.7,list:.06,hand:.3,swap:.20,sellAt:1.1,buyUpTo:1.1,keep:.15},        // держит кассу, продаёт выгодно, ставит на торгах
+  saboteur:{name:'пакостник',build:.8,cheap:.7,upgrade:.4,offer:.15,buyout:.10,bid:.4,list:.03,hand:.9,swap:.10,sellAt:1.5,buyUpTo:1.2,keep:.15}, // бьёт лидера картами и выкупом
 };
 const PROFILE_ORDER=['chain','trader','saboteur','builder'];
 const profOf=pid=>{const b=bots.get(pid);return PROFILES[(b&&b.profile)||'builder'];};
@@ -447,18 +463,22 @@ function strategyHidden({credit,emit,v,after,bot}){
     // Торги: ставит, пока цена ниже ценности клетки для него.
     for(const l of (v.lots||[])){if(l.seller===H.PID||l.bestBy===H.PID)continue;const next=l.best?Math.ceil(l.best*1.1/10)*10:l.min,g=gainOf({[l.tile]:ME},V,leader);
       if(next*(1+V.margin)<=g&&S.cash-next>=keep)after.push({t:'bid',id:l.id,amount:next});}
-    // Свой лот — одиночку, которая его улицы не держит, когда в кассе пусто; по ценности для него с наценкой профиля.
-    if(!(v.lots||[]).some(l=>l.seller===H.PID)&&S.cash<Math.max(150,keep)){const o=ownersNow();
+    // Свой лот — одиночку, которая его улицы не держит: когда в кассе пусто (отдаёт и чуть ниже своей ценности) или
+    // с вероятностью профиля «на продажу» (делец чаще всех), если соперник ценит её хотя бы на 10% выше, чем он сам.
+    const broke=S.cash<Math.max(150,keep);
+    if(!(v.lots||[]).some(l=>l.seller===H.PID)&&(broke||rnd(P.list))){const o=ownersNow();
       // Ту же клетку без покупателей не выставляет снова 8 кругов стола — иначе лот «мигает» каждый ход.
       const listed=S.botListed||{},fresh=x=>listed[x.i]==null||v.turn.n-listed[x.i]>=8*v.players.length;
       const onTable=i=>!v.tiles||(v.tiles[i]&&v.tiles[i].owner===H.PID);   // на торги — только синхронизированное со столом
       const lone=mine.filter(x=>o[(x.i+39)%40]!==ME&&o[(x.i+1)%40]!==ME&&fresh(x)&&onTable(x.i)).sort((a,c)=>baseAt(a.i)-baseAt(c.i));
-      // Старт — не выше, чем даст самый заинтересованный соперник с деньгами (его выгода глазами среднего игрока с запасом 25%); выставляет
-      // одиночку, только если кто-то даст хотя бы её ценность для бота. Раньше старт был «ценность × наценка профиля»
-      // (×1,1…1,8) — одиночка без соседей покупателю стоит меньше, и 6 лотов из 8 уходили без ставок (Интерфейс, прод 03.10).
+      // Спрос — сколько даст самый заинтересованный соперник с деньгами (его выгода глазами среднего игрока с запасом 25%).
+      // Старт — 70% спроса (есть куда торговаться, перебивают — см. watchLots), не выше «ценность × наценка профиля» и не ниже порога продажи:
+      // 80% ценности, когда касса пуста, и сама ценность, когда продаёт с выгодой. Раньше старт был «ценность × наценка»
+      // (6 из 8 лотов без ставок), потом — только при спросе ≥ 95% ценности и пустой кассе (0 лотов за партию, прод 03.10).
       const demand=i=>Math.max(0,...v.players.filter(p=>p.pid!==H.PID).map(p=>Math.min(theirGain({[i]:p.pid},p.pid)/1.25,(p.cash||0)*.8)));
-      const sale=lone.map(x=>{const loss=Math.max(H.invested(x),-gainOf({[x.i]:null},V)),d=demand(x.i);
-        return {x,loss,min:Math.floor(Math.min(loss*P.sellAt,d)/10)*10};}).filter(e=>e.min>=e.loss*.95);
+      const sale=lone.map(x=>{const loss=Math.max(H.invested(x),-gainOf({[x.i]:null},V)),d=demand(x.i),floor=broke?loss*.8:loss;
+        if(d<(broke?floor:loss*1.1))return null;
+        return {x,min:Math.floor(Math.max(floor,Math.min(loss*P.sellAt,d*.7))/10)*10};}).filter(Boolean);
       if(lone.length>(profKey(H.PID)==='builder'?2:0)&&sale.length){const {x,min}=sale[0];
         S.botListed=Object.assign(listed,{[x.i]:v.turn.n});
         after.push({t:'lot',tile:x.i,min,kind:'sale'});brainLog(bot,`выставил одиночку «${titleOf(x)}» от $${min}`);}}
