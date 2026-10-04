@@ -15,7 +15,7 @@ const prosp=()=>(window.SFBuilder&&+SFBuilder.prosp)||.06;   // надбавка
 const RENT_LAPS=1.5;      // рента: полторы круговой прибыли хозяина с точки (Передел §9: 75% × 2)
 // Покупка чужой клетки — предложение хозяину (решение продюсера 01.10, вместо принудительного перекупа ×1,5):
 // множитель от вложенного хозяином, хозяин принимает или отказывает в начале своего хода.
-const OFFER_MULTS=[1,1.5,2,3,5,10];
+const OFFER_MULTS=[1,1.5,2,3];   // 04.10: ×5 и ×10 убраны — дороже выкупа (рыночная ×4), смысла нет
 // Выкуп чужой клетки без согласия хозяина (решение продюсера 01.10). С 04.10 — рыночная × FORCE_MARKET, «вложено ×10» убрано:
 // «это должно быть сложным решением».
 const GROUP_BONUS=0.25;     // соседняя клетка того же хозяина: +25% к ренте за каждую (рамку рисует Графика)
@@ -1354,7 +1354,7 @@ function credit(to,cash,note,escrow,extra){if(!note&&extra){note=extra.potTake?'
 const titleOf=t=>t.type==='biz'?bizName(t):pointName(t);
 
 // ---- предложение о покупке: покупатель ----
-// Встал на чужую клетку (рента уплачена) — можно предложить хозяину вложенное × 1…10. Деньги уходят в резерв,
+// Встал на чужую клетку (рента уплачена) — можно предложить хозяину рыночную цену × 1…3 или свою сумму. Деньги уходят в резерв,
 // чтобы их не потратить; одно предложение на клетку. Ответ хозяина — в начале его хода; молчание до конца хода — отказ.
 async function rivalWindow(t){
   const biz=t.type==='biz',owner=t.rival,who=nameOf(owner),col=colorOf(owner),inv=invested(t),mv=marketValue(t,PID),title=titleOf(t);
@@ -1384,13 +1384,13 @@ async function rivalWindow(t){
      :`<div class="mp-choice"><b>${!myTurn()?'Предложить цену можно в свой ход.':proposedThisTurn()?'В этот ход ты уже сделал предложение — следующее в следующий ход.':'Предложи хозяину цену:'}</b>
        <p>Сумма — от рыночной цены: доход клетки с группой, растёт к концу партии. ${esc(who)} решит в начале своего хода: согласится — ${biz?'бизнес':'точка'} твоя${biz?'':' вместе с товаром'}, откажет — деньги вернутся.</p>
        <div class="mp-mults">${opts}</div>
-       ${canOffer?`<div class="mp-offer-own"><span>Своя сумма, от ${money(mv)}:</span><input type="number" class="mp-offer-amount" min="${Math.ceil(mv/10)*10}" step="10" value="${Math.ceil(mv*1.2/10)*10}"><button type="button" class="mp-offer-go buy-btn buy-ok">Предложить</button></div>`:''}</div>`}
+       ${canOffer?`<div class="mp-offer-own"><span>Своя сумма, от ${money(mv)} до ${money(forcePrice(t))}:</span><input type="number" class="mp-offer-amount" min="${Math.ceil(mv/10)*10}" max="${forcePrice(t)}" step="10" value="${Math.ceil(mv*1.2/10)*10}"><button type="button" class="mp-offer-go buy-btn buy-ok">Предложить</button></div>`:''}</div>`}
     ${lot?lotHtml(lot):''}
     ${swapHtml}
     ${here&&!ending&&!lot?`<div class="mp-choice mp-force-box"><b>Или выкупить сразу, без согласия ${esc(who)}:</b><button type="button" class="mp-force buy-btn ${canForce?'buy-ok':'buy-no'}" ${canForce?'':'disabled'}>${forceReady()?`Выкупить за ${money(forceAmt)} · рыночная ×${FORCE_MARKET}`:`Выкуп — через ${forceWait()} ${plural(forceWait(),'круг','круга','кругов')}`}</button></div>`:''}`,
     [{t:'Уйти',v:0,cls:'sec'}]);
   $('card').querySelectorAll('.mp-mult').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal(+b.dataset.m);});
-  {const go=$('card').querySelector('.mp-offer-go');if(go)go.onclick=()=>{const a=Math.round(+$('card').querySelector('.mp-offer-amount').value||0);if(a<mv){toast(`Не меньше рыночной цены — ${money(mv)}`);return;}if(a>S.cash){toast('Столько денег нет');return;}closeModal('amt:'+a);};}
+  {const go=$('card').querySelector('.mp-offer-go');if(go)go.onclick=()=>{const a=Math.round(+$('card').querySelector('.mp-offer-amount').value||0);if(a<mv){toast(`Не меньше рыночной цены — ${money(mv)}`);return;}if(a>forcePrice(t)){toast(`Не больше ${money(forcePrice(t))}: дороже — уже выкуп`);return;}if(a>S.cash){toast('Столько денег нет');return;}closeModal('amt:'+a);};}
   {const f=$('card').querySelector('.mp-force');if(f)f.onclick=()=>{if(!f.disabled)closeModal('force');};}
   wireBids();
   {const sb=$('card').querySelector('.mp-swap-go');if(sb)sb.onclick=()=>{if(sb.disabled)return;const g=+$('card').querySelector('.mp-swap-give').value,pay=+$('card').querySelector('.mp-swap-pay').value;closeModal('swap:'+g+':'+pay);};}
@@ -1592,7 +1592,7 @@ function placeOffer(t,m){return placeOfferAmount(t,Math.round(marketValue(t,PID)
 // Своя сумма — не меньше вложенного хозяином (×1); множитель для окна хозяина — amount / вложенное.
 function placeOfferAmount(t,amount,m){
   if(!isRival(t)||t.mpOffer||t.mpSwap||!myTurn()||ending||lotOn(t.i)||proposedThisTurn())return false;
-  const owner=t.rival,who=nameOf(owner),title=titleOf(t),inv=marketValue(t,PID);amount=Math.round(amount);if(amount<Math.round(inv)||S.cash<amount)return false;   // не меньше рыночной цены
+  const owner=t.rival,who=nameOf(owner),title=titleOf(t),inv=marketValue(t,PID);amount=Math.round(amount);if(amount<Math.round(inv)||amount>forcePrice(t)||S.cash<amount)return false;   // от рыночной до цены выкупа (×4, 04.10)
   m=m||Math.round(amount/Math.max(1,inv)*100)/100;
   S.cash-=amount;S.mpEscrow=(S.mpEscrow||0)+amount;S.mpProposeN=view.turn.n;
   t.mpOffer={from:PID,amount,mult:m,n:view.turn.n};
@@ -2323,7 +2323,7 @@ new MutationObserver(()=>{
     if(parts.length){const d=document.createElement('p');d.className='mp-inv-parts';d.textContent='= '+parts.map(([n,v])=>`${n} ${money(v)}`).join(' + ')+'. Цены сделок — от рыночной: доход клетки за '+MARKET_LAPS+' кругов с группой, не меньше вложенного.';row.after(d);}}
   const own=c.querySelector('.mp-offer-own');
   if(own&&!own.dataset.ui){own.dataset.ui='1';const inp=own.querySelector('.mp-offer-amount');if(inp){
-    const mk=(txt,dv)=>{const b=document.createElement('button');b.type='button';b.className='mp-offer-step';b.textContent=txt;b.onclick=()=>{const min=+inp.min||0;inp.value=Math.max(min,Math.round((+inp.value||0)+dv));inp.dispatchEvent(new Event('input'));};return b;};
+    const mk=(txt,dv)=>{const b=document.createElement('button');b.type='button';b.className='mp-offer-step';b.textContent=txt;b.onclick=()=>{const min=+inp.min||0;inp.value=Math.min(+inp.max||Infinity,Math.max(min,Math.round((+inp.value||0)+dv)));inp.dispatchEvent(new Event('input'));};return b;};
     const wrap=document.createElement('span');wrap.className='mp-offer-steps';wrap.append(mk('−50',-50),mk('−10',-10),inp,mk('+10',10),mk('+50',50));own.insertBefore(wrap,own.querySelector('.mp-offer-go'));
     const inv=marketValue(lastRival,PID),hint=document.createElement('small');hint.className='mp-offer-x';own.append(hint);
     const upd=()=>{hint.textContent=inv?`×${((+inp.value||0)/inv).toFixed(1).replace('.',',')} к рыночной`:'';};inp.addEventListener('input',upd);upd();}}
