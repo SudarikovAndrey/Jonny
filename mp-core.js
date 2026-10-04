@@ -20,7 +20,7 @@ const MINUTE_OPTIONS=[15,20,25,30];
 // Условия победы (решение продюсера 01.10: выбираются на старте, видны всем). Параметры — в goal.
 const WIN_OPTIONS=[
   {id:'capital',name:'Богатейший',text:'Когда время выйдет, побеждает самый большой капитал: нал, вложения и товар минус долги.'},
-  {id:'cash',name:'Первый миллионер',text:'Первый, чей капитал дошёл до $3 000, побеждает сразу.',goal:3000},
+  {id:'cash',name:'Первый миллионер',text:'Первый, чей капитал дошёл до $2 500, побеждает сразу.',goal:2500},
   {id:'chain',name:'Король техники',text:'Первый, кто купил обе лицензии и построил 3 точки техники, побеждает сразу.',goal:3},
   {id:'city',name:'Весь город',text:'Первый, кто обеспечил город всеми 6 категориями товара и держит 2 бизнеса, побеждает сразу.',goal:6},
   {id:'empire',name:'Империя',text:'Первый, у кого 9 владений (точки и бизнесы вместе), побеждает сразу.',goal:9},   // 9 из 25 (19 пустырей + 6 бизнесов): с клетками «Шанса» пустырей стало меньше — было 10 из 28
@@ -62,14 +62,17 @@ function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings
 // 990 живых ходов, в среднем 17 с на ход, круг ≈ 5,6 хода на игрока → 1,6 мин на игрока (2,35 было при 25 с на ход в прогоне).
 // «Империя» — по числу игроков.
 const MIN_PER_LAP_PER_PLAYER=1.6;
-const WIN_SCALE={capitalPer20:3000,capitalRound:100,rentPer20:250,minPerLap:MIN_PER_LAP_PER_PLAYER,round:50,empire:{2:12,3:10,4:9}};
+// «Миллионер» (прогон «Дебага» на cbfe3ce, 12 024 партии, ход 17 с): порог по числу игроков — лидер закрывает 46–50% партий;
+// в режиме кругов капитал растёт от кругов, а не от минут: $450 за круг при любом числе игроков (10 кругов → $4 500).
+const WIN_SCALE={capitalPer20:{2:2500,3:1900,4:1600},capitalPerLap:450,capitalRound:100,rentPer20:250,rentPerLap:{2:55,3:100,4:135},minPerLap:MIN_PER_LAP_PER_PLAYER,round:50,empire:{2:12,3:10,4:9}};
 function lengthMinutes(T){const s=T.settings||{},n=Math.max(2,Math.min(4,(T.players||[]).length||2));
   return s.mode==='laps'?(+s.rounds||DEFAULTS.rounds)*WIN_SCALE.minPerLap*n:(+s.minutes||DEFAULTS.minutes);}
 const r50=x=>Math.max(WIN_SCALE.round,Math.round(x/WIN_SCALE.round)*WIN_SCALE.round);
 function winOf(T){const w=WIN_OPTIONS.find(x=>x.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0],m=lengthMinutes(T),n=Math.max(2,Math.min(4,(T.players||[]).length||2));
-  if(w.id==='cash'){const R=WIN_SCALE.capitalRound,g=Math.max(R,Math.round(WIN_SCALE.capitalPer20*m/20/R)*R);
+  if(w.id==='cash'){const R=WIN_SCALE.capitalRound,s=T.settings||{},raw=s.mode==='laps'?WIN_SCALE.capitalPerLap*(+s.rounds||DEFAULTS.rounds):WIN_SCALE.capitalPer20[n]*m/20,g=Math.max(R,Math.round(raw/R)*R);
     return Object.assign({},w,{goal:g,text:`Первый, чей капитал дошёл до $${g.toLocaleString('ru-RU')}, побеждает сразу. Капитал — нал, точки, бизнесы и товар минус долги.`});}
-  if(w.id==='rent'){const g=r50(WIN_SCALE.rentPer20*m/20);return Object.assign({},w,{goal:g,text:`Первый, кто собрал $${g.toLocaleString('ru-RU')} рентой с соперников, побеждает сразу.`});}
+  // «Рантье» по кругам (прогон на cbfe3ce: с минутами брали в 84–98% партий) — рента за круг по числу игроков; по времени — $250 на 20 минут.
+  if(w.id==='rent'){const s=T.settings||{},g=r50(s.mode==='laps'?WIN_SCALE.rentPerLap[n]*(+s.rounds||DEFAULTS.rounds):WIN_SCALE.rentPer20*m/20);return Object.assign({},w,{goal:g,text:`Первый, кто собрал $${g.toLocaleString('ru-RU')} рентой с соперников, побеждает сразу.`});}
   if(w.id==='empire'){const g=WIN_SCALE.empire[n];return Object.assign({},w,{goal:g,text:`Первый, у кого ${g} владений (точки и бизнесы вместе), побеждает сразу.`});}
   return w;}
 function newTable(room,settings){
