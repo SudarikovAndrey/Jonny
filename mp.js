@@ -38,7 +38,7 @@ function frameMap(){try{return new URL($('board-frame').src,location.href).searc
 function applyBoardMap(){
   const id=tableMap();if(!id||frameMap()===id){mapPending=null;return;}
   if(mapPending===id)return;mapPending=id;
-  (async()=>{for(let i=0;i<120&&(moving||document.body.classList.contains('dice-rolling'));i++)await wait(250);
+  (async()=>{for(let i=0;i<120&&(moving||document.body.classList.contains('dice-rolling'));i++)await pollWait(250);
     if(tableMap()!==id||frameMap()===id){mapPending=null;return;}
     const f=$('board-frame'),u=new URL(f.src,location.href);u.searchParams.set('map',id);
     MobileHost.ready=false;document.body.classList.remove('engine-ready');lastOwners='';rivalsSent='';
@@ -69,6 +69,10 @@ CFG.POLICE.attempts=2;      // плейтест 4: бросать на дубл�
 CFG.BIZ.landMult=1.5;       // плейтест 4: остановка на чужом бизнесе — ×1,5 сбора вместо ×3 (Макс платил $162–221 при $70–100 на руках)
 const MP_SLOT_BASE_MIN=100; // плейтест 4: база призов автомата не ниже $100 — в начале партии призы были «ерунда»
 const MICRO_RATE=0.25,MICRO_MIN=100,MICRO_MAX=500,STOCK_SELL=0.5,DEBT_LAPS=2;   // микрозайм и продажа товара в минусе; торги принудительно — со второго круга в минусе
+// Ожидание в циклах-опросах («пока открыто окно…») — всегда настоящим таймером. wait() игры при «⚡ мгновенно»
+// (CFG.SPEED≥100) возвращается сразу, и while(окно открыто) await wait() крутился микрозадачами без конца: окно не могло
+// закрыться, вкладка висла (тестовый стол с ботом, авто-ход + мгновенно, 04.10).
+const pollWait=ms=>new Promise(r=>setTimeout(r,Math.min(ms,CFG&&CFG.SPEED>=100?30:ms)));
 const STEP_MS=170;        // шаг чужой фишки по клетке
 // Ручная пауза (плейтест 01.10: её спамили): две на игрока за партию, дальше — одна раз в 5 минут.
 const PAUSE_FREE=2,PAUSE_CD_MS=5*60000;
@@ -953,7 +957,7 @@ async function mpBankWindow(forced=true){
     if(forced&&sum<need&&picked.size<list.length){toast(`Банк должен покрыть ${money(need)} — выбрано на ${money(sum)}`,2600);continue;}
     for(const x of list)if(picked.has(x.i))startLot(x.i,x.price,'bankrupt',x.bank);
     if(!forced)return;
-    for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await wait(100);   // ждём, пока хозяин стола примет лоты
+    for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await pollWait(100);   // ждём, пока хозяин стола примет лоты
     finishTurn();return;
   }
 }
@@ -1235,7 +1239,7 @@ async function autoFinish(){
   // Время вышло на втором круге в минусе — клетки выставляются на торги сами, с самого дешёвого.
   S.mpDebtAskN=view.turn.n;
   if(bankruptNeed()>0){let acc=0;for(const x of mpBankList().sort((a,b)=>a.price-b.price)){if(acc>=bankruptNeed())break;startLot(x.i,x.price,'bankrupt',x.bank);acc+=x.price;}
-    for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await wait(100);}
+    for(let i=0;i<30&&bankruptNeed()>0&&mpBankList().length;i++)await pollWait(100);}
   finishTurn();
 }
 
@@ -1643,13 +1647,13 @@ async function answerOne(t){
 }
 async function answerOffers(){
   if(!myTurn()||ending||!S||!S.tiles)return;
-  for(const t of S.tiles.filter(x=>x.rival&&x.mpSale&&x.mpSale.to===PID)){if(!myTurn()||ending)return;while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);await answerSale(t);}
+  for(const t of S.tiles.filter(x=>x.rival&&x.mpSale&&x.mpSale.to===PID)){if(!myTurn()||ending)return;while((!$('modal').hidden||moving)&&myTurn()&&!ending)await pollWait(300);await answerSale(t);}
   for(const t of S.tiles.filter(x=>x.owner&&x.mpOffer)){
     if(!myTurn()||ending)return;
-    while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);
+    while((!$('modal').hidden||moving)&&myTurn()&&!ending)await pollWait(300);
     await answerOne(t);
   }
-  for(const o of swapIncoming()){if(!myTurn()||ending)return;while((!$('modal').hidden||moving)&&myTurn()&&!ending)await wait(300);await MPSwap.answerWindow(o.id);}
+  for(const o of swapIncoming()){if(!myTurn()||ending)return;while((!$('modal').hidden||moving)&&myTurn()&&!ending)await pollWait(300);await MPSwap.answerWindow(o.id);}
 }
 function rentOfMine(t){const keep=t.rival;t.rival=PID;t.owner=null;const r=rentOf(t);t.owner='you';if(keep)t.rival=keep;else delete t.rival;return r;}
 function acceptOffer(t){
@@ -2474,7 +2478,7 @@ function onEvt(from,e){
   if((e.kind==='scatter'||e.kind==='insp')&&from!==PID&&Array.isArray(e.drops)&&e.drops.length){
     // Разлёт и плашку показываем, когда фишка соперника ДОШЛА до клетки: не только цель (k.pos), но и анимация шагов
     // (очередь пуста, k.cur на клетке). Плейтест 4: k.pos ставился сразу по приходу вида — разлёт обгонял фишку на 2–3 с.
-    (async()=>{for(let i=0;i<100;i++){const tk=tokens.get(from);if(!tk||tk.pos==null||(tk.pos===e.tile&&!tk.queue.length&&tk.cur===e.tile))break;await wait(100);}
+    (async()=>{for(let i=0;i<100;i++){const tk=tokens.get(from);if(!tk||tk.pos==null||(tk.pos===e.tile&&!tk.queue.length&&tk.cur===e.tile))break;await pollWait(100);}
       if(e.kind==='insp')feedAdd(p,'insp',e.text.replace(/^инспектор пришёл с проверкой: /,'инспектор проверяет: '),null,mine,e.tile);
       else{const n=noteOf(p,e,false,null);feedAdd(p,'scatter',n.text,null,true,e.tile);}   // «Вася попал на инкассатора — разлетелось $40» (плейтест 4)
       if(MobileHost.ready)MobileHost.request('scatter',{from:e.tile==null?0:e.tile,drops:e.drops},15000).catch(()=>{});})();
