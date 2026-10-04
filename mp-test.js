@@ -641,7 +641,7 @@ panel.innerHTML=`<summary>🧪 Тестовый стол</summary><div class="mp
   <b>Фишка</b><input id="mpTestTile" type="number" min="0" max="39" value="5"><button data-a="goto">На клетку</button><button data-a="land">…и сыграть клетку</button>
   <b>Бросок</b><input id="mpTestA" type="number" min="1" max="6" value="3"><input id="mpTestB" type="number" min="1" max="6" value="3"><button data-a="dice">Задать a+b</button>
   <b>Шанс</b><select id="mpTestChance">${Object.keys(CHANCE_LABELS).map(k=>`<option value="${k}">${CHANCE_LABELS[k]}</option>`).join('')}</select><button data-a="chance">Вытянуть</button>
-  <b>Бот в следующий ход</b><button data-a="force" data-v="lot">Лот</button><button data-a="force" data-v="offer">Предложение</button><button data-a="force" data-v="buy">Выкуп ×10</button>
+  <b>Бот в следующий ход</b><button data-a="force" data-v="lot">Лот</button><button data-a="force" data-v="offer">Предложение</button><button data-a="force" data-v="buy">Выкуп</button>
   <b>События</b><button data-a="insp">Инспектор</button><button data-a="jail">В участок</button><button data-a="scatter">Инкассатор</button>
   <b>Партия</b><button data-a="final">К последнему раунду</button><button data-a="over">К итогу</button>
 </div>`;
@@ -661,7 +661,7 @@ panel.addEventListener('click',e=>{
     case 'land':{if(!needTurn())break;const i=Math.max(0,Math.min(39,+$('mpTestTile').value|0));S.pos=i;S.mpLanded={n:MP.view.turn.n,i};sync();try{land(S.tiles[i]);}catch(x){console.error(x);}break;}
     case 'dice':window.MP_FORCE_DICE={a:+$('mpTestA').value|0,b:+$('mpTestB').value|0};toast(`🧪 Следующий бросок: ${window.MP_FORCE_DICE.a}+${window.MP_FORCE_DICE.b}`,1800);break;
     case 'chance':if(!needTurn())break;H.mpChance($('mpTestChance').value);break;
-    case 'force':force=v;toast(`🤖 Бот в свой следующий ход: ${v==='lot'?'выставит лот':v==='offer'?'предложит цену':'выкупит ×10'}`,2200);break;
+    case 'force':force=v;toast(`🤖 Бот в свой следующий ход: ${v==='lot'?'выставит лот':v==='offer'?'предложит цену':'выкупит'}`,2200);break;
     case 'insp':if(!needTurn())break;try{hazard();}catch(x){console.error(x);}break;
     case 'jail':{if(!needTurn())break;const i=S.tiles.findIndex(t=>t.type==='police');if(i>=0)S.pos=i;S.jail=CFG.POLICE.attempts;S.jailFine=0;sync();toast('🧪 В участке: следующий бросок — на дубль',2200);break;}
     case 'scatter':if(!needTurn())break;try{scatter();}catch(x){console.error(x);}break;

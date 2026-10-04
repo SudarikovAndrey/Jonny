@@ -16,10 +16,11 @@ const RENT_LAPS=1.5;      // рента: полторы круговой при�
 // Покупка чужой клетки — предложение хозяину (решение продюсера 01.10, вместо принудительного перекупа ×1,5):
 // множитель от вложенного хозяином, хозяин принимает или отказывает в начале своего хода.
 const OFFER_MULTS=[1,1.5,2,3,5,10];
-const FORCE_MULT=10;        // принудительный выкуп чужой клетки без согласия хозяина (решение продюсера 01.10)
+// Выкуп чужой клетки без согласия хозяина (решение продюсера 01.10). С 04.10 — рыночная × FORCE_MARKET, «вложено ×10» убрано:
+// «это должно быть сложным решением».
 const GROUP_BONUS=0.25;     // соседняя клетка того же хозяина: +25% к ренте за каждую (рамку рисует Графика)
 const BANK_SELL=0.5;        // банкротство: стартовая цена торгов и цена банка — половина вложенного
-const FORCE_LAPS=2;         // выкуп ×10 — не чаще раза в два своих круга (решение продюсера 01.10)
+const FORCE_LAPS=2;         // выкуп — не чаще раза в два своих круга (решение продюсера 01.10)
 // ---- поле партии: клетки «Шанса» (плейтест 4: в поле SF их не было — колода партии не выпадала ни разу) ----
 // Три клетки, как в «Монополии», вместо пустырей 7, 22, 36. Соло-поле Сан-Франциско не меняется.
 const MP_CHANCE_TILES=[7,22,36];
@@ -647,16 +648,38 @@ function onMessage(m){
       if(m.ep!=null&&m.ep<hostEp)return;   // старый хозяин проснулся — его стол уже ведёт другой
       if(m.ep!=null&&m.ep>hostEp){hostEp=m.ep;ss('abmp_ep_'+ROOM,String(hostEp));}
       lastHostAt=Date.now();
-      const prev=view&&view.host,moved=prev&&m.v&&m.v.host&&m.v.host!==prev;if(moved)handoffBanner(m.v,prev===PID);
+      // Смена хозяина — по последнему увиденному, а не по view.host: вид может ждать фишку (walkGate), и тогда каждое
+      // следующее сообщение снова давало бы moved (мультиплеер режим, 04.10).
+      const prev=hostSeen,moved=prev&&m.v&&m.v.host&&m.v.host!==prev;if(m.v&&m.v.host)hostSeen=m.v.host;if(moved)handoffBanner(m.v,prev===PID);
       if(backFromAway&&m.v&&m.v.host){if(m.v.host!==PID)handoffBanner(m.v,true,6500);backFromAway=false;}
-      onView(m.v,m.now);if(moved)resyncTurn();return;}
-    case 'evt':onEvt(m.from,m.e);return;
+      onView(m.v,m.now,moved);if(moved)resyncTurn();return;}   // стол сменил хозяина — вид сразу, без ожидания фишки: resyncTurn смотрит на свежий ход
+    case 'evt':if(walkGate.list.length){walkGate.list.push({from:m.from,e:m.e});walkGate.arm();}else onEvt(m.from,m.e);return;
   }
 }
-let lastMode=null;
-function onView(v,now){
+let lastMode=null,hostSeen=null;
+// Ход соперника (особенно бота) приходит одним пакетом: клетки, лента, монеты и пульсы применялись сразу,
+// а фишка ещё 1–2 с шагала по клеткам — «клетки отрисовываются раньше, чем добегает фишка» (Андрей 04.10).
+// Пока чья-то фишка идёт, новые виды и события копятся и применяются по порядку, когда она дошла.
+// Страховка — 5 с; в фоне (rAF стоит, фишки не шагают) не ждём.
+const walkGate={list:[],since:0,timer:null,
+  walking(){for(const [,k] of tokens)if(k.queue.length)return true;return false;},
+  arm(){if(!this.since)this.since=Date.now();if(!this.timer)this.timer=setInterval(()=>this.flush(false),80);},
+  flush(force){
+    if(!force&&!document.hidden&&this.walking()&&Date.now()-this.since<5000)return;
+    clearInterval(this.timer);this.timer=null;this.since=0;
+    const items=this.list.splice(0);
+    for(const it of items){try{if(it.v)applyView(it.v,it.now);else onEvt(it.from,it.e);}catch(x){console.error(x);}}
+  }};
+function onView(v,now,urgent){
   if(v&&v.settings&&v.settings.mode)lastMode=v.settings.mode;   // для бонуса старта вне хода
   if(window.MPBots&&MPBots.acting()){MPBots.holdHostView(v,now);return;}   // пока ходит бот, свой вид откладываем
+  const gate=!urgent&&!!view&&!!v&&v.phase==='play'&&view.phase==='play'&&v.match===curMatch&&!document.hidden;
+  if(!gate){if(walkGate.list.length)walkGate.flush(true);applyView(v,now);return;}
+  syncTokens(v);   // фишки получают новую цель сразу — шагают, пока остальное ждёт
+  if(walkGate.list.length||walkGate.walking()){walkGate.list.push({v,now});walkGate.arm();return;}
+  applyView(v,now);
+}
+function applyView(v,now){
   if(now)clockOff=now-Date.now();
   const prev=view;view=v;
   if(document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');
@@ -1337,7 +1360,7 @@ async function rivalWindow(t){
   const biz=t.type==='biz',owner=t.rival,who=nameOf(owner),col=colorOf(owner),inv=invested(t),mv=marketValue(t,PID),title=titleOf(t);
   const g=biz?null:good(t.good),here=S.pos===t.i,offer=t.mpOffer;
   // Плейтест 5: предлагать цену и обмен можно на любую чужую клетку в свой ход (из «Моих владений» и с карты), не только стоя;
-  // одно новое предложение (цена или обмен) за ход. Выкуп ×10 — по-прежнему только стоя на клетке.
+  // одно новое предложение (цена или обмен) за ход. Выкуп — по-прежнему только стоя на клетке.
   const mine=offer&&offer.from===PID,busy=offer&&!mine,canOffer=myTurn()&&!ending&&!offer&&!t.mpSwap&&!lotOn(t.i)&&!proposedThisTurn();
   const rows=[
     biz?['Уровень',t.level]:['Уровень',t.salesLvl],
@@ -1364,7 +1387,7 @@ async function rivalWindow(t){
        ${canOffer?`<div class="mp-offer-own"><span>Своя сумма, от ${money(mv)}:</span><input type="number" class="mp-offer-amount" min="${Math.ceil(mv/10)*10}" step="10" value="${Math.ceil(mv*1.2/10)*10}"><button type="button" class="mp-offer-go buy-btn buy-ok">Предложить</button></div>`:''}</div>`}
     ${lot?lotHtml(lot):''}
     ${swapHtml}
-    ${here&&!ending&&!lot?`<div class="mp-choice mp-force-box"><b>Или выкупить сразу, без согласия ${esc(who)}:</b><button type="button" class="mp-force buy-btn ${canForce?'buy-ok':'buy-no'}" ${canForce?'':'disabled'}>${forceReady()?`Выкупить ×${FORCE_MULT} · ${money(forceAmt)}`:`Выкуп ×${FORCE_MULT} — через ${forceWait()} ${plural(forceWait(),'круг','круга','кругов')}`}</button></div>`:''}`,
+    ${here&&!ending&&!lot?`<div class="mp-choice mp-force-box"><b>Или выкупить сразу, без согласия ${esc(who)}:</b><button type="button" class="mp-force buy-btn ${canForce?'buy-ok':'buy-no'}" ${canForce?'':'disabled'}>${forceReady()?`Выкупить за ${money(forceAmt)} · рыночная ×${FORCE_MARKET}`:`Выкуп — через ${forceWait()} ${plural(forceWait(),'круг','круга','кругов')}`}</button></div>`:''}`,
     [{t:'Уйти',v:0,cls:'sec'}]);
   $('card').querySelectorAll('.mp-mult').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal(+b.dataset.m);});
   {const go=$('card').querySelector('.mp-offer-go');if(go)go.onclick=()=>{const a=Math.round(+$('card').querySelector('.mp-offer-amount').value||0);if(a<mv){toast(`Не меньше рыночной цены — ${money(mv)}`);return;}if(a>S.cash){toast('Столько денег нет');return;}closeModal('amt:'+a);};}
@@ -1445,7 +1468,7 @@ function rentShared(sh,t){
 // ---- рыночная цена клетки (продюсер 03.10: «выкуп за дёшево в конце игры — считать по эффективной цене») ----
 // Цена = max(вложено, MARKET_LAPS кругов дохода клетки с цепочкой). Для покупателя — по его цепочке и его сети бизнесов:
 // если клетка достраивает его группу, она для него дороже. Берём большее из «для хозяина» и «для покупателя».
-const MARKET_LAPS=6,FORCE_MARKET=2,MARKET_STAGE=0.15;
+const MARKET_LAPS=6,FORCE_MARKET=4,MARKET_STAGE=0.15;
 // Стадия партии: цены сделок растут на 15% за каждый средний пройденный круг игроков (круг 0 — ×1, круг 10 — ×2,5).
 // Продюсер 02.10: «точки постоянно дорожают»; доход одной точки за 6 кругов в конце игры меньше вложенного, без стадии цена упиралась во вложенное.
 function marketStage(){const ps=(view&&view.players)||[];if(!ps.length)return 1;const avg=ps.reduce((a,p)=>a+(+p.laps||0),0)/ps.length;return 1+MARKET_STAGE*avg;}
@@ -1563,8 +1586,8 @@ window.MPSwap={max:SWAP_MAX,pays:SWAP_PAYS,get lastError(){return swapErr;},
   accept:swapAccept,decline:id=>swapDecline(id,false),counter:swapCounter,
   answer:(id,a)=>a==='accept'?swapAccept(id):swapDecline(id,false),answerWindow:answerSwapWindow,
   _local:{place:swapPlaceLocal,accept:swapAcceptLocal,decline:swapDeclineLocal,byId:swapById}};
-// Выкуп без согласия: ×10 вложенного, но не меньше ×2 рыночной цены (×3 до 03.10) для покупателя — в конце игры точка дорожает.
-function forcePrice(t){return Math.round(Math.max(invested(t)*FORCE_MULT,marketValue(t,PID)*FORCE_MARKET)/10)*10;}
+// Выкуп без согласия: рыночная цена для покупателя × 4 (04.10; до этого max(вложено ×10, рыночная ×2 / ×3)) — в конце игры точка дорожает.
+function forcePrice(t){return Math.round(marketValue(t,PID)*FORCE_MARKET/10)*10;}
 function placeOffer(t,m){return placeOfferAmount(t,Math.round(marketValue(t,PID)*m),m);}
 // Своя сумма — не меньше вложенного хозяином (×1); множитель для окна хозяина — amount / вложенное.
 function placeOfferAmount(t,amount,m){
@@ -1580,7 +1603,7 @@ function placeOfferAmount(t,amount,m){
   save();render();push();return true;
 }
 
-// Принудительный выкуп ×10 (решение продюсера 01.10): хозяин получает деньги сразу, клетка переходит с товаром.
+// Принудительный выкуп (решение продюсера 01.10, цена — forcePrice): хозяин получает деньги сразу, клетка переходит с товаром.
 // Не чаще раза в два своих круга (второй плейтест): S.mpForceLap — круг последнего выкупа.
 const forceWait=()=>Math.max(0,(S.mpForceLap==null?-FORCE_LAPS:S.mpForceLap)+FORCE_LAPS-(S.laps||0));
 const forceReady=()=>forceWait()<=0;
@@ -1597,7 +1620,7 @@ function forceBuy(t){
   track('mp_force_buy',{tile:t.i,from:owner,amount});
   log(`💰 Выкупил «${title}» у ${who} за ${money(amount)}.`);
   plate(`💰 Выкуп · ${who}`,-amount,`«${title}» теперь твоя`);
-  emit({kind:'sale',text:`выкупил «${title}» у ${who} за ×${FORCE_MULT}`,amount:-amount,tile:t.i,to:owner});
+  emit({kind:'sale',text:`выкупил «${title}» у ${who} за ${money(amount)}`,amount:-amount,tile:t.i,to:owner});
   save();render();push();
 }
 
@@ -2572,8 +2595,12 @@ function frame(now){
   for(const [,k] of tokens){
     let p;
     // Отстала больше чем на 4 клетки — шагает быстрее, чтобы не копить отставание.
-    const ms=k.queue.length>4?STEP_MS*.55:STEP_MS;
-    if(k.queue.length&&now-k.t0>=ms){k.cur=k.queue.shift();k.t0=now;}
+    // Шаги — по реальному времени, а не по одному за кадр: на тяжёлом поле кадр бывает 300–500 мс, и фишка
+    // «застревала», теряя остаток времени на каждом шаге (Андрей 04.10). Долгий кадр — догоняет пропущенные клетки.
+    let ms=k.queue.length>4?STEP_MS*.55:STEP_MS;
+    if(k.queue.length&&now-k.t0>2000)k.t0=now-ms;   // вкладка спала — не проматываем весь путь мгновенно, идём дальше
+    while(k.queue.length&&now-k.t0>=ms){k.cur=k.queue.shift();k.t0+=ms;ms=k.queue.length>4?STEP_MS*.55:STEP_MS;}
+    if(!k.queue.length)k.t0=now;
     if(k.queue.length){
       const q=Math.min(1,(now-k.t0)/ms),a=screenOfTile(k.cur),b=screenOfTile(k.queue[0]);
       p={x:a.x+(b.x-a.x)*q,y:a.y+(b.y-a.y)*q-Math.sin(Math.PI*q)*14};k.seg={a:k.cur,b:k.queue[0],k:q};
@@ -2671,7 +2698,7 @@ function renderLobby(force){
       :`<div class="mp-seat empty" style="--c:${C.COLORS[i]}"><i></i><b>свободно</b><small>${C.COLOR_NAMES[i]}</small>${host&&window.MPBots?'<button type="button" class="mp-seat-bot">🤖 + Бот</button>':''}</div>`).join('')}</div>
     ${host?'':'<p class="mp-guest-note">🔒 Настраивает хозяин стола — ты видишь, что он выбрал</p>'}
     <div class="mp-set mp-set-map"><span>Карта<small>вид поля; клетки те же — хозяин может сменить и в партии</small></span><select class="mp-map-sel" ${host?'':'disabled'}>${C.BOARD_OPTIONS.map(([id,name])=>`<option value="${id}" ${id===(T.settings.boardMap||'sanfrancisco')?'selected':''}>${esc(name)}</option>`).join('')}</select></div>
-    <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>esc((C.WIN_OPTIONS.find(w=>w.id===v)||{}).name||v))}</div>
+    <div class="mp-set mp-set-win"><span>Как победить<small>${esc(C.winOf(T).text)}</small></span>${opt('win',C.WIN_OPTIONS.map(w=>w.id),T.settings.win,v=>{const w=C.WIN_OPTIONS.find(x=>x.id===v)||{};return esc((w.name||v)+(w.long?' · от часа':''));})}</div>
     ${C.timed(T)?`<div class="mp-set mp-set-mode"><span>Длина партии<small>${C.modeOf(T)==='laps'?'кругов лидера; потом — последний раунд':'минут на всех; потом — последний раунд'}</small></span>${opt('mode',C.MODE_OPTIONS,C.modeOf(T),v=>v==='laps'?'По кругам':'По времени')}
       ${C.modeOf(T)==='laps'?opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>v+' кр.'):opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>`
     :`<div class="mp-set mp-set-mode"><span>Темп миссии<small>лимита нет — от длины зависит порог: ${esc(C.winOf(T).text)}</small></span>${opt('mode',C.MODE_OPTIONS,T.settings.mode==='laps'?'laps':'time',v=>v==='laps'?'По кругам':'По времени')}
@@ -2795,6 +2822,7 @@ window.MP={marketValue:(i,buyer)=>marketValue(S.tiles[i],buyer),forcePrice:i=>fo
 {
   window.__MP={test:TEST,
     get PID(){return PID;},set PID(v){PID=v;},get view(){return view;},set view(v){view=v;},get hub(){return hub;},get net(){return net;},get S(){return S;},
+    walkGate,swapMode,swapClose,get swapUI(){return swapUI;},rivalsOf,   // walkGate и окно обмена — для проверок (фишка и «⏸ обмен», 04.10)
     adopt,onView,finishTurn,placeOffer,forceBuy,placeBid,startLot,mpChance,landedHere,isRival,invested,rentOf,forceReady,lotOn,myLots,
     roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,dblCash,rollCash,titleOf,sellOf,baseInv,pairKey,
     setTurn(o){mine=!!o.mine;rolled=!!o.rolled;landed=!!o.landed;ending=false;autoEnding=false;credits=[];},
