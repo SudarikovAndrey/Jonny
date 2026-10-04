@@ -592,6 +592,12 @@ function yieldTable(ep){
 // Повтор безопасен: проводки отсекаются по id, «конец хода» с прошлым номером ядро не примет.
 function resyncTurn(){if(!myTurn()||!net)return;try{net.send(ending?{t:'end',n:view.turn.n,pack:makePack()}:{t:'state',pack:makePack()});}catch(e){console.warn('resync',e);}}
 let handoffEl=null,handoffT=0,backFromAway=false;
+// Вкладки одного браузера: новая спрашивает «кто сидит за этим столом?» — живая отвечает, и место не занимается (см. enter).
+const tabsBC=(()=>{try{return new BroadcastChannel('abmp_tabs');}catch(e){return null;}})();
+if(tabsBC)tabsBC.onmessage=e=>{const m=e.data||{};if(m.q==='who'&&m.room===ROOM&&view&&net)tabsBC.postMessage({a:'here',room:ROOM,id:m.id});};
+function tabAtTable(room){return new Promise(res=>{if(!tabsBC)return res(false);const id=Math.random().toString(36).slice(2);let done=false;
+  const on=e=>{const m=e.data||{};if(m.a==='here'&&m.id===id&&!done){done=true;tabsBC.removeEventListener('message',on);res(true);}};
+  tabsBC.addEventListener('message',on);tabsBC.postMessage({q:'who',room,id});setTimeout(()=>{if(!done){done=true;tabsBC.removeEventListener('message',on);res(false);}},400);});}
 function handoffBanner(v,wasHost,ms){
   const who=v.host===PID?null:((v.players.find(p=>p.pid===v.host)||{}).name||'другой игрок');
   const text=wasHost?`Ты был не на связи — стол ведёт ${who}`:who?`Хозяин отключился — стол ведёт ${who}`:'Хозяин отключился — стол ведёшь ты';
@@ -2761,7 +2767,8 @@ async function enter(){
   // Этот браузер уже сидел за этим столом (вкладку закрыли) — садимся тем же игроком, без экрана входа.
   // Бывший хозяин, которому за 7 с никто не ответил (стол никто не принял), поднимает стол из своего сохранения.
   {let seat=null;try{seat=JSON.parse(ls('abmp_seat_'+ROOM)||'null');}catch(e){}
-    if(ROOM&&seat&&seat.pid&&Date.now()-(seat.t||0)<12*3600e3){
+    // За этим столом сейчас сидит другая вкладка этого браузера — её место не занимаем, обычный экран входа.
+    if(ROOM&&seat&&seat.pid&&Date.now()-(seat.t||0)<12*3600e3&&!(await tabAtTable(ROOM))){
       PID=seat.pid;ss('abmp_pid',PID);if(seat.name){myName=seat.name;ls('abmp_name',myName);}backFromAway=!!seat.host;
       renderWait(`Возвращаемся за стол ${ROOM}…`);connectAsClient(ROOM,false);
       if(seat.host&&ls('abmp_host_'+ROOM))setTimeout(()=>{if(view||!net||net.host)return;net.stopped=true;backFromAway=false;

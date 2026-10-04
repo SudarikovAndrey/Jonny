@@ -7,6 +7,9 @@
 CFG.INSP={limit:3,attempts:3,fineShare:0.5,steps:[3,7],fromLap:5,lapStep:3}; // штраф = доля полицейского штрафа; steps: до 3 своих клеток — 1 проверка, до 7 — 2, дальше — 3
 
 function inspActive(){return S.tiles.filter(t=>t.insp);}
+// Потолок проверок считается по своим клеткам: в мультиплеере проверка на точке соперника (rival) — его забота,
+// иначе чужая проверка съедала единственный слот и инспектор уходил с «все три уже идут» (плейтест 03.10).
+function inspMine(){return S.tiles.filter(t=>t.insp&&!t.rival);}
 function inspFine(){return Math.max(10,Math.round(policeFine()*CFG.INSP.fineShare/10)*10);}
 function inspWorks(t){return !t.insp;} // точка работает на игрока
 function inspLabel(t){return t.type==='biz'?'бизнес не платит':'точка не торгует';}
@@ -21,9 +24,11 @@ hazard=async function(){
   const ownNow=S.tiles.filter(t=>(t.type==='kiosk'||t.type==='biz')&&t.owner&&unlocked(t)).length;
   if(ownNow<(CFG.INSP.minOwn||0)){toast(`📋 Инспектору пока некого проверять — проверки с ${CFG.INSP.minOwn} владений`);log(`📋 Клетка инспектора: проверки начнутся с ${CFG.INSP.minOwn} владений.`);return;}
   const lapCap=1+Math.floor(Math.max(0,lapsDone-CFG.INSP.fromLap)/CFG.INSP.lapStep);
-  const free=Math.min(CFG.INSP.limit-inspActive().length,lapCap-inspActive().length);
-  if(free<=0){toast('📋 Инспектор: все три проверки уже идут');log('📋 Инспектор приходил, но проверок и так три — ушёл.');return;}
-  const fit=t=>(t.type==='kiosk'||t.type==='biz')&&unlocked(t)&&!t.insp&&t.i!==S.pos;
+  const busy=inspMine().length,cap=Math.min(CFG.INSP.limit,lapCap),free=cap-busy;
+  if(free<=0){const k=busy===1?'проверка':busy<5?'проверки':'проверок',w=busy===1?'идёт':'идут';
+    toast(busy>=CFG.INSP.limit?`📋 Инспектор: все ${busy} ${k} уже ${w}`:`📋 Инспектор: у тебя уже ${w} ${busy} ${k} — больше пока не положено`);
+    log(`📋 Инспектор приходил, но у тебя уже ${busy} ${k} из ${cap} возможных — ушёл.${cap<CFG.INSP.limit?` Потолок растёт на одну каждые ${CFG.INSP.lapStep} круга.`:''}`);return;}
+  const fit=t=>(t.type==='kiosk'||t.type==='biz')&&unlocked(t)&&!t.insp&&!t.rival&&t.i!==S.pos;
   let spots=S.tiles.filter(t=>fit(t)&&t.owner);
   if(!spots.length)spots=S.tiles.filter(t=>fit(t)&&!t.owner&&!t.drop);
   if(!spots.length){toast('📋 Инспектору некого проверять');return;}
