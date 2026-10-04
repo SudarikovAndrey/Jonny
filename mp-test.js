@@ -410,7 +410,7 @@ function lapHidden({credit,emit}){
   if(S.mpLapCut!=null){income=Math.round(income*S.mpLapCut);delete S.mpLapCut;}   // карта соперника: демпинг или забастовка
   if(S.mpLapBoost){income=Math.round(income*S.mpLapBoost);delete S.mpLapBoost;}   // своя «Акция»
   income+=window.MP_START_BONUS_NOW?MP_START_BONUS_NOW():100;   // проход старта: $100 по кругам, $50 по времени
-  if(window.MP_IS_UNDERDOG&&MP_IS_UNDERDOG()){const ex=window.MP_UNDERDOG_BONUS?MP_UNDERDOG_BONUS():50;income+=ex;emit({kind:'underdog',text:`пособие отстающему $${ex}`,amount:ex,tile:0});}
+  if(window.MP_IS_UNDERDOG&&MP_IS_UNDERDOG()){const ex=window.MP_UNDERDOG_BONUS?MP_UNDERDOG_BONUS():50;income+=ex;emit({kind:'underdog',text:`подмога района $${ex}`,amount:ex,tile:0});}
   if(income>0){S.cash+=income;S.stat.earned=(S.stat.earned||0)+income;emit({kind:'pass',text:'прошёл старт — продажи',amount:income,tile:0});}
   credit(null,0,{slot:10});
   for(const l of (S.loans||[]))if(l.micro){const i=Math.round(l.principal*l.rate);S.cash-=i;}
@@ -510,16 +510,16 @@ function chanceHidden({credit,emit,v,after}){
   // Пакость — в руку (до 2 карт), как у игрока; сыграет бот позже в strategyHidden.
   if(window.MPHand&&(S.mpHand||[]).length<MPHand.max&&rnd(.5)){const ids=Object.keys(MPHand.cards);S.mpHand=(S.mpHand||[]).concat(pick(ids));emit({kind:'hand',text:'взял карту в руку',amount:null,tile:S.pos});trace.push('бот: карта в руку');return;}
   // Денежные карты бота — те же, что у игрока, и тоже от среднего дохода стола за круг.
-  const rivals=v.players.filter(p=>p.pid!==H.PID);let text,amount=null;
+  const rivals=v.players.filter(p=>p.pid!==H.PID);let text,amount=null,hits;
   const U=Math.max(50,Math.round((window.MP_LAP_P?window.MP_LAP_P():100)/5)*5),k=x=>Math.max(10,Math.round(U*x/5)*5);
   const roll=Math.random();
   if(roll<.25){const a=k(.4);amount=-a;S.cash-=a;credit(null,0,{pot:a});text=`🚗 Штраф за парковку $${a} — в общую копилку.`;}
   else if(roll<.45&&myKiosks().length){S.mpLapBoost=1.5;text='🏷 Акция «Два по цене одного»: на следующем проходе старта продажи ×1,5.';}
   else if(roll<.65&&myKiosks().some(t=>t.goods<cap(t))){let n=0;for(const t of myKiosks()){const add=Math.ceil((cap(t)-t.goods)/2);if(add>0){t.goods+=add;n+=add;}}text=`🚚 Оптовый завоз: точки заполнились наполовину бесплатно (+${n} шт).`;}
-  else if(roll<.8&&rivals.length){const a=k(.25);amount=-a;S.cash-=a;for(const p of rivals)credit(p.pid,-a);credit(null,0,{pot:a*(rivals.length+1)});text=`🚔 Облава на районе: все платят в копилку по $${a}.`;}
+  else if(roll<.8&&rivals.length){const a=k(.25);amount=-a;S.cash-=a;for(const p of rivals)credit(p.pid,-a);credit(null,0,{pot:a*(rivals.length+1)});hits=rivals.map(p=>({pid:p.pid,amount:-a})).concat({pid:H.PID,amount:-a});text=`🚔 Облава на районе: все платят в копилку по $${a}.`;}
   else if(rivals.length){const p=pick(rivals);after.push({t:'hit',h:{k:'skip',to:p.pid}});text=`⏳ Очередь в ЖЭК: ${p.name} пропускает следующий ход.`;}
   else{const a=k(.4);amount=a;S.cash+=a;text=`📺 Сюжет на MTV: $${a} за интервью.`;}
-  emit({kind:'chance',text,amount,tile:S.pos});
+  emit({kind:'chance',text,amount,tile:S.pos,hits});
 }
 function inspHidden(t,{emit}){
   const own=S.tiles.filter(x=>(x.type==='kiosk'||x.type==='biz')&&x.owner&&unlocked(x));

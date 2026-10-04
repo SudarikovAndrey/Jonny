@@ -228,6 +228,22 @@ function skipOffline(T,now){
 }
 
 // ---- События стола для всех клиентов (торги, удары, пропуски): клиент показывает те, чей id больше виденного ----
+// Отложенные эффекты игрока для значков у фишки и в полосе (плейтест 04.10: «Крышу» и «на следующий ход» не видно до срабатывания).
+// k — ключ карты/эффекта, untilN — последний ход стола, когда эффект ещё действует; lap:true — до следующего прохода старта;
+// tiles — клетки, на которых он висит. Текст — короткая подпись для подсказки.
+function effectsOf(T,p){const s=p&&p.s||{},n=T.turn?T.turn.n:0,out=[];
+  if(s.mpShieldN&&s.mpShieldN>=n)out.push({k:'roof',icon:'🛡',text:'Крыша: следующий ход без ренты',untilN:s.mpShieldN});
+  if(s.mpLapBoost>1)out.push({k:'promo',icon:'🏷',text:`Акция: следующий проход старта — продажи ×${String(s.mpLapBoost).replace('.',',')}`,lap:true});
+  if(s.mpLapCut!=null&&s.mpLapCut<1)out.push(s.mpLapCut===0?{k:'strike',icon:'✊',text:'Забастовка: следующий проход старта без продаж',lap:true}
+    :{k:'dumping',icon:'📉',text:'Демпинг: следующий проход старта — продажи вдвое меньше',lap:true});
+  if(p&&p.skip>0)out.push({k:'skip',icon:'⏳',text:p.skip>1?`пропустит ${p.skip} хода`:'пропустит следующий ход'});
+  if(s.jail>0)out.push({k:'jail',icon:'🚔',text:`в участке, попыток выйти: ${s.jail}`});
+  const own=(T.tiles||[]).filter(t=>t&&t.owner===p.pid);
+  const tl=(k,icon,text,f,u)=>{const ts=own.filter(f);if(ts.length)out.push({k,icon,text,tiles:ts.map(t=>t.i),untilN:u?Math.max(...ts.map(u)):undefined});};
+  tl('mtv','📺','Сюжет на MTV: рента с точек ×2',t=>t.boostN&&t.boostN>=n,t=>t.boostN);
+  tl('blackout','❄️','Отключили свет: точки без ренты',t=>t.frozen&&t.frozen>n,t=>t.frozen-1);
+  tl('insp','📋','Инспектор: рента не берётся до штрафа',t=>t.insp);
+  return out;}
 function event(T,e){T.evSeq=(T.evSeq||0)+1;(T.events=T.events||[]).push(Object.assign({id:T.evSeq,n:T.turn?T.turn.n:0},e));if(T.events.length>24)T.events=T.events.slice(-24);return e;}
 const pnameOf=(T,pid)=>(T.players.find(p=>p.pid===pid)||{}).name||'соперник';
 
@@ -313,12 +329,12 @@ function applyHit(T,pid,h){
     case 'spoil':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||!(t.goods>0))return false;const lost=Math.ceil(t.goods/2);t.goods-=lost;
       event(T,{from:pid,kind:'hit',text:`испортил ${lost} шт товара у ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
     case 'levy':{if(!rival)return false;const x=Math.round(Math.max(0,to.s.cash||0)*0.3);if(x<=0)return false;to.s.cash-=x;T.pot=(T.pot||0)+x;   // 30% нала, без потолка (продюсер 02.10)
-      event(T,{from:pid,kind:'hit',text:`наслал на ${to.name} налоговую: $${x} в копилку`,amount:null,tile:null,to:to.pid});return true;}
+      event(T,{from:pid,kind:'hit',text:`наслал на ${to.name} налоговую: $${x} в копилку`,amount:null,tile:null,to:to.pid,hits:[{pid:to.pid,amount:-x}]});return true;}
     // «Ремонт дороги» (продюсер 02.10): соперник едет вперёд до первой чужой для него клетки и платит там ренту хозяину.
     // Хозяин — активный игрок: ренту он прибавляет у себя сам (его срез придёт пакетом), стол её не дублирует.
     case 'push':{if(!rival)return false;const t=T.tiles&&T.tiles[h.tile];if(!t)return false;to.s.pos=t.i;const rent=Math.max(0,Math.round(+h.rent||0)),own=t.owner;
       if(rent&&own&&own!==to.pid){to.s.cash=(to.s.cash||0)-rent;if(own!==pid){const o=T.players.find(x=>x.pid===own);if(o&&o.s)o.s.cash=(o.s.cash||0)+rent;}T.rent[own]=(T.rent[own]||0)+rent;}
-      event(T,{from:pid,kind:'hit',text:`отправил ${to.name} вперёд на «чужую» клетку${rent?` — рента $${rent}`:''}`,amount:null,tile:t.i,to:to.pid});return true;}
+      event(T,{from:pid,kind:'hit',text:`отправил ${to.name} вперёд на «чужую» клетку${rent?` — рента $${rent}`:''}`,amount:null,tile:t.i,to:to.pid,hits:rent?[{pid:to.pid,amount:-rent}]:undefined});return true;}
     // «Просрочка»: портится и пропадает половина запаса во всех точках соперника.
     case 'spoilAll':{if(!rival)return false;let lost=0;for(const t of T.tiles||[])if(t.owner===to.pid&&t.type==='kiosk'&&t.goods>0){const k=Math.ceil(t.goods/2);t.goods-=k;lost+=k;}
       if(!lost)return false;event(T,{from:pid,kind:'hit',text:`у ${to.name} испортилось ${lost} шт товара`,amount:null,tile:null,to:to.pid});return true;}
@@ -423,13 +439,13 @@ function viewFor(T,pid,valuer){
   return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
     tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),slotPot:Math.round(T.slotPot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
-      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,hand:p.s&&Array.isArray(p.s.mpHand)?p.s.mpHand.length:0,   // число карт в руке видно всем, какие — нет
+      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,effects:effectsOf(T,p),hand:p.s&&Array.isArray(p.s.mpHand)?p.s.mpHand.length:0,   // число карт в руке видно всем, какие — нет
       jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,skip:p.skip||0,
       cap:T.tiles&&valuer?capital(T,p.pid,valuer):null,chain:T.tiles?sfChain(T,p.pid):null,win:T.tiles?winProgress(T,p.pid,valuer):null})),
     mine:me&&me.s?me.s:null};
 }
 
-const api={WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+const api={effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;

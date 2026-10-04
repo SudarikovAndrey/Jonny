@@ -971,7 +971,8 @@ window.MP_START_BONUS_NOW=()=>startBonus();
 const MP_CAP_SHARE=2/3;
 (function(){const base=cap;cap=function(t){return Math.max(1,Math.round(base.apply(this,arguments)*MP_CAP_SHARE));};
   if(typeof kioskAfter==='function'){const ka=kioskAfter;kioskAfter=function(t){const r=ka.apply(this,arguments);if(r&&r.cap)r.cap=Math.max(1,Math.round(r.cap*MP_CAP_SHARE));return r;};}})();
-// Пособие отстающему (решение продюсера 02.10, вариант 1 из догоняющих). Параметры — под автотесты:
+// «Подмога района» (решение продюсера 02.10, вариант 1 из догоняющих; до 04.10 — «пособие отстающему», Саня: «формулировка обижающая»).
+// Параметры — под автотесты:
 // gap — отстающий: последний по капиталу и капитал не больше gap × средний по столу; fixed — пособие, $ в любом режиме.
 // 03.10 (решение продюсера по прогону «Дебага»): $50 фиксом вместо половины бонуса старта, порог 0,9 среднего вместо 0,75.
 const MP_UNDERDOG={gap:0.9,fixed:50};
@@ -985,10 +986,10 @@ function lapExtras(earned0){
     if(loss>0){S.cash-=loss;S.stat.earned-=loss;plate(S.mpLapCut===0?'✊ Забастовка':'📉 Демпинг конкурента',-loss,S.mpLapCut===0?'продаж на этом проходе нет':'продажи на этом проходе вдвое меньше');log(`📉 Карта соперника: продажи на старте −${money(loss)}.`);}
     delete S.mpLapCut;}
   if(S.mpLapBoost){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),add=Math.round(inc*(S.mpLapBoost-1));if(add>0){S.cash+=add;S.stat.earned+=add;plate('🏷 Акция',add,'продажи ×1,5');}delete S.mpLapBoost;}
-  // Пособие отстающему (продюсер 02.10): последний по капиталу получает на старте +50% бонуса.
-  const extra=isUnderdog()?underdogBonus():0;if(extra)emit({kind:'underdog',text:`пособие отстающему ${money(extra)}`,amount:extra,tile:0});
+  // Подмога района (продюсер 02.10): последний по капиталу получает на старте +$50.
+  const extra=isUnderdog()?underdogBonus():0;if(extra)emit({kind:'underdog',text:`подмога района ${money(extra)}`,amount:extra,tile:0});
   const sb=startBonus();S.cash+=sb+extra;S.stat.earned=(S.stat.earned||0)+sb+extra;
-  plate('🏁 Старт',sb+extra,extra?'+50% — пособие отстающему':'каждый проход старта');log(`🏁 Проход старта: +${money(sb)}${extra?` и пособие отстающему +${money(extra)}`:''}.`);
+  plate('🏁 Старт',sb+extra,extra?`+${money(extra)} — подмога района`:'каждый проход старта');log(`🏁 Проход старта: +${money(sb)}${extra?` и подмога района +${money(extra)}`:''}.`);
 }
 // ---- такси до склада за 💎 (плейтест 5): в свой ход до броска, едет на ближайший склад впереди — это и есть ход ----
 async function mpTaxi(){
@@ -1097,8 +1098,8 @@ const MP_CHANCE=[
     return {text:`🚚 Оптовый завоз: склад отдал в долг и забыл — твои точки заполнились наполовину бесплатно (+${n} шт).`,amount:null};}},
   {id:'promo',ok:()=>myKiosks().length>0,f:()=>{S.mpLapBoost=1.5;return {text:'🏷 Акция «Два по цене одного»: на следующем проходе старта продажи ×1,5.',amount:null};}},
   {id:'gathering',ok:()=>rivalsOf().length>0,f:()=>{const rs=rivalsOf(),a=pct(.3);for(const r of rs)credit(r.pid,-a,`сходка: ${esc(r.name)} → ${esc(S.player)} ${money(a)}`);S.cash+=a*rs.length;hit({k:'rest'});
-    return {text:`🤝 Сходка: каждый соперник заносит тебе ${money(a)}, но ты пропускаешь следующий ход.`,amount:a*rs.length};}},
-  {id:'raid',f:()=>{const rs=rivalsOf(),a=pct(.25);for(const r of rs)credit(r.pid,-a,`облава: ${esc(r.name)} −${money(a)} в копилку`);S.cash-=a;credit(null,0,null,0,{pot:a*(rs.length+1)});return {text:`🚔 Облава на районе: все платят в копилку по ${money(a)}.`,amount:-a};}},
+    return {text:`🤝 Сходка: каждый соперник заносит тебе ${money(a)}, но ты пропускаешь следующий ход.`,amount:a*rs.length,hits:rs.map(r=>({pid:r.pid,amount:-a}))};}},
+  {id:'raid',f:()=>{const rs=rivalsOf(),a=pct(.25);for(const r of rs)credit(r.pid,-a,`облава: ${esc(r.name)} −${money(a)} в копилку`);S.cash-=a;credit(null,0,null,0,{pot:a*(rs.length+1)});return {text:`🚔 Облава на районе: все платят в копилку по ${money(a)}.`,amount:-a,hits:rs.map(r=>({pid:r.pid,amount:-a})).concat({pid:PID,amount:-a})};}},
   {id:'mtv',f:()=>{const mine=S.tiles.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t));if(!mine.length){const a=pct(.4);S.cash+=a;return {text:`📺 Про тебя сняли сюжет на MTV. Точек нет — зато ${money(a)} за интервью.`,amount:a};}
     for(const t of mine)t.boostN=view.turn.n+view.players.length;return {text:'📺 Сюжет на MTV про твои точки: рента с них ×2 до твоего следующего хода.',amount:null};}},
   {id:'complaint',ok:()=>!!bestRivalTile(),f:()=>{const t=bestRivalTile();hit({k:'insp',tile:t.i});return {text:`📋 Жалоба соседей: инспектор идёт в «${titleOf(t)}» (${nameOf(t.rival)}).`,amount:null,tile:t.i};}},
@@ -1108,7 +1109,7 @@ const MP_CHANCE=[
     if(ps.length<2||rich.cash-poor.cash<a)return {text:'🤑 Робин Гуд посмотрел на ваши кошельки и ушёл: отнимать нечего.',amount:null};
     if(rich.pid===PID)S.cash-=a;else credit(rich.pid,-a,`Робин Гуд: ${esc(rich.name)} −${money(a)}`);
     if(poor.pid===PID)S.cash+=a;else credit(poor.pid,a,`Робин Гуд: ${esc(poor.name)} +${money(a)}`);
-    return {text:`🤑 Робин Гуд: ${rich.pid===PID?'ты отдаёшь':rich.name+' отдаёт'} ${money(a)} ${poor.pid===PID?'тебе':poor.name}.`,amount:rich.pid===PID?-a:poor.pid===PID?a:null};}},
+    return {text:`🤑 Робин Гуд: ${rich.pid===PID?'ты отдаёшь':rich.name+' отдаёт'} ${money(a)} ${poor.pid===PID?'тебе':poor.name}.`,amount:rich.pid===PID?-a:poor.pid===PID?a:null,hits:[{pid:rich.pid,amount:-a},{pid:poor.pid,amount:a}]};}},
   {id:'roof',f:()=>{S.mpShieldN=view.turn.n+view.players.length;return {text:'🛡 Крыша: тебя прикрыли. Следующий ход — без ренты: встанешь на чужую точку или бизнес, хозяину не платишь.',amount:null};}},
   {id:'roadwork',ok:()=>rivalsOf().some(p=>HAND.roadwork.ok(p.pid)),f:()=>{const r=rivalsOf().find(p=>HAND.roadwork.ok(p.pid));return {text:HAND.roadwork.play(r.pid),amount:null};}},
   {id:'snitch',ok:()=>rivalsOf().some(p=>!p.jail),f:()=>{const r=rivalsOf().filter(p=>!p.jail).sort((a,b)=>b.cash-a.cash)[0];hit({k:'jail',to:r.pid});return {text:`🚔 Донос: ${r.name} едет в участок — две попытки на дубль.`,amount:null};}},
@@ -1180,7 +1181,7 @@ async function mpChance(forceId){
     await mpCardShow(mpCardHTML({id:c.id,cap:HAND[c.id].text,stamp:'В руку'}),`<p class="t mp-cu-note">Карта легла в руку. Сыграй её в свой ход ${HAND[c.id].leader?'против лидера':'против любого соперника'}. Соперники видят, что карта есть, но не какая.</p>`,[{t:'Понял',v:1}]);return;}
   const r=c.f();if(r.amount>0)S.stat.earned=(S.stat.earned||0)+r.amount;
   track('mp_chance',{card:c.id,amount:r.amount||0});log(`🎴 ${r.text}`);
-  emit({kind:'chance',text:r.text,amount:r.amount,tile:r.tile!=null?r.tile:S.pos});
+  emit({kind:'chance',id:c.id,text:r.text,amount:r.amount,tile:r.tile!=null?r.tile:S.pos,hits:r.hits});   // hits — кто сколько потерял/получил (плейтест 04.10: жертве «ты заплатил $30»)
   if(r.amount)plate('🎴 Шанс',r.amount,r.text.replace(/^\S+\s/,''));
   save();render();push();
   await mpCardShow(mpCardHTML({id:c.id,cap:mpcCap(c.id,r.text),stamp:'Шанс',tone:r.amount<0?'grey':undefined}),r.amount?`<p class="t mp-cu-sum ${r.amount>0?'plus':'minus'}">${r.amount>0?'+':'−'}${money(Math.abs(r.amount))}</p>`:'',[{t:'Ок',v:1}]);
@@ -1979,10 +1980,19 @@ function updateUi(){
   bar.classList.toggle('tight',view.players.length>2);   // трое-четверо: компактные фишки, круг и пауза — второй строкой
   chipsEl.innerHTML=view.players.map(p=>`<span data-pid="${esc(p.pid)}" class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.pid===PID?' me':''}" style="--c:${p.color}">
       <i>${esc(p.name.slice(0,1).toUpperCase())}</i><span class="mp-nm">${esc(p.pid===PID?'Ты':p.name)}</span>
-      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} вл.</span></span>${p.pid!==PID&&p.hand?`<span class="mp-chip-hand" title="карт в руке: ${p.hand}">🃏${p.hand}</span>`:''}
+      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} вл.</span></span>${p.pid!==PID&&p.hand?`<span class="mp-chip-hand" title="карт в руке: ${p.hand}">🃏${p.hand}</span>`:''}${(p.effects||[]).length?`<span class="mp-chip-fx">${p.effects.slice(0,3).map(f=>`<b data-fx="${esc(f.text)}">${f.icon}</b>`).join('')}</span>`:''}
       ${p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
   tick();
 }
+// Отложенные эффекты на мне (плейтест 04.10: «Крышу» хотел видеть, пока не сработала) — плашки над кубиком, тап — что это.
+const fxEl=el('div','mp-fx');fxEl.hidden=true;
+fxEl.addEventListener('click',e=>{const b=e.target.closest('[data-fx]');if(b)toast(b.dataset.fx,3000);});
+chipsEl.addEventListener('click',e=>{const b=e.target.closest('[data-fx]');if(!b||handPick)return;e.stopPropagation();toast(b.dataset.fx,3000);},true);
+function fxWhen(f){if(f.lap)return 'до старта';if(f.untilN!=null&&view&&view.turn){const d=f.untilN-view.turn.n;return d<=0?'этот ход':'следующий ход';}return '';}
+function fxSync(r){const me=playerOf(PID),fx=(view&&view.phase==='play'&&me&&me.effects)||[];fxEl.hidden=!fx.length||document.body.classList.contains('mp-swapping');if(fxEl.hidden)return;
+  const html=fx.map(f=>{const nm=f.text.split(':')[0],w=fxWhen(f);return `<button type="button" data-fx="${esc(f.text)}"><i>${f.icon}</i>${esc(nm)}${w?` <small>· ${w}</small>`:''}</button>`;}).join('');
+  if(fxEl._h!==html){fxEl._h=html;fxEl.innerHTML=html;}
+  if(r&&r.width){const t=document.querySelector('.mp-tag:not([hidden])'),tr=t&&t.getBoundingClientRect(),top=Math.round((tr&&tr.height?tr.top:r.top)-fxEl.offsetHeight-6)+'px';if(fxEl.style.top!==top)fxEl.style.top=top;}}
 function tick(){
   if(!view||view.phase!=='play'||!view.turn){return;}
   const noLimit=!(view.settings.turnSec>0),tablePaused=!!view.paused;
@@ -1995,6 +2005,7 @@ function tick(){
   {const rn=roundEl.querySelector('.mp-rn');let t;
     if(view.finalRound)t='последний круг';
     else if(view.deadline){const at=tablePaused&&view.paused.at?view.paused.at:hostNow();t=mmss(view.deadline-at);}
+    else if(view.win&&view.win.id!=='capital'&&view.startedAt){t='без лимита · '+mmss(hostNow()-view.startedAt);roundEl.title='Миссия без лимита времени: партия идёт, пока кто-то не выполнит условие. Число — сколько уже играете';}   // плейтест 04.10: «куда ушёл таймер?»
     else t='круг '+Math.min(Math.max(0,...view.players.map(p=>p.laps||0))+1,view.settings.rounds);
     if(rn.textContent!==t)rn.textContent=t;
     roundEl.classList.toggle('late',!view.finalRound&&!!view.deadline&&view.deadline-hostNow()<60000);}
@@ -2019,6 +2030,7 @@ function tick(){
   }
   chipsEl.querySelectorAll('.mp-chip').forEach(ch=>{const on=!!handPick&&handPick.targets.has(ch.dataset.pid);if(ch.classList.contains('mp-target')!==on)ch.classList.toggle('mp-target',on);});   // цели карты из руки
   const r=$('bRoll')&&$('bRoll').getBoundingClientRect();
+  fxSync(r);
   if(r&&r.width){
     const hx=Math.round(r.right+10)+'px',hy=Math.round(r.top+r.height/2)+'px';if(handEl.style.left!==hx||handEl.style.top!==hy){handEl.style.left=hx;handEl.style.top=hy;}
     const tOn=!!(window.MPTaxi&&MPTaxi.can()&&!moving&&$('modal').hidden);taxiBtn.hidden=!tOn;
@@ -2422,8 +2434,13 @@ function onEvt(from,e){
     if(e.to&&amount&&(e.kind==='rent'||e.kind==='sale'))flyBetween(amount<0?from:e.to,amount<0?e.to:from,amount);
     // Событие соперника — в ленту слева (Андрей 03.10), на клетке — короткий пульс с иконкой.
     const big=mine&&['offer','sale','decline','hit','bid','won','bank','unsold','swap','swapcounter','swapped','swapdecline','swapvoid'].includes(e.kind);
+    // Карта задела тебя (e.hits, плейтест 04.10: «Облава просто списалась, непонятно с чего») — своя карточка и плашка.
+    const myHit=Array.isArray(e.hits)?e.hits.find(h=>h&&h.pid===PID&&+h.amount):null;
+    if(myHit){const title=(e.id&&MPC_TITLE[e.id])||String(e.text||'').replace(/^[^\p{L}]+/u,'').split(':')[0],v=Math.round(+myHit.amount);
+      const t=`${title}: ${v<0?`ты заплатил ${money(-v)}${e.id==='raid'?' в копилку':''}`:`ты получил ${money(v)}`}`;
+      feedAdd(p,e.kind,t,v,true,e.tile!=null?e.tile:null);plate(`🎴 ${title} · ${p.name}`,v,v<0?(e.id==='raid'?'в общую копилку':'карта соперника'):'карта соперника');}
     // Всё о сопернике — в ленту, и то, что задело тебя (плашка в центре гаснет через 2 с, в ленте можно дочитать).
-    if(e.kind!=='scatter'&&!(e.kind==='insp'&&Array.isArray(e.drops)&&e.drops.length)&&e.text){
+    if(!myHit&&e.kind!=='scatter'&&!(e.kind==='insp'&&Array.isArray(e.drops)&&e.drops.length)&&e.text){
       const n=noteOf(p,e,mine,amount);
       feedAdd(p,/копилк/.test(e.text||'')?'bonus':e.kind,n.text,n.amount,mine||n.big,e.tile!=null?e.tile:null,n);
     }
@@ -2450,7 +2467,7 @@ function onEvt(from,e){
   if(e.kind==='unsold'&&mine)plate('🔨 Торги без ставок',0,`«${tileName}» осталась у тебя`);
   if(e.kind==='saleoffer'&&mine)plate(`🏷 ${p.name} продаёт`,0,e.text.replace(/^предлагает купить /,'')+' · ответ — в начале твоего хода');
   if(e.kind==='salebought'&&mine)plate(`🏷 ${p.name} купил`,0,e.text.replace(/^купил /,''));
-  if(e.kind==='underdog'&&from!==PID)plate(`🤝 Пособие ${money(e.amount||0)} — ${p.name}`,0,'отстающему на старте');
+  if(e.kind==='underdog'&&from!==PID)plate(`🤝 Подмога района ${money(e.amount||0)} — ${p.name}`,0,'на старте');
   if(e.kind==='map')plate(`🗺 Карта · ${p.name}`,0,`хозяин стола ${e.text}`);
   if(e.kind==='chance'&&mine&&from!==PID){cardPlateAt[from]=Date.now();const m=String(e.text||'').match(/^(\S+)\s+([^:]+):/);plate(`🃏 ${p.name} сыграл «${m?m[2].trim():'карту'}» против тебя`,e.amount?-Math.abs(e.amount):0,String(e.text||'').replace(/^[^:]*:\s*/,''));}
   // Инкассатор соперника: монеты разлетаются по полю и у остальных — видно, куда легли (плейтест 01.10).
@@ -2541,7 +2558,6 @@ function feedAdd(p,kind,text,amount,mine,tile,x){
   // Тап: есть полный текст — раскрыть (и не гасить, пока раскрыто); второй тап — убрать прочитанное.
   n.onclick=()=>{if(full&&!n.classList.contains('open')){n.classList.add('open');n.querySelector('.t').textContent=full;const u=n.querySelector('u');u&&u.remove();it.age=0;it.hold=Date.now();return;}
     n.remove();const k=feed.indexOf(it);if(k>=0)feed.splice(k,1);};
-  if(tile!=null&&MobileHost.ready)fieldPing(tile,p,icon);
   if(mine)try{navigator.vibrate&&navigator.vibrate(50);}catch(x){}
 }
 // Возраст считаем сами: под окном (лента скрыта) карточки не стареют, после закрытия окна их видно.
