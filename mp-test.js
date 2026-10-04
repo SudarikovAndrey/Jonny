@@ -149,7 +149,7 @@ function bestSwap(V,v,keep){
     for(const give of combos(mine))for(const get of combos(theirs)){
       const ch={};for(const i of give)ch[i]=p.pid;for(const i of get)ch[i]=ME;
       // С миссией — обмен только ради шага к цели и без потери шага у соперника: иначе отказ наверняка (прод 04.10: 26 предложений, 17 отказов).
-      if(missionOn()&&(stepGain(ch)<=0||stepGain(ch,p.pid)<0))continue;
+      if(missionLive(profOf(H.PID))&&(stepGain(ch)<=0||stepGain(ch,p.pid)<0))continue;
       const g=gainOf(ch,V),bGive=give.reduce((x,i)=>x+baseAt(i),0),bGet=get.reduce((x,i)=>x+baseAt(i),0);
       const tg=theirGain(ch,p.pid),need=THEIR_MARGIN*Math.max(50,bGet);   // соперник отдаёт get, получает give и доплату
       const pays=MPSwap.pays.filter(x=>tg+x>=need&&(x<=0||S.cash-x>=keep));if(!pays.length)continue;   // pay>0 — доплачивает бот
@@ -304,9 +304,24 @@ const roiOf=c=>{try{const sell=(SFB().sell||{})[c]||0,buy=typeof buyPrice==='fun
 function saveGoal(P){const L=(SFB().licenses||[]).filter(l=>!SFB().hasLic(l.id));if(!L.length)return 0;
   if(MISSION_CELLS[winId()]&&winId()!=='empire'){const want=wantCats(),free=want.filter(c=>catOpen(c));
     if(free.length&&holdings()<3)return 0;const need=L.filter(l=>winId()==='chain'||l.cats.some(c=>want.includes(c)));
-    return need.length?need.sort((a,b)=>a.price-b.price)[0].price:0;}
+    const g=need.length?need.sort((a,b)=>a.price-b.price)[0].price:0;
+    if(g&&reachable(g))return g;}   // не успеть к лицензии до конца партии — играет как в «Богатейшем» (Андрей 04.10)
   if(holdings()<3)return 0;if(S.botSaver==null)S.botSaver=rnd(P.lic||0);if(!S.botSaver)return 0;
-  const nx=L.sort((a,b)=>a.price-b.price)[0];return nx.price+Math.min(...nx.cats.map(c=>SFB().price(c)));}
+  const nx=L.sort((a,b)=>a.price-b.price)[0],g=nx.price+Math.min(...nx.cats.map(c=>SFB().price(c)));return reachable(g)?g:0;}
+// Успеет ли бот накопить amount до конца партии (прод 04.10: «Весь город» на 20 кругов — боты копили и замерли).
+// Конец — плановая длина стола из лобби (минуты; в режиме кругов — круги × 1,6 мин × игроков); засиделись дольше плана —
+// впереди ещё половина прошедшего. Доход — прирост его состояния (нал + вложенное + лицензии) за последние круги.
+function wealthNow(){let w=S.cash||0;for(const t of S.tiles)if(t.owner&&(t.type==='kiosk'||t.type==='biz'))w+=H.invested(t);
+  for(const l of (SFB().licenses||[]))if(SFB().hasLic(l.id))w+=l.price;return w;}
+function trackWealth(v){const r=v.turn.round,h=S.botW=(S.botW||[]).filter(x=>x[0]<r).slice(-7);h.push([r,Math.round(wealthNow())]);}
+function roundsLeft(v){const s=v.settings||{},n=Math.max(2,v.players.length),plan=s.mode==='laps'?(+s.rounds||10)*1.6*n:(+s.minutes||20);
+  const el=v.startedAt?Math.max(0,(Date.now()-v.startedAt)/60000):0,r=Math.max(1,v.turn.round),perR=el>1?el/r:.3*n;
+  return Math.max(0,plan-el>0?plan-el:el*.5)/Math.max(.05,perR);}
+function reachable(amount){const v=H.view;if(!v||!v.turn)return true;const need=amount-(S.cash||0);if(need<=0)return true;
+  const h=S.botW||[];if(h.length<3)return false;const a=h[0],b=h[h.length-1],rate=(b[1]-a[1])/Math.max(1,b[0]-a[0]);
+  return rate>0&&need/rate<=roundsLeft(v)*.6;}   // запас 40% — после лицензии ещё строить или перестраивать
+// Миссия «живая»: копить и торговаться только ради неё бот будет, если лицензии уже есть или до них реально дойти.
+const missionLive=P=>missionOn()&&(winId()==='empire'||!(SFB().licenses||[]).some(l=>!SFB().hasLic(l.id)&&(winId()==='chain'||l.cats.some(c=>wantCats().includes(c))))||!!saveGoal(P));
 // Сколько шагов миссии даёт смена хозяев (для отбора сделок: с миссией бот торгуется только ради шага к цели).
 function stepGain(change,who=ME){const o=snapNow().o,a=j=>o[(j+40)%40],b=j=>{j=(j+40)%40;return j in change?change[j]:o[j];};return missionSteps(b,who)-missionSteps(a,who);}
 const missionOn=()=>!!MISSION_CELLS[winId()];
@@ -331,7 +346,7 @@ async function botTurnHidden(pid){
     const s=clone(v.mine);s.tiles=botLocal(v,pid);S=s;H.view=v;H.PID=pid;    // тихая подмена, синхронно, без render
     // 1. Ответы на предложения о покупке своих клеток
     const P=profOf(pid);
-    const V=valOf(pid);freshSnap();
+    const V=valOf(pid);freshSnap();try{trackWealth(v);}catch(e){}   // доход за круги — для «успеет ли к лицензии»
     // Продаёт, если цена покрывает потерю ценности (с ослабленной группой) с наценкой профиля.
     for(const t of S.tiles.filter(x=>x.owner&&x.mpOffer)){const o=t.mpOffer,inv=H.invested(t),need=Math.max(inv,-gainOf({[t.i]:o.from},V))*P.sellAt;
       // Не распродаётся в ноль (партия Андрея 04.10: Вася-бот кончил без точек с $1 658 налом): меньше 4 владений — только в долгах.
@@ -438,8 +453,8 @@ function landHidden(t,ctx){
       // Партия Андрея 04.10: «у ботов были группы точек, но они их не прокачивали — не было опасных мест» (по журналу:
       // одна прокачка на бота за 51 ход). Теперь первый шаг — всегда, если касса выше запаса; точка в группе (рядом своя)
       // качается дальше почти всегда — там рента ×1,25 за соседа, это и есть опасное место для соперника.
-      // Копит под миссию — не качает вовсе; копит без миссии — качает только точку в группе.
-      if(canUp(t)&&!(saveGoal(P)&&(missionOn()||!adjOwn(t.i)))){const keepUp=S.cash*P.keep,grp=adjOwn(t.i);for(let k=0;k<4&&canUp(t);k++){const cost=upCost(t);if(S.cash-cost<keepUp)break;
+      // Копит на лицензию — качает только точку в группе (её не замораживает никогда: это опасное место для соперника).
+      if(canUp(t)&&!(saveGoal(P)&&!adjOwn(t.i))){const keepUp=S.cash*P.keep,grp=adjOwn(t.i);for(let k=0;k<4&&canUp(t);k++){const cost=upCost(t);if(S.cash-cost<keepUp)break;
         S.cash-=cost;if(t.capLvl<capTab(t).length)t.capLvl++;if(t.salesLvl<salTab(t).length)t.salesLvl++;emit({kind:'upgrade',text:`прокачал «${titleOf(t)}»`,amount:-cost,tile:t.i});
         if(!rnd(grp?Math.max(.85,P.upgrade):P.upgrade))break;}}
       fillGoods(t,.4);break;}
@@ -540,7 +555,7 @@ function strategyHidden({credit,emit,v,after,bot}){
         brainLog(bot,`предлагает обмен ${sw.give.join(',')}→${sw.get.join(',')}, доплата ${sw.pay} (выгода $${Math.round(sw.net)})`);}}
     if(window.MPHand&&(S.mpHand||[]).length&&rnd(P.hand)){const l=MPHand.list(),i=l.findIndex(c=>c.targets.length);if(i>=0){MPHand.play(i,pick(l[i].targets));trace.push(bot.name+': сыграл карту из руки');}}
     // Выкуп и предложение цены — по ценности клетки для него: выбирает клетку с наибольшей выгодой за вычетом цены.
-    const targets=S.tiles.filter(x=>H.isRival(x)&&!H.lotOn(x.i)&&!x.mpOffer&&!x.mpSwap&&!x.mpSale&&(!missionOn()||stepGain({[x.i]:ME})>0)).map(x=>{const g=gainOf({[x.i]:ME},V,leader),cap=g/(1+V.margin),
+    const targets=S.tiles.filter(x=>H.isRival(x)&&!H.lotOn(x.i)&&!x.mpOffer&&!x.mpSwap&&!x.mpSale&&(!missionLive(P)||stepGain({[x.i]:ME})>0)).map(x=>{const g=gainOf({[x.i]:ME},V,leader),cap=g/(1+V.margin),
       min=Math.max(H.invested(x),MV(x.i,H.PID));return {x,g,cap,min};}).filter(e=>e.cap>=e.min).sort((a,c)=>(c.cap-c.min)-(a.cap-a.min));
     const fp=e=>MP.forcePrice?MP.forcePrice(e.x.i):1e9;
     const here=targets.find(e=>e.x.i===t.i&&rivalHere);
