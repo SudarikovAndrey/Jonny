@@ -1669,7 +1669,7 @@ function lotBadgeSync(){
 // Андрей 03.10: «карточки случая крупнее, красивее, как разрабатывали ранее». Тон рамки: синяя — тебе в плюс, серая — в минус,
 // фиолетовая — пакость против соперника, золотая — против лидера.
 // «i:» — значки карт 512 px (web/assets/icons/card, design/иконки-карт-шанса), а не мелкие значки интерфейса.
-const MPC_ART={wholesale:'v:cargo',promo:'i:percent',gathering:'i:gathering',raid:'s:police',mtv:'s:tv',complaint:'s:inspector',stash:'v:cash',
+const MPC_ART={wholesale:'v:cargo',promo:'i:percent',gathering:'i:gathering',raid:'i:raid',mtv:'i:mtv',complaint:'i:complaint',stash:'v:cash',
   parking:'i:parking',robin:'i:robin',roof:'i:roof',roadwork:'i:roadwork',snitch:'i:snitch',queue:'i:clock',blackout:'i:blackout',dumping:'i:dumping',
   spoiled:'i:spoiled',levy:'i:levy',audit:'i:audit',strike:'i:strike'};
 const MPC_TITLE={wholesale:'Оптовый завоз',promo:'Акция',gathering:'Сходка',raid:'Облава',mtv:'Сюжет на MTV',complaint:'Жалоба соседей',
