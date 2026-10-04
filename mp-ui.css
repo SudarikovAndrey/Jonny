@@ -561,3 +561,9 @@ body.mp-ver-stale .mp-menubtn{position:relative}
 body.mp-ver-stale .mp-menubtn::after{content:"";position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:#a92720;border:2px solid #fbf0d4;box-shadow:0 0 0 1.5px #25221c}
 /* плашка смены ведущего — под HUD слева, как лента, а не поверх шапки (Андрей 03.10: верхние полосы «перекрывают всё») */
 .mp-handoff{left:8px!important;right:auto!important;top:calc(var(--world-top,110px) + 6px)!important;transform:none!important;max-width:min(320px,calc(100vw - 92px))!important;font-size:14px!important}
+/* Картинка на карте «Шанса» — крупнее (Андрей 03.10: «мелкая, они отрисованы с большим запасом»): наклейки 512 px */
+.mp-cu .cu-art{flex:1 1 auto!important;width:100%!important;margin:2px 0!important;min-height:0}
+.mp-cu .cu-art img{width:calc(var(--w)*.8)!important;height:calc(var(--w)*.66)!important;max-height:none!important;object-fit:contain}
+.mp-cu .cu-art::before{width:calc(var(--w)*.7)!important}
+.mp-cu .cu-title{margin-top:calc(var(--w)*.13)!important}
+.mp-hand .cu-mini .cu-art img{width:46px!important;height:44px!important}
