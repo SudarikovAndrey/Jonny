@@ -20,7 +20,7 @@ const MINUTE_OPTIONS=[15,20,25,30];
 // Условия победы (решение продюсера 01.10: выбираются на старте, видны всем). Параметры — в goal.
 const WIN_OPTIONS=[
   {id:'capital',name:'Богатейший',text:'Когда время выйдет, побеждает самый большой капитал: нал, вложения и товар минус долги.'},
-  {id:'cash',name:'Первый миллионер',text:'Первый, у кого на руках $10 000 наличными, побеждает сразу.',goal:10000},
+  {id:'cash',name:'Первый миллионер',text:'Первый, чей капитал дошёл до $3 000, побеждает сразу.',goal:3000},
   {id:'chain',name:'Король техники',text:'Первый, кто купил обе лицензии и построил 3 точки техники, побеждает сразу.',goal:3},
   {id:'city',name:'Весь город',text:'Первый, кто обеспечил город всеми 6 категориями товара и держит 2 бизнеса, побеждает сразу.',goal:6},
   {id:'empire',name:'Империя',text:'Первый, у кого 9 владений (точки и бизнесы вместе), побеждает сразу.',goal:9},   // 9 из 25 (19 пустырей + 6 бизнесов): с клетками «Шанса» пустырей стало меньше — было 10 из 28
@@ -56,13 +56,19 @@ function setMode(T,m){if(!MODE_OPTIONS.includes(m))return false;T.settings.mode=
 const timed=T=>winOf(T).id==='capital';
 const modeOf=T=>timed(T)?(T.settings.mode==='laps'?'laps':'time'):'none';
 function setWin(T,id){if(!WIN_OPTIONS.some(w=>w.id===id))return false;T.settings.win=id;return true;}
-// Пороги под длину партии (решение продюсера 02.10 по прогону «Дебага»): «Миллионер» и «Рантье» — от минут (на 20 минут
-// $2 500 налом и $250 ренты, пропорционально); в режиме кругов минуты оцениваются как круги × minPerLap. «Империя» — по числу игроков.
-const WIN_SCALE={cashPer20:10000,rentPer20:250,minPerLap:2,round:50,empire:{2:12,3:10,4:9}};
-function lengthMinutes(T){const s=T.settings||{};return s.mode==='laps'?(+s.rounds||DEFAULTS.rounds)*WIN_SCALE.minPerLap:(+s.minutes||DEFAULTS.minutes);}
+// Пороги под длину партии (решения продюсера 02–03.10 по прогонам «Дебага»): «Миллионер» и «Рантье» — от минут.
+// «Миллионер» с 03.10 — по капиталу (та же capital(), что в итоге): на 20 минут $3 000, кратно $100 (налом $10 000 не брал никто).
+// «Рантье» — $250 ренты на 20 минут. В режиме кругов минуты = круги × MIN_PER_LAP_PER_PLAYER × игроков. Телеметрия 03.10:
+// 990 живых ходов, в среднем 17 с на ход, круг ≈ 5,6 хода на игрока → 1,6 мин на игрока (2,35 было при 25 с на ход в прогоне).
+// «Империя» — по числу игроков.
+const MIN_PER_LAP_PER_PLAYER=1.6;
+const WIN_SCALE={capitalPer20:3000,capitalRound:100,rentPer20:250,minPerLap:MIN_PER_LAP_PER_PLAYER,round:50,empire:{2:12,3:10,4:9}};
+function lengthMinutes(T){const s=T.settings||{},n=Math.max(2,Math.min(4,(T.players||[]).length||2));
+  return s.mode==='laps'?(+s.rounds||DEFAULTS.rounds)*WIN_SCALE.minPerLap*n:(+s.minutes||DEFAULTS.minutes);}
 const r50=x=>Math.max(WIN_SCALE.round,Math.round(x/WIN_SCALE.round)*WIN_SCALE.round);
 function winOf(T){const w=WIN_OPTIONS.find(x=>x.id===(T.settings&&T.settings.win))||WIN_OPTIONS[0],m=lengthMinutes(T),n=Math.max(2,Math.min(4,(T.players||[]).length||2));
-  if(w.id==='cash'){const g=r50(WIN_SCALE.cashPer20*m/20);return Object.assign({},w,{goal:g,text:`Первый, у кого на руках $${g.toLocaleString('ru-RU')} наличными, побеждает сразу.`});}
+  if(w.id==='cash'){const R=WIN_SCALE.capitalRound,g=Math.max(R,Math.round(WIN_SCALE.capitalPer20*m/20/R)*R);
+    return Object.assign({},w,{goal:g,text:`Первый, чей капитал дошёл до $${g.toLocaleString('ru-RU')}, побеждает сразу. Капитал — нал, точки, бизнесы и товар минус долги.`});}
   if(w.id==='rent'){const g=r50(WIN_SCALE.rentPer20*m/20);return Object.assign({},w,{goal:g,text:`Первый, кто собрал $${g.toLocaleString('ru-RU')} рентой с соперников, побеждает сразу.`});}
   if(w.id==='empire'){const g=WIN_SCALE.empire[n];return Object.assign({},w,{goal:g,text:`Первый, у кого ${g} владений (точки и бизнесы вместе), побеждает сразу.`});}
   return w;}
@@ -372,7 +378,7 @@ function sfChain(T,pid,techPoints=3){
 function winProgress(T,pid,valuer){
   const w=winOf(T),p=T.players.find(x=>x.pid===pid),own=(T.tiles||[]).filter(t=>t.owner===pid&&(t.type==='kiosk'||t.type==='biz'));
   switch(w.id){
-    case 'cash':{const v=Math.round(p&&p.s?(p.s.cash||0):0);return {value:v,goal:w.goal,done:v>=w.goal,text:`$${v} из $${w.goal} наличными`};}
+    case 'cash':{const v=Math.round(T.tiles&&valuer?capital(T,pid,valuer).total:(p&&p.s?(p.s.cash||0):0));return {value:v,goal:w.goal,done:v>=w.goal,text:`капитал $${v} из $${w.goal}`};}
     case 'chain':{const c=sfChain(T,pid,w.goal);const v=(c.clothes?1:0)+(c.tech?1:0)+c.techPoints;return {value:v,goal:2+w.goal,done:c.done,text:`лицензий ${(c.clothes?1:0)+(c.tech?1:0)}/2 · техники ${c.techPoints}/${w.goal}`};}
     case 'city':{const cats=new Set(own.filter(t=>t.type==='kiosk'&&t.base&&!t.lot).map(t=>t.base)).size,biz=own.filter(t=>t.type==='biz').length;
       return {value:cats+Math.min(2,biz),goal:w.goal+2,done:cats>=w.goal&&biz>=2,text:`категорий ${cats}/${w.goal} · бизнесов ${Math.min(2,biz)}/2`};}
@@ -420,7 +426,7 @@ function viewFor(T,pid,valuer){
     mine:me&&me.s?me.s:null};
 }
 
-const api={WIN_SCALE,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+const api={WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;

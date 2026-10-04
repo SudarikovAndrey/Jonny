@@ -644,11 +644,12 @@ function lotHtml(lot){
     ${btns?`<div class="mp-mults mp-bids">${btns}</div>`:''}</div>`;
 }
 function wireBids(){$('card').querySelectorAll('.mp-bid').forEach(b=>b.onclick=()=>{if(!b.disabled)closeModal('bid:'+b.dataset.a);});}
+// Мои ставки по лотам — чтобы в ленте сказать «перебил тебя», когда бот или игрок даст больше (боты перебивают за 1–2 с).
+const myBids={};
 function placeBid(lotId,amount){
   const lot=(view.lots||[]).find(l=>l.id===lotId);if(!lot||!(amount>0)||lot.seller===PID)return;
   if(S.cash<amount){toast('На такую ставку нет денег');return;}
-  net.send({t:'bid',id:lotId,amount:Math.round(amount)});track('mp_bid',{tile:lot.tile,amount});
-  toast(`🔨 Ставка ${money(amount)} на «${titleOf(S.tiles[lot.tile])}»`,2200);
+  net.send({t:'bid',id:lotId,amount:Math.round(amount)});track('mp_bid',{tile:lot.tile,amount});myBids[lotId]=Math.round(amount);
 }
 async function bidWindow(lotId){
   const lot=(view.lots||[]).find(l=>l.id===lotId);if(!lot)return;const t=S.tiles[lot.tile];
@@ -826,12 +827,13 @@ const MP_CAP_SHARE=2/3;
 (function(){const base=cap;cap=function(t){return Math.max(1,Math.round(base.apply(this,arguments)*MP_CAP_SHARE));};
   if(typeof kioskAfter==='function'){const ka=kioskAfter;kioskAfter=function(t){const r=ka.apply(this,arguments);if(r&&r.cap)r.cap=Math.max(1,Math.round(r.cap*MP_CAP_SHARE));return r;};}})();
 // Пособие отстающему (решение продюсера 02.10, вариант 1 из догоняющих). Параметры — под автотесты:
-// gap — отстающий: последний по капиталу и капитал не больше gap × средний по столу; share — доля бонуса старта.
-const MP_UNDERDOG={gap:0.75,share:0.5};
+// gap — отстающий: последний по капиталу и капитал не больше gap × средний по столу; fixed — пособие, $ в любом режиме.
+// 03.10 (решение продюсера по прогону «Дебага»): $50 фиксом вместо половины бонуса старта, порог 0,9 среднего вместо 0,75.
+const MP_UNDERDOG={gap:0.9,fixed:50};
 function isUnderdog(){if(!view||!view.players||view.players.length<2)return false;
   const v=view.players.map(p=>({pid:p.pid,c:p.cap?p.cap.total:p.cash})).sort((a,b)=>a.c-b.c),avg=v.reduce((a,x)=>a+x.c,0)/v.length;
   return v[0].pid===PID&&v[1].c>v[0].c&&v[0].c<=avg*MP_UNDERDOG.gap;}
-const underdogBonus=()=>Math.round(startBonus()*MP_UNDERDOG.share);
+const underdogBonus=()=>MP_UNDERDOG.fixed;
 window.MP_IS_UNDERDOG=()=>isUnderdog();window.MP_UNDERDOG_BONUS=underdogBonus;window.MP_UNDERDOG=MP_UNDERDOG;
 function lapExtras(earned0){
   if(S.mpLapCut!=null){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),loss=Math.round(inc*(1-S.mpLapCut));
@@ -1321,7 +1323,7 @@ function rentShared(sh,t){
 // ---- рыночная цена клетки (продюсер 03.10: «выкуп за дёшево в конце игры — считать по эффективной цене») ----
 // Цена = max(вложено, MARKET_LAPS кругов дохода клетки с цепочкой). Для покупателя — по его цепочке и его сети бизнесов:
 // если клетка достраивает его группу, она для него дороже. Берём большее из «для хозяина» и «для покупателя».
-const MARKET_LAPS=6,FORCE_MARKET=3,MARKET_STAGE=0.15;
+const MARKET_LAPS=6,FORCE_MARKET=2,MARKET_STAGE=0.15;
 // Стадия партии: цены сделок растут на 15% за каждый средний пройденный круг игроков (круг 0 — ×1, круг 10 — ×2,5).
 // Продюсер 02.10: «точки постоянно дорожают»; доход одной точки за 6 кругов в конце игры меньше вложенного, без стадии цена упиралась во вложенное.
 function marketStage(){const ps=(view&&view.players)||[];if(!ps.length)return 1;const avg=ps.reduce((a,p)=>a+(+p.laps||0),0)/ps.length;return 1+MARKET_STAGE*avg;}
@@ -1439,7 +1441,7 @@ window.MPSwap={max:SWAP_MAX,pays:SWAP_PAYS,get lastError(){return swapErr;},
   accept:swapAccept,decline:id=>swapDecline(id,false),counter:swapCounter,
   answer:(id,a)=>a==='accept'?swapAccept(id):swapDecline(id,false),answerWindow:answerSwapWindow,
   _local:{place:swapPlaceLocal,accept:swapAcceptLocal,decline:swapDeclineLocal,byId:swapById}};
-// Выкуп без согласия: ×10 вложенного, но не меньше ×3 рыночной цены для покупателя — в конце игры точка дорожает.
+// Выкуп без согласия: ×10 вложенного, но не меньше ×2 рыночной цены (×3 до 03.10) для покупателя — в конце игры точка дорожает.
 function forcePrice(t){return Math.round(Math.max(invested(t)*FORCE_MULT,marketValue(t,PID)*FORCE_MARKET)/10)*10;}
 function placeOffer(t,m){return placeOfferAmount(t,Math.round(marketValue(t,PID)*m),m);}
 // Своя сумма — не меньше вложенного хозяином (×1); множитель для окна хозяина — amount / вложенное.
@@ -1652,10 +1654,13 @@ new MutationObserver(()=>{
 }).observe($('card'),{childList:true,subtree:true});
 function lotBadgeSync(){
   const lots=view&&view.phase==='play'&&view.lots||[];lotBadge.hidden=!lots.length;if(!lots.length)return;
-  const l=lots[0],t=S&&S.tiles&&S.tiles[l.tile],mine=l.seller===PID,lead=l.bestBy===PID;
-  const what=`«${esc(t?titleOf(t):'клетка')}»`+(lots.length>1?` <em>+${lots.length-1}</em>`:'');
-  const state=l.best?`${money(l.best)} · ${lead?'лидируешь ты':'лидирует '+esc(nameOf(l.bestBy))}`:`от ${money(l.min)} · ставок нет`;
-  const html=`<i>🔨</i><span><b>Торги</b> ${what} · ${state}</span><u>${mine?'смотреть':lead?'смотреть':l.best?'перебить':'ставить'}</u>`;
+  // Первым — лот, где тебя перебили (боты перебивают за 1–2 с, решение 03.10), потом твой лот, потом остальные.
+  const outbid=l=>myBids[l.id]&&l.bestBy&&l.bestBy!==PID;
+  const l=lots.find(outbid)||lots.find(x=>x.seller===PID)||lots[0],t=S&&S.tiles&&S.tiles[l.tile],mine=l.seller===PID,lead=l.bestBy===PID,hot=outbid(l);
+  const state=hot?`тебя перебили · ${money(l.best)} · ${esc(nameOf(l.bestBy))}`:l.best?`${money(l.best)} · ${lead?'лидируешь ты':'лидирует '+esc(nameOf(l.bestBy))}`:`от ${money(l.min)} · ставок нет`;
+  const more=lots.length>1?`<small>и ещё ${lots.length-1} ${lots.length-1===1?'лот':'лота'}</small>`:'';
+  const html=`<i>🔨</i><span><b>«${esc(t?titleOf(t):'клетка')}»</b> ${state}${more}</span><u>${mine||lead?'смотреть':l.best?'перебить':'ставить'}</u>`;
+  lotBadge.classList.toggle('hot',!!hot);
   if(lotBadge._h!==html){lotBadge._h=html;lotBadge.innerHTML=html;lotBadge.style.setProperty('--c',colorOf(l.seller));}
 }
 // ---- рука карт «Шанса» на экране (плейтест 5): 1–2 карты значками у кубика; тап — карта крупно; «Сыграть» —
@@ -1893,7 +1898,10 @@ function tick(){
   if(!lotBadge.hidden)under=Math.round(lotBadge.getBoundingClientRect().bottom+6);
   setVar('--mp-under',under+'px');
   // события — под журналом (они слева в одной колонке)
-  {const j=$('moneyJournal'),jr=j&&j.offsetParent&&j.getBoundingClientRect();const tt=(jr&&jr.height?Math.max(under,Math.round(jr.bottom+6)):under)+'px';if(ticker.style.top!==tt)ticker.style.top=tt;}
+  {const j=$('moneyJournal'),jr=j&&j.offsetParent&&j.getBoundingClientRect();const tt=(jr&&jr.height?Math.max(under,Math.round(jr.bottom+6)):under)+'px';if(ticker.style.top!==tt)ticker.style.top=tt;
+    // Лента не заходит под плакат хода: высота — до его верха; старые карточки внизу просто не помещаются.
+    const po=document.querySelector('.mp-poster:not(.out)'),pr=po&&po.getBoundingClientRect();   // плакат fixed — offsetParent у него пустой
+    const mh=pr&&pr.height?Math.max(90,Math.round(pr.top-parseFloat(tt)-6))+'px':'';if(ticker.style.maxHeight!==mh)ticker.style.maxHeight=mh;}
   // Окно открыто — карточка начинается под строкой денег: кошелёк виден (плейтест 01.10, все окна).
   const wr=!$('modal').hidden&&document.querySelector('#top .bar1');
   document.body.classList.toggle('mp-modal',!!wr);
@@ -2003,23 +2011,31 @@ function swapPaint(){
   // лоток
   const who=nameOf(U.rival),ready=give.length&&get.length;
   const pv=ready?A.preview({to:U.rival,give,get,pay:U.pay,counter:sid,accept:!!U.incoming}):null;
-  const d=(x)=>{if(!x)return '—';const df=Math.round(x.after-x.before);return `<em>${money(x.before)} → <b>${money(x.after)}</b> <i class="${df>=0?'up':'down'}">${df>=0?'+':'−'}${money(Math.abs(df))}</i></em>`;};
   // Доплата в моей системе: pay>0 — плачу я (−), pay<0 — платит соперник мне (+).
-  const pays=(A.pays||SWAP_PAYS).map(v=>`<button type="button" data-sw="pay" data-v="${v}" class="${v<0?'in':v>0?'out':''}${v===U.pay?' on':''}">${v===0?'0':v<0?'+'+money(-v):'−'+money(v)}</button>`).join('');
-  const payNote=U.pay<0?`${esc(who)} доплатит тебе <b>${money(-U.pay)}</b>`:U.pay>0?`Ты доплатишь <b>${money(U.pay)}</b> — уйдёт в резерв до ответа`:'Без доплаты';
   const inc=U.incoming,canSend=ready&&pv&&pv.ok;
-  const cnt=(n)=>`${n}/${A.max||2}`;
-  U.banner.style.top=Math.round($('top').getBoundingClientRect().bottom+6)+'px';
-  U.banner.innerHTML=inc?`<b>🔁 ${esc(who)} предлагает обмен</b><small>Кольца на поле — клетки из предложения. «После» покажет, что станет.</small>`
-    :`<b>🔁 Обмен с ${esc(who)}: выбери клетки</b><small>Кольцо над клеткой — её можно обменять. Тапни, чтобы выбрать.</small>`;
-  U.tray.innerHTML=`<div class="mp-sw-head"><b>🔁 ${inc?`${esc(who)} предлагает`:`Обмен · ${esc(who)}`}</b><span class="mp-sw-tabs"><button type="button" data-sw="now" class="${U.after?'':'on'}">Сейчас</button><button type="button" data-sw="after" class="${U.after?'on':''}">После</button></span></div>
-    <p class="mp-sw-legend"><b>Отдаёшь</b> — твои клетки уйдут ${esc(who)}. <b>Получаешь</b> — клетки ${esc(who)} станут твоими. <b>«одна»</b> — твоя клетка без соседей твоего цвета, её выгоднее отдать.</p>
-    <div class="mp-sw-cols"><div><p>Отдаёшь <small>${cnt(give.length)}</small></p>${give.map(swapRow).join('')||'<small class="mp-sw-hint">тапни свою клетку</small>'}</div>
-      <div><p>Получаешь <small>${cnt(get.length)}</small></p>${get.map(swapRow).join('')||`<small class="mp-sw-hint">тапни клетку ${esc(who)}</small>`}</div></div>
-    ${pv?`<div class="mp-sw-rent"><p><span>Твоя рента</span>${d(pv.mine)}</p><p><span>Рента ${esc(who)}</span>${d(pv.theirs)}</p><p class="inv"><span>Вложено</span><em>отдаёшь ${money(pv.invGive)} · получаешь ${money(pv.invGet)}</em></p>${pv.ok||inc?'':`<p class="why">${esc(pv.reason||'Обмен сейчас невозможен')}</p>`}</div>`:''}
-    ${inc?(U.pay?`<p class="mp-sw-paynote">${U.pay>0?`Ты доплатишь <b>${money(U.pay)}</b>`:`${esc(who)} доплатит тебе <b>${money(-U.pay)}</b>`}</p>`:''):`<p class="mp-sw-paynote">Доплата: ${payNote}</p><div class="mp-sw-pays">${pays}</div>`}
-    <div class="mp-sw-btns">${inc&&!(myTurn()&&!ending)?`<button type="button" data-sw="close" style="grid-column:1/-1">Ответишь в свой ход · Закрыть</button>`:inc?`<button type="button" data-sw="accept" class="ok">Принять</button><button type="button" data-sw="edit">Изменить</button><button type="button" data-sw="decline" class="no">Отказать</button>`
-      :`<button type="button" data-sw="suggest">Подобрать обмен</button><button type="button" data-sw="propose" class="ok" ${canSend?'':'disabled'}>${U.counter?'Встречное':'Предложить'}</button><button type="button" data-sw="close">Назад</button>`}</div>`;
+  // Андрей 03.10: «самое худшее решение — неудобно, непонятно, куча всего». Одно решение на экране: принять или нет
+  // (или что предложить). Компактная карточка: что отдаёшь ⇄ что получаешь, доплата, итог твоей ренты крупно, две кнопки.
+  if(U.banner)U.banner.hidden=true;
+  const myTurnNow=myTurn()&&!ending;
+  const card=i=>{const t=S.tiles[i],biz=t.type==='biz';let r=0;try{r=t.owner==='you'?rentOfMine(t):rentOf(t);}catch(e){}
+    return `<div class="sw2-tile"><em>${biz?bizIcon(t):(good(t.good)||{}).icon||'🏪'}</em><span><b>${esc(swapTitle(t))}</b><small>${cellNo(t.i)} · рента ${money(r)}</small></span></div>`;};
+  const side=(ids,lab,hint)=>`<div class="sw2-side"><p>${lab}</p>${ids.length?ids.map(card).join(''):`<div class="sw2-empty">${hint}</div>`}</div>`;
+  const delta=x=>{const df=Math.round(x.after-x.before);return `<i class="${df>0?'up':df<0?'down':''}">${df>0?'+':df<0?'−':'±'}${money(Math.abs(df))}</i>`;};
+  const payText=U.pay<0?`${esc(who)} доплатит тебе ${money(-U.pay)}`:U.pay>0?`Ты доплатишь ${money(U.pay)}`:'Без доплаты';
+  const payChip=inc&&U.pay?`<div class="sw2-pay ${U.pay<0?'in':'out'}">${payText}</div>`:'';
+  const verdict=pv?`<div class="sw2-verdict"><span>Твоя рента за круг</span><b>${money(pv.mine.before)} → ${money(pv.mine.after)}</b>${delta(pv.mine)}</div>
+    <p class="sw2-their">У ${esc(who)}: ${money(pv.theirs.before)} → ${money(pv.theirs.after)}${!inc&&!pv.ok&&pv.reason?` · <span class="why">${esc(pv.reason)}</span>`:''}</p>`:'';
+  // Доплата — переключателем: «+» — больше получаешь ты, «−» — больше платишь; фраза в середине говорит, кто кому.
+  const PS=(A.pays||SWAP_PAYS).slice().sort((a,b)=>b-a),pi=Math.max(0,PS.indexOf(U.pay));   // от «ты платишь больше всех» к «тебе платят больше всех»
+  const pays=!inc&&ready?`<div class="sw2-step"><button type="button" data-sw="pay" data-v="${PS[Math.max(0,pi-1)]}" ${pi<=0?'disabled':''} aria-label="Меньше тебе">−</button><b class="${U.pay<0?'in':U.pay>0?'out':''}">${payText}</b><button type="button" data-sw="pay" data-v="${PS[Math.min(PS.length-1,pi+1)]}" ${pi>=PS.length-1?'disabled':''} aria-label="Больше тебе">+</button></div>`:'';
+  let btns;
+  if(inc&&!myTurnNow)btns=`<button type="button" data-sw="close" class="wide">Ответишь в свой ход</button>`;
+  else if(inc)btns=`<button type="button" data-sw="accept" class="ok">Принять</button><button type="button" data-sw="decline" class="no">Отказать</button><a role="button" data-sw="edit" class="sw2-link">Изменить условия</a>`;
+  else btns=`<button type="button" data-sw="propose" class="ok" ${canSend?'':'disabled'}>${U.counter?'Отправить встречное':'Предложить'}</button><button type="button" data-sw="suggest">Подобрать</button>`;
+  U.tray.innerHTML=`<div class="sw2-head"><b>🔁 ${inc?`${esc(who)} предлагает обмен`:U.counter?`Встречное · ${esc(who)}`:`Обмен · ${esc(who)}`}</b><button type="button" data-sw="close" class="sw2-x" aria-label="Закрыть">✕</button></div>
+    <div class="sw2-deal">${side(give,'Отдаёшь','Тапни свою клетку на поле')}<span class="sw2-arrow">⇄</span>${side(get,'Получаешь',`Тапни клетку ${esc(who)}`)}</div>
+    ${payChip}${verdict}${pays}<div class="sw2-btns">${btns}</div>`;
+  U.tray.classList.add('sw2');
 }
 function swapAct(a,v){
   requestAnimationFrame(swapFrame);
@@ -2044,7 +2060,7 @@ function swapSync(){const U=swapUI;if(!U)return;
   if(U.incoming&&!(SW().incoming()||[]).some(x=>x.id===U.incoming.id)){swapClose();return;}
   const key=[view.turn&&view.turn.n,myTurn(),ending,S.cash,proposedThisTurn(),(view.tiles||[]).map(t=>t.owner||'').join(',')].join('|');
   if(key!==U.key){U.key=key;swapPaint();}}
-function swapApply(r){const U=swapUI;U.give=new Set(r.give);U.get=new Set(r.get);U.pay=r.pay||0;U.after=true;swapPaint();}
+function swapApply(r){const U=swapUI;U.give=new Set(r.give);U.get=new Set(r.get);U.pay=r.pay||0;swapPaint();}
 // Входящее: окно получателя — этот же режим (MPSwap.answerWindow).
 function swapAnswerMode(id){const A=SW();if(!A)return Promise.resolve();const o=(A.incoming()||[]).find(x=>x.id===id)||(A.incoming()||[])[0];if(!o)return Promise.resolve();
   swapMode({rival:o.from,give:o.give,get:o.get,pay:o.pay,incoming:o});
@@ -2334,6 +2350,9 @@ function swapText(e,emitter){
     N=>`${what} · ${other===PID?'тебе':nameOf(other)}: ${N(e.give)} ⇄ ${N(e.get)}${payT}`);
 }
 function noteOf(p,e,mine,amount){
+  if(e.kind==='bid'){const t=e.tile!=null&&S.tiles[e.tile],v=+((String(e.text).match(/\$(\d+)/)||[])[1]||0),where=t?` за «${titleOf(t)}»`:'';
+    const over=e.lot!=null&&myBids[e.lot]&&v>myBids[e.lot]&&p.pid!==PID;
+    return over?{text:`перебил тебя: ${money(v)}${where}`,amount:null,big:true}:{text:`ставка ${money(v)}${where}${mine?' — на твоих торгах':''}`,amount:null};}
   if(/^swap/.test(e.kind||'')&&Array.isArray(e.give)){const w=swapText(e,p.pid);return {text:w.short,full:w.full,chain:w.chain,amount:null};}
   const tile=e.tile!=null&&S&&S.tiles&&S.tiles[e.tile],where=tile?`«${titleOf(tile)}»`:'';
   if(e.kind==='rent')return mine?{text:`попал на твою клетку ${where}`,amount:Math.abs(amount||0)}:{text:`попал на клетку ${nameOf(e.to)} ${where}`,amount:-Math.abs(amount||0)};
@@ -2357,7 +2376,7 @@ function feedAdd(p,kind,text,amount,mine,tile,x){
   text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');
   // Одна карта против тебя приходит двумя событиями (chance и hit) — в ленту одно.
   const key=p.pid+'|'+(kind==='hit'?'chance':kind),now=Date.now();if(feedAdd.last&&feedAdd.last.key===key&&now-feedAdd.last.t<4000&&(kind==='hit'||kind==='chance'))return;feedAdd.last={key,t:now};
-  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':'')+(text.length>70?' long':''));n.style.setProperty('--c',p.color);
+  const icon=FEED_ICON[kind]||'•',n=el('div','mp-tick'+(mine?' mine':'')+(text.length>70||mine?' long':''));n.style.setProperty('--c',p.color);
   const full=x&&x.full&&x.full!==text?x.full:'',chain=x&&x.chain||'';
   n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span class="tx"><b>${esc(p.name)}</b> <span class="t">${esc(text)}</span>${full?'<u> ▾</u>':''}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}${chain?`<small class="ch">→ ${esc(chain)}</small>`:''}`;
   if(chain)n.classList.add('has-ch');if(/^swap/.test(kind))n.classList.add('long');
@@ -2372,7 +2391,8 @@ function feedAdd(p,kind,text,amount,mine,tile,x){
 // Возраст считаем сами: под окном (лента скрыта) карточки не стареют, после закрытия окна их видно.
 {let last=performance.now();setInterval(()=>{const now=performance.now(),dt=now-last;last=now;
   if(document.body.classList.contains('mp-modal')||document.hidden)return;
-  for(const it of feed.slice()){if(it.hold&&now-it.hold<30000)continue;it.age+=dt;   // раскрытая держится до 30 сif(it.age>it.life-500&&!it.el.classList.contains('out'))it.el.classList.add('out');
+  // раскрытая (тапом) держится до 30 с
+  for(const it of feed.slice()){if(it.hold&&now-it.hold<30000)continue;it.age+=dt;if(it.age>it.life-500&&!it.el.classList.contains('out'))it.el.classList.add('out');
     if(it.age>=it.life){it.el.remove();feed.splice(feed.indexOf(it),1);}}},200);}
 // Пульс на клетке: где это случилось — без текста, его читают в ленте.
 function fieldPing(tile,p,icon){
