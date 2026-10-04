@@ -1983,7 +1983,7 @@ function tick(){
     // На левом верхнем углу карточки: справа — крестик окна, сверху — кошелёк.
     clock.style.left=(card.left+12)+'px';clock.style.top=card.top+'px';clock.hidden=false;
   } else clock.hidden=true;
-  const tm=tablePaused?'⏸ пауза':view.turn.paused?'⏸ мини-игра':noLimit?'':mmss(left);
+  const tm=tablePaused?'⏸ пауза':view.turn.paused?(swapUI&&swapUI.clock?'⏸ обмен':'⏸ мини-игра'):noLimit?'':mmss(left);
   // После броска кубик превращается в «Передать ход» на том же месте.
   if(me&&rolled&&!ending){tag.hidden=true;endBtn.hidden=moving;{const sm=endBtn.querySelector('small');if(sm.textContent!==tm)sm.textContent=tm;}endBtn.classList.toggle('late',late);}
   else{
@@ -2087,8 +2087,10 @@ function swapMode(o){
     if(best<0)return;e.stopImmediatePropagation();if(!swapUI.incoming)swapTap(best);};
   if(cv){cv.addEventListener('pointerdown',swapUI.pd,true);cv.addEventListener('pointerup',swapUI.pu,true);}
   swapPaint();
-  // Всё поле в кадре, низ кадра — над лотком (как mapPick: обзор на входе, «к Джонни» на выходе).
-  try{MobileHost.send({action:'overview'});swapFrame();}catch(e){}
+  // Низ кадра — над окном; камера держит клетки обмена (swapCam); на выходе — «к Джонни».
+  swapFrame();setTimeout(swapCam,0);
+  // С ботами разобраться не спеша (Андрей 03.10): пока окно открыто в мой ход, часы хода стоят (как в мини-игре, до 3 минут).
+  if(myTurn()&&rivalsOf().length&&rivalsOf().every(p=>/^bot/.test(p.pid))){try{net.send({t:'pause',on:true});swapUI.clock=true;}catch(e){}}
 }
 function swapFrame(){const U=swapUI;if(!U)return;const app=$('app').getBoundingClientRect(),h=app.height||innerHeight,top=Math.max($('top').getBoundingClientRect().bottom,U.banner?U.banner.getBoundingClientRect().bottom:0);
   const bottom=(app.bottom-U.tray.getBoundingClientRect().top+8)/h;try{MobileHost.send({action:'layout',top:(top-app.top)/h,bottom});}catch(e){}}
@@ -2104,6 +2106,7 @@ function swapClose(){
   if(cv){cv.removeEventListener('pointerdown',U.pd,true);cv.removeEventListener('pointerup',U.pu,true);}
   U.veil.remove();U.tray.remove();if(U.banner)U.banner.remove();for(const [,r] of U.rings)r.remove();U.chains.forEach(c=>c.el.remove());
   document.body.classList.remove('mp-swapping');try{syncFlags();}catch(e){}
+  if(U.clock&&!mg)try{net.send({t:'pause',on:false});}catch(e){}
   try{MobileHost.send({action:'home'});mobileLastLayout='';mobileLayout();}catch(e){}
   try{offerBadgeSync();}catch(e){}if(U.done)U.done();
 }
@@ -2116,7 +2119,7 @@ function swapPaint(){
   const loners=new Set(A.loners(PID));
   // кольца: мои клетки и клетки соперника, которые можно положить в обмен (и уже лежащие)
   const sid=U.counter||(U.incoming&&U.incoming.id)||undefined;
-  const want=new Set(sh.filter(t=>(t.owner===PID||t.owner===U.rival)&&(A.free(t.i,sid)||U.give.has(t.i)||U.get.has(t.i))).map(t=>t.i));
+  const want=new Set(sh.filter(t=>U.give.has(t.i)||U.get.has(t.i)||(!U.incoming&&(t.owner===PID||t.owner===U.rival)&&A.free(t.i,sid))).map(t=>t.i));
   for(const [i,r] of U.rings)if(!want.has(i)){r.remove();U.rings.delete(i);}
   for(const i of want){let r=U.rings.get(i);if(!r){r=el('div','mp-sw-ring',layer);U.rings.set(i,r);}
     const inGive=U.give.has(i),inGet=U.get.has(i),single=now[i]===PID&&loners.has(i)&&!inGive;
@@ -2135,33 +2138,41 @@ function swapPaint(){
   const pv=ready?A.preview({to:U.rival,give,get,pay:U.pay,counter:sid,accept:!!U.incoming}):null;
   // Доплата в моей системе: pay>0 — плачу я (−), pay<0 — платит соперник мне (+).
   const inc=U.incoming,canSend=ready&&pv&&pv.ok;
-  // Андрей 03.10: «самое худшее решение — неудобно, непонятно, куча всего». Одно решение на экране: принять или нет
-  // (или что предложить). Компактная карточка: что отдаёшь ⇄ что получаешь, доплата, итог твоей ренты крупно, две кнопки.
+  // Андрей 03.10: окно внизу на треть экрана, поле над ним видно. Карточки — как клетки поля: картинка, полоса цвета
+  // хозяина, номер, уровень, рента. Тап по карточке — камера к этой клетке и пульс кольца, повторный — снова обе.
   if(U.banner)U.banner.hidden=true;
   const myTurnNow=myTurn()&&!ending;
-  const card=i=>{const t=S.tiles[i],biz=t.type==='biz';let r=0;try{r=t.owner==='you'?rentOfMine(t):rentOf(t);}catch(e){}
-    return `<div class="sw2-tile"><em>${biz?bizIcon(t):(good(t.good)||{}).icon||'🏪'}</em><span><b>${esc(swapTitle(t))}</b><small>${cellNo(t.i)} · рента ${money(r)}</small></span></div>`;};
-  const side=(ids,lab,hint)=>`<div class="sw2-side"><p>${lab}</p>${ids.length?ids.map(card).join(''):`<div class="sw2-empty">${hint}</div>`}</div>`;
+  const card=(i,side)=>{const t=S.tiles[i],biz=t.type==='biz',own=sh[i]&&sh[i].owner;let r=0;try{r=t.owner==='you'?rentOfMine(t):rentOf(t);}catch(e){}
+    const art=window.PropertyArt?PropertyArt.tile(t,'sanfrancisco',true):'',lvl=(biz?t.level:t.salesLvl)||1;
+    return `<button type="button" class="sw3-card ${side}${U.focusTile===i?' on':''}" data-sw="focus" data-v="${i}" style="--c:${colorOf(own)}"><i class="band"></i><span class="no">№${i}</span>${art?`<img src="${art}" alt="">`:''}<b>${esc(swapTitle(t))}</b><small>ур. ${lvl} · 🏠 ${money(r)}</small></button>`;};
+  const side=(ids,kind,lab,hint)=>`<div class="sw3-side ${kind}"><p>${lab}</p><div class="sw3-cards">${ids.length?ids.map(i=>card(i,kind)).join(''):`<div class="sw3-empty">${hint}</div>`}</div></div>`;
   const delta=x=>{const df=Math.round(x.after-x.before);return `<i class="${df>0?'up':df<0?'down':''}">${df>0?'+':df<0?'−':'±'}${money(Math.abs(df))}</i>`;};
   const payText=U.pay<0?`${esc(who)} доплатит тебе ${money(-U.pay)}`:U.pay>0?`Ты доплатишь ${money(U.pay)}`:'Без доплаты';
-  const payChip=inc&&U.pay?`<div class="sw2-pay ${U.pay<0?'in':'out'}">${payText}</div>`:'';
-  const verdict=pv?`<div class="sw2-verdict"><span>Твоя рента за круг</span><b>${money(pv.mine.before)} → ${money(pv.mine.after)}</b>${delta(pv.mine)}</div>
-    <p class="sw2-their">У ${esc(who)}: ${money(pv.theirs.before)} → ${money(pv.theirs.after)}${!inc&&!pv.ok&&pv.reason?` · <span class="why">${esc(pv.reason)}</span>`:''}</p>`:'';
-  // Доплата — переключателем: «+» — больше получаешь ты, «−» — больше платишь; фраза в середине говорит, кто кому.
-  const PS=(A.pays||SWAP_PAYS).slice().sort((a,b)=>b-a),pi=Math.max(0,PS.indexOf(U.pay));   // от «ты платишь больше всех» к «тебе платят больше всех»
+  const PS=(A.pays||SWAP_PAYS).slice().sort((a,b)=>b-a),pi=Math.max(0,PS.indexOf(U.pay));
   const pays=!inc&&ready?`<div class="sw2-step"><button type="button" data-sw="pay" data-v="${PS[Math.max(0,pi-1)]}" ${pi<=0?'disabled':''} aria-label="Меньше тебе">−</button><b class="${U.pay<0?'in':U.pay>0?'out':''}">${payText}</b><button type="button" data-sw="pay" data-v="${PS[Math.min(PS.length-1,pi+1)]}" ${pi>=PS.length-1?'disabled':''} aria-label="Больше тебе">+</button></div>`:'';
+  const verdict=pv?`<div class="sw3-verdict"><span>Твоя рента за круг</span><b>${money(pv.mine.before)} → ${money(pv.mine.after)}</b>${delta(pv.mine)}${inc&&U.pay?`<em class="${U.pay<0?'in':'out'}">${U.pay<0?'+':'−'}${money(Math.abs(U.pay))} ${U.pay<0?'тебе':'с тебя'}</em>`:''}</div>${!inc&&!pv.ok&&pv.reason?`<p class="sw3-why">${esc(pv.reason)}</p>`:''}`:'';
   let btns;
   if(inc&&!myTurnNow)btns=`<button type="button" data-sw="close" class="wide">Ответишь в свой ход</button>`;
-  else if(inc)btns=`<button type="button" data-sw="accept" class="ok">Принять</button><button type="button" data-sw="decline" class="no">Отказать</button><a role="button" data-sw="edit" class="sw2-link">Изменить условия</a>`;
-  else btns=`<button type="button" data-sw="propose" class="ok" ${canSend?'':'disabled'}>${U.counter?'Отправить встречное':'Предложить'}</button><button type="button" data-sw="suggest">Подобрать</button>`;
+  else if(inc)btns=`<button type="button" data-sw="accept" class="ok">Принять</button><button type="button" data-sw="decline" class="no">Отказать</button><button type="button" data-sw="edit" class="sec">Изменить</button>`;
+  else btns=`<button type="button" data-sw="propose" class="ok" ${canSend?'':'disabled'}>${U.counter?'Встречное':'Предложить'}</button><button type="button" data-sw="suggest" class="sec">Подобрать</button>`;
   U.tray.innerHTML=`<div class="sw2-head"><b>🔁 ${inc?`${esc(who)} предлагает обмен`:U.counter?`Встречное · ${esc(who)}`:`Обмен · ${esc(who)}`}</b><button type="button" data-sw="close" class="sw2-x" aria-label="Закрыть">✕</button></div>
-    <div class="sw2-deal">${side(give,'Отдаёшь','Тапни свою клетку на поле')}<span class="sw2-arrow">⇄</span>${side(get,'Получаешь',`Тапни клетку ${esc(who)}`)}</div>
-    ${payChip}${verdict}${pays}<div class="sw2-btns">${btns}</div>`;
-  U.tray.classList.add('sw2');
+    <div class="sw3-deal">${side(give,'give','Отдаёшь','тапни свою клетку на поле')}<span class="sw2-arrow">⇄</span>${side(get,'get','Получаешь',`тапни клетку ${esc(who)}`)}</div>
+    ${verdict}${pays}<div class="sw3-btns ${inc&&myTurnNow?'three':''}">${btns}</div>`;
+  U.tray.classList.add('sw2','sw3');
+  if(U.focusTile!=null&&!U.give.has(U.focusTile)&&!U.get.has(U.focusTile))U.focusTile=null;
+  swapCam();
 }
+// Камера в окне обмена: все клетки обмена в кадре над окном; выбрана карточка — одна клетка. Ничего не выбрано — всё поле.
+// Составляешь сам — поле не уезжает из-под пальца: всё поле, пока не тапнешь карточку. Ответ на предложение — обе клетки сразу.
+function swapCam(){const U=swapUI;if(!U)return;const tiles=U.focusTile!=null?[U.focusTile]:U.incoming?[...U.give,...U.get]:[];const key=tiles.join(',');
+  if(key===U.camKey)return;U.camKey=key;
+  try{if(tiles.length)MobileHost.send({action:'frame',tiles});else{MobileHost.send({action:'home'});MobileHost.send({action:'overview'});}}catch(e){}}
+
 function swapAct(a,v){
   requestAnimationFrame(swapFrame);
   const U=swapUI,A=SW();if(!U||!A)return;
+  if(a==='focus'){const i=+v;U.focusTile=U.focusTile===i?null:i;
+    if(U.focusTile!=null){const r=U.rings.get(i);if(r){r.classList.remove('pulse');void r.offsetWidth;r.classList.add('pulse');}}swapPaint();return;}
   if(a==='close'){swapClose();return;}
   if(a==='now'||a==='after'){U.after=a==='after';swapPaint();return;}
   if(a==='pay'){U.pay=+v;swapPaint();return;}
@@ -2545,6 +2556,7 @@ function plate(title,amount,sub){
 // ('focus' — src/board/main.js). Раньше — сдвигом 'pan' каждый кадр: камера дёргалась и уезжала по инерции.
 let focusSent='',focusAt=0,rivalsSent='';
 function followRival(now){
+  if(swapUI)return;   // окно обмена держит свой кадр
   let key='';
   const k=view&&view.phase==='play'&&!myTurn()&&MobileHost.ready&&tokens.get(view.turn.pid);
   if(k&&k.seg)key=k.seg.a+':'+k.seg.b+':'+k.seg.k.toFixed(2);
