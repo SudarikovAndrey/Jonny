@@ -520,7 +520,9 @@ async function doForce(f,t){
   if(f==='offer'){if(S.cash<H.invested(r)*1.5)S.cash=Math.round(H.invested(r)*1.5)+50;H.placeOffer(r,1.5);}
   if(f==='buy'){S.cash=Math.max(S.cash,Math.round(H.invested(r)*10)+100);S.mpForceLap=null;H.forceBuy(r);}
 }
-window.MPBots={brain:{VALUE,gainOf,theirGain,bestSwap,freshSnap,ME,leaderOf,cityWorth},trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
+// Хозяин уступил стол (mp-hosthandoff): боты уже переехали к новому ведущему — здесь гасим их пульс без «bye».
+function releaseBots(){for(const b of bots.values())clearInterval(b.ping);bots.clear();clearTimeout(pendingT);pendingT=0;}
+window.MPBots={release:releaseBots,brain:{VALUE,gainOf,theirGain,bestSwap,freshSnap,ME,leaderOf,cityWorth},trace,add:addBot,clear:removeBots,acting:()=>!!acting,busy:()=>busy,instant:()=>!!acting&&speed>=99,list:()=>[...bots.values()].map(b=>({pid:b.pid,name:b.name})),
   holdHostView(v,now){heldView=v;heldNow=now;if(acting===H.PID)H.view=v;if(v&&v.phase!=='play'&&acting)unstick();},   // свой авто-ход: вид свежий, применим в конце; партия кончилась — ход бота обрываем
   get speed(){return speed;},set speed(x){speed=+x||1;},
   get force(){return force;},set force(f){force=f;},

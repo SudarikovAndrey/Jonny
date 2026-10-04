@@ -229,22 +229,33 @@ function Bus(room){
   });
   return {ready:readyP,
     sub(t,cb){if(subs.has(t)){subs.set(t,cb);return;}subs.set(t,cb);clients.forEach(c=>{if(c.connected)c.subscribe(base+'/'+t,{qos:1});});},
+    unsub(t){if(!subs.delete(t))return;clients.forEach(c=>{try{if(c.connected)c.unsubscribe(base+'/'+t);}catch(e){}});},
     pub(t,m){const s=JSON.stringify({id:tag+':'+(++seq),m});clients.forEach(c=>{try{c.publish(base+'/'+t,s,{qos:1});}catch(e){}});},
     get online(){return clients.some(c=>c.connected);}};
 }
-async function openBus(room){
-  await loadMqtt();
-  const bus=Bus(room);
-  const ok=await Promise.race([bus.ready.then(()=>true),new Promise(r=>setTimeout(()=>r(false),12000))]);
-  if(!ok)throw new Error('нет связи с сервером-ретранслятором');
-  return bus;
+// Одна шина на вкладку: при передаче стола клиент становится хозяином (и обратно) на том же соединении.
+let busOf=null;
+function openBus(room){
+  if(busOf&&busOf.room===room)return busOf.p;
+  const p=(async()=>{await loadMqtt();
+    const bus=Bus(room);
+    const ok=await Promise.race([bus.ready.then(()=>true),new Promise(r=>setTimeout(()=>r(false),12000))]);
+    if(!ok)throw new Error('нет связи с сервером-ретранслятором');
+    return bus;})();
+  busOf={room,p};p.catch(()=>{if(busOf&&busOf.p===p)busOf=null;});
+  return p;
 }
 
 // ---------- хозяин стола ----------
 let hub=null;
-function Hub(room,restored){
+// Передача стола (mp-hosthandoff, Андрей 03.10): хозяин пропал — стол ведёт следующий игрок с последнего полного среза.
+// ho={from} — стол принят у ушедшего хозяина. T.epoch — срок ведения: у нового ведущего на 1 больше; кто увидит
+// больший срок (в views или в конверте сообщения клиента), уступает — двух ведущих не бывает.
+function Hub(room,restored,ho){
   const T=restored||C.newTable(room);
-  T.hostPid=PID;
+  const prevHost=T.hostPid;
+  T.hostPid=PID;T.epoch=(T.epoch||0)+(ho?1:0);
+  const timers=[];let stopped=false;
   // Торги закрывает ядро при смене хода: вложено считаем по ценам движка, клетку банкрота возвращаем в пустырь.
   C.lotApi.baseInv=t=>{try{return baseInv(t);}catch(e){return 0;}};
   C.lotApi.valuer=()=>makeValuer(T.tiles);   // победитель и раскладка в итоге — у ядра
@@ -255,12 +266,26 @@ function Hub(room,restored){
   let dirty=false,saveT=0;
   // После перезагрузки хозяина остальные офлайн, пока не отзовутся пульсом (вернётся сам) или не войдут
   // заново по имени. Из лобби молчащих убираем через 15 с.
-  if(restored)T.players.forEach(p=>{if(p.pid!==PID){p.online=false;p.offAt=Date.now();}});
+  // При передаче стола: ушедший хозяин — офлайн, остальным даём 9 с отозваться пульсом (иначе ядро сразу отдаст
+  // ход дальше: активный игрок офлайн → advance).
+  if(ho){const now=Date.now();T.players.forEach(p=>{if(p.pid===ho.from){p.online=false;p.offAt=now;}else if(p.pid!==PID&&p.online)p.seenAt=now;});
+    T.handoff={from:ho.from,to:PID,at:now,n:(T.handoff&&T.handoff.n||0)+1};}
+  else if(restored)T.players.forEach(p=>{if(p.pid!==PID){p.online=false;p.offAt=Date.now();}});
   function persist(){clearTimeout(saveT);saveT=setTimeout(()=>ls('abmp_host_'+room,JSON.stringify(T)),300);}
   function broadcast(){
+    if(stopped)return;
     const now=Date.now(),val=T.tiles?makeValuer(T.tiles):null;
-    for(const p of T.players){const send=links.get(p.pid);if(send)send({t:'view',v:C.viewFor(T,p.pid,val),now});}
-    persist();dirty=false;
+    for(const p of T.players){const send=links.get(p.pid);if(send)send({t:'view',v:C.viewFor(T,p.pid,val),now,ep:T.epoch});}
+    persist();dirty=false;snapOut(now);
+  }
+  // Полный срез стола — трём первым преемникам (живые люди по месту): им продолжать, если хозяин пропадёт.
+  // Не чаще раза в 2,5 с; broadcast идёт минимум раз в 3 с и после каждого изменения.
+  let snapAt=0;
+  function snapOut(now){
+    if(now-snapAt<2500||NET==='p2p')return;snapAt=now;
+    const heirs=T.players.filter(p=>p.pid!==PID&&p.online&&!/^bot\d/.test(p.pid)&&links.has(p.pid)).sort((a,b)=>a.seat-b.seat).slice(0,3);
+    if(!heirs.length)return;const m={t:'tsnap',T,now,ep:T.epoch};
+    for(const p of heirs)links.get(p.pid)(m);
   }
   const soon=()=>{if(!dirty){dirty=true;setTimeout(()=>{if(dirty)broadcast();},60);}};
   // ---- журнал стола (хозяин): очередь ходов, броски, рента и кому, предложения, итог ----
@@ -281,7 +306,9 @@ function Hub(room,restored){
     try{if(T.tiles)s.ranking=C.ranking(T,makeValuer(T.tiles)).map(r=>({pid:r.pid,name:r.name,seat:r.seat,total:Math.round(r.total||0),cash:Math.round(r.cash||0)}));}catch(e){}
     return s;}
   function tsend(force){if(!TL||!T.match||(!tlog.length&&!force))return;TL.enqueue(tsum(),tlog.splice(0,tlog.length));TL.pump();}
-  addEventListener('abtm:flush',e=>tsend(e.detail&&e.detail.final&&T.phase!=='lobby'));
+  const onFlush=e=>tsend(e.detail&&e.detail.final&&T.phase!=='lobby');
+  addEventListener('abtm:flush',onFlush);
+  if(ho&&T.phase==='play')try{tev('host_handoff',{from:ho.from,fromName:pname(ho.from),to:PID,toName:pname(PID),epoch:T.epoch,prevHost});}catch(e){}
   function observe(){
     const tr=T.turn,snap={phase:T.phase,n:tr?tr.n:null,paused:!!T.paused,final:T.finalRound||null,
       online:T.players.map(p=>p.pid+(p.online?'+':'-')).join(',')};
@@ -299,6 +326,7 @@ function Hub(room,restored){
     tlast=snap;
   }
   function handle(pid,msg,send){
+    if(stopped)return;
     // Что пришло от игрока — в журнал стола до и после применения правил.
     const known=T.applied?new Set(Object.keys(T.applied)):new Set();
     const r=handle0(pid,msg,send);
@@ -369,7 +397,7 @@ function Hub(room,restored){
     }
   }
   function drop(pid,send){if(links.get(pid)!==send)return;links.delete(pid);C.leave(T,pid);soon();}
-  setInterval(()=>{
+  timers.push(setInterval(()=>{
     const now=Date.now();
     // Молчит дольше 9 с — считаем отвалившимся (закрытие соединения приходит не всегда).
     for(const p of T.players)if(p.pid!==PID&&p.online&&p.seenAt&&now-p.seenAt>9000){C.leave(T,p.pid);links.delete(p.pid);p.offAt=now;dirty=false;soon();}
@@ -378,29 +406,20 @@ function Hub(room,restored){
     if(r==='timeout'){const send=links.get(T.turn.pid);send&&send({t:'timeout',n:T.turn.n});try{tev('timeout',{pid:T.turn.pid,name:pname(T.turn.pid)});}catch(e){}}
     if(r){C.checkEarly(T);soon();}
     try{observe();}catch(e){}
-  },250);
-  setInterval(broadcast,3000);      // заодно пульс: клиенты по нему видят, что связь жива
-  return {T,handle,drop,room};
+  },250));
+  timers.push(setInterval(broadcast,3000));      // заодно пульс: клиенты по нему видят, что связь жива
+  // Уступить стол (вернулся к столу, который уже ведёт другой): таймеры, журнал и сохранение — стоп.
+  function stop(){if(stopped)return;try{tsend(true);}catch(e){}stopped=true;timers.forEach(clearInterval);clearTimeout(saveT);removeEventListener('abtm:flush',onFlush);}
+  return {T,handle,drop,room,stop,get stopped(){return stopped;},get epoch(){return T.epoch;}};
 }
 async function hostTable(room){
   const saved=ls('abmp_host_'+room);let restored=null;
   if(ss('abmp_hosting')===room&&saved){try{restored=JSON.parse(saved);}catch(e){}}
   ss('abmp_hosting',room);
   hub=Hub(room,restored);
-  window.MPHub=hub;
-  if(NET_LOCAL){
-    const ch=new BroadcastChannel(peerId(room));const sends=new Map();
-    ch.onmessage=e=>{const d=e.data;if(!d||d.to!=='hub'||!d.from)return;
-      let send=sends.get(d.from);if(!send){send=m=>ch.postMessage({to:d.from,msg:m});sends.set(d.from,send);}
-      hub.handle(d.from,d.msg,send);};
-  } else if(NET==='relay'){
-    status('Подключаемся к ретранслятору…');
-    const bus=await openBus(room);status('');
-    const sends=new Map();
-    bus.sub('hub',d=>{if(!d||!d.from)return;
-      let send=sends.get(d.from);if(!send){const to=d.from;send=m=>bus.pub('c/'+to,m);sends.set(to,send);}
-      hub.handle(d.from,d.msg,send);});
-  } else {
+  window.MPHub=hub;hostEp=Math.max(hostEp,hub.epoch);
+  if(NET!=='p2p'){if(NET==='relay')status('Подключаемся к ретранслятору…');await listenHub(room,hub);status('');}
+  else {
     await loadPeer();
     await new Promise((resolve,reject)=>{
       let tries=0;
@@ -431,8 +450,40 @@ async function hostTable(room){
   connectAsClient(room,true);
 }
 
+// Хаб слушает игроков: тема …/hub ретранслятора или канал вкладок. В конверте — срок ведения, который знает клиент:
+// он больше нашего — стол уже ведёт другой, уступаем (вернулся старый хозяин, проснулся погасший экран).
+let hubOff=null;
+async function listenHub(room,h){
+  if(hubOff){hubOff();hubOff=null;}
+  const sends=new Map();
+  const take=d=>{if(!d||!d.from||h.stopped||hub!==h)return;
+    if(d.ep>h.epoch){yieldTable(d.ep);return;}
+    // Маяк другого ведущего: срок больше — уже уступили выше; равный (взяли стол одновременно) — уступает больший pid.
+    if(d.msg&&d.msg.t==='lead'){if(d.from!==PID&&d.ep===h.epoch&&d.from<PID)yieldTable(d.ep);return;}
+    let send=sends.get(d.from);if(!send){send=sendTo(d.from);sends.set(d.from,send);}
+    h.handle(d.from,d.msg,send);};
+  let sendTo;
+  // Маяк ведущего раз в 3 с в ту же тему: проснувшийся старый хозяин (его пульс идёт только в свой хаб) узнаёт
+  // о новом сроке и уступает.
+  let beacon;
+  if(NET_LOCAL){
+    const ch=new BroadcastChannel(peerId(room));sendTo=to=>m=>ch.postMessage({to,msg:m});
+    ch.onmessage=e=>{const d=e.data;if(d&&d.to==='hub')take(d);};
+    beacon=()=>ch.postMessage({to:'hub',from:PID,msg:{t:'lead'},ep:h.epoch});
+    const bt=setInterval(()=>{if(!h.stopped)beacon();},3000);
+    hubOff=()=>{clearInterval(bt);try{ch.close();}catch(e){}};
+  } else {
+    const bus=await openBus(room);sendTo=to=>m=>bus.pub('c/'+to,m);
+    bus.sub('hub',take);
+    const bt=setInterval(()=>{if(!h.stopped)bus.pub('hub',{from:PID,msg:{t:'lead'},ep:h.epoch});},3000);
+    hubOff=()=>{clearInterval(bt);bus.unsub('hub');};
+  }
+}
+
 // ---------- клиент ----------
 let net=null,lastMsgAt=0;
+// Передача стола: срок ведения, последний голос хозяина и последний полный срез стола от него.
+let hostEp=+(ss('abmp_ep_'+(ROOM||'-'))||0)||0,lastHostAt=0,tsnap=null,pingT=0;
 function connectAsClient(room,isHost){
   let welcomed=false,helloT=0;
   const hello=()=>net.send({t:'hello',pid:PID,name:myName});
@@ -443,8 +494,8 @@ function connectAsClient(room,isHost){
   }
   if(NET_LOCAL){
     const ch=new BroadcastChannel(peerId(room));
-    ch.onmessage=e=>{const d=e.data;if(d&&d.to===PID)onMessage(d.msg);};
-    net={send:m=>ch.postMessage({to:'hub',from:PID,msg:m}),host:false};
+    ch.onmessage=e=>{const d=e.data;if(d&&d.to===PID&&net&&!net.host)onMessage(d.msg);};
+    net={send:m=>ch.postMessage({to:'hub',from:PID,msg:m,ep:hostEp}),host:false};
     const again=()=>{if(!welcomed){hello();helloT=setTimeout(again,1500);}};again();
     net.onWelcome=()=>{welcomed=true;clearTimeout(helloT);};
   } else if(NET==='relay'){
@@ -453,7 +504,7 @@ function connectAsClient(room,isHost){
     openBus(room).then(bus=>{
       const inbox=m=>onMessage(m);
       bus.sub('c/'+PID,inbox);
-      net.send=m=>bus.pub('hub',{from:PID,msg:m});
+      net.send=m=>bus.pub('hub',{from:PID,msg:m,ep:hostEp});
       net.onPid=pid=>bus.sub('c/'+pid,inbox);         // вернулся по имени — хозяин отдал прежний pid
       // Хозяин может появиться позже — представляемся, пока не ответит.
       const again=()=>{if(welcomed||net.stopped)return;hello();
@@ -488,10 +539,61 @@ function connectAsClient(room,isHost){
     boot();
     net.onWelcome=()=>{welcomed=true;};
   }
-  // Пульс: хозяин узнаёт, что мы живы; мы — что жив он.
-  setInterval(()=>{if(net.stopped)return;net.send({t:'ping'});
-    if(lastMsgAt&&Date.now()-lastMsgAt>8000)status(net.host?'':'Нет связи со столом — переподключаемся…');},2500);
-  addEventListener('pagehide',()=>{if(!net.host)net.send({t:'bye'});});
+  // Пульс: хозяин узнаёт, что мы живы; мы — что жив он. Один на вкладку: клиент мог стать хозяином и обратно.
+  clearInterval(pingT);
+  pingT=setInterval(()=>{if(net.stopped)return;net.send({t:'ping'});
+    if(!net.host&&lastMsgAt&&Date.now()-lastMsgAt>8000)status(tsnap?'Хозяин стола молчит — если не вернётся, стол поведёт следующий игрок…':'Нет связи со столом — переподключаемся…');
+    watchHost();},2500);
+  if(!connectAsClient.hide){connectAsClient.hide=true;addEventListener('pagehide',()=>{if(net&&!net.host)net.send({t:'bye'});});}
+}
+// ---------- передача стола ----------
+// Хозяин молчит HANDOFF_MS (погас экран, закрыл вкладку, пропала сеть) — стол принимает первый живой человек по месту
+// из последнего среза; второй — ещё через HANDOFF_STEP, если первый тоже молчит. Боты едут вместе со столом
+// (mp-test.js adoptRestored подхватывает новый хаб). В p2p адрес стола занят старым хозяином — передачи нет.
+const HANDOFF_MS=16000,HANDOFF_STEP=6000;
+function watchHost(){
+  if(!net||net.host||net.stopped||NET==='p2p'||!tsnap||!view||(view.phase!=='play'&&view.phase!=='lobby'))return;
+  const quiet=Date.now()-lastHostAt;if(!lastHostAt||quiet<HANDOFF_MS)return;
+  const T=tsnap.T,heirs=T.players.filter(p=>p.pid!==T.hostPid&&p.online&&!/^bot\d/.test(p.pid)).sort((a,b)=>a.seat-b.seat);
+  const k=heirs.findIndex(p=>p.pid===PID);if(k<0||quiet<HANDOFF_MS+k*HANDOFF_STEP)return;
+  takeTable();
+}
+function takeTable(){
+  const snap=tsnap;tsnap=null;const T=clone(snap.T),now=Date.now(),gap=Math.max(0,now-lastHostAt);
+  // Часы стола — часы хозяина: переводим в свои (snap.off = его время − наше), простой без связи хода не съедает.
+  const sh=x=>x==null?x:x-snap.off;
+  T.startedAt=sh(T.startedAt);if(T.deadline)T.deadline=sh(T.deadline)+gap;
+  if(T.turn&&T.turn.endsAt!=null)T.turn.endsAt=Math.max(sh(T.turn.endsAt)+gap,now+20000);
+  if(T.paused&&T.paused.at)T.paused.at=sh(T.paused.at)+gap;
+  for(const p of T.players){if(p.offAt)p.offAt=sh(p.offAt);if(p.seenAt)p.seenAt=now;}
+  if(T.pauseUse)for(const u of Object.values(T.pauseUse))if(u&&u.at)u.at=sh(u.at);
+  const from=T.hostPid;
+  hub=Hub(ROOM,T,{from});window.MPHub=hub;hostEp=hub.epoch;ss('abmp_ep_'+ROOM,String(hostEp));ss('abmp_hosting',ROOM);
+  listenHub(ROOM,hub).catch(e=>console.warn('handoff listen',e));
+  const send=m=>queueMicrotask(()=>onMessage(clone(m)));
+  net={send:m=>hub.handle(PID,clone(m),send),host:true};
+  net.send({t:'hello',pid:PID,name:myName});status('');setTimeout(resyncTurn,300);
+  console.info(`MP: стол ${ROOM} принят у ${from}, срок ведения ${hostEp}`);
+}
+// Стол уже ведёт другой (у него срок больше) — уступаем и садимся обычным игроком.
+function yieldTable(ep){
+  const h=hub;if(!h)return;h.stop();hub=null;window.MPHub=null;if(hubOff){hubOff();hubOff=null;}
+  hostEp=Math.max(hostEp,ep);ss('abmp_ep_'+ROOM,String(hostEp));ss('abmp_hosting','');ss('abmp_joined_'+ROOM,'1');
+  lastHostAt=Date.now();tsnap=null;
+  try{window.MPBots&&MPBots.release&&MPBots.release();}catch(e){}
+  console.info(`MP: стол ${ROOM} ведёт другой игрок (срок ${ep}) — садимся игроком`);
+  connectAsClient(ROOM,false);
+}
+// Стол сменил ведущего посреди моего хода: срез или «конец хода» могли уйти пропавшему хозяину — шлём ещё раз.
+// Повтор безопасен: проводки отсекаются по id, «конец хода» с прошлым номером ядро не примет.
+function resyncTurn(){if(!myTurn()||!net)return;try{net.send(ending?{t:'end',n:view.turn.n,pack:makePack()}:{t:'state',pack:makePack()});}catch(e){console.warn('resync',e);}}
+let handoffEl=null,handoffT=0;
+function handoffBanner(v,wasHost){
+  const who=v.host===PID?null:((v.players.find(p=>p.pid===v.host)||{}).name||'другой игрок');
+  const text=wasHost?`Ты был не на связи — стол ведёт ${who}`:who?`Хозяин отключился — стол ведёт ${who}`:'Хозяин отключился — стол ведёшь ты';
+  if(!handoffEl)handoffEl=el('div','mp-handoff');
+  handoffEl.textContent='🔁 '+text;handoffEl.hidden=false;clearTimeout(handoffT);handoffT=setTimeout(()=>{handoffEl.hidden=true;},9000);
+  try{log('🔁 '+text);}catch(e){}
 }
 
 // =====================================================================
@@ -524,10 +626,16 @@ function onMessage(m){
       lobbyError(m.error==='full'?'За столом уже четверо.':m.error==='started'?'Партия за этим столом уже идёт.':m.error==='kicked'?'Хозяин стола убрал тебя из лобби.':'Не пускают: '+m.error);
       return;
     case 'rehello':if(net.stopped)return;net.send({t:'hello',pid:PID,name:myName});return;
-    case 'pong':if(!net.host&&document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');return;
+    case 'tsnap':if((m.ep||0)>=hostEp&&m.T)tsnap={T:m.T,off:(m.now||Date.now())-Date.now(),ep:m.ep||0};return;
+    case 'pong':lastHostAt=Date.now();if(!net.host&&document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');return;
     case 'timeout':if(myTurn()&&m.n===view.turn.n)autoFinish();return;
     case 'pausedeny':toast(`⏸ Паузы кончились — следующая через ${mmss(m.wait||0)}`,2600);return;
-    case 'view':onView(m.v,m.now);return;
+    case 'view':{
+      if(m.ep!=null&&m.ep<hostEp)return;   // старый хозяин проснулся — его стол уже ведёт другой
+      if(m.ep!=null&&m.ep>hostEp){hostEp=m.ep;ss('abmp_ep_'+ROOM,String(hostEp));}
+      lastHostAt=Date.now();
+      const prev=view&&view.host,moved=prev&&m.v&&m.v.host&&m.v.host!==prev;if(moved)handoffBanner(m.v,prev===PID);
+      onView(m.v,m.now);if(moved)resyncTurn();return;}
     case 'evt':onEvt(m.from,m.e);return;
   }
 }
@@ -1669,7 +1777,7 @@ function lotBadgeSync(){
 // Андрей 03.10: «карточки случая крупнее, красивее, как разрабатывали ранее». Тон рамки: синяя — тебе в плюс, серая — в минус,
 // фиолетовая — пакость против соперника, золотая — против лидера.
 // «i:» — значки карт 512 px (web/assets/icons/card, design/иконки-карт-шанса), а не мелкие значки интерфейса.
-const MPC_ART={wholesale:'v:cargo',promo:'i:percent',gathering:'i:gathering',raid:'i:raid',mtv:'i:mtv',complaint:'i:complaint',stash:'v:cash',
+const MPC_ART={wholesale:'i:wholesale',promo:'i:percent',gathering:'i:gathering',raid:'i:raid',mtv:'i:mtv',complaint:'i:complaint',stash:'i:stash',
   parking:'i:parking',robin:'i:robin',roof:'i:roof',roadwork:'i:roadwork',snitch:'i:snitch',queue:'i:clock',blackout:'i:blackout',dumping:'i:dumping',
   spoiled:'i:spoiled',levy:'i:levy',audit:'i:audit',strike:'i:strike'};
 const MPC_TITLE={wholesale:'Оптовый завоз',promo:'Акция',gathering:'Сходка',raid:'Облава',mtv:'Сюжет на MTV',complaint:'Жалоба соседей',

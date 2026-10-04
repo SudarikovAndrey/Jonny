@@ -373,3 +373,8 @@ body.mp-play.mp-modal .mp-tag,body.mp-play.mp-modal .mp-end,body.mp-play.mp-moda
 body.mp-play.mp-modal .mp-offer-badge,body.mp-play.mp-modal .mp-ticker,body.mp-play.mp-modal #moneyJournal{visibility:hidden;pointer-events:none}
 body.mp-play .mp-bar .mp-chip{pointer-events:auto}
 body.mp-play.mp-modal .mp-plate,body.mp-play.mp-modal .mp-bang{visibility:hidden}
+/* Передача стола: «Хозяин отключился — стол ведёт …» (mp-hosthandoff). Печатная плашка в стиле плашки версии, без красного. */
+.mp-handoff{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%) rotate(-.6deg);z-index:97;max-width:calc(100% - 32px);
+  padding:8px 14px;background:#f2e3bd;color:#25221c;border:2.5px solid #25221c;border-radius:10px 13px 9px 12px;box-shadow:3px 4px 0 #25221c;
+  font:800 14px/1.25 var(--mp-num,inherit);text-align:center;pointer-events:none}
+.mp-handoff[hidden]{display:none}
