@@ -43,8 +43,8 @@ function counterBid(pid,lotId,tries=0){const b=bots.get(pid),v=b&&b.view;if(!v||
 // ---- стратегии ботов (продюсер 03.10: «боты должны играть по разным стратегиям и прикидывать, к чему приведёт сделка») ----
 // Все решения о покупке и продаже — по рыночной цене (window.MP_MARKET: доход клетки с цепочкой × круги), а не по вложенному.
 const PROFILES={
-  builder:{name:'строитель',build:.9,cheap:.5,lic:.4,upgrade:.6,offer:.10,buyout:.02,bid:.3,list:.03,hand:.4,swap:.10,sellAt:1.3,buyUpTo:1.0,keep:.15},   // ширится дёшево, копит точки
-  chain:{name:'цепочки',build:.92,cheap:.3,lic:.5,upgrade:.4,offer:.35,buyout:.08,bid:.5,list:.02,hand:.4,swap:.45,sellAt:1.8,buyUpTo:1.5,keep:.10},      // собирает соседей, за них платит дороже
+  builder:{name:'строитель',build:.85,cheap:.5,lic:.4,upgrade:.6,offer:.10,buyout:.02,bid:.3,list:.03,hand:.4,swap:.10,sellAt:1.3,buyUpTo:1.0,keep:.15},   // ширится дёшево, копит точки
+  chain:{name:'цепочки',build:.92,cheap:.6,lic:.5,upgrade:.4,offer:.35,buyout:.08,bid:.5,list:.02,hand:.4,swap:.45,sellAt:1.8,buyUpTo:1.2,keep:.15},      // собирает соседей, за них платит дороже
   trader:{name:'делец',build:.75,cheap:.2,lic:.7,upgrade:.6,offer:.25,buyout:.04,bid:.7,list:.06,hand:.3,swap:.20,sellAt:1.1,buyUpTo:1.1,keep:.15},        // держит кассу, продаёт выгодно, ставит на торгах
   saboteur:{name:'пакостник',build:.8,cheap:.3,lic:.5,upgrade:.4,offer:.15,buyout:.10,bid:.4,list:.03,hand:.9,swap:.10,sellAt:1.5,buyUpTo:1.2,keep:.15}, // бьёт лидера картами и выкупом
 };
@@ -59,7 +59,7 @@ const adjOwn=i=>[S.tiles[(i+39)%40],S.tiles[(i+1)%40]].some(x=>x&&x.owner&&(x.ty
 // предложение, покупка, своё предложение, выкуп, ставка, лот, продажа за долги — проходит, только если ценность
 // растёт с запасом профиля. Поэтому бот не рвёт свою группу без компенсации и не платит больше, чем клетка ему стоит.
 const VALUE={
-  chain:{groupW:.6,margin:.05,swaps:true,swapPause:8,offerPause:5},      // соседство ценит вдвое выше реального бонуса — тянется к улицам
+  chain:{groupW:.3,margin:.1,swaps:true,swapPause:8,offerPause:5},      // соседство ценит вдвое выше реального бонуса — тянется к улицам
   trader:{groupW:.25,margin:.2,swaps:true,swapPause:10,offerPause:6},     // по реальной ренте, только с наценкой
   saboteur:{groupW:.25,margin:.15,swaps:false,spite:.5,offerPause:6},   // доплачивает за то, что ослабит лидера
   builder:{groupW:.35,margin:.35,swaps:false,offerPause:8},  // держится за своё
@@ -130,10 +130,17 @@ const brainLog=(bot,msg)=>trace.push(`${bot?bot.name:'бот'} (${(PROFILES[prof
 // Раньше бот смотрел только, чтобы база соперника не падала, — и звал рвать его улицу: 111 отказов на 117 обменов
 // (прогон «Дебага» 03.10). Теперь зовёт на обмен, выгодный обоим, а соперника в минусе догоняет доплатой.
 const THEIR_MARGIN=.1;
+// Соперник-бот считает так же, как ответит (его профиль: вес соседства, запас; миссия стола — его шаги и чужие);
+// человек — средней моделью, но тоже с миссией. Живой стол 04.10: Саня-бот звал на обмен «с выгодой соперника», а Вася
+// и Макс считали его себе в −$330…−480 (теряли категорию или бизнес для «Весь город») — 5 отказов из 7.
+const theirV=who=>bots.has(who)?valOf(who):{groupW:GROUP,margin:THEIR_MARGIN};
 function theirGain(change,who){const sn=snapNow(),o=sn.o,base=sn.base,a=j=>o[(j+40)%40],b=j=>{j=(j+40)%40;return j in change?change[j]:o[j];};
-  const touched=new Set();for(const k in change){const i=+k;touched.add((i+39)%40);touched.add(i);touched.add((i+1)%40);}
-  let d=0;for(const i of touched)d+=cellWorth(i,b,base,GROUP,who)-cellWorth(i,a,base,GROUP,who);
+  const Vr=theirV(who),touched=new Set();for(const k in change){const i=+k;touched.add((i+39)%40);touched.add(i);touched.add((i+1)%40);}
+  let d=0;for(const i of touched)d+=cellWorth(i,b,base,Vr.groupW,who)-cellWorth(i,a,base,Vr.groupW,who);
   if(Object.keys(change).some(k=>sn.cat[+k]))d+=cityWorth(b,sn,who)-cityWorth(a,sn,who);
+  if(MISSION_CELLS[winId()]){d+=missionWorth(b,who)-missionWorth(a,who);
+    for(const x of new Set(Object.values(change).filter(y=>y&&y!==who))){const s0=missionSteps(a,x),s1=missionSteps(b,x),g=missionGoal();
+      if(s1>s0)d-=s1>=g&&s0<g?missionWin():(Vr.spite?1:.5)*missionStep()*(s1-s0);}}
   return d;}
 function bestSwap(V,v,keep){
   const combos=arr=>{const out=[];for(let a=0;a<arr.length;a++){out.push([arr[a]]);for(let c=a+1;c<arr.length;c++)out.push([arr[a],arr[c]]);}return out;};
@@ -151,8 +158,11 @@ function bestSwap(V,v,keep){
       // С миссией — обмен только ради шага к цели и без потери шага у соперника: иначе отказ наверняка (прод 04.10: 26 предложений, 17 отказов).
       if(missionLive(profOf(H.PID))&&(stepGain(ch)<=0||stepGain(ch,p.pid)<0))continue;
       const g=gainOf(ch,V),bGive=give.reduce((x,i)=>x+baseAt(i),0),bGet=get.reduce((x,i)=>x+baseAt(i),0);
-      const tg=theirGain(ch,p.pid),need=THEIR_MARGIN*Math.max(50,bGet);   // соперник отдаёт get, получает give и доплату
-      const pays=MPSwap.pays.filter(x=>tg+x>=need&&(x<=0||S.cash-x>=keep));if(!pays.length)continue;   // pay>0 — доплачивает бот
+      // Соперник отдаёт get, получает give и доплату. Запас: его срез и наш снимок поля расходятся на копейки. Доплата соперника
+      // (x<0) — только если его касса после неё не ниже запаса его профиля (живой стол 04.10: «доплата твоя $300–500» — бот в плюсе,
+      // но отказывал из-за кассы). Человеку — без его доплаты и только с явной выгодой (×2): такие обмены люди отклоняли.
+      const human=!bots.has(p.pid),tv=theirV(p.pid),tg=theirGain(ch,p.pid),need=(human?2:1.25)*tv.margin*Math.max(50,bGet)+10,pc=+p.cash||0,pk=human?.2:((PROFILES[profKey(p.pid)]||{}).keep||.15);
+      const pays=MPSwap.pays.filter(x=>tg+x>=need&&(x<=0||S.cash-x>=keep)&&(x>=0||(!human&&pc+x>=pc*pk)));if(!pays.length)continue;   // pay>0 — доплачивает бот
       const pay=Math.min(...pays),net=g-pay;if(net<V.margin*Math.max(50,bGive))continue;
       const key=give.join('.')+'>'+get.join('.')+'@'+p.pid;if(asked[key]!=null&&v.turn.n-asked[key]<12*v.players.length)continue;
       if(!best||net>best.net)best={to:p.pid,give,get,pay,net,key};}}
@@ -453,8 +463,9 @@ function landHidden(t,ctx){
       // Партия Андрея 04.10: «у ботов были группы точек, но они их не прокачивали — не было опасных мест» (по журналу:
       // одна прокачка на бота за 51 ход). Теперь первый шаг — всегда, если касса выше запаса; точка в группе (рядом своя)
       // качается дальше почти всегда — там рента ×1,25 за соседа, это и есть опасное место для соперника.
-      // Копит на лицензию — качает только точку в группе (её не замораживает никогда: это опасное место для соперника).
-      if(canUp(t)&&!(saveGoal(P)&&!adjOwn(t.i))){const keepUp=S.cash*P.keep,grp=adjOwn(t.i);for(let k=0;k<4&&canUp(t);k++){const cost=upCost(t);if(S.cash-cost<keepUp)break;
+      // Копилка прокачку не держит (живой стол 04.10: Макс-бот копил с $600–680 на руках и за 20 кругов не качнул ни разу):
+      // прокачка поднимает доход и сама ускоряет копилку; держит только запас профиля.
+      if(canUp(t)){const keepUp=S.cash*P.keep,grp=adjOwn(t.i);for(let k=0;k<4&&canUp(t);k++){const cost=upCost(t);if(S.cash-cost<keepUp)break;
         S.cash-=cost;if(t.capLvl<capTab(t).length)t.capLvl++;if(t.salesLvl<salTab(t).length)t.salesLvl++;emit({kind:'upgrade',text:`прокачал «${titleOf(t)}»`,amount:-cost,tile:t.i});
         if(!rnd(grp?Math.max(.85,P.upgrade):P.upgrade))break;}}
       fillGoods(t,.4);break;}
