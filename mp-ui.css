@@ -548,3 +548,10 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 .sw2-step button:disabled{opacity:.35;box-shadow:none}
 .sw2-step b{text-align:center;font:800 15px/1.2 var(--mp-num)}
 .sw2-step b.in{color:#2f6b3a}.sw2-step b.out{color:var(--mp-red)}
+/* «Играть с ботами» на входе (m5-quickbots): вторая эмалевая кнопка, синяя как «С друзьями» на старте, и выбор числа ботов */
+.mp-quick{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+body.mp-mode .mp-quick .mp-big{background-color:#243f4b!important}
+.mp-quick-n{display:flex;align-items:center;justify-content:center;gap:6px}
+.mp-quick-n span{font:700 14px var(--mp-txt);color:#5b4c35;margin-right:4px}
+.mp-quick-n button{width:44px;height:40px;border:2px solid var(--mp-ink);border-radius:9px 8px 10px 8px;background:#fbf0d4;color:var(--mp-ink);font:800 17px var(--mp-num);box-shadow:2px 2px 0 rgba(37,34,28,.6)}
+.mp-quick-n button.on{background:var(--mp-ink);color:#fbf0d4}

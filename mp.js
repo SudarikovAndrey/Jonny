@@ -271,7 +271,7 @@ function Hub(room,restored){
     tlog.push(Object.assign({type,t:now,at:TL.isoLocal(now),sec:T.startedAt?Math.round((now-T.startedAt)/100)/10:null,room,match:T.match,
       turnN:T.turn?T.turn.n:null,round:T.turn?T.turn.round:null},d||{}));
     if(tlog.length>=10)tsend();}
-  function tsum(){const s={kind:'mp_table',test:TEST||undefined,bots:T.players.filter(p=>/^bot\d/.test(p.pid)).length||undefined,runId:`mp-${room}-m${T.match}-table`,player:`стол ${room} · хозяин ${pname(PID)}`,
+  function tsum(){const s={kind:'mp_table',test:TEST||undefined,quick:ls('abmp_quick_'+room)?true:undefined,bots:T.players.filter(p=>/^bot\d/.test(p.pid)).length||undefined,runId:`mp-${room}-m${T.match}-table`,player:`стол ${room} · хозяин ${pname(PID)}`,
       version:typeof VERSION!=='undefined'?VERSION:'',build:TL.build,mpBuild:window.AB_MP_BUILD||null,
       startedAt:T.startedAt||null,startedAtISO:T.startedAt?TL.isoLocal(T.startedAt):null,updatedAtISO:TL.isoLocal(Date.now()),
       tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){return '';}})(),
@@ -504,7 +504,7 @@ const playerOf=pid=>view&&view.players.find(p=>p.pid===pid);
 const nameOf=pid=>(playerOf(pid)||{}).name||'соперник';
 const colorOf=pid=>(playerOf(pid)||{}).color||'#6b5f52';
 // Для логов (web/telemetry.js): код стола, место, имя, число игроков, время хозяина — в каждой записи игрока.
-window.MPTele={hostNow,info(){const me=view&&playerOf(PID);return {test:TEST||undefined,bots:view?view.players.filter(p=>/^bot\d/.test(p.pid)).length||undefined:undefined,room:ROOM,match:view?view.match:null,pid:PID,seat:me?me.seat:null,
+window.MPTele={hostNow,info(){const me=view&&playerOf(PID);return {test:TEST||undefined,quick:ROOM&&ls('abmp_quick_'+ROOM)?true:undefined,bots:view?view.players.filter(p=>/^bot\d/.test(p.pid)).length||undefined:undefined,room:ROOM,match:view?view.match:null,pid:PID,seat:me?me.seat:null,
   name:(me&&me.name)||myName,host:!!(net&&net.host),players:view?view.players.length:0,names:view?view.players.map(p=>p.name):[],
   rounds:view?view.settings.rounds:null,turnSec:view?view.settings.turnSec:null,startedAt:view?view.startedAt:null,phase:view?view.phase:null,
   turnN:view&&view.turn?view.turn.n:null,round:view&&view.turn?view.turn.round:null,clockOff,hostNow,mpBuild:window.AB_MP_BUILD||null};}};
@@ -2489,18 +2489,37 @@ function renderEntry(){
     ${lobbyErr?`<p class="mp-err">${esc(lobbyErr)}</p>`:''}
     ${nameField()}
     <button class="mp-big" id="mpHost">Открыть стол</button>
+    ${window.MPBots?`<div class="mp-quick"><button class="mp-big sec" id="mpQuick">🤖 Играть с ботами</button><div class="mp-quick-n"><span>Ботов</span>${[1,2,3].map(n=>`<button type="button" data-n="${n}" class="${n===quickN()?'on':''}">${n}</button>`).join('')}</div></div>`:''}
     <div class="mp-or"><span>или сесть к друзьям</span></div>
     <div class="mp-join"><input id="mpCode" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="КОД" value="${esc(ROOM)}"><button id="mpJoin">Сесть за стол</button></div>
     <a class="mp-solo" href="index.html?map=sf${Q.has('mute')?'&mute':''}">Играть одному</a>`);
   $('mpHost').onclick=()=>{if(!readName())return;lobbyErr='';const code=C.makeCode();ROOM=code;ls('abmp_host_'+code,null);ss('abmp_hosting','');renderWait('Открываем стол…');hostTable(code).catch(e=>{lobbyError('Стол не открылся: '+(e.type||e.message));});};
+  // «Играть с ботами» (m5-quickbots, Андрей 03.10): стол без лобби и QR — боты садятся сами, партия стартует с настройками по умолчанию.
+  {const q=$('mpQuick');if(q){q.onclick=()=>{if(!readName())return;lobbyErr='';const code=C.makeCode();ROOM=code;ls('abmp_host_'+code,null);ss('abmp_hosting','');
+      quick={n:quickN(),room:code};ls('abmp_quick_'+code,'1');renderWait('Сажаем ботов за стол…','🤖 Партия с ботами');hostTable(code).catch(e=>{quick=null;lobbyError('Стол не открылся: '+(e.type||e.message));});};
+    document.querySelectorAll('.mp-quick-n button').forEach(b=>b.onclick=()=>{ls('abmp_quick_n',b.dataset.n);document.querySelectorAll('.mp-quick-n button').forEach(x=>x.classList.toggle('on',x===b));});}}
   const join=()=>{if(!readName())return;const code=C.normCode($('mpCode').value);if(code.length!==4){toast('Код — четыре буквы');$('mpCode').focus();return;}lobbyErr='';ROOM=code;renderWait(`Ищем стол ${code}…`);connectAsClient(code,false);};
   $('mpJoin').onclick=join;$('mpCode').onkeydown=e=>{if(e.key==='Enter')join();};
   $('mpCode').oninput=()=>{const c=C.normCode($('mpCode').value);if($('mpCode').value!==c)$('mpCode').value=c;};
 }
-function renderWait(text){showLobby(`<h2>🌉 Стол ${esc(ROOM)}</h2><p class="mp-lead">${esc(text)}</p><div class="mp-spin"></div><a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Отмена</a>`);}
+function renderWait(text,title){showLobby(`<h2>${title||`🌉 Стол ${esc(ROOM)}`}</h2><p class="mp-lead">${esc(text)}</p><div class="mp-spin"></div><a class="mp-solo" href="?map=sf&mp${Q.has('mute')?'&mute':''}">Отмена</a>`);}
 let qrFor='';
 let lobbyKey='',rulesAuto=false;
+let quick=null;
+const quickN=()=>{const n=+ls('abmp_quick_n');return n>=1&&n<=3?n:3;};
+// Быстрая партия: в лобби хозяина сажаем ботов по одному и стартуем; пока идёт — экран ожидания вместо QR.
+async function quickRun(){
+  if(!quick||quick.busy)return;quick.busy=true;
+  const W=ms=>new Promise(r=>setTimeout(r,ms));
+  for(let k=0;k<40&&view&&view.phase==='lobby'&&view.players.length<1+quick.n;k++){
+    const before=view.players.length;if(window.MPBots)MPBots.add();
+    for(let j=0;j<20&&view.players.length===before;j++)await W(100);await W(150);}
+  if(view&&view.phase==='lobby'&&net&&net.host){await verCheck();if(verStale){quick=null;toast('Вышла новая версия — перезагрузи страницу',3200);renderLobby(true);return;}
+    net.send({t:'start'});}
+  quick=null;
+}
 function renderLobby(force){
+  if(quick&&net&&net.host&&view&&view.phase==='lobby'){renderWait(`Сажаем ботов: ${Math.max(0,view.players.length-1)} из ${quick.n}…`,'🤖 Партия с ботами');quickRun();return;}
   const key=JSON.stringify([view.players.map(p=>[p.pid,p.name,p.seat,p.online]),view.settings,!!net&&net.host]);
   if(!force&&key===lobbyKey&&!lobby.hidden)return;lobbyKey=key;
   const host=!!net&&net.host,T=view,seats=[0,1,2,3].map(i=>T.players.find(p=>p.seat===i));
