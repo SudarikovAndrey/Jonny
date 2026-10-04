@@ -13,7 +13,12 @@ window.PropertyArt={
   const format=(map==='mainstreet'||ladder)?Math.ceil((t?.salesLvl||1)/4):1;
   return this.point(t?.good||t?.base||'gum',format);
  },
+ // Сан-Франциско (?map=sf, и мультиплеер): свои бизнесы по клеткам — sf-builder.js, SF.biz;
+ // картинки — заказ Codex 3 (design/ЗАДАЧА-CODEX-картинки-графики.md), 3 стадии.
+ sfBiz:{3:'cablecar',8:'fishpier',17:'coffee',23:'chinalaundry',32:'surf',37:'sourdough'},
  business(tile,stage=1,map='mainstreet'){
+  const st=Math.max(1,Math.min(3,Number(stage)||1));
+  if(map!=='mainstreet'&&typeof SFMAP!=='undefined'&&SFMAP&&this.sfBiz[tile])return `assets/points/biz_sf_${this.sfBiz[tile]}_${st}.webp`;
   return map==='mainstreet'?`assets/points/biz_mainstreet_${tile}.webp`:`assets/points/biz_brooklyn_${tile}_${Math.max(1,Math.min(3,Number(stage)||1))}.webp`;
  }
 };
