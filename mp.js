@@ -106,11 +106,15 @@ async function verCheck(){
   }
   return verStale;
 }
+// Андрей 03.10: полоса во всю ширину «перекрывает всё». Теперь — красная точка на ☰, один короткий тост
+// и строка с «перезагрузи» в меню ☰ и в лобби (verLine). Ничего не висит поверх интерфейса.
 function verBanner(){
-  const b=el('div','mp-ver-banner');b.innerHTML=`<b>Вышла новая версия игры</b><span>${view&&view.phase==='play'?'доиграйте партию и перезагрузите страницу':'перезагрузи страницу, чтобы играть в свежую'}</span><button type="button">Перезагрузить</button>`;
-  b.querySelector('button').onclick=()=>location.reload();
+  document.body.classList.add('mp-ver-stale');
+  toast(view&&view.phase==='play'?'🔄 Вышла новая версия — перезагрузи после партии':'🔄 Вышла новая версия — перезагрузи страницу',3200);
   if(view&&view.phase==='lobby')renderLobby(true);
 }
+// «перезагрузи» в строке версии — и в меню ☰, и в лобби
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.mp-ver-reload'))location.reload();});
 setInterval(()=>{verCheck();},90000);setTimeout(()=>{verCheck();},5000);
 const mmss=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 
@@ -587,12 +591,13 @@ function yieldTable(ep){
 // Стол сменил ведущего посреди моего хода: срез или «конец хода» могли уйти пропавшему хозяину — шлём ещё раз.
 // Повтор безопасен: проводки отсекаются по id, «конец хода» с прошлым номером ядро не примет.
 function resyncTurn(){if(!myTurn()||!net)return;try{net.send(ending?{t:'end',n:view.turn.n,pack:makePack()}:{t:'state',pack:makePack()});}catch(e){console.warn('resync',e);}}
-let handoffEl=null,handoffT=0;
-function handoffBanner(v,wasHost){
+let handoffEl=null,handoffT=0,backFromAway=false;
+function handoffBanner(v,wasHost,ms){
   const who=v.host===PID?null:((v.players.find(p=>p.pid===v.host)||{}).name||'другой игрок');
   const text=wasHost?`Ты был не на связи — стол ведёт ${who}`:who?`Хозяин отключился — стол ведёт ${who}`:'Хозяин отключился — стол ведёшь ты';
-  if(!handoffEl)handoffEl=el('div','mp-handoff');
-  handoffEl.textContent='🔁 '+text;handoffEl.hidden=false;clearTimeout(handoffT);handoffT=setTimeout(()=>{handoffEl.hidden=true;},9000);
+  // В ленту событий, как всё остальное (Андрей 03.10: отдельные полосы сверху перекрывают интерфейс); про тебя — 9 с.
+  if(typeof feedAdd==='function'){const hp=v.players.find(p=>p.pid===v.host);feedAdd({pid:'_table',name:'Стол:',color:hp?hp.color:'#6b5f52'},'handoff',wasHost?`ты был не на связи — ведёт ${who}`:who?`хозяин отключился — ведёт ${who}`:'хозяин отключился — ведёшь ты',null,true,null);}
+  else{if(!handoffEl)handoffEl=el('div','mp-handoff');handoffEl.textContent='🔁 '+text;handoffEl.hidden=false;clearTimeout(handoffT);handoffT=setTimeout(()=>{handoffEl.hidden=true;},ms||9000);}
   try{log('🔁 '+text);}catch(e){}
 }
 
@@ -619,6 +624,8 @@ function onMessage(m){
       if(m.pid&&m.pid!==PID){PID=m.pid;ss('abmp_pid',PID);net.onPid&&net.onPid(PID);}
       if(ROOM!==m.room){ROOM=m.room;}
       ss('abmp_joined_'+ROOM,'1');
+      // Место за столом — в localStorage: вернулся по ссылке в новой вкладке — садишься тем же игроком (backlog 03.10).
+      ls('abmp_seat_'+ROOM,JSON.stringify({pid:PID,name:myName,t:Date.now(),host:!!(net&&net.host)}));
       {const q=new URLSearchParams(location.search);q.set('map','sf');q.set('mp',ROOM);history.replaceState(null,'','?'+q.toString());}
       return;
     case 'deny':
@@ -635,6 +642,7 @@ function onMessage(m){
       if(m.ep!=null&&m.ep>hostEp){hostEp=m.ep;ss('abmp_ep_'+ROOM,String(hostEp));}
       lastHostAt=Date.now();
       const prev=view&&view.host,moved=prev&&m.v&&m.v.host&&m.v.host!==prev;if(moved)handoffBanner(m.v,prev===PID);
+      if(backFromAway&&m.v&&m.v.host){if(m.v.host!==PID)handoffBanner(m.v,true,6500);backFromAway=false;}
       onView(m.v,m.now);if(moved)resyncTurn();return;}
     case 'evt':onEvt(m.from,m.e);return;
   }
@@ -2476,7 +2484,7 @@ const notes=[];
 const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'🔨',bid:'🔨',won:'🔨',unsold:'🔨',bank:'🏦',bankrupt:'🏦',loan:'🏦',
   offer:'💼',sale:'🤝',saleoffer:'🏷',salebought:'🏷',decline:'✋',chance:'🎴',hand:'🃏',hit:'🎴',skip:'⏳',jail:'🚔',fine:'👮',insp:'📋',
   scatter:'💰',minigame:'🎰',double:'🎲',pass:'🏁',bonus:'💵',underdog:'🤝',taxi:'🚕',swap:'🔁',swapcounter:'🔁',swapped:'🔁',
-  swapdecline:'🔁',swapvoid:'🔁',map:'🗺'};
+  swapdecline:'🔁',swapvoid:'🔁',map:'🗺',handoff:'🔁'};
 const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
@@ -2750,6 +2758,15 @@ async function enter(){
   if(ROOM&&ss('abmp_hosting')===ROOM&&ls('abmp_host_'+ROOM)&&myName){renderWait('Возвращаем стол…');hostTable(ROOM).catch(e=>lobbyError('Стол не открылся: '+(e.type||e.message)));return;}
   // Уже сидел за этим столом в этой вкладке — возвращаем сразу; пришёл по ссылке — сначала имя.
   if(ROOM&&myName&&ss('abmp_joined_'+ROOM)){renderWait(`Садимся за стол ${ROOM}…`);connectAsClient(ROOM,false);return;}
+  // Этот браузер уже сидел за этим столом (вкладку закрыли) — садимся тем же игроком, без экрана входа.
+  // Бывший хозяин, которому за 7 с никто не ответил (стол никто не принял), поднимает стол из своего сохранения.
+  {let seat=null;try{seat=JSON.parse(ls('abmp_seat_'+ROOM)||'null');}catch(e){}
+    if(ROOM&&seat&&seat.pid&&Date.now()-(seat.t||0)<12*3600e3){
+      PID=seat.pid;ss('abmp_pid',PID);if(seat.name){myName=seat.name;ls('abmp_name',myName);}backFromAway=!!seat.host;
+      renderWait(`Возвращаемся за стол ${ROOM}…`);connectAsClient(ROOM,false);
+      if(seat.host&&ls('abmp_host_'+ROOM))setTimeout(()=>{if(view||!net||net.host)return;net.stopped=true;backFromAway=false;
+        ss('abmp_hosting',ROOM);renderWait('Возвращаем стол…');hostTable(ROOM).catch(e=>lobbyError('Стол не открылся: '+(e.type||e.message)));},7000);
+      return;}}
   renderEntry();
 }
 async function shareLink(){const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${ROOM}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);}

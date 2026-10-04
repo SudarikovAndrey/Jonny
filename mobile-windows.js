@@ -30,8 +30,8 @@ function upgradeIcons(root){
 function shopFrame(t,inner){
   track('window',{w:t.type==='biz'?'biz':'point',tile:t.i,owner:!!t.owner});
   const isPoint=t.type==='kiosk',g=isPoint?good(t.good):null,title=isPoint?pointName(t):bizName(t);
-  const format=(MAP1||CFG.L5_LADDER)?Math.min(4,Math.floor(((t.salesLvl||1)-1)/4)+1):1;
-  const stage=CFG.L5_LADDER?Math.min(3,Math.floor(((t.level||1)-1)/3)+1):Math.min(3,t.tier||1);
+  const format=PropertyArt.sf()?PropertyArt.sfFormat(t):(MAP1||CFG.L5_LADDER)?Math.min(4,Math.floor(((t.salesLvl||1)-1)/4)+1):1;
+  const stage=PropertyArt.sf()?PropertyArt.sfStage(t):CFG.L5_LADDER?Math.min(3,Math.floor(((t.level||1)-1)/3)+1):Math.min(3,t.tier||1);
   const path=isPoint?PropertyArt.point(t.good||t.base,format):PropertyArt.business(t.i,stage,MAP1?'mainstreet':'brooklyn');
   const illustration=`<img class="property-illustration" src="${path}" alt="${title}" decoding="async">`;
   const c=$('card');

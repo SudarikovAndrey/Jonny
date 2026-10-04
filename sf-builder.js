@@ -98,7 +98,7 @@ kioskUpCost=t=>kioskNextStat(t)?salesCost(t):0;
 kioskAfter=t=>kioskNextStat(t)?{cap:4*sfBase(t.salesLvl+1),sales:salesBoost(sfBase(t.salesLvl+1))}:null;
 kioskLevelsNormalize=function(){if(!S||!S.tiles)return;for(const t of S.tiles)if(t.type==='kiosk'&&t.owner)t.capLvl=t.salesLvl;};
 function sfIsLot(t){return !!t&&t.type==='kiosk'&&!t.owner&&(t.lot||t.good==='lot');}
-pointName=function(t){if(sfIsLot(t)||!t.base)return 'Пустырь';const f=SF.formats[Math.min(SF.formats.length-1,Math.floor((t.salesLvl-1)/2))];return `${f} ${SF.gen[t.base]||''}`.trim();};
+pointName=function(t){if(sfIsLot(t)||!t.base)return 'Пустырь';const f=SF.formats[(window.PropertyArt?PropertyArt.sfFormat(t):Math.min(SF.formats.length,t.salesLvl||1))-1];return `${f} ${SF.gen[t.base]||''}`.trim();};
 evolveState=()=>'max';
 // Благосостояние: чем больше категорий у города, тем дороже всё продаётся.
 (function(){const base=sellPrice;sellPrice=function(g){const p=SF.sell[g]?base.apply(this,arguments)*SF.sell[g]/good(g).sell:base.apply(this,arguments);return Math.round(p*sfPriceMult());};})();

@@ -8,7 +8,14 @@ window.PropertyArt={
   const key=`${aliases[good]||good}_${f}`;
   return `assets/points/pt_${key}${this.revisions.has(key)?'-v2':''}.webp`;
  },
+ // Сан-Франциско и мультиплеер (SFMAP): картинка растёт с каждой прокачкой (Андрей 03.10).
+ // Бизнес: стадия = уровень (1–3, потолок CFG.BIZ.maxLevel = 3). Точка: формат = уровень
+ // (1–4; на 5-м, потолке SF.levelCap, — магазинчик: форматов у товара четыре).
+ sf(){return typeof SFMAP!=='undefined'&&!!SFMAP;},
+ sfFormat(t){return Math.max(1,Math.min(4,Number(t?.salesLvl)||1));},
+ sfStage(t){return Math.max(1,Math.min(3,Number(t?.level)||1));},
  tile(t,map='brooklyn',ladder=false){
+  if(this.sf())return t?.type==='biz'?this.business(t.i,this.sfStage(t),map):this.point(t?.good||t?.base||'gum',this.sfFormat(t));
   if(t?.type==='biz')return this.business(t.i,ladder?Math.ceil((t.level||1)/3):t.tier||1,map);
   const format=(map==='mainstreet'||ladder)?Math.ceil((t?.salesLvl||1)/4):1;
   return this.point(t?.good||t?.base||'gum',format);
