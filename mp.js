@@ -503,7 +503,13 @@ let hostEp=+(ss('abmp_ep_'+(ROOM||'-'))||0)||0,lastHostAt=0,tsnap=null,pingT=0;
 // ведущего (идёт и на паузе); после входа, пробуждения, возврата на вкладку и переподключения — сначала 8 с слушаем.
 let lastLeadAt=0,lastPeerAt=0,listenFrom=Date.now(),lastTick=Date.now(),curBus=null,busWasOn=true;
 const LISTEN_MS=8000,SNAP_FRESH_MS=6000;
-function heardLead(d){if(!d||(d.ep||0)<hostEp)return;if(d.ep>hostEp){hostEp=d.ep;ss('abmp_ep_'+ROOM,String(hostEp));}lastLeadAt=Date.now();}
+function heardLead(d){if(!d||(d.ep||0)<hostEp)return;if(d.ep>hostEp){hostEp=d.ep;ss('abmp_ep_'+ROOM,String(hostEp));}lastLeadAt=Date.now();hostAlive();}
+// Статус сторожа (m8-hostbanner, GBQL/SDHY 14.10): «Хозяин стола молчит…» не снимался, когда хозяин снова на связи —
+// снимали только тексты «Нет связи…». Теперь любой статус сторожа снимается первым же сообщением хозяина.
+let wdStatus=false;
+function watchStatus(){if(!net||net.host||!lastMsgAt||Date.now()-lastMsgAt<=8000)return;
+  status(tsnap?'Хозяин стола молчит — если не вернётся, стол поведёт следующий игрок…':'Нет связи со столом — переподключаемся…');wdStatus=true;}
+function hostAlive(){if(!wdStatus&&!(statusEl.textContent||'').startsWith('Нет связи'))return;wdStatus=false;status('');}
 function relisten(){listenFrom=Date.now();}
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')relisten();});
 addEventListener('pageshow',relisten);addEventListener('online',relisten);
@@ -568,8 +574,7 @@ function connectAsClient(room,isHost){
   // Пульс: хозяин узнаёт, что мы живы; мы — что жив он. Один на вкладку: клиент мог стать хозяином и обратно.
   clearInterval(pingT);
   pingT=setInterval(()=>{if(net.stopped)return;net.send({t:'ping'});
-    if(!net.host&&lastMsgAt&&Date.now()-lastMsgAt>8000)status(tsnap?'Хозяин стола молчит — если не вернётся, стол поведёт следующий игрок…':'Нет связи со столом — переподключаемся…');
-    watchHost();},2500);
+    watchStatus();watchHost();},2500);
   if(!connectAsClient.hide){connectAsClient.hide=true;addEventListener('pagehide',()=>{if(net&&!net.host)net.send({t:'bye'});});}
 }
 // ---------- передача стола ----------
@@ -669,8 +674,8 @@ function onMessage(m){
       lobbyError(m.error==='full'?'За столом уже четверо.':m.error==='started'?'Партия за этим столом уже идёт.':m.error==='kicked'?'Хозяин стола убрал тебя из лобби.':'Не пускают: '+m.error);
       return;
     case 'rehello':if(net.stopped)return;net.send({t:'hello',pid:PID,name:myName});return;
-    case 'tsnap':if((m.ep||0)>=hostEp&&m.T)tsnap={T:m.T,off:(m.now||Date.now())-Date.now(),ep:m.ep||0,at:Date.now()};return;
-    case 'pong':lastHostAt=Date.now();if(!net.host&&document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');return;
+    case 'tsnap':if((m.ep||0)>=hostEp&&m.T){hostAlive();}if((m.ep||0)>=hostEp&&m.T)tsnap={T:m.T,off:(m.now||Date.now())-Date.now(),ep:m.ep||0,at:Date.now()};return;
+    case 'pong':lastHostAt=Date.now();if(!net.host)hostAlive();return;
     case 'timeout':if(myTurn()&&m.n===view.turn.n)autoFinish();return;
     case 'pausedeny':toast(`⏸ Паузы кончились — следующая через ${mmss(m.wait||0)}`,2600);return;
     case 'view':{
@@ -711,7 +716,7 @@ function onView(v,now,urgent){
 function applyView(v,now){
   if(now)clockOff=now-Date.now();
   const prev=view;view=v;
-  if(document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');
+  hostAlive();
   if(v.phase==='lobby'){curMatch=null;curTurn=null;shownOver=null;hideOver();renderLobby();updateUi();return;}
   hideLobby();
   if(v.match!==curMatch){curMatch=v.match;curTurn=null;tokens.forEach(k=>k.pos=null);}
@@ -1235,7 +1240,10 @@ function push(){
   S.rolls=999;   // ход = один бросок; награды ходами платят налом в явных местах (автомат, находки), общей конвертации нет
   net.send({t:'state',pack:makePack()});
 }
-function makePack(){return {n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,dice:lastDice&&!lastDice.lesson?{a:lastDice.a,b:lastDice.b}:null};}
+// Кубики — только этого хода и после броска (SDHY 14.10: встречный обмен до броска унёс кубики прошлого хода, и в журнале
+// стола появился ложный бросок). unroll — бросок не состоялся (сцена не ответила): стол снимает «бросок был».
+function makePack(){return {n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,unroll:!rolled&&unrollN===view.turn.n||undefined,
+  dice:rolled&&lastDice&&!lastDice.lesson?{a:lastDice.a,b:lastDice.b}:null};}
 function pushSoon(){if(myTurn()&&!pushT)pushT=setTimeout(push,150);}
 save=function(){pushSoon();};       // сохранение партии — у хозяина стола
 // Ход = один бросок, запас ходов не нужен. Общей конвертации «лишних ходов» больше нет (плейтест 01.10:
@@ -1283,13 +1291,23 @@ async function autoFinish(){
   if(!view||view.phase!=='play'){toast('Партия ещё не началась');return;}
   if(!myTurn()){toast(`Сейчас ходит ${nameOf(view.turn.pid)}`);return;}
   if(rolled||ending){toast('Бросок уже был — жми «Передать ход»');return;}
+  // Окно обмена держит поле в своей раскладке — сцена не ответит на бросок (SDHY 14.10: в участке со встречным обменом
+  // «Бросок прервался», ход сгорел). Закрываем окно до броска.
+  // Так же — выбор клеток после «🔁 обмен» у кубика (swapPicking): держит обзор поля и перехватывает тапы.
+  if(swapUI||(typeof swapPicking!=='undefined'&&swapPicking)){try{swapClose();}catch(e){}try{if(typeof swapPickEnd==='function')swapPickEnd();}catch(e){}await pollWait(250);}
   if(S.jail>0&&!autoEnding&&S.mpJailAskN!==view.turn.n){S.mpJailAskN=view.turn.n;await jailChoice();if(!myTurn()||rolled||ending)return;}   // в участке: откупиться и бросить, или бросать на дубль
-  rolled=true;S.rolls=999;lastDice=null;push();posterAway();
-  try{await base.apply(this,arguments);}finally{
-    landed=true;S.rolls=999;
-    push();updateUi();}
+  rolled=true;S.rolls=999;lastDice=null;unrollN=null;push();posterAway();
+  try{await base.apply(this,arguments);}
+  catch(e){
+    // Кубики не легли — броска не было: снимаем «бросок был» у себя и у стола, roll() вернёт срез — можно бросить снова.
+    // Легли — бросок засчитан: ошибку гасим здесь, иначе roll() откатит срез, а «бросок был» останется — ход сгорит.
+    if(!lastDice){rolled=false;landed=false;unrollN=view.turn.n;push();updateUi();throw e;}
+    console.error('бросок: ошибка после того, как легли кубики — ход засчитан',e);moving=false;toast('Бросок прервался — ход засчитан');
+  }
+  landed=true;S.rolls=999;
+  push();updateUi();
 };})();
-let lastDice=null;
+let lastDice=null,unrollN=null;
 // Бонус за дубль — сразу, как кубики легли (до движения фишки), а не после передачи хода.
 (function(){const base=mobileDice;mobileDice=async function(){const r=await base.apply(this,arguments);lastDice=r;
   if(r&&r.a===r.b&&!r.lesson&&myTurn()&&rolled&&!S.jail)doubleBonus(r.a+r.b);return r;};})();
@@ -2949,7 +2967,8 @@ window.MP={marketValue:(i,buyer)=>marketValue(S.tiles[i],buyer),forcePrice:i=>fo
 {
   window.__MP={test:TEST,
     get PID(){return PID;},set PID(v){PID=v;},get view(){return view;},set view(v){view=v;},get hub(){return hub;},get net(){return net;},get S(){return S;},
-    walkGate,swapMode,swapClose,get swapUI(){return swapUI;},rivalsOf,   // walkGate и окно обмена — для проверок (фишка и «⏸ обмен», 04.10)
+    walkGate,swapMode,swapClose,get swapUI(){return swapUI;},rivalsOf,
+    onMessage,watchStatus,get statusText(){return statusEl.hidden?'':statusEl.textContent;},setLastMsgAt(t){lastMsgAt=t;},   // для тестов сторожа (m8-hostbanner)   // walkGate и окно обмена — для проверок (фишка и «⏸ обмен», 04.10)
     adopt,onView,finishTurn,placeOffer,forceBuy,placeBid,startLot,mpChance,landedHere,isRival,invested,rentOf,forceReady,lotOn,myLots,
     roll:()=>prototypeRoll(),closeAll,closeMinigame,push,emit,dblCash,rollCash,titleOf,sellOf,baseInv,pairKey,
     setTurn(o){mine=!!o.mine;rolled=!!o.rolled;landed=!!o.landed;ending=false;autoEnding=false;credits=[];},

@@ -137,6 +137,7 @@ function applyState(T,pid,pack,now){
     if(+c.escrow)to.s.mpEscrow=Math.max(0,(to.s.mpEscrow||0)+(+c.escrow));
     if(c.note)T.log.push(c.note);
   }
+  if(pack.unroll&&T.turn.rolled&&!T.turn.landed&&!pack.rolled)T.turn.rolled=false;   // бросок не состоялся (сцена не ответила) — можно бросить снова
   if(pack.rolled&&!T.turn.rolled)T.turn.rolled=true;
   if(pack.landed&&!T.turn.landed&&!T.turn.paused){
     T.turn.landed=true;
