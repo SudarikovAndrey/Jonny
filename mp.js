@@ -101,7 +101,8 @@ const plural=(n,a,b,c)=>{const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&
 // mp.html при загрузке записал подпись каждого файла (ETag) и id версии; здесь раз в 90 с и перед стартом партии
 // спрашиваем сервер HEAD-запросом. Подпись поменялась — вышла новая версия: плашка у всех, хозяин не стартует.
 let verStale=false,verAt=0;
-const verLine=()=>{const id=(window.AB_VER||{}).id||'—';return verStale?`⚠ Вышла новая версия — <button type="button" class="mp-ver-reload">перезагрузи</button> · у тебя ${esc(id)}`:`версия ${esc(id)}`;};
+// В партии перезагрузка не предлагается (плейтест 04.10, стол XBFF: хозяин перезагрузился — стол ушёл другому). Обновление — в лобби и на итоге.
+const verLine=()=>{const id=(window.AB_VER||{}).id||'—';if(!verStale)return `версия ${esc(id)}`;return view&&view.phase==='play'?`новая версия — обновится после партии · у тебя ${esc(id)}`:`⚠ Вышла новая версия — <button type="button" class="mp-ver-reload">перезагрузи</button> · у тебя ${esc(id)}`;};
 async function verCheck(){
   const V=window.AB_VER;if(!V||!V.sig||Date.now()-verAt<4000)return verStale;verAt=Date.now();
   for(const [u,sg] of Object.entries(V.sig)){
@@ -115,7 +116,7 @@ async function verCheck(){
 // и строка с «перезагрузи» в меню ☰ и в лобби (verLine). Ничего не висит поверх интерфейса.
 function verBanner(){
   document.body.classList.add('mp-ver-stale');
-  toast(view&&view.phase==='play'?'🔄 Вышла новая версия — перезагрузи после партии':'🔄 Вышла новая версия — перезагрузи страницу',3200);
+  if(!(view&&view.phase==='play'))toast('🔄 Вышла новая версия — перезагрузи страницу',3200);   // в партии — только точка на ☰
   if(view&&view.phase==='lobby')renderLobby(true);
 }
 // «перезагрузи» в строке версии — и в меню ☰, и в лобби
@@ -277,7 +278,9 @@ function Hub(room,restored,ho){
   // заново по имени. Из лобби молчащих убираем через 15 с.
   // При передаче стола: ушедший хозяин — офлайн, остальным даём 9 с отозваться пульсом (иначе ядро сразу отдаст
   // ход дальше: активный игрок офлайн → advance).
-  if(ho){const now=Date.now();T.players.forEach(p=>{if(p.pid===ho.from){p.online=false;p.offAt=now;}else if(p.pid!==PID&&p.online)p.seenAt=now;});
+  // Плейтест 14.10 (GBQL): принявший стол сразу пропустил ход «игрок офлайн» — по его срезу соперники были офлайн.
+  // Теперь все, кроме ушедшего хозяина, живы, пока не отзовутся или не промолчат 9 с.
+  if(ho){const now=Date.now();T.players.forEach(p=>{if(p.pid===ho.from){p.online=false;p.offAt=now;}else if(p.pid!==PID){p.online=true;p.seenAt=now;}});
     T.handoff={from:ho.from,to:PID,at:now,n:(T.handoff&&T.handoff.n||0)+1};}
   else if(restored)T.players.forEach(p=>{if(p.pid!==PID){p.online=false;p.offAt=Date.now();}});
   function persist(){clearTimeout(saveT);saveT=setTimeout(()=>ls('abmp_host_'+room,JSON.stringify(T)),300);}
@@ -478,13 +481,15 @@ async function listenHub(room,h){
   if(NET_LOCAL){
     const ch=new BroadcastChannel(peerId(room));sendTo=to=>m=>ch.postMessage({to,msg:m});
     ch.onmessage=e=>{const d=e.data;if(d&&d.to==='hub')take(d);};
-    beacon=()=>ch.postMessage({to:'hub',from:PID,msg:{t:'lead'},ep:h.epoch});
-    const bt=setInterval(()=>{if(!h.stopped)beacon();},3000);
+    beacon=()=>{ch.postMessage({to:'hub',from:PID,msg:{t:'lead'},ep:h.epoch});ch.postMessage({to:'lead',from:PID,ep:h.epoch});};
+    beacon();const bt=setInterval(()=>{if(!h.stopped)beacon();},3000);
     hubOff=()=>{clearInterval(bt);try{ch.close();}catch(e){}};
   } else {
     const bus=await openBus(room);sendTo=to=>m=>bus.pub('c/'+to,m);
     bus.sub('hub',take);
-    const bt=setInterval(()=>{if(!h.stopped)bus.pub('hub',{from:PID,msg:{t:'lead'},ep:h.epoch});},3000);
+    // Маяк — и хабам (тема hub), и клиентам (тема lead): по нему, а не по видам, клиенты считают тишину хозяина.
+    beacon=()=>{bus.pub('hub',{from:PID,msg:{t:'lead'},ep:h.epoch});bus.pub('lead',{from:PID,ep:h.epoch});};
+    beacon();const bt=setInterval(()=>{if(!h.stopped)beacon();},3000);
     hubOff=()=>{clearInterval(bt);bus.unsub('hub');};
   }
 }
@@ -493,8 +498,17 @@ async function listenHub(room,h){
 let net=null,lastMsgAt=0;
 // Передача стола: срок ведения, последний голос хозяина и последний полный срез стола от него.
 let hostEp=+(ss('abmp_ep_'+(ROOM||'-'))||0)||0,lastHostAt=0,tsnap=null,pingT=0;
+// Плейтест 14.10 (GBQL): у Bob погас экран, телефон проснулся — сторож посчитал собственный сон «16 с тишины хозяина» и
+// принял стол, ещё не подключившись к ретранслятору: два ведущих 20 с, пропущенный ход. Теперь тишина — только по маяку
+// ведущего (идёт и на паузе); после входа, пробуждения, возврата на вкладку и переподключения — сначала 8 с слушаем.
+let lastLeadAt=0,lastPeerAt=0,listenFrom=Date.now(),lastTick=Date.now(),curBus=null,busWasOn=true;
+const LISTEN_MS=8000,SNAP_FRESH_MS=6000;
+function heardLead(d){if(!d||(d.ep||0)<hostEp)return;if(d.ep>hostEp){hostEp=d.ep;ss('abmp_ep_'+ROOM,String(hostEp));}lastLeadAt=Date.now();}
+function relisten(){listenFrom=Date.now();}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')relisten();});
+addEventListener('pageshow',relisten);addEventListener('online',relisten);
 function connectAsClient(room,isHost){
-  let welcomed=false,helloT=0;
+  let welcomed=false,helloT=0;relisten();
   const hello=()=>net.send({t:'hello',pid:PID,name:myName});
   if(isHost){
     const send=m=>queueMicrotask(()=>onMessage(clone(m)));
@@ -503,7 +517,7 @@ function connectAsClient(room,isHost){
   }
   if(NET_LOCAL){
     const ch=new BroadcastChannel(peerId(room));
-    ch.onmessage=e=>{const d=e.data;if(d&&d.to===PID&&net&&!net.host)onMessage(d.msg);};
+    ch.onmessage=e=>{const d=e.data;if(!d||!net||net.host)return;if(d.to==='lead'){heardLead(d);return;}if(d.to===PID)onMessage(d.msg);};
     net={send:m=>ch.postMessage({to:'hub',from:PID,msg:m,ep:hostEp}),host:false};
     const again=()=>{if(!welcomed){hello();helloT=setTimeout(again,1500);}};again();
     net.onWelcome=()=>{welcomed=true;clearTimeout(helloT);};
@@ -512,7 +526,10 @@ function connectAsClient(room,isHost){
     const t0=Date.now();
     openBus(room).then(bus=>{
       const inbox=m=>onMessage(m);
-      bus.sub('c/'+PID,inbox);
+      bus.sub('c/'+PID,inbox);curBus=bus;
+      bus.sub('lead',d=>{if(net&&!net.host)heardLead(d);});
+      // Пульс других игроков в теме стола: хозяина не слышно, а их слышно — ушёл хозяин; не слышно никого — пропали мы.
+      bus.sub('hub',d=>{if(d&&d.from&&d.from!==PID&&net&&!net.host)lastPeerAt=Date.now();});
       net.send=m=>bus.pub('hub',{from:PID,msg:m,ep:hostEp});
       net.onPid=pid=>bus.sub('c/'+pid,inbox);         // вернулся по имени — хозяин отдал прежний pid
       // Хозяин может появиться позже — представляемся, пока не ответит.
@@ -561,14 +578,22 @@ function connectAsClient(room,isHost){
 // (mp-test.js adoptRestored подхватывает новый хаб). В p2p адрес стола занят старым хозяином — передачи нет.
 const HANDOFF_MS=16000,HANDOFF_STEP=6000;
 function watchHost(){
+  const now=Date.now();if(now-lastTick>5000)relisten();lastTick=now;   // таймеры стояли — вкладка спала
+  if(curBus){const on=curBus.online;if(on&&!busWasOn)relisten();busWasOn=on;if(!on)return;}   // сами без связи — стол не берём
   if(!net||net.host||net.stopped||NET==='p2p'||!tsnap||!view||(view.phase!=='play'&&view.phase!=='lobby'))return;
-  const quiet=Date.now()-lastHostAt;if(!lastHostAt||quiet<HANDOFF_MS)return;
+  // Срез — последний от живого хозяина (пришёл не раньше чем за 6 с до последнего маяка) и той же партии
+  // (XBFF 04.10: преемник поднял стол из лобби, партия началась заново).
+  if(tsnap.at<lastLeadAt-SNAP_FRESH_MS||tsnap.T.phase!==view.phase||tsnap.T.match!==view.match)return;
+  const heard=Math.max(lastLeadAt,listenFrom),quiet=now-heard;if(now-listenFrom<LISTEN_MS||quiet<HANDOFF_MS)return;
+  // Кроме хозяина за столом есть другие люди — берём стол, только если их пульс слышен (иначе без связи мы сами).
+  const others=tsnap.T.players.filter(p=>p.pid!==PID&&p.pid!==tsnap.T.hostPid&&p.online&&!/^bot\d/.test(p.pid));
+  if(NET==='relay'&&others.length&&now-lastPeerAt>6000)return;
   const T=tsnap.T,heirs=T.players.filter(p=>p.pid!==T.hostPid&&p.online&&!/^bot\d/.test(p.pid)).sort((a,b)=>a.seat-b.seat);
   const k=heirs.findIndex(p=>p.pid===PID);if(k<0||quiet<HANDOFF_MS+k*HANDOFF_STEP)return;
   takeTable();
 }
 function takeTable(){
-  const snap=tsnap;tsnap=null;const T=clone(snap.T),now=Date.now(),gap=Math.max(0,now-lastHostAt);
+  const snap=tsnap;tsnap=null;const T=clone(snap.T),now=Date.now(),gap=Math.max(0,now-Math.max(lastLeadAt,lastHostAt));
   // Часы стола — часы хозяина: переводим в свои (snap.off = его время − наше), простой без связи хода не съедает.
   const sh=x=>x==null?x:x-snap.off;
   T.startedAt=sh(T.startedAt);if(T.deadline)T.deadline=sh(T.deadline)+gap;
@@ -588,7 +613,7 @@ function takeTable(){
 function yieldTable(ep){
   const h=hub;if(!h)return;h.stop();hub=null;window.MPHub=null;if(hubOff){hubOff();hubOff=null;}
   hostEp=Math.max(hostEp,ep);ss('abmp_ep_'+ROOM,String(hostEp));ss('abmp_hosting','');ss('abmp_joined_'+ROOM,'1');
-  lastHostAt=Date.now();tsnap=null;
+  lastHostAt=lastLeadAt=Date.now();relisten();tsnap=null;
   try{window.MPBots&&MPBots.release&&MPBots.release();}catch(e){}
   console.info(`MP: стол ${ROOM} ведёт другой игрок (срок ${ep}) — садимся игроком`);
   connectAsClient(ROOM,false);
@@ -644,7 +669,7 @@ function onMessage(m){
       lobbyError(m.error==='full'?'За столом уже четверо.':m.error==='started'?'Партия за этим столом уже идёт.':m.error==='kicked'?'Хозяин стола убрал тебя из лобби.':'Не пускают: '+m.error);
       return;
     case 'rehello':if(net.stopped)return;net.send({t:'hello',pid:PID,name:myName});return;
-    case 'tsnap':if((m.ep||0)>=hostEp&&m.T)tsnap={T:m.T,off:(m.now||Date.now())-Date.now(),ep:m.ep||0};return;
+    case 'tsnap':if((m.ep||0)>=hostEp&&m.T)tsnap={T:m.T,off:(m.now||Date.now())-Date.now(),ep:m.ep||0,at:Date.now()};return;
     case 'pong':lastHostAt=Date.now();if(!net.host&&document.querySelector('#mpStatus')?.textContent.startsWith('Нет связи'))status('');return;
     case 'timeout':if(myTurn()&&m.n===view.turn.n)autoFinish();return;
     case 'pausedeny':toast(`⏸ Паузы кончились — следующая через ${mmss(m.wait||0)}`,2600);return;
@@ -1878,7 +1903,40 @@ function handPickEnd(pid){if(!handPick)return;const P=handPick;P.banner&&P.banne
 chipsEl.addEventListener('click',e=>{if(!handPick)return;const ch=e.target.closest('.mp-chip');if(!ch)return;e.stopImmediatePropagation();e.preventDefault();
   const pid=ch.dataset.pid;if(!handPick.targets.has(pid)){toast('Этого игрока выбрать нельзя');return;}handPickEnd(pid);},true);
 // Такси до склада — кнопкой у кубика в свой ход до броска (было только в ☰).
-const taxiBtn=el('button','mp-taxi');taxiBtn.type='button';taxiBtn.hidden=true;taxiBtn.innerHTML='🚕<small>на склад · 💎1</small>';
+// «🔁 Обмен» у кубика (решение Андрея 14.10, f-swapplayers: «кнопку обмена надо вынести отдельно»).
+// Нажал — на поле мерцают клетки, которые можно обменять (свои и соперников); тап по чужой — режим обмена с этим соперником,
+// по своей — она ляжет в «Отдаёшь», дальше тап по клетке соперника.
+const swapBtn=el('button','mp-taxi mp-swapbtn');swapBtn.type='button';swapBtn.hidden=true;swapBtn.innerHTML='🔁<small>обмен</small>';
+const swapCan=()=>!!(SW()&&view&&view.phase==='play'&&myTurn()&&!ending&&!proposedThisTurn()&&!moving&&$('modal').hidden&&!swapUI&&!pick&&!handPick);
+let swapPicking=null;
+swapBtn.onclick=()=>{if(swapPicking){swapPickEnd();return;}if(swapCan())swapPickStart();};
+function swapPickStart(){
+  const A=SW(),sh=toShared(S.tiles),cands=sh.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(S.tiles[t.i])&&A.free(t.i));
+  if(!cands.some(t=>t.owner===PID)){toast('Меняться пока нечем — у тебя нет свободных клеток');return;}
+  if(!cands.some(t=>t.owner!==PID)){toast('У соперников нет клеток для обмена');return;}
+  const P={give:new Set(),rings:new Map(),ui:el('div','mp-hand-pick mp-swappick')};swapPicking=P;document.body.classList.add('mp-swap-picking');
+  for(const t of cands){const r=el('div','mp-sw-ring blink'+(t.owner===PID?' mine':''),layer);r.style.setProperty('--c',colorOf(t.owner));P.rings.set(t.i,{el:r,owner:t.owner});}
+  const paint=()=>{for(const [i,o] of P.rings){o.el.classList.toggle('give',P.give.has(i));o.el.innerHTML=P.give.has(i)?'<b>отдаёшь</b>':'';}
+    P.ui.innerHTML=`<b>🔁 Обмен: тапни клетку соперника</b><span>${P.give.size?`отдаёшь ${[...P.give].map(cellNo).join(', ')} · `:''}свою — чтобы отдать, чужую — чтобы получить</span><button type="button">Отмена</button>`;
+    P.ui.querySelector('button').onclick=()=>swapPickEnd();};
+  const cv=$('board');let down=null;
+  P.pd=e=>{down={x:e.clientX,y:e.clientY};};
+  P.pu=e=>{const d=down;down=null;if(!d||Math.hypot(e.clientX-d.x,e.clientY-d.y)>8)return;
+    let best=-1,bd=44;for(const [i] of P.rings){const q=screenOfTile(i),dd=Math.hypot(e.clientX-q.x,e.clientY-q.y);if(dd<bd){bd=dd;best=i;}}
+    if(best<0)return;e.stopImmediatePropagation();const o=P.rings.get(best).owner;
+    if(o===PID){if(P.give.has(best))P.give.delete(best);else if(P.give.size<(SW().max||2))P.give.add(best);else toast('Не больше двух своих клеток');paint();return;}
+    const give=[...P.give];swapPickEnd(true);swapMode({rival:o,give,get:[best]});};
+  if(cv){cv.addEventListener('pointerdown',P.pd,true);cv.addEventListener('pointerup',P.pu,true);}
+  paint();updateUi();
+  // Всё поле в кадре, низ кадра — над плашкой выбора (как mapPick).
+  try{MobileHost.send({action:'home'});MobileHost.send({action:'overview'});requestAnimationFrame(()=>{const app=$('app').getBoundingClientRect(),h=app.height||innerHeight,top=$('top').getBoundingClientRect().bottom;
+    MobileHost.send({action:'layout',top:(top-app.top)/h,bottom:(app.bottom-P.ui.getBoundingClientRect().top+8)/h});});}catch(e){}
+}
+function swapPickEnd(toSwap){const P=swapPicking;if(!P)return;swapPicking=null;const cv=$('board');
+  if(!toSwap)try{MobileHost.send({action:'home'});mobileLastLayout='';mobileLayout();}catch(e){}
+  if(cv){cv.removeEventListener('pointerdown',P.pd,true);cv.removeEventListener('pointerup',P.pu,true);}
+  for(const [,o] of P.rings)o.el.remove();P.ui.remove();document.body.classList.remove('mp-swap-picking');updateUi();}
+const taxiBtn=el('button','mp-taxi');taxiBtn.type='button';taxiBtn.hidden=true;taxiBtn.innerHTML='🚕<small><span class="full">на склад · </span>💎1</small>';
 taxiBtn.onclick=()=>{if(window.MPTaxi)MPTaxi.go();};
 function offerBadgeSync(){
   // входящая продажа (m5-sellto) — первой: «🏷 Вася продаёт «X» за $N», висит до ответа
@@ -1962,7 +2020,7 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();handSync();swapSync();
+  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();handSync();swapSync();hammerSync();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
@@ -2038,7 +2096,13 @@ function tick(){
   if(r&&r.width){
     const hx=Math.round(r.right+10)+'px',hy=Math.round(r.top+r.height/2)+'px';if(handEl.style.left!==hx||handEl.style.top!==hy){handEl.style.left=hx;handEl.style.top=hy;}
     const tOn=!!(window.MPTaxi&&MPTaxi.can()&&!moving&&$('modal').hidden);taxiBtn.hidden=!tOn;
-    if(tOn){const tx=Math.round(r.left-10)+'px';if(taxiBtn.style.left!==tx||taxiBtn.style.top!==hy){taxiBtn.style.left=tx;taxiBtn.style.top=hy;}}
+    // Слева от кубика: «Обмен» у кубика, такси (до броска) — над ним.
+    if(swapPicking&&!(myTurn()&&!ending&&$('modal').hidden))swapPickEnd();   // ход ушёл или открылось окно — выбор снимается
+    const sOn=swapCan()||!!swapPicking;swapBtn.hidden=!sOn;swapBtn.classList.toggle('on',!!swapPicking);
+    // Обе кнопки — узкой колонкой чуть левее кубика: не задевают плашку «Твой ход» над кубиком и склад слева.
+    const lx=Math.round(r.left-(sOn&&tOn?22:10))+'px';if(sOn&&(swapBtn.style.left!==lx||swapBtn.style.top!==hy)){swapBtn.style.left=lx;swapBtn.style.top=hy;}
+    taxiBtn.classList.toggle('compact',sOn&&tOn);
+    if(tOn){const ty=sOn?Math.round(r.top+r.height/2-(swapBtn.offsetHeight||52)-6)+'px':hy;if(taxiBtn.style.left!==lx||taxiBtn.style.top!==ty){taxiBtn.style.left=lx;taxiBtn.style.top=ty;}}
   }
   if(r&&r.width){const x=r.left+r.width/2,cy=r.top+r.height/2,above=r.top-8;
     const key=x+':'+cy;if(tag._k!==key){tag._k=key;
@@ -2312,7 +2376,7 @@ new MutationObserver(()=>{
 // ---- тап по чужой клетке на карте — её окно: рента, предложить цену или обмен (плейтест 5) ----
 {const cv=$('board');let down=null;
   if(cv){cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};},true);
-    cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||pick||swapUI||!view||view.phase!=='play'||!$('modal').hidden||moving)return;
+    cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||pick||swapUI||swapPicking||!view||view.phase!=='play'||!$('modal').hidden||moving)return;
       if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>8||!MobileHost.ready)return;
       let best=-1,bd=40;for(let i=0;i<40;i++){const q=screenOfTile(i),dd=Math.hypot(e.clientX-q.x,e.clientY-q.y);if(dd<bd){bd=dd;best=i;}}
       const t=best>=0&&S.tiles[best];if(!t||!isRival(t))return;
@@ -2425,10 +2489,29 @@ function syncFlags(){
 let lastOwners='';
 function owners(){const o={};if(view&&view.tiles&&view.phase!=='lobby')for(const t of view.tiles)if(t.owner&&(t.type==='kiosk'||t.type==='biz')){const p=playerOf(t.owner);o[t.i]={pid:t.owner,color:p?p.color:'#6b5f52',name:p?p.name:'',mine:t.owner===PID};}
   // Режим обмена, вкладка «После»: поле перекрашено в будущих хозяев (m5-swapmap).
+  for(const [i] of hammered)if(o[i])o[i]=Object.assign({},o[i],{color:'#8a8478'});
   if(swapUI&&swapUI.after){const a=swOwnersAfter(swapUI);for(const i of [...swapUI.give,...swapUI.get]){const p=playerOf(a[i]);if(p&&o[i])o[i]={pid:p.pid,color:p.color,name:p.name,mine:p.pid===PID};}}
   return o;}
 
 // ---- события соперников: журнал, всплытие над клеткой, плашка «тебе заплатили» ----
+// Свои события автору стол не пересылает (хаб шлёт evt только остальным) — свои плашки кредита и банкротства ставим при emit.
+function selfEvt(e){if(!e||(window.MPBots&&MPBots.acting()))return;const a=e.amount==null?0:Math.round(e.amount);
+  if(e.kind==='interest'&&a)plate('🏦 Проценты по кредиту',-Math.abs(a),e.loans>1?`${e.loans} кредита · каждый проход банка`:'каждый проход банка, пока не вернёшь');
+  if(e.kind==='debtwarn')debtWarnWindow(e);
+  if(e.kind==='bankrupt'){if(Array.isArray(e.tiles))hammerTiles(e.tiles,PID);const n=(e.tiles||[]).length;plate('🔨 Банкрот',0,`${n} ${plural(n,'клетка уходит','клетки уходят','клеток уходят')} с молотка`);}}
+{const base=emit;emit=function(e){const r=base.apply(this,arguments);try{if(e&&/^(interest|debtwarn|bankrupt)$/.test(e.kind))selfEvt(e);}catch(x){console.error(x);}return r;};}
+// Первый проход старта в минусе: жёсткое предупреждение. Второй подряд — банкрот, клетки уходят с молотка.
+async function debtWarnWindow(e){
+  while((!$('modal').hidden||moving)&&myTurn())await pollWait(300);
+  const minus=Math.abs(Math.round(e.amount||S.cash||0));
+  await modal(`<div class="mp-debtwarn"><b>⚠️ Ты в минусе на ${money(minus)}</b><p>Ещё раз пройдёшь старт в минусе — <u>банкрот</u>: твои клетки уйдут с молотка.</p>
+    <ul><li>возьми микрозайм в банке</li><li>продай товар или клетку</li><li>выставь клетку на торги</li></ul></div>`,[{t:'Понятно',v:1,cls:'bad'}]);
+}
+// Клетки банкрота — серые со штампом «с молотка», пока у них не сменится хозяин.
+const hammered=new Map();
+function hammerTiles(ids,pid){for(const i of ids){if(hammered.has(i))continue;const n=el('div','mp-hammer',layer);n.innerHTML='<b>с молотка</b>';hammered.set(i,{el:n,pid});}
+  try{syncFlags();}catch(x){}}
+function hammerSync(){if(!hammered.size)return;for(const [i,h] of hammered){const t=view&&view.tiles&&view.tiles[i];if(!t||t.owner!==h.pid||!view||view.phase!=='play'){h.el.remove();hammered.delete(i);}}}
 function onEvt(from,e){
   if(!e||!view)return;const p=playerOf(from);if(!p)return;
   const mine=e.to===PID,amount=e.amount==null?null:Math.round(e.amount);
@@ -2449,6 +2532,8 @@ function onEvt(from,e){
       feedAdd(p,/копилк/.test(e.text||'')?'bonus':e.kind,n.text,n.amount,mine||n.big,e.tile!=null?e.tile:null,n);
     }
   } else if(e.tile!=null&&amount)floatAt(e.tile,(amount>0?'+':'−')+money(Math.abs(amount)),amount>0?'#2f6b35':'#a92720');
+  // Кредит и банкротство (решение Андрея 14.10, m8-loaninterest / m8-bankrupt). События — «Геймплея»: interest, debtwarn, bankrupt.
+  if(e.kind==='bankrupt'&&from!==PID){if(Array.isArray(e.tiles))hammerTiles(e.tiles,from);plate(`🔨 ${p.name} — банкрот`,0,`клетки с молотка: ${(e.tiles||[]).map(cellNo).join(', ')} — ставь на торгах`);}
   if(mine&&e.kind==='offer')plate(`💼 Предложение · ${p.name}`,0,e.text.replace(/^предлагает /,'')+' · ответ — в начале твоего хода');
   if(mine&&e.kind==='sale')plate(`🤝 ${p.name} согласился`,-amount,e.text.replace(/^продал /,'')+' теперь твоя');
   if(mine&&e.kind==='decline')plate(`✋ ${p.name} отказал`,0,'деньги вернулись из резерва');
@@ -2545,7 +2630,7 @@ const notes=[];
 const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'🔨',bid:'🔨',won:'🔨',unsold:'🔨',bank:'🏦',bankrupt:'🏦',loan:'🏦',
   offer:'💼',sale:'🤝',saleoffer:'🏷',salebought:'🏷',decline:'✋',chance:'🎴',hand:'🃏',hit:'🎴',skip:'⏳',jail:'🚔',fine:'👮',insp:'📋',
   scatter:'💰',minigame:'🎰',double:'🎲',pass:'🏁',bonus:'💵',underdog:'🤝',taxi:'🚕',swap:'🔁',swapcounter:'🔁',swapped:'🔁',
-  swapdecline:'🔁',swapvoid:'🔁',map:'🗺',handoff:'🔁'};
+  swapdecline:'🔁',swapvoid:'🔁',map:'🗺',handoff:'🔁',interest:'🏦',debtwarn:'⚠️'};
 const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
@@ -2630,6 +2715,8 @@ function frame(now){
   }
   for(const [,f] of flags){const p=screenOfTile(f.i);f.el.style.transform=`translate(${p.x}px,${p.y-26}px)`;}
   if(pick)for(const [i,r] of pick.rings){const p=screenOfTile(i);r.style.transform=`translate(${p.x}px,${p.y}px)`;}
+  for(const [i,h] of hammered){const q=screenOfTile(i);h.el.style.transform=`translate(${q.x}px,${q.y}px)`;}
+  if(swapPicking)for(const [i,o] of swapPicking.rings){const q=screenOfTile(i);o.el.style.transform=`translate(${q.x}px,${q.y}px)`;}
   if(swapUI){for(const [i,r] of swapUI.rings){const q=screenOfTile(i);r.style.transform=`translate(${q.x}px,${q.y}px)`;}
     for(const c of swapUI.chains){const a=screenOfTile(c.a),b=screenOfTile(c.b);c.el.style.transform=`translate(${(a.x+b.x)/2}px,${(a.y+b.y)/2-18}px)`;}}
   for(const it of notes){const p=screenOfTile(it.tile);it.el.style.transform=`translate(${p.x}px,${p.y-30}px)`;}
@@ -2824,13 +2911,16 @@ async function enter(){
   // Уже сидел за этим столом в этой вкладке — возвращаем сразу; пришёл по ссылке — сначала имя.
   if(ROOM&&myName&&ss('abmp_joined_'+ROOM)){renderWait(`Садимся за стол ${ROOM}…`);connectAsClient(ROOM,false);return;}
   // Этот браузер уже сидел за этим столом (вкладку закрыли) — садимся тем же игроком, без экрана входа.
-  // Бывший хозяин, которому за 7 с никто не ответил (стол никто не принял), поднимает стол из своего сохранения.
+  // Бывший хозяин стола с одними ботами, которому за 7 с никто не ответил, поднимает стол из своего сохранения.
   {let seat=null;try{seat=JSON.parse(ls('abmp_seat_'+ROOM)||'null');}catch(e){}
     // За этим столом сейчас сидит другая вкладка этого браузера — её место не занимаем, обычный экран входа.
     if(ROOM&&seat&&seat.pid&&Date.now()-(seat.t||0)<12*3600e3&&!(await tabAtTable(ROOM))){
       PID=seat.pid;ss('abmp_pid',PID);if(seat.name){myName=seat.name;ls('abmp_name',myName);}backFromAway=!!seat.host;
       renderWait(`Возвращаемся за стол ${ROOM}…`);connectAsClient(ROOM,false);
-      if(seat.host&&ls('abmp_host_'+ROOM))setTimeout(()=>{if(view||!net||net.host)return;net.stopped=true;backFromAway=false;
+      // Стол забирает назад только бывший хозяин стола без других живых игроков (одни боты): иначе его принял живой
+      // игрок, и вернувшийся садится игроком (решение по 197b5bd, 14.10) — даже если ретранслятор медлит.
+      const soloHost=(()=>{try{const T=JSON.parse(ls('abmp_host_'+ROOM)||'null');return !!T&&(T.players||[]).every(p=>p.pid===PID||/^bot\d/.test(p.pid));}catch(e){return false;}})();
+      if(seat.host&&soloHost)setTimeout(()=>{if(view||!net||net.host)return;net.stopped=true;backFromAway=false;
         ss('abmp_hosting',ROOM);renderWait('Возвращаем стол…');hostTable(ROOM).catch(e=>lobbyError('Стол не открылся: '+(e.type||e.message)));},7000);
       return;}}
   renderEntry();
