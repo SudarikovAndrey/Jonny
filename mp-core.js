@@ -120,6 +120,7 @@ function applyState(T,pid,pack,now){
   const p=active(T);
   // Резерв под лидирующие ставки (mpHold) ведёт ядро: клиент мог не успеть узнать о нём — сверяем нал по резерву стола.
   if(pack.s){const h=(p.s&&p.s.mpHold)||0,ph=pack.s.mpHold||0;if(h!==ph){pack.s.cash=(pack.s.cash||0)-(h-ph);pack.s.mpHold=h;}p.s=pack.s;}
+  if(p.s&&p.s.mpOut)p.out=true;   // банкрот (14.10): выбыл навсегда, в очереди ходов его больше нет
   // Кто-то первым прошёл старт в N-й раз — доигрываем текущий раунд стола (у всех поровну ходов) и считаем итог.
   if(modeOf(T)==='laps'&&!T.finalRound&&lapsOf(p)>=T.settings.rounds){T.finalRound=T.turn.round;T.finalBy=p.pid;}
   if(pack.tiles)T.tiles=mergeTiles(T.tiles,pack.tiles,pid,pack.credits||[]);
@@ -201,8 +202,12 @@ function tablePause(T,pid,on,now,name){
   T.paused=null;return true;
 }
 function nextIdx(T,idx){return (idx+1)%T.players.length;}
+// Банкротство (решение продюсера 14.10): выбывший не ходит; остался один — он и победил.
+const alive=T=>T.players.filter(p=>!p.out);
+function lastStanding(T){const a=alive(T);if(T.players.length>1&&a.length<=1){finish(T,'bankrupt',a[0]?a[0].pid:null);return true;}return false;}
 function advance(T,now){
   if(T.phase!=='play')return;
+  if(lastStanding(T))return;
   let guard=0;
   while(guard++<T.players.length*2){
     let idx=T.turn.idx,round=T.turn.round;
@@ -211,6 +216,7 @@ function advance(T,now){
     T.turn={idx,pid:T.players[idx].pid,n:T.turn.n+1,round,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
     resolveLots(T);
     const p=active(T);
+    if(p.out)continue;
     // Карта «Шанса» соперника: пропуск хода. Отвалившегося не считаем — его и так пропустят.
     if(p.skip>0&&p.online){p.skip--;event(T,{from:p.pid,kind:'skip',text:'пропускает ход',amount:null,tile:null,to:p.pid});continue;}
     break;
@@ -220,7 +226,7 @@ function advance(T,now){
 // Отвалившегося пропускаем сразу, остальные его не ждут. Все офлайн — стол стоит.
 function skipOffline(T,now){
   let guard=0;
-  while(T.phase==='play'&&!active(T).online&&T.players.some(p=>p.online)&&guard++<T.players.length*2){
+  while(T.phase==='play'&&(!active(T).online||active(T).out)&&T.players.some(p=>p.online&&!p.out)&&guard++<T.players.length*2){
     let idx=nextIdx(T,T.turn.idx),round=T.turn.round;if(idx===0)round++;
     if(round>T.turn.round&&(T.finalRound||round>T.settings.rounds*ROUND_CAP)){finish(T,'rounds');return;}
     T.turn={idx,pid:T.players[idx].pid,n:T.turn.n+1,round,rolled:false,landed:false,timedOut:false,endsAt:deadline(T,now,T.settings.turnSec*1000)};
@@ -442,7 +448,7 @@ function viewFor(T,pid,valuer){
   return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
     tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),slotPot:Math.round(T.slotPot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
-      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,effects:effectsOf(T,p),hand:p.s&&Array.isArray(p.s.mpHand)?p.s.mpHand.length:0,   // число карт в руке видно всем, какие — нет
+      pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,effects:effectsOf(T,p),out:!!p.out,debtLaps:p.s?p.s.mpDebtLaps||0:0,hand:p.s&&Array.isArray(p.s.mpHand)?p.s.mpHand.length:0,   // число карт в руке видно всем, какие — нет
       jail:p.s?p.s.jail||0:0,cash:p.s?Math.round(p.s.cash||0):0,skip:p.skip||0,
       cap:T.tiles&&valuer?capital(T,p.pid,valuer):null,chain:T.tiles?sfChain(T,p.pid):null,win:T.tiles?winProgress(T,p.pid,valuer):null})),
     mine:me&&me.s?me.s:null};

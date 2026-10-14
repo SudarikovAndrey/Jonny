@@ -640,3 +640,24 @@ body.mp-ver-stale .mp-menubtn::after{content:"";position:absolute;top:-3px;right
   background:rgba(120,114,104,.55);border:3px dashed #25221c;display:grid;place-items:center}
 .mp-hammer b{rotate:-12deg;padding:1px 5px;background:#a92720;color:#fbf0d4;border:1.5px solid #25221c;border-radius:4px;font:900 10px var(--mp-num);white-space:nowrap}
 #boot #startFriends[hidden]{display:none}
+/* своя клетка не в свой ход — только посмотреть */
+#card.mp-readonly .property-body button:disabled,#card.mp-readonly .uup button:disabled{opacity:.45;filter:grayscale(.6)}
+#card .mp-ro-note{margin:0 0 6px;text-align:center;font:700 13px var(--mp-txt);color:#5b4c35}
+
+/* Карточка своей клетки (m7-ui, 04.10): картинка крупная и не сжимается, «за проход / за остановку» — одна строка, торги — в углу */
+body.mp-mode #card.print-property .property-picture{flex:none!important;height:clamp(150px,24dvh,200px)!important;max-height:none!important;position:relative}
+#card .mp-guest-rent{display:grid!important;grid-template-columns:1fr 1fr;gap:4px 10px;padding:6px 10px!important}
+#card .mp-guest-rent .gr-c{display:flex;flex-direction:column;min-width:0}
+#card .mp-guest-rent .gr-c small{font:700 12px var(--mp-txt);color:#5b4c35;white-space:nowrap}
+#card .mp-guest-rent .gr-c>span{display:flex;align-items:center;gap:4px;font:800 19px var(--mp-num);white-space:nowrap}
+#card .mp-guest-rent .gr-c b{display:flex;align-items:center;gap:2px}
+#card .mp-guest-rent .cash-glyph{width:16px;height:16px}
+#card .uup .uup-stat.mp-moved,#card .property-body>.box.mp-moved{display:none!important}
+#card .property-picture .mp-lot-btn.corner{position:absolute;right:2px;top:2px;width:auto;min-height:0;padding:4px 9px!important;font:800 12px var(--mp-num)!important;border-radius:999px!important;z-index:2}
+/* запас и прибыль — в кнопке «Улучшить» (+3 мест · +6 за круг) и строке «за проход / за остановку»; отдельный блок не нужен */
+body.mp-mode #card .uup .uup-stats{display:none}
+.mp-seg button .mp-win-goal{display:block;font:600 10.5px/1.2 var(--mp-txt);opacity:.8;margin-top:1px;white-space:normal}
+/* итог: победа по миссии — крупной плашкой, чтобы не путали с капиталом (m7-ui) */
+.mp-win-banner{margin:4px 0 8px;padding:10px 12px;border:3px solid var(--c,#c99a32);border-radius:11px 13px 10px 12px;background:#fbf0d4;text-align:center}
+.mp-win-banner b{display:block;font:900 19px/1.2 var(--mp-num);color:#25221c}
+.mp-win-banner small{display:block;margin-top:3px;font:600 13px var(--mp-txt);color:#5b4c35}

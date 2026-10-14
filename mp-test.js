@@ -608,7 +608,11 @@ function debtHidden({credit,emit,v,after,bot}){
   if(S.cash>=0)return;
   if(!(S.loans||[]).some(l=>l.micro)){const amt=Math.min(500,Math.max(100,Math.ceil((-S.cash+50)/50)*50));S.loans=S.loans||[];S.loans.push({tier:0,micro:true,name:'Микрозайм',principal:amt,rate:.25,strikes:0,maxStrikes:99});S.cash+=amt;emit({kind:'loan',text:`взял микрозайм $${amt}`,amount:amt,tile:S.pos});trace.push(bot.name+': микрозайм $'+amt);}
   if(S.cash<0){let v2=0;for(const k of myKiosks()){v2+=Math.round((k.goods||0)*buyPrice(k.good)*.5);k.goods=0;}if(v2>0){S.cash+=v2;emit({kind:'sale',text:`продал товар с точек за $${v2}`,amount:v2,tile:S.pos});}}
-  if(S.cash<0&&(S.mpDebtLaps||0)>=2){let need=-S.cash;const V=valOf(H.PID);freshSnap();
+  // 14.10: второй проход старта в минусе — банкрот, как у игрока: все клетки с молотка от половины вложенного, бот выбывает.
+  if(S.cash<0&&(S.mpDebtLaps||0)>=2&&!S.mpOut){const ts=S.tiles.filter(x=>x.owner&&(x.type==='kiosk'||x.type==='biz')&&!(typeof sfIsLot==='function'&&sfIsLot(x))&&!H.lotOn(x.i));
+    for(const x of ts){const p=Math.max(10,Math.round(H.invested(x)*.5/10)*10);after.push({t:'lot',tile:x.i,min:p,kind:'bankrupt',bank:p});}
+    S.mpOut=true;emit({kind:'bankrupt',text:'обанкротился — клетки ушли с молотка',amount:Math.round(S.cash),tiles:ts.map(x=>x.i),tile:S.pos});return;}
+  if(false){let need=-S.cash;const V=valOf(H.PID);freshSnap();
     // Сначала то, что меньше всего ломает его улицы (потеря ценности на доллар базы).
     const mine=S.tiles.filter(x=>x.owner&&(x.type==='kiosk'||x.type==='biz')&&!(typeof sfIsLot==='function'?sfIsLot(x):(!x.owner&&(x.lot||x.good==='lot')))&&!H.lotOn(x.i))
       .map(x=>({x,k:-gainOf({[x.i]:null},V)/Math.max(1,baseAt(x.i))})).sort((a,c)=>a.k-c.k).map(e=>e.x);
