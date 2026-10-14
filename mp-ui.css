@@ -639,3 +639,4 @@ body.mp-ver-stale .mp-menubtn::after{content:"";position:absolute;top:-3px;right
 .mp-hammer{position:absolute;left:0;top:0;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;pointer-events:none;
   background:rgba(120,114,104,.55);border:3px dashed #25221c;display:grid;place-items:center}
 .mp-hammer b{rotate:-12deg;padding:1px 5px;background:#a92720;color:#fbf0d4;border:1.5px solid #25221c;border-radius:4px;font:900 10px var(--mp-num);white-space:nowrap}
+#boot #startFriends[hidden]{display:none}

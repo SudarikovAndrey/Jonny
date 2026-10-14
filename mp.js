@@ -2915,6 +2915,13 @@ function showOver(v){
 }
 
 // ---- вход ----
+// Обложка на mp.html (m8-friendsbtn, запись 124): «С друзьями» вело на mp.html, где та же обложка с той же кнопкой —
+// новому игроку казалось, что ничего не происходит. Здесь «С друзьями» не нужна;
+// пришёл с обложки игры — заходим к столу сами, как только поле готово.
+{const fr=document.getElementById('startFriends'),pl=document.getElementById('startPlay');
+  if(fr)fr.hidden=true;   // подпись «Играть» не меняем: по ней сценарии проверки других чатов находят кнопку
+  let fromStart=false;try{const r=document.referrer&&new URL(document.referrer);fromStart=!!r&&r.origin===location.origin&&!/mp\.html$/.test(r.pathname);}catch(e){}
+  if(fromStart&&pl){const go=()=>{const b=document.getElementById('boot');if(!b||b.hidden)return;if(!pl.disabled){pl.click();return;}setTimeout(go,250);};setTimeout(go,300);}}
 async function enter(){
   try{if(window.GameStart&&GameStart.whenEntered)await GameStart.whenEntered;}catch(e){}
   if(ROOM&&ss('abmp_hosting')===ROOM&&ls('abmp_host_'+ROOM)&&myName){renderWait('Возвращаем стол…');hostTable(ROOM).catch(e=>lobbyError('Стол не открылся: '+(e.type||e.message)));return;}
