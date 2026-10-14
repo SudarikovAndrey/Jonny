@@ -340,7 +340,9 @@ function applyHit(T,pid,h){
       if(!lost)return false;event(T,{from:pid,kind:'hit',text:`у ${to.name} испортилось ${lost} шт товара`,amount:null,tile:null,to:to.pid});return true;}
     // «Сходка»: сам пропускаешь следующий ход (плата за карту).
     case 'rest':{const me=T.players.find(x=>x.pid===pid);if(!me)return false;me.skip=(me.skip||0)+1;event(T,{from:pid,kind:'hit',text:`${me.name} пропустит следующий ход — сходка`,amount:null,tile:null,to:pid});return true;}
-    case 'insp':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||t.insp)return false;t.insp=true;
+    case 'insp':{const t=T.tiles&&T.tiles[h.tile];if(!t||!t.owner||t.owner===pid||t.type!=='kiosk'||t.insp)return false;
+      {const o=T.players.find(x=>x.pid===t.owner);if(o&&o.s&&(o.s.cash||0)<0)return false;}   // 14.10: должника инспектор жалеет
+      t.insp=true;
       event(T,{from:pid,kind:'hit',text:`натравил инспектора на точку ${pnameOf(T,t.owner)}`,amount:null,tile:t.i,to:t.owner});return true;}
   }
   return false;

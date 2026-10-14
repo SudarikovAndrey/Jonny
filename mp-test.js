@@ -522,6 +522,7 @@ function chanceHidden({credit,emit,v,after}){
   emit({kind:'chance',text,amount,tile:S.pos,hits});
 }
 function inspHidden(t,{emit}){
+  if((S.cash||0)<0){emit({kind:'insp',text:'инспектор пожалел — у игрока долги, проверок нет',amount:null,tile:t.i});trace.push('бот: инспектор пожалел — долги');return;}   // 14.10
   const own=S.tiles.filter(x=>(x.type==='kiosk'||x.type==='biz')&&x.owner&&unlocked(x));
   if(own.length<(CFG.INSP.minOwn||0)){emit({kind:'insp',text:'инспектору пока некого проверять',amount:null,tile:t.i});return;}
   const active=own.filter(x=>x.insp).length,lapCap=1+Math.floor(Math.max(0,(S.laps||0)-(CFG.INSP.fromLap||0))/(CFG.INSP.lapStep||3));

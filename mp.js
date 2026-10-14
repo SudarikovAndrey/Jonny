@@ -747,12 +747,22 @@ function mpLeader(){
   const mo=Math.max(0,...others.map(own)),mt=Math.max(0,...others.map(p=>p.cap?p.cap.total:0));
   return (own(me)>=4&&own(me)>=mo*1.5)||(own(me)>=3&&me.cap.total>=mt*1.5);
 }
+// Инспектор жалеет должника (решение 14.10, SDHY: Bob в −963 получил две проверки — «отстающего добивают»): у кого нал в минусе,
+// тому проверки не ставит ни клетка инспектора, ни карты «Жалоба соседей» / «Проверка лидера». Порог 3 владения и потолок лидеру — как были.
+// hazard задаёт inspector.js, который грузится после mp.js, — обёртку ставим при первом виде стола.
+const INSP_MERCY='📋 Инспектор пожалел: «С тебя и так долги трясут — зайду, когда выберешься». Проверок нет.';
+const inDebt=pid=>{if(pid===PID)return (S.cash||0)<0;const p=playerOf(pid);return !!p&&(+p.cash||0)<0;};
+function inspMercyHook(){if(typeof hazard!=='function'||hazard.mpMercy)return;const base=hazard;
+  hazard=async function(){if(view&&view.phase==='play'&&myTurn()&&(S.cash||0)<0){toast(INSP_MERCY,3200);log(INSP_MERCY);
+      emit({kind:'insp',text:'инспектор пожалел — у игрока долги, проверок нет',amount:null,tile:S.pos});return;}
+    return base.apply(this,arguments);};hazard.mpMercy=true;}
 function adopt(v){
   if(!v.mine||!v.tiles)return;
   const s=clone(v.mine);s.tiles=toLocal(v.tiles);S=s;
   S.pot=Math.round(v.pot||0);   // копилка общая на стол: своя цифра в срезе — только для отрисовки
   syncSlotPot();
   const lead=mpLeader();CFG.INSP.limit=lead?4:3;CFG.INSP.fineShare=lead?.75:.5;
+  inspMercyHook();
   if(lead!==wasLead){wasLead=lead;if(lead)toast('📋 Ты в отрыве — инспекторов больше и штрафы выше',3000);}
   try{render();}catch(e){console.error(e);}
 }
@@ -1112,7 +1122,7 @@ shopHard=function(){toast('В партии кристаллы не продаю�
 // проверка) — сообщением hit хозяину стола (ядро applyHit). Колода общая для всех карт, без коллекции и редкостей.
 const rivalsOf=()=>view?view.players.filter(p=>p.pid!==PID):[];
 const richestRival=()=>rivalsOf().slice().sort((a,b)=>(b.cap?b.cap.total:b.cash)-(a.cap?a.cap.total:a.cash))[0];
-const bestRivalTile=()=>S.tiles.filter(t=>isRival(t)&&t.type==='kiosk'&&!t.insp&&!(t.frozen>view.turn.n)).sort((a,b)=>invested(b)-invested(a))[0];
+const bestRivalTile=()=>S.tiles.filter(t=>isRival(t)&&t.type==='kiosk'&&!t.insp&&!(t.frozen>view.turn.n)&&!inDebt(t.rival)).sort((a,b)=>invested(b)-invested(a))[0];
 // Удар уходит хозяину стола, а клетку меняем и у себя: иначе следующий пакет хода вернул бы её старое состояние
 // (mergeTiles принимает от активного игрока drop/insp на чужих клетках — «Жалоба соседей» тут же снималась).
 function hit(h){if(!(myTurn()&&net))return;const t=h.tile!=null&&S.tiles[h.tile];
@@ -1168,14 +1178,14 @@ const HAND={
     play:pid=>{const all=S.tiles.filter(t=>t.rival===pid&&(t.type==='kiosk'||t.type==='biz')),n=Math.max(1,Math.ceil(all.length*0.2));
       const ts=all.filter(t=>!(t.frozen>view.turn.n)).sort((a,b)=>invested(b)-invested(a)).slice(0,n);ts.forEach(t=>hit({k:'freeze',tile:t.i}));
       return `❄️ Отключили свет: ${ts.map(t=>'«'+titleOf(t)+'»').join(', ')} (${nameOf(pid)}) круг не берут ренту.`;}},
-  complaint:{name:'📋 Жалоба соседей',text:'инспектор в самую дорогую точку соперника',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
+  complaint:{name:'📋 Жалоба соседей',text:'инспектор в самую дорогую точку соперника',ok:pid=>!inDebt(pid)&&!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
     play:pid=>{const t=topTileOf(pid,t=>t.type==='kiosk'&&!t.insp);hit({k:'insp',tile:t.i});return `📋 Жалоба соседей: инспектор идёт в «${titleOf(t)}» (${nameOf(pid)}).`;}},
   dumping:{name:'📉 Демпинг',text:'следующий проход старта соперника — продажи вдвое меньше',play:pid=>{hit({k:'cut',to:pid,cut:0.5});return `📉 Демпинг: у ${nameOf(pid)} следующий проход старта — продажи вдвое меньше.`;}},
   spoiled:{name:'🦠 Просрочка',text:'портится и пропадает половина всего запаса соперника',ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&t.goods>0),
     play:pid=>{let n=0;for(const t of S.tiles)if(t.rival===pid&&t.type==='kiosk'&&t.goods>0){const k=Math.ceil(t.goods/2);t.goods-=k;n+=k;}hit({k:'spoilAll',to:pid});return `🦠 Просрочка: у ${nameOf(pid)} пропала половина запаса — ${n} шт.`;}},
   // Против лидера (идея Сани): цель — лидер по капиталу, сыграть можно, только если лидер не ты.
   levy:{name:'🧾 Налоговая',text:'лидер платит 30% наличных в копилку',leader:true,play:pid=>{hit({k:'levy',to:pid});return `🧾 Налоговая к лидеру: ${nameOf(pid)} платит 30% наличных в копилку.`;}},
-  audit:{name:'🔎 Проверка лидера',text:'инспектор в две самые дорогие точки лидера',leader:true,ok:pid=>!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
+  audit:{name:'🔎 Проверка лидера',text:'инспектор в две самые дорогие точки лидера',leader:true,ok:pid=>!inDebt(pid)&&!!topTileOf(pid,t=>t.type==='kiosk'&&!t.insp),
     play:pid=>{const ts=S.tiles.filter(t=>t.rival===pid&&t.type==='kiosk'&&!t.insp).sort((a,b)=>invested(b)-invested(a)).slice(0,2);ts.forEach(t=>hit({k:'insp',tile:t.i}));return `🔎 Проверка лидера: инспектор в ${ts.map(t=>'«'+titleOf(t)+'»').join(' и ')} (${nameOf(pid)}).`;}},
   strike:{name:'✊ Забастовка',text:'следующий проход старта лидера — без продаж',leader:true,play:pid=>{hit({k:'cut',to:pid,cut:0});return `✊ Забастовка: у ${nameOf(pid)} следующий проход старта без продаж.`;}},
 };
