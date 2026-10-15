@@ -2,6 +2,7 @@
 function costcoArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'costco-atlas.webp',1222,1287);}
 const COSTCO_ICONS={gum:[715,1132,83,88],cola:[808,1127,58,92],bud:[880,1130,66,90],tape:[949,1137,77,82],marl:[1032,1125,87,95]};
 let warehouseScroll=0,warehouseStocks={},warehouseLeft='';
+const skippedText=list=>list.length?`Пропущено: ${list.map(x=>'«'+x.title+'»').join(', ')} — под проверкой, сначала заплати штраф.`:'';
 function decorateWarehouse(card){
  if(!card.querySelector('#wNo')||card.querySelector('.warehouse-shell'))return;
  card.className='card warehouse-card';
@@ -21,7 +22,7 @@ function decorateWarehouse(card){
   meta.classList.add('warehouse-meta');row.append(meta);
   // Проверка на точке (m8-warehouse, запись 124): товар туда ляжет, но продаж нет, пока не заплачен штраф — говорим прямо в строке.
   const insp=goodKiosks(id).filter(t=>t.insp);
-  if(insp.length){const w=document.createElement('small');w.className='warehouse-insp';w.textContent=`📋 Проверка: ${insp.map(t=>'«'+pointName(t)+'»').join(', ')} — не продаёт, пока не заплатишь штраф`;row.append(w);}
+  if(insp.length){const w=document.createElement('small');w.className='warehouse-insp';w.textContent=`📋 Проверка: ${insp.map(t=>'«'+pointName(t)+'»').join(', ')} — не продаёт и не пополняется, пока не заплатишь штраф`;row.append(w);}
   if(stockNow<capacity)button.innerHTML=`<span>Купить 1</span><span class="warehouse-unit-price">$${buyPrice(id)}</span>`;
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
@@ -39,8 +40,11 @@ function decorateWarehouse(card){
  if(all){
   // Primary action states whether the budget can fill every point.
   const text=all.querySelector('span');
-  const need=myKiosks().reduce((sum,t)=>sum+(cap(t)-t.goods)*buyPrice(t.good),0);
+  // Точки под проверкой «Пополнить всё» пропускает (Геймплей d992973, решение Андрея 14.10) — и в сумме их нет.
+  const need=myKiosks().filter(t=>!t.insp).reduce((sum,t)=>sum+(cap(t)-t.goods)*buyPrice(t.good),0);
   if(text)text.textContent=need<=0?'Точки заполнены':S.cash>=need?'Пополнить всё':'Купить максимум';
+  const sum=all.querySelector('b');if(sum)sum.textContent=need<=0?'':'$'+(S.cash>=need?need:S.cash);   // сумма прототипа считала и точки под проверкой
+  if(need<=0)all.disabled=true;
   if(need>0&&S.cash<need)all.querySelector('b').prepend('до ');
   all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
   const buys=document.createElement('div');buys.className='warehouse-buys';
@@ -48,8 +52,8 @@ function decorateWarehouse(card){
   // После «Пополнить всё» — чего не хватило и почему (запись 124: «купилось всё, кроме джинсов» — без объяснения).
   // Закупка идёт по выгоде на доллар: кончились деньги — дорогой товар остаётся последним.
   all.addEventListener('click',()=>setTimeout(()=>{
-   const left=CFG.GOODS.filter(g=>goodKiosks(g.id).length).map(g=>({g,n:goodCap(g.id)-stock(g.id)})).filter(x=>x.n>0);
-   warehouseLeft=left.length?`Не хватило денег: ${left.map(x=>`${x.g.name} — ещё ${x.n} шт. по $${buyPrice(x.g.id)}`).join(' · ')}. Сначала берём самое выгодное.`:'';
+   const left=CFG.GOODS.map(g=>({g,n:goodKiosks(g.id).filter(t=>!t.insp).reduce((a,t)=>a+cap(t)-t.goods,0)})).filter(x=>x.n>0);
+   warehouseLeft=[skippedText((window.Restock&&Restock.lastSkipped)||[]),left.length?`Не хватило денег: ${left.map(x=>`${x.g.name} — ещё ${x.n} шт. по $${buyPrice(x.g.id)}`).join(' · ')}. Сначала берём самое выгодное.`:''].filter(Boolean).join(' ');
    const n=document.querySelector('#card .warehouse-buy-note');if(n&&warehouseLeft){n.textContent=warehouseLeft;n.classList.add('warn');}
   },0));
   // Вторая закупка — на половину суммы «на всё» (а не половину кармана, иначе
@@ -72,7 +76,9 @@ function decorateWarehouse(card){
     buys.append(half); enamelButton(half);
   }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
-  const note=document.createElement('small');note.className='warehouse-buy-note'+(warehouseLeft?' warn':'');note.textContent=warehouseLeft?warehouseLeft:canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
+  // До покупки — сразу видно, что точки под проверкой пропустят (список «Геймплея», Restock.plan().skipped).
+  const skipNow=!warehouseLeft&&window.Restock?skippedText(Restock.plan(0).skipped||[]):'';
+  const note=document.createElement('small');note.className='warehouse-buy-note'+(warehouseLeft||skipNow?' warn':'');note.textContent=warehouseLeft?warehouseLeft:skipNow?skipNow:canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
  }else{
   const done=document.createElement('button');done.className='sec';done.textContent='На карту';done.onclick=()=>closeModal();footer.append(done);enamelButton(done);
  }
