@@ -4281,7 +4281,7 @@ vec3 practicalLight(vec3 world, vec3 normal) {
   for (int i = 0; i < 14; i++) { if (float(i) >= lampCount) break;
     vec3 delta = lampPositions[i] - world; float dist = length(delta);
     float facing = max(dot(normal, normalize(delta)), 0.0);
-    result += vec3(1.0, 0.57, 0.21) * exp(-dist * dist / 2.0) * (0.25 + 0.75 * facing) * 1.55;
+    result += vec3(1.0, 0.57, 0.21) * exp(-dist * dist / 3.2) * (0.25 + 0.75 * facing) * 1.9;
   }
   return result * night * lampsOn + engineLight(world);
 }
@@ -4308,8 +4308,8 @@ vec3 windowGlow(vec3 color, vec2 uv) {
   if (e.a + g.a < 0.002) return color;
   int circuit = int(floor(texture2D(circuitMap, uv).r * 255.0 + 0.5));
   float on = 0.0; for (int i = 0; i < 12; i++) { if (i == circuit) on = buildingLevels[i]; }
-  color = mix(color, e.rgb * vec3(1.18, 1.02, 0.78), e.a * on * 0.91);
-  return color + g.rgb * g.a * on * 1.1;
+  color = mix(color, e.rgb * vec3(1.25, 1.08, 0.82), e.a * on * 0.95);
+  return color + g.rgb * g.a * on * 1.7;
 }
 vec3 shoulder(vec3 color) { float m = max(color.r, max(color.g, color.b)); return color * (m > 0.88 ? (0.88 + 0.12 * (1.0 - exp(-(m - 0.88) / 0.12))) / m : 1.0); }
 vec3 nightTint(vec3 c) { return mix(c, vec3(dot(c, vec3(0.299, 0.587, 0.114))) * vec3(0.72, 0.88, 1.14), night * 0.16); }
@@ -4591,7 +4591,7 @@ float inkLine(float d, float width) {
       void main(){
         vec3 n = normalize(vNormalW);
         // \u0421\u0432\u0435\u0442 \u0441\u0443\u0442\u043E\u043A (daylight.js): \u0434\u043D\u0451\u043C 1, \u043D\u043E\u0447\u044C\u044E \u0442\u0435\u043C\u043D\u0435\u0435 \u0441 \u043D\u0438\u0436\u043D\u0438\u043C \u043F\u043E\u0440\u043E\u0433\u043E\u043C \u2014 \u043F\u043E\u043B\u0435 \u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F.
-        vec3 dayLight = lightOn ? max(sceneLight(vWorld, n), vec3(0.22, 0.25, 0.32)) : vec3(1.0);
+        vec3 dayLight = lightOn ? max(sceneLight(vWorld, n), vec3(0.36, 0.39, 0.46)) : vec3(1.0);
         float shade = n.y > 0.5 ? 1.0 : (n.x > 0.5 ? 0.73 : 0.85);
         float grain = (hash(floor(vLocal * 450.0)) - 0.5) * 0.018;
         float wash = sin(vLocal.x * 16.0 + vLocal.z * 23.0) * 0.008;

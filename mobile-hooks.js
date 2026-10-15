@@ -17,7 +17,7 @@ function mobileSync(){
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
     // lvl считается и у чужих клеток в партии (t.rival) — башенки соперников (плейтест 02.10)
-    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?potShown():0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.drop||(t.insp?{insp:1}:null),
+    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?potShown():0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.insp?Object.assign({},t.drop,{insp:1}):(t.drop||null),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+potShown():t.type==='slot'?(window.MinigameRotation&&MinigameRotation.current(S.minigames)==='dice21'?'':'$'+((S.slot&&S.slot.pot)||0)):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -238,7 +238,11 @@ cv.addEventListener('wheel',e=>{
   e.preventDefault();
   const unit=e.deltaMode===1?16:e.deltaMode===2?cv.getBoundingClientRect().height:1;
   const dx=e.deltaX*unit,dy=e.deltaY*unit;
-  if(e.ctrlKey||e.metaKey){
+  // Колесо мыши в партии — приближение, как в картах: на ПК поле стола видно почти целиком, тянуть было некуда,
+  // и карта отскакивала резинкой (m8-camera, запись 124). Тачпад шлёт дробные шаги или wheelDeltaY = −3·deltaY — он по-прежнему двигает.
+  const mouseWheel=document.body.classList.contains('mp-mode')&&!e.shiftKey&&(e.deltaMode===1||(!e.deltaX&&Number.isInteger(e.deltaY)&&Math.abs(e.deltaY)>=50&&!(e.wheelDeltaY&&e.wheelDeltaY===-3*e.deltaY)));
+  if(mouseWheel&&!e.ctrlKey&&!e.metaKey)MobileHost.send({action:'zoom',factor:Math.exp(Math.sign(dy)*Math.min(Math.abs(dy),240)*.0016)});
+  else if(e.ctrlKey||e.metaKey){
     // Trackpad pinch arrives as Ctrl+wheel; magnitude matters, not just its sign.
     MobileHost.send({action:'zoom',factor:Math.exp(Math.max(-120,Math.min(120,dy))*.008)});
   }else{
