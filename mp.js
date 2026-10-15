@@ -295,7 +295,7 @@ function Hub(room,restored,ho){
   let snapAt=0;
   function snapOut(now){
     if(now-snapAt<2500||NET==='p2p')return;snapAt=now;
-    const heirs=T.players.filter(p=>p.pid!==PID&&p.online&&!/^bot\d/.test(p.pid)&&links.has(p.pid)).sort((a,b)=>a.seat-b.seat).slice(0,3);
+    const heirs=C.heirs(T,PID).filter(p=>links.has(p.pid)).slice(0,3);
     if(!heirs.length)return;const m={t:'tsnap',T,now,ep:T.epoch};
     for(const p of heirs)links.get(p.pid)(m);
   }
@@ -593,7 +593,7 @@ function watchHost(){
   // Кроме хозяина за столом есть другие люди — берём стол, только если их пульс слышен (иначе без связи мы сами).
   const others=tsnap.T.players.filter(p=>p.pid!==PID&&p.pid!==tsnap.T.hostPid&&p.online&&!/^bot\d/.test(p.pid));
   if(NET==='relay'&&others.length&&now-lastPeerAt>6000)return;
-  const T=tsnap.T,heirs=T.players.filter(p=>p.pid!==T.hostPid&&p.online&&!/^bot\d/.test(p.pid)).sort((a,b)=>a.seat-b.seat);
+  const T=tsnap.T,heirs=C.heirs(T,T.hostPid);
   const k=heirs.findIndex(p=>p.pid===PID);if(k<0||quiet<HANDOFF_MS+k*HANDOFF_STEP)return;
   takeTable();
 }

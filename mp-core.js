@@ -454,7 +454,10 @@ function viewFor(T,pid,valuer){
     mine:me&&me.s?me.s:null};
 }
 
-const api={effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+// Преемники стола (передача стола, если хозяин пропал): живые люди онлайн, кроме хозяина; сначала те, кто ещё в партии,
+// по месту, выбывшие банкроты — в конце (backlog 14.10: выбывший мог стать первым преемником и закрыть вкладку).
+function heirs(T,hostPid){return (T.players||[]).filter(p=>p.pid!==hostPid&&p.online&&!/^bot\d/.test(p.pid)).sort((a,b)=>(!!a.out-!!b.out)||a.seat-b.seat);}
+const api={heirs,effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;
