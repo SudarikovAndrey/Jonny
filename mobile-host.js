@@ -1,7 +1,6 @@
 /* Мост в пределах одного origin: прототип владеет состоянием игры, веб-поле (board.html) — 3D-сценой. */
 window.MobileHost = (() => {
   let callback=null, nextId=1, lastSign=Date.now();
-  const bootAt=Date.now();
   const pending=new Map();
   const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)");
   const api={
@@ -33,14 +32,30 @@ window.MobileHost = (() => {
     diceDone(id,a,b){api.complete(id,{a,b});},
     positions(json){api.points=JSON.parse(json);}
   };
-  // Страховка: веб-поле молчит — показываем ошибку. Считаем от последнего шага загрузки, а не от старта:
-  // на холодном кэше Канзас грузится дольше 15 с, хотя исправно шлёт проценты (02.10, «Графика»).
-  // Ошибка — если 20 с нет ни одного процента или поле не поднялось за 90 с.
+  // Страховка: веб-поле молчит — сначала перезапускаем загрузку сами, потом уже ошибка. Считаем от последнего шага
+  // загрузки, а не от старта: на холодном кэше Канзас грузится дольше 15 с, хотя исправно шлёт проценты (02.10, «Графика»).
+  // Время скрытой вкладки не считается (m8-slowload, 14.10): в фоне requestAnimationFrame стоит, поле не дорисовывается,
+  // а сторож раньше всё равно отсчитывал 20 с и показывал «Перезагрузите страницу». Вернулись — ждём заново.
+  // Встала на видимой вкладке — 20 с без процента или 90 с без готовности: тихо перезапускаем поле (до 2 раз).
+  let idle=0,shown=0,tick=Date.now(),restarts=0;
+  const visible=()=>document.visibilityState!=='hidden';
+  document.addEventListener('visibilitychange',()=>{tick=Date.now();if(visible())idle=0;});
+  const restart=frame=>{
+    restarts++;idle=0;shown=0;lastSign=Date.now();
+    const el=document.getElementById('loadProgress');if(el)el.textContent='Загружаем поле заново…';
+    console.warn('Поле не грузится — перезапуск загрузки',restarts);
+    try{frame.contentWindow.location.reload();}catch(e){const src=frame.src;frame.src='about:blank';setTimeout(()=>{frame.src=src;},50);}
+  };
   const watch=setInterval(()=>{
     if(api.ready){clearInterval(watch);return;}
-    const frame=document.getElementById('board-frame'),now=Date.now();
+    const frame=document.getElementById('board-frame'),now=Date.now(),dt=now-tick;tick=now;
     if(!frame||!/board\.html/.test(frame.src))return;
-    if(now-lastSign>20000||now-bootAt>90000){clearInterval(watch);api.failed(now-bootAt>90000?'поле не поднялось за 90 с':'загрузка поля встала на 20 с');}
+    if(!visible())return;
+    if(lastSign>now-dt)idle=now-lastSign;else idle+=dt;   // процент пришёл за этот такт — отсчёт с него
+    shown+=dt;
+    if(idle<=20000&&shown<=90000)return;
+    if(restarts<2){restart(frame);return;}
+    clearInterval(watch);api.failed(shown>90000?'поле не поднялось за 90 с видимой вкладки':'загрузка поля встала на 20 с видимой вкладки');
   },2000);
   reducedMotion.addEventListener("change",()=>api.send({action:"ambience",on:!reducedMotion.matches}));
   return api;
