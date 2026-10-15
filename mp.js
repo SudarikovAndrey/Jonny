@@ -1890,11 +1890,9 @@ new MutationObserver(()=>{
   const c=$('card');if(!c||$('modal').hidden)return;const b=c.querySelector('.mp-debt-micro');if(!b||c.querySelector('.mp-micro-memo'))return;
   const amt=+String(b.textContent).replace(/[^\d]/g,'')||0,fee=Math.round(amt*MICRO_RATE),row=b.closest('.row');if(!row||!amt)return;
   const m=document.createElement('div');m.className='mp-micro-memo';
-  m.innerHTML=`<b>Микрозайм ${money(amt)} — что дальше</b>
-    <div><span>Сразу</span><span>+${money(amt)} в кассу</span></div>
-    <div><span>Каждый проход банка</span><span>−${money(fee)} (${Math.round(MICRO_RATE*100)}%), пока не вернёшь</span></div>
-    <div><span>Как вернуть</span><span>встань на банк → «Погасить» ${money(amt)}</span></div>
-    <div><span>Второй займ</span><span>не дадут, пока этот не вернёшь</span></div>`;
+  // Разбор 04.10: «очень много текста» — три коротких строки: сколько дают, сколько за круг, что будет.
+  m.innerHTML=`<div><span>Дают</span><b>+${money(amt)}</b></div><div><span>Каждый круг</span><b>−${money(fee)}</b></div><div class="warn"><span>Не вернёшь</span><b>проценты, пока не погасишь в банке</b></div>`;
+  row.classList.add('mp-micro-row');
   row.after(m);
 }).observe($('card'),{childList:true,subtree:true});
 // «Перебить» вместо «Ставка», когда ставка уже есть: так понятно, что торги идут и кто-то лидирует.
@@ -2116,10 +2114,10 @@ function updateUi(){
   // На плейтесте число капитала (538, 899) никто не опознал — в полосе нал и число точек.
   const own=p=>p.cap?p.cap.points+p.cap.biz:0;   // точки и бизнесы вместе — «владения» (плейтест 01.10: «точек» путало)
   bar.classList.toggle('tight',view.players.length>2);   // трое-четверо: компактные фишки, круг и пауза — второй строкой
-  chipsEl.innerHTML=view.players.map(p=>`<span data-pid="${esc(p.pid)}" class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.pid===PID?' me':''}" style="--c:${p.color}">
+  chipsEl.innerHTML=view.players.map(p=>`<span data-pid="${esc(p.pid)}" class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.out?' out':''}${p.pid===PID?' me':''}" style="--c:${p.out?'#8a8478':p.color}">
       <i>${esc(p.name.slice(0,1).toUpperCase())}</i><span class="mp-nm">${esc(p.pid===PID?'Ты':p.name)}</span>
       <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} вл.</span></span>${p.pid!==PID&&p.hand?`<span class="mp-chip-hand" title="карт в руке: ${p.hand}">🃏${p.hand}</span>`:''}${(p.effects||[]).length?`<span class="mp-chip-fx">${p.effects.slice(0,3).map(f=>`<b data-fx="${esc(f.text)}" data-tiles="${(f.tiles||[]).join(',')}">${f.icon}</b>`).join('')}</span>`:''}
-      ${p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
+      ${p.out?'<em class="mp-out">выбыл</em>':p.debtLaps>=1?'<em class="mp-debtmark">в минусе</em>':p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
   tick();
 }
 // Отложенные эффекты на мне (плейтест 04.10: «Крышу» хотел видеть, пока не сработала) — плашки над кубиком, тап — что это.
@@ -2467,6 +2465,12 @@ new MutationObserver(()=>{
       if(t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t)&&best!==S.pos){e.stopImmediatePropagation();ownTileWindow(t);return;}
       if(!isRival(t))return;
       e.stopImmediatePropagation();window.MPTrade?MPTrade.open(t):rivalWindow(t);},true);}}
+// В минусе — в окне своей клетки «🏦 Продать банку · $N» (MPBank.sell «Геймплея», 14.10: половина вложенного сразу).
+new MutationObserver(()=>{const c=$('card'),t=guestRentTile;if(!c||$('modal').hidden||!t||!window.MPBank||!MPBank.sell||c.querySelector('.mp-banksell'))return;
+  if(!(S&&S.cash<0&&myTurn()&&!ending&&t.owner&&!lotOn(t.i)))return;const pic=c.querySelector('.property-picture');if(!pic)return;
+  const b=document.createElement('button');b.type='button';b.className='mp-banksell sm sec';b.title='Продать банку сразу — половина вложенного';b.innerHTML=`🏦 банку · ${money(MPBank.price(t.i))}`;
+  b.onclick=()=>{const pr=MPBank.price(t.i),nm=titleOf(t);closeModal();setTimeout(()=>{if(MPBank.sell(t.i))plate('🏦 Продано банку',pr,`«${nm}» — клетка стала пустырём`);},200);};pic.append(b);
+}).observe($('card'),{childList:true,subtree:true});
 function ownTileWindow(t){(t.type==='biz'?bizWindow:kioskWindow)(t);
   if(myTurn()&&!ending)return;
   setTimeout(()=>{const c=$('card');if(!c||$('modal').hidden)return;c.classList.add('mp-readonly');
@@ -2595,8 +2599,9 @@ function selfEvt(e){if(!e||(window.MPBots&&MPBots.acting()))return;const a=e.amo
 async function debtWarnWindow(e){
   while((!$('modal').hidden||moving)&&myTurn())await pollWait(300);
   const minus=Math.abs(Math.round(e.amount||S.cash||0));
-  await modal(`<div class="mp-debtwarn"><b>⚠️ Ты в минусе на ${money(minus)}</b><p>Ещё раз пройдёшь старт в минусе — <u>банкрот</u>: твои клетки уйдут с молотка.</p>
-    <ul><li>возьми микрозайм в банке</li><li>продай товар или клетку</li><li>выставь клетку на торги</li></ul></div>`,[{t:'Понятно',v:1,cls:'bad'}]);
+  const v=await modal(`<div class="mp-debtwarn"><b>⚠️ Ты в минусе на ${money(minus)}</b><p>Ещё раз пройдёшь старт в минусе — <u>банкрот</u>: клетки уйдут с молотка, а ты выбываешь из партии.</p>
+    <ul><li>займ — деньги сразу, проценты каждый круг</li><li>продай клетку банку — половина вложенного сразу</li><li>или выставь клетку на торги</li></ul></div>`,[{t:'Что сделать',v:2,cls:'ok'},{t:'Понятно',v:1,cls:'sec'}]);
+  if(v===2&&window.MPDebt)setTimeout(()=>MPDebt.open(),200);
 }
 // Клетки банкрота — серые со штампом «с молотка», пока у них не сменится хозяин.
 const hammered=new Map();
@@ -2721,7 +2726,7 @@ const notes=[];
 const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'🔨',bid:'🔨',won:'🔨',unsold:'🔨',bank:'🏦',bankrupt:'🏦',loan:'🏦',
   offer:'💼',sale:'🤝',saleoffer:'🏷',salebought:'🏷',decline:'✋',chance:'🎴',hand:'🃏',hit:'🎴',skip:'⏳',jail:'🚔',fine:'👮',insp:'📋',
   scatter:'💰',minigame:'🎰',double:'🎲',pass:'🏁',bonus:'💵',underdog:'🤝',taxi:'🚕',swap:'🔁',swapcounter:'🔁',swapped:'🔁',
-  swapdecline:'🔁',swapvoid:'🔁',map:'🗺',handoff:'🔁',interest:'🏦',debtwarn:'⚠️'};
+  swapdecline:'🔁',swapvoid:'🔁',map:'🗺',handoff:'🔁',interest:'🏦',debtwarn:'⚠️',banksale:'🏦'};
 const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
