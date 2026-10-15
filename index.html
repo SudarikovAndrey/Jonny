@@ -2069,6 +2069,9 @@ function potShown(){const v=Math.round((typeof S!=='undefined'&&S&&S.pot)||0);
   return potLabel.v;}
 // Inserted into the prototype script before boot so the original rules retain their scope.
 let mobileLastState='', mobileFitScheduled=false, mobileLastLayout='';
+// Значок проверки на поле — только по t.insp, как в карточке клетки (inspCardNote). Застрявший в находках drop.insp
+// давал печать без проверки: «значок остался, хотя снял за оплату, а в окне клетки её нет» (Женя, ADHR 15.10).
+function mobileDropNoInsp(d){if(!d||!d.insp)return d||null;const o=Object.assign({},d);delete o.insp;return Object.keys(o).length?o:null;}
 // Цепь держится, пока идёт сцена с полицией и выбор, и пока игрок сидит в участке.
 // Заплатил, выкинул дубль или отсидел — цепь снимается сразу, не дожидаясь хода.
 // Объявление функции поднимается, а let ниже ещё может быть в «мёртвой зоне» — отсюда try.
@@ -2079,7 +2082,7 @@ function mobileSync(){
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
     // lvl считается и у чужих клеток в партии (t.rival) — башенки соперников (плейтест 02.10)
-    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?potShown():0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.insp?Object.assign({},t.drop,{insp:1}):(t.drop||null),
+    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?potShown():0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.insp?Object.assign({},t.drop,{insp:1}):mobileDropNoInsp(t.drop),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+potShown():t.type==='slot'?(window.MinigameRotation&&MinigameRotation.current(S.minigames)==='dice21'?'':'$'+((S.slot&&S.slot.pot)||0)):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''
@@ -3886,7 +3889,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='02d0371643';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='3088ac8d07';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -5748,7 +5751,12 @@ if(typeof land==='function'){const base=land;land=async function(t){
 };}
 (function(){const bar=$('tilebar');if(!bar)return;
  const base=render;render=function(){const result=base.apply(this,arguments);const tile=S.tiles[S.pos];
-  if(tile?.type==='slot'&&!moving&&!S.finished){bar.hidden=false;bar.disabled=false;bar.classList.remove('poor','off');$('tbText').textContent=MinigameRotation.current(S.minigames)==='dice21'?'🎲 21 в кости · сделай ставку':`🎰 Касса автомата (джекпот${window.MPSlotHooks&&window.MPSlotHooks.active()?' стола':''}) · $${st().pot||0}`;bar.querySelector('b').textContent='открыть';}
+  if(tile?.type==='slot'&&!moving&&!S.finished){bar.hidden=false;bar.disabled=false;bar.classList.remove('poor','off');$('tbText').textContent=MinigameRotation.current(S.minigames)==='dice21'?'🎲 21 в кости · сделай ставку':`🎰 Касса автомата (джекпот${window.MPSlotHooks&&window.MPSlotHooks.active()?' стола':''}) · $${st().pot||0}`;bar.querySelector('b').textContent='открыть';
+   // Мультиплеер: касса общая, сыграть можно только в ход остановки. В остальное время полоса не зовёт «открыть» —
+   // на ADHR (15.10) Женя принял кассу стола за свой выигрыш и жал «открыть», а получал только тост.
+   const MH=window.MPSlotHooks&&window.MPSlotHooks.active()?window.MPSlotHooks:null;
+   if(MH&&MinigameRotation.current(S.minigames)!=='dice21'&&!MH.canPlay()){bar.classList.add('off');$('tbText').textContent=`🎰 Касса стола · $${st().pot||0} — общая, её срывает джекпот`;
+    const mine=window.MP&&MP.view&&MP.view.turn&&MP.view.turn.pid===MP.pid;bar.querySelector('b').textContent=mine?'играют, встав на клетку':'сейчас чужой ход';}}
   return result;
  };
  bar.addEventListener('click',e=>{if(S.tiles[S.pos]?.type==='slot'&&!moving&&$('modal').hidden){e.stopImmediatePropagation();openTile();}},true);

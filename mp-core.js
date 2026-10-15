@@ -367,11 +367,16 @@ function endTurn(T,pid,n,now,pack){
   if(pack)applyState(T,pid,pack,now);
   advance(T,now);return true;
 }
+// Живой игрок за столом один, остальные — боты (pid bot…): паузе и её лимиту ждать некого.
+const isBotPid=pid=>/^bot/.test(String(pid||''));
+function soloWithBots(T){const ps=(T&&T.players)||[];return ps.length>1&&ps.filter(p=>!isBotPid(p.pid)).length<=1;}
 // Часы хозяина стола. Возвращает, что сделать: 'timeout' — сказать игроку, что время вышло;
 // 'advanced' — ход перешёл сам (игрок молчит или офлайн).
 function tick(T,now){
   if(T.phase!=='play'||!T.turn)return null;
-  if(T.paused){if(now-(T.paused.at||now)>=TABLE_PAUSE_MAX_MS){tablePause(T,T.paused.by,false,now);return 'resumed';}return null;}
+  // За столом с одними ботами пауза стоит, пока игрок сам её не снимет: ждать некого, а часы партии иначе шли дальше —
+  // «поставил паузу, отошёл, вернулся — время игры кончилось» (Андрей 15.10).
+  if(T.paused){if(!soloWithBots(T)&&now-(T.paused.at||now)>=TABLE_PAUSE_MAX_MS){tablePause(T,T.paused.by,false,now);return 'resumed';}return null;}
   if(!T.finalRound&&T.deadline&&now>=T.deadline){T.finalRound=T.turn.round;T.finalBy='time';}   // «🏁 Последний раунд»: круг стола доигрывается
   const p=active(T);
   if(!p.online){advance(T,now);return 'advanced';}
@@ -501,7 +506,7 @@ function viewFor(T,pid,valuer){
 // Преемники стола (передача стола, если хозяин пропал): живые люди онлайн, кроме хозяина; сначала те, кто ещё в партии,
 // по месту, выбывшие банкроты — в конце (backlog 14.10: выбывший мог стать первым преемником и закрыть вкладку).
 function heirs(T,hostPid){return (T.players||[]).filter(p=>p.pid!==hostPid&&p.online&&!/^bot\d/.test(p.pid)).sort((a,b)=>(!!a.out-!!b.out)||a.seat-b.seat);}
-const api={heirs,VOTE_MS,EXTEND_MAX,startVote,answerVote,voteCheck,effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+const api={soloWithBots,isBotPid,heirs,VOTE_MS,EXTEND_MAX,startVote,answerVote,voteCheck,effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;

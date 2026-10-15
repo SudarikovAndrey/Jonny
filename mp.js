@@ -400,7 +400,7 @@ function Hub(room,restored,ho){
       case 'lot':if(C.listLot(T,pid,+msg.tile,msg.min,msg.kind,msg.bank))soon();return;     // выставить клетку на торги
       case 'bid':if(C.bid(T,pid,String(msg.id||''),msg.amount))soon();return;
       case 'tpause':{if(!p)return;const now=Date.now();   // ручная пауза — любой игрок, но не чаще PAUSE_FREE/PAUSE_CD_MS
-        if(msg.on){const use=T.pauseUse=T.pauseUse||{},u=use[pid];const w=pauseWait(u,now);if(w>0){send&&send({t:'pausedeny',wait:w});return;}
+        if(msg.on){const use=T.pauseUse=T.pauseUse||{},u=use[pid];const w=C.soloWithBots(T)?0:pauseWait(u,now);if(w>0){send&&send({t:'pausedeny',wait:w});return;}
           if(C.tablePause(T,pid,true,now,p.name)){use[pid]={n:(u?u.n:0)+1,at:now};soon();}return;}
         if(C.tablePause(T,pid,false,now,p.name))soon();return;}
       // Действие игрока (стройка, рента, мини-игра…) — остальным, для журнала и всплытий над клеткой.
@@ -759,6 +759,10 @@ function applyView(v,now){
   // Копилка общая: цифра на клетке у всех — со стола, и в свой ход тоже (плейтест 5: «у вас 236, у меня пустая»).
   if(S&&v.phase==='play'){const vp=Math.round(v.pot||0);if(vp!==lastViewPot){lastViewPot=vp;S.pot=vp;try{mobileSync();}catch(e){}}}
   syncTokens(v);syncFlags();updateUi();
+  // Цифры на клетках («ГОСТЬ $35») поле считает по виду стола (src/board/tiles.js, MP.rentOf по view.tiles), а снимок
+  // уходит полю, только если поменялся свой срез. Перестроил точку — вид пришёл уже после снимка, и поле держало старую
+  // ренту до следующего шага фишки (Женя, ADHR 15.10: «35, пока не сдвинулся, потом 223»). Клетки стола сменились — перерисовать.
+  if(S&&v.phase==='play'&&v.tiles){const tk=JSON.stringify(v.tiles);if(tk!==lastViewTiles){lastViewTiles=tk;try{mobileLastState='';mobileSync();}catch(e){}}}
   if(v.phase!=='lobby')applyBoardMap();
   // плакат хода гаснет, когда кубики брошены (или ход сменился, партия кончилась)
   if(poster){const P=poster;
@@ -766,7 +770,7 @@ function applyView(v,now){
     else if(P.kind==='rival'&&(v.turn.rolled||v.turn.pid!==P.pid))posterAway(v.turn.pid!==P.pid);
     else if(P.kind==='mine'&&(v.turn.pid!==PID||v.turn.n!==P.n||v.turn.rolled))posterAway(v.turn.pid!==PID);}
 }
-let lastEvId=0,wasLead=false,lastViewPot=null;const cardPlateAt={};
+let lastEvId=0,wasLead=false,lastViewPot=null,lastViewTiles='';const cardPlateAt={};
 // Инспектор бьёт лидера сильнее (решение продюсера 01.10): заметный отрыв по владениям или капиталу —
 // на карте до 4 проверок вместо 3 и штраф 75% полицейского вместо 50%. Порог: в полтора раза больше лучшего из соперников.
 function mpLeader(){
@@ -1902,12 +1906,13 @@ function pauseSync(){
   if(!view||view.phase!=='play')return;
   if(myPause.match!==view.match)myPause={match:view.match,n:0,at:0,seen:null};
   const pz=view.paused;if(pz&&pz.by===PID&&pz.at!==myPause.seen){myPause.seen=pz.at;myPause.n++;myPause.at=pz.at;}
-  const w=pauseWait(myPause,hostNow()),left=Math.max(0,PAUSE_FREE-myPause.n);
-  const html=`⏸<sup>${left?left:w>0?mmss(w):1}</sup>`;if(pauseBtn._h!==html){pauseBtn._h=html;pauseBtn.innerHTML=html;}
+  const solo=C.soloWithBots(view);   // с одними ботами пауз сколько угодно и без лимита по времени
+  const w=solo?0:pauseWait(myPause,hostNow()),left=solo?1:Math.max(0,PAUSE_FREE-myPause.n);
+  const html=solo?'⏸':`⏸<sup>${left?left:w>0?mmss(w):1}</sup>`;if(pauseBtn._h!==html){pauseBtn._h=html;pauseBtn.innerHTML=html;}
   pauseBtn.classList.toggle('spent',!left&&w>0);
 }
 pauseBtn.onclick=()=>{if(!view||view.phase!=='play'||view.paused)return;
-  const w=pauseWait(myPause,hostNow());if(w>0){toast(`⏸ Паузы кончились — следующая через ${mmss(w)}`,2400);return;}
+  const w=C.soloWithBots(view)?0:pauseWait(myPause,hostNow());if(w>0){toast(`⏸ Паузы кончились — следующая через ${mmss(w)}`,2400);return;}
   net.send({t:'tpause',on:true});};
 // ☰ Меню партии (плейтест 01.10): продолжить, правила, выйти из-за стола, сыграть одному.
 const menuBtn=el('button','mp-pausebtn mp-menubtn',bar);menuBtn.type='button';menuBtn.title='Меню партии';menuBtn.setAttribute('aria-label','Меню партии');menuBtn.textContent='☰';

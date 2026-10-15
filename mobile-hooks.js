@@ -7,6 +7,9 @@ function potShown(){const v=Math.round((typeof S!=='undefined'&&S&&S.pot)||0);
   return potLabel.v;}
 // Inserted into the prototype script before boot so the original rules retain their scope.
 let mobileLastState='', mobileFitScheduled=false, mobileLastLayout='';
+// Значок проверки на поле — только по t.insp, как в карточке клетки (inspCardNote). Застрявший в находках drop.insp
+// давал печать без проверки: «значок остался, хотя снял за оплату, а в окне клетки её нет» (Женя, ADHR 15.10).
+function mobileDropNoInsp(d){if(!d||!d.insp)return d||null;const o=Object.assign({},d);delete o.insp;return Object.keys(o).length?o:null;}
 // Цепь держится, пока идёт сцена с полицией и выбор, и пока игрок сидит в участке.
 // Заплатил, выкинул дубль или отсидел — цепь снимается сразу, не дожидаясь хода.
 // Объявление функции поднимается, а let ниже ещё может быть в «мёртвой зоне» — отсюда try.
@@ -17,7 +20,7 @@ function mobileSync(){
   if(S.policePoseTile!==S.pos)delete S.policePoseTile;
   const snapshot={action:'state',pos:S.pos,moving,police_bound:(S.policePoseTile===S.pos&&mobilePoliceBusy())||(S.jail>0&&S.tiles[S.pos]?.type==='police'),day:S.day,tiles:S.tiles.map(t=>({
     // lvl считается и у чужих клеток в партии (t.rival) — башенки соперников (плейтест 02.10)
-    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?potShown():0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.insp?Object.assign({},t.drop,{insp:1}):(t.drop||null),
+    i:t.i,type:t.type,lvl:(t.owner||t.rival)?(t.type==='kiosk'?((typeof kioskLvl==='function'?kioskLvl(t):t.salesLvl)||1):t.type==='biz'?(t.level||1):0):0,pot:t.type==='pot'?potShown():0,game:t.type==='slot'&&window.MinigameRotation?MinigameRotation.current(S.minigames):undefined,good:t.good,owner:!!t.owner,unlocked:unlocked(t),drop:t.insp?Object.assign({},t.drop,{insp:1}):mobileDropNoInsp(t.drop),
     boost:t.boost?.day===S.day?t.boost.m:1,trend:t.good===S.trend?CFG.TREND_MULT:1,
     label:!unlocked(t)?'':t.type==='kiosk'?(t.owner?t.goods+'/'+cap(t):'$'+t.price):
       t.type==='biz'?(t.owner?'$'+fee(t)+' · ур.'+t.level:'$'+t.price):t.type==='wh'?'Costco':t.type==='home'?'':t.type==='bank'?'Банк':t.type==='pot'?'$'+potShown():t.type==='slot'?(window.MinigameRotation&&MinigameRotation.current(S.minigames)==='dice21'?'':'$'+((S.slot&&S.slot.pot)||0)):t.type==='scatter'?'Инкассатор':t.type==='police'?'Участок':t.type==='hazard'?'Инспектор':''

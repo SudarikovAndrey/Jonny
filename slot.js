@@ -96,7 +96,12 @@ if(typeof land==='function'){const base=land;land=async function(t){
 };}
 (function(){const bar=$('tilebar');if(!bar)return;
  const base=render;render=function(){const result=base.apply(this,arguments);const tile=S.tiles[S.pos];
-  if(tile?.type==='slot'&&!moving&&!S.finished){bar.hidden=false;bar.disabled=false;bar.classList.remove('poor','off');$('tbText').textContent=MinigameRotation.current(S.minigames)==='dice21'?'🎲 21 в кости · сделай ставку':`🎰 Касса автомата (джекпот${window.MPSlotHooks&&window.MPSlotHooks.active()?' стола':''}) · $${st().pot||0}`;bar.querySelector('b').textContent='открыть';}
+  if(tile?.type==='slot'&&!moving&&!S.finished){bar.hidden=false;bar.disabled=false;bar.classList.remove('poor','off');$('tbText').textContent=MinigameRotation.current(S.minigames)==='dice21'?'🎲 21 в кости · сделай ставку':`🎰 Касса автомата (джекпот${window.MPSlotHooks&&window.MPSlotHooks.active()?' стола':''}) · $${st().pot||0}`;bar.querySelector('b').textContent='открыть';
+   // Мультиплеер: касса общая, сыграть можно только в ход остановки. В остальное время полоса не зовёт «открыть» —
+   // на ADHR (15.10) Женя принял кассу стола за свой выигрыш и жал «открыть», а получал только тост.
+   const MH=window.MPSlotHooks&&window.MPSlotHooks.active()?window.MPSlotHooks:null;
+   if(MH&&MinigameRotation.current(S.minigames)!=='dice21'&&!MH.canPlay()){bar.classList.add('off');$('tbText').textContent=`🎰 Касса стола · $${st().pot||0} — общая, её срывает джекпот`;
+    const mine=window.MP&&MP.view&&MP.view.turn&&MP.view.turn.pid===MP.pid;bar.querySelector('b').textContent=mine?'играют, встав на клетку':'сейчас чужой ход';}}
   return result;
  };
  bar.addEventListener('click',e=>{if(S.tiles[S.pos]?.type==='slot'&&!moving&&$('modal').hidden){e.stopImmediatePropagation();openTile();}},true);
