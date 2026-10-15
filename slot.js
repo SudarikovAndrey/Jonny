@@ -96,7 +96,7 @@ if(typeof land==='function'){const base=land;land=async function(t){
 };}
 (function(){const bar=$('tilebar');if(!bar)return;
  const base=render;render=function(){const result=base.apply(this,arguments);const tile=S.tiles[S.pos];
-  if(tile?.type==='slot'&&!moving&&!S.finished){bar.hidden=false;bar.disabled=false;bar.classList.remove('poor','off');$('tbText').textContent=MinigameRotation.current(S.minigames)==='dice21'?'🎲 21 в кости · сделай ставку':`🎰 Однорукий бандит · касса $${st().pot||0}`;bar.querySelector('b').textContent='открыть';}
+  if(tile?.type==='slot'&&!moving&&!S.finished){bar.hidden=false;bar.disabled=false;bar.classList.remove('poor','off');$('tbText').textContent=MinigameRotation.current(S.minigames)==='dice21'?'🎲 21 в кости · сделай ставку':`🎰 Касса автомата (джекпот${window.MPSlotHooks&&window.MPSlotHooks.active()?' стола':''}) · $${st().pot||0}`;bar.querySelector('b').textContent='открыть';}
   return result;
  };
  bar.addEventListener('click',e=>{if(S.tiles[S.pos]?.type==='slot'&&!moving&&$('modal').hidden){e.stopImmediatePropagation();openTile();}},true);

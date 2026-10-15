@@ -396,6 +396,20 @@ html.embedded{background:linear-gradient(to bottom,#070605b3,transparent 22%,tra
 .win-fx .stock-reward .stock-row{font-size:1em;line-height:1;gap:.25em}
 .win-fx .stock-reward .stock-row .prize-unit img,.win-fx .stock-reward .stock-row .prize-unit svg{width:1.2em;height:1.2em}
 .win-fx .stock-reward .stock-line{font:700 clamp(13px,4.9cqw,23px)/1.15 var(--body);margin:0;letter-spacing:0;-webkit-text-stroke:0;text-shadow:none;color:#382415;white-space:normal}
+
+/* Короткая таблица партии: четыре крупные строки вместо десяти. */
+.row.short{font-size:4.4cqw}
+.row.short .s svg{width:5.6cqw;height:5.6cqw}
+.row.short .s .lbl{font-size:3.4cqw;font-weight:700;color:var(--ink);text-transform:none;letter-spacing:0}
+button.row.short{appearance:none;border:0;background:none;text-align:left;cursor:pointer;width:100%;font-family:var(--display)}
+button.row.short:focus-visible{outline:2px dashed #8c3a22;outline-offset:-2px}
+.help-q{display:inline-grid;place-items:center;width:5.4cqw;height:5.4cqw;border-radius:50%;background:#8c3a22;color:#f6e5c1;font-size:3.6cqw;box-shadow:0 .3cqw 0 #4a1a10}
+button.row.short:active .help-q{translate:0 .3cqw;box-shadow:none}
+.col:has(.row.short){display:flex;flex-direction:column;justify-content:space-evenly;grid-auto-rows:auto}
+.row.short{flex:none;min-height:9cqw}
+#colL .row.short .v,#colR .row.short .v{font-size:4.4cqw}
+#colL .row.short .s svg,#colR .row.short .s svg{width:5.6cqw;height:5.6cqw}
+#colR .row.short .v.help-q{font-size:4cqw;font-weight:700;color:#f6e5c1}
 </style><!-- Bundled asset licenses
 *** GeneralUser GS v2.0.3 ***
 ***      License v2.0     ***
@@ -1227,6 +1241,20 @@ function renderActions(){
  document.querySelectorAll('.stand input,.stand select,.stand button').forEach(x=>x.disabled=game.busy);
  $('hand').hidden=!(S.freeSpin&&S.totalSpins===0&&!S.closed);
 }
+// Партия (плейтест 04.10, стол VDXT: таблицу не читают): три строки — джекпот, самая частая тройка, пара;
+// четвёртая открывает полную таблицу шансов. Подсветка выигрыша ведёт на ближайшую строку.
+const SHORT_OF={jackpot:'jackpot',cherry3:'triple',coin3:'triple',dice3:'triple',gem3:'triple',box3:'triple',pair:'pair',dice2:'pair',box2:'pair'};
+function renderShortRows(){
+ const pair=Math.min(Math.round(MP_PAY.pair*PP()),MP_PAY.dice2*S.rollCash||Infinity),cherry=Math.round(MP_PAY.cherry3*PP()),hit=!game.busy&&SHORT_OF[(S.pending||S.lastPrize)?.id];
+ const rows=[
+  ['jackpot',`<span class="s">${svg('seven')}${svg('seven')}${svg('seven')}</span><span class="v">Джекпот</span>`,'colL'],
+  ['triple',`<span class="s">${svg('cherry')}${svg('cherry')}${svg('cherry')}</span><span class="v">от ${money(cherry)}</span>`,'colL'],
+  ['pair',`<span class="s"><span class="lbl">Пара</span></span><span class="v">от ${money(pair)}</span>`,'colR'],
+  ['all',`<span class="s"><span class="lbl">Все комбинации</span></span><span class="v help-q" aria-hidden="true">?</span>`,'colR']];
+ rows.forEach(([id,html,col],i)=>{const d=document.createElement(id==='all'?'button':'div');d.className='row short';d.dataset.row=id;d.style.setProperty('--d',i);
+  if(id==='all'){d.type='button';d.setAttribute('aria-label','Все комбинации и шансы');d.onclick=help;}
+  d.classList.toggle('hit',hit===id);d.innerHTML=html;$(col).append(d);});
+}
 function renderRows(){
  const P=Math.max(S.P,15*S.day),spec=[
  ['jackpot',['seven','seven','seven'],'Касса + 5 💎'],['gem3',['gem','gem','gem'],'3 💎'],
@@ -1235,6 +1263,7 @@ function renderRows(){
  ['dice2',['dice','dice','·'],mp()?money(MP_PAY.dice2*S.rollCash):'+3 хода'],['box2',['box','box','·'],'В лучшую точку'],
  ['pair',null,money((mp()?MP_PAY.pair:.25)*PP())],['none',null,'—']];
  $('colL').innerHTML='';$('colR').innerHTML='';
+ if(mp()){renderShortRows();return;}
  spec.forEach(([id,syms,value],i)=>{const d=document.createElement('div');d.className='row';d.dataset.row=id;
  d.classList.toggle('hit',!game.busy&&(S.pending||S.lastPrize)?.id===id);
  d.innerHTML=`<span class="s">${syms?syms.map(k=>k==='·'?'<span class="dot">·</span>':svg(k)).join(''):`<span class="lbl">${id==='pair'?'Пара':'Пусто'}</span>`}</span><span class="v">${value}</span>`;
@@ -1244,7 +1273,7 @@ function renderRows(){
 }
 function renderPoints(){$('points').innerHTML=S.points.map(p=>`<div class="pt"><span>${p.n}</span><div class="bar"><i style="width:${100*p.q/p.cap}%"></i></div><span>${p.q}/${p.cap} шт</span></div>`).join('');}
 function setCounter(v){
- const c=$('counter'),str=String(Math.round(v));c.setAttribute('aria-label','Касса джекпота: '+money(v));
+ const c=$('counter'),str=String(Math.round(v));c.setAttribute('aria-label',(mp()?'Касса автомата (джекпот стола): ':'Касса джекпота: ')+money(v));
  const chars=[];for(let i=0;i<str.length;i++){chars.push(str[i]);if((str.length-i-1)%3===0&&i<str.length-1)chars.push(' ');}
  if(c.children.length!==chars.length){c.innerHTML='';chars.forEach(ch=>{const d=document.createElement('div');d.setAttribute('aria-hidden','true');d.className=ch===' '?'digit sep':'digit';if(ch!==' ')d.innerHTML='<span class="roll">'+'0123456789'.split('').map(x=>'<span>'+x+'</span>').join('')+'</span>';c.append(d);});}
  [...c.children].forEach((d,i)=>{if(!d.classList.contains('sep'))d.firstChild.style.transform=`translateY(calc(-5cqw * ${+chars[i]}))`;});
