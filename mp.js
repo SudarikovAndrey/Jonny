@@ -3036,6 +3036,13 @@ function voteSync(){
       :`<b>${ic} ${what}</b><small>${wait.length?'ждём ответа: '+esc(wait.map(nameOf).join(', ')):'все за'} · <span class="mp-vote-s"></span></small>`;}
   else if(view&&view.phase==='play'&&view.finalRound&&me&&!meOut&&(view.win&&view.win.id)==='capital'&&(view.extended||0)<C.EXTEND_MAX){
     key='ask';html=`<button type="button" class="mp-vote-ask">⏱ Ещё время? · +${voteExtra()}</button>`;}
+  // Своё место, а не попап поверх попапа (Андрей 14.10: «следи, чтоб не было кривых наложений»): в партии — первой строкой
+  // ленты (на время голосования карточки ленты прячутся), на итоге — внутри листа итогов под заголовком.
+  const sheet=view&&view.phase==='over'&&!over.hidden&&over.querySelector('.mp-sheet');
+  const home=sheet||ticker,anchor=sheet?sheet.querySelector('h2'):null;
+  if(html&&voteEl.parentNode!==home){if(anchor)anchor.after(voteEl);else home.prepend(voteEl);}
+  voteEl.classList.toggle('in-sheet',!!sheet);
+  document.body.classList.toggle('mp-voting',!!v&&!sheet);
   if(key!==voteKey){voteKey=key;voteEl.innerHTML=html;voteEl.hidden=!html;voteEl.classList.toggle('ask',key==='ask');
     voteEl.querySelectorAll('button[data-y]').forEach(b=>b.onclick=()=>{voteEl.querySelectorAll('button').forEach(x=>x.disabled=true);net.send({t:'voteAnswer',id:v.id,yes:b.dataset.y==='1'});});
     const a=voteEl.querySelector('.mp-vote-ask');if(a)a.onclick=()=>{a.disabled=true;net.send({t:'vote',kind:'extend'});};}
