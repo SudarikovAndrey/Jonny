@@ -4234,16 +4234,21 @@ vec3 vegetation_motion(vec2 p,float clock,vec2 mask,float strength){
  float t=floor(clock*12.)/12.;
  // This is one painted plate, not separate rooted stems or cut-out crowns.
  // Keep deformation below 1.2 source pixels; large UV waves tear the drawing.
- float gain=clamp(strength,0.,2.);
+ // strength \u0434\u043E 8: \u043D\u0430 \u041A\u0430\u043D\u0437\u0430\u0441\u0435 \u043F\u0440\u0438 2 \u0441\u043C\u0435\u0449\u0435\u043D\u0438\u0435 ~1 px \u0438\u0441\u0445\u043E\u0434\u043D\u0438\u043A\u0430, \u043D\u0430 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0435 \u0435\u0433\u043E \u043D\u0435 \u0432\u0438\u0434\u043D\u043E
+ // (\u043F\u043B\u0435\u0439\u0442\u0435\u0441\u0442 14.10: \xAB\u043B\u0438\u0441\u0442\u0432\u0430 \u0438 \u043F\u0448\u0435\u043D\u0438\u0446\u0430 \u043D\u0435 \u0434\u0432\u0438\u0433\u0430\u044E\u0442\u0441\u044F\xBB).
+ float gain=clamp(strength,0.,8.);
  float breeze=.75+.25*sin(t*.31);
+ // \u041F\u043E\u0440\u044B\u0432 \u0431\u0435\u0436\u0438\u0442 \u043F\u043E \u043F\u043E\u043B\u044E \u043F\u043E \u0432\u0435\u0442\u0440\u0443: \u043A\u043E\u043B\u043E\u0441\u044C\u044F \u0433\u043D\u0443\u0442\u0441\u044F \u0432\u043E\u043B\u043D\u043E\u0439, \u0430 \u043D\u0435 \u0432\u0441\u0435\u043C \u043F\u043E\u043B\u0435\u043C \u0440\u0430\u0437\u043E\u043C.
+ float gust=.5+.5*sin(dot(p,vec2(-.0062,.0033))-t*1.45);
  // Nearby leaves share a slow phase. No rapid flutter inside a fixed silhouette.
  float crown=(.42*sin(t*.85+p.x*.001+p.y*.0007)
              +.10*sin(t*1.31+.6))*gain*breeze;
  // Only slight lateral bending: never lift/translate the field vertically.
  // Long wavelength keeps adjacent painted stalks together instead of rippling.
  float stalk=(.40*sin(t*1.15+p.x*.004+p.y*.002)
-             +.08*sin(t*1.73+p.x*.006))*gain*breeze;
- return vec3(crown*mask.y+stalk*mask.x,0.,1.);
+             +.08*sin(t*1.73+p.x*.006))*gain*breeze*(.45+.9*gust);
+ // \u041D\u0430 \u0433\u0440\u0435\u0431\u043D\u0435 \u043F\u043E\u0440\u044B\u0432\u0430 \u043A\u043E\u043B\u043E\u0441\u044C\u044F \u0441\u0432\u0435\u0442\u043B\u0435\u044E\u0442 \u2014 \u0438\u0437\u0433\u0438\u0431 \u0437\u0430\u043C\u0435\u0442\u0435\u043D \u0438 \u0431\u0435\u0437 \u0431\u043E\u043B\u044C\u0448\u043E\u0433\u043E \u0441\u0434\u0432\u0438\u0433\u0430.
+ return vec3(crown*mask.y+stalk*mask.x,0.,1.+.07*(gust-.5)*mask.x*min(gain,1.));
 }
 vec2 river_drift(vec2 p,float clock){
  float t=floor(clock*12.)/12.;

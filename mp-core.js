@@ -152,7 +152,13 @@ function applyState(T,pid,pack,now){
 // Иначе игрок с устаревшим полем (ушёл в фон, пропустил виды) стирал чужие покупки — «у Макса пропали точки».
 // Исключения на чужой клетке («Интерфейс», 01.10): своё предложение о покупке (поставил или забрал резерв) и выкуп ×10 —
 // клетка переходит, только если в этом же пакете есть проводка старому хозяину с пометкой force за эту клетку.
+// Смена хозяина снимает с клетки эффекты прежнего (плейтест 04.10, XBFF: «инспектор остался у тебя — наверное, должно сниматься»):
+// проверку инспектора, «Сюжет на MTV» и «Отключили свет» — они были про бизнес прежнего хозяина. Обмен, продажа, выкуп, торги.
+function freshOwner(t){if(!t)return t;const o=Object.assign({},t);if(o.insp)o.insp=false;delete o.boostN;delete o.frozen;return o;}
 function mergeTiles(cur,next,pid,credits){
+  const out=mergeTiles0(cur,next,pid,credits);if(!cur||!Array.isArray(out))return out;
+  return out.map((t,i)=>{const was=cur[i];return t&&was&&was.owner&&t.owner&&t.owner!==was.owner?freshOwner(t):t;});}
+function mergeTiles0(cur,next,pid,credits){
   if(!cur||!Array.isArray(next))return next;
   // Обмен клетками (решение продюсера 02.10): хозяин клетки t, принимая обмен, забирает клетку give у предложившего.
   // Обмен на карте (m5-swapmap): o={from,to,give[],get[]} в системе автора. Получатель (pid) принимает — его get уходят автору,
@@ -299,7 +305,7 @@ function resolveLots(T){
     const buyer=lot.bestBy?T.players.find(p=>p.pid===lot.bestBy):null;
     if(buyer&&buyer.s){
       hold(T,lot.bestBy,-lot.best);buyer.s.cash=(buyer.s.cash||0)-lot.best;if(seller&&seller.s)seller.s.cash=(seller.s.cash||0)+lot.best;   // резерв уходит продавцу
-      const base=lotApi.baseInv?lotApi.baseInv(t):0;t.owner=lot.bestBy;t.mpPrem=lot.best-base;delete t.mpOffer;
+      const base=lotApi.baseInv?lotApi.baseInv(t):0;t.owner=lot.bestBy;t.mpPrem=lot.best-base;delete t.mpOffer;t.insp=false;delete t.boostN;delete t.frozen;   // новый хозяин — без эффектов прежнего
       event(T,{from:lot.bestBy,kind:'won',text:`купил клетку на торгах у ${pnameOf(T,lot.seller)} за $${lot.best}`,amount:-lot.best,tile:lot.tile,to:lot.seller,lot:lot.id,paid:lot.best});
       out.push({lot,result:'sold',to:lot.bestBy,amount:lot.best});continue;
     }

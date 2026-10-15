@@ -1348,7 +1348,9 @@ function push(){
 }
 // Кубики — только этого хода и после броска (SDHY 14.10: встречный обмен до броска унёс кубики прошлого хода, и в журнале
 // стола появился ложный бросок). unroll — бросок не состоялся (сцена не ответила): стол снимает «бросок был».
-function makePack(){return {n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,unroll:!rolled&&unrollN===view.turn.n||undefined,
+// Клетка только что стала моей (купил, обменял, выкупил) — эффекты прежнего хозяина не тащим (ядро их тоже снимает: freshOwner).
+function freshMine(){const vt=view&&view.tiles;if(!vt)return;for(const t of S.tiles){const v=vt[t.i];if(t.owner&&v&&v.owner&&v.owner!==PID){t.insp=false;delete t.boostN;delete t.frozen;}}}
+function makePack(){freshMine();return {n:view.turn.n,s:sliceOf(S),tiles:toShared(S.tiles),credits,rolled,landed,unroll:!rolled&&unrollN===view.turn.n||undefined,
   dice:rolled&&lastDice&&!lastDice.lesson?{a:lastDice.a,b:lastDice.b}:null};}
 function pushSoon(){if(myTurn()&&!pushT)pushT=setTimeout(push,150);}
 save=function(){pushSoon();};       // сохранение партии — у хозяина стола
