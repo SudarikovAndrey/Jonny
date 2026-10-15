@@ -102,8 +102,8 @@ const TECH_C=['tape','vcr'];
 const MISSION_CELLS={city:1,chain:1,empire:1};
 const winId=()=>{const v=H.view;return (v&&v.win&&v.win.id)||(v&&v.settings&&v.settings.win)||'capital';};
 const missionGoal=()=>({city:8,chain:5,empire:(H.view&&H.view.win&&H.view.win.goal)||9})[winId()]||0;
-// Лицензии игрока: свои — из среза, соперников — из view (players[].chain: clothes/tech).
-function licOf(who){if(who===ME)return (S.sf&&S.sf.lic)||{};const p=H.view&&H.view.players.find(x=>x.pid===who);return p&&p.chain?{clothes:p.chain.clothes,tech:p.chain.tech}:{};}
+// Лицензии игрока: свои — из среза, соперников — из view (players[].chain: tape/vcr — 14.10, лицензии по товару).
+function licOf(who){if(who===ME)return (S.sf&&S.sf.lic)||{};const p=H.view&&H.view.players.find(x=>x.pid===who);return p&&p.chain?{tape:p.chain.tape,vcr:p.chain.vcr}:{};}
 // Шаги миссии у who при хозяевах f: «Весь город» — категории (до 6) + бизнесы (до 2); «Король техники» — лицензии (2) +
 // точки техники (до 3); «Империя» — владения.
 function missionSteps(f,who){const sn=snapNow(),id=winId();let cats=new Set(),biz=0,tech=0,n=0;
@@ -112,7 +112,7 @@ function missionSteps(f,who){const sn=snapNow(),id=winId();let cats=new Set(),bi
   // из лотков сладостей, купленных у Васи-бота, а бот этого не видел и продавал.
   if(id==='city'){let kiosks=0;for(let i=0;i<40;i++)if(f(i)===who&&sn.cat[i])kiosks++;const c=Math.min(6,cats.size);
     return c+.6*Math.min(6-c,kiosks-cats.size)+Math.min(2,biz);}
-  if(id==='chain'){const l=licOf(who);return (l.clothes?1:0)+(l.tech?1:0)+Math.min(3,tech);}
+  if(id==='chain'){const l=licOf(who);return (l.tape||l.tech?1:0)+(l.vcr||l.tech?1:0)+Math.min(3,tech);}
   if(id==='empire')return n;
   return 0;}
 // Цена шага — от средней базы клеток стола (растёт со стадией партии); ближе к цели — дороже; победа — 20 шагов.
@@ -295,12 +295,12 @@ const myBiz=()=>S.tiles.filter(x=>x.owner&&x.type==='biz').length;
 // техники») или в богатой кассе ради дорогих категорий. Раньше — 12% случайно на пустыре, лицензий у ботов не было.
 function buyLicenses(t,P,bot,emit,onOwn){const want=wantCats(),keepB=S.cash*P.keep;
   for(const lic of (SFB().licenses||[])){if(SFB().hasLic(lic.id))continue;
-    const need=winId()==='chain'||lic.cats.some(c=>want.includes(c)),cheapest=Math.min(...lic.cats.map(c=>onOwn&&SFB().rebuildPrice?SFB().rebuildPrice(c):SFB().price(c)));
+    const need=(winId()==='chain'&&lic.cats.some(c=>c==='tape'||c==='vcr'))||lic.cats.some(c=>want.includes(c)),cheapest=Math.min(...lic.cats.map(c=>onOwn&&SFB().rebuildPrice?SFB().rebuildPrice(c):SFB().price(c)));
     // Под миссию — как только хватает на саму лицензию с небольшим запасом: точку под неё строит или перестраивает следом.
     const can=need&&missionOn()?S.cash-lic.price>=Math.min(keepB,100):S.cash-lic.price-(winId()==='chain'?0:cheapest)>=keepB;
     // Без миссии — по расчёту: категории под лицензию окупаются быстрее (джинсы 65%, кроссовки 72% цены за круг против 48% у
     // сладостей) и дают опасную ренту; хватает на лицензию, первую точку и запас — берёт с вероятностью профиля.
-    if(can&&(need||rnd(P.lic||.5))){S.sf=S.sf||{};S.sf.lic=S.sf.lic||{};S.sf.lic[lic.id]=true;S.cash-=lic.price;
+    if(can&&(need||rnd(P.lic||.5))){const pr=lic.price;S.sf=S.sf||{};S.sf.lic=S.sf.lic||{};S.sf.lic[lic.id]=true;S.cash-=pr;
       emit({kind:'license',text:`купил лицензию «${lic.name}»`,amount:-lic.price,tile:t.i});brainLog(bot,`лицензия «${lic.name}»${need?' — под миссию':''}`);}}}
 // «Богатая касса»: денег больше, чем на дорогую точку и лицензию — копить дальше незачем.
 const richCash=()=>Math.max(1200,(SFB().build||{}).vcr||0);
@@ -313,7 +313,7 @@ const roiOf=c=>{try{const sell=(SFB().sell||{})[c]||0,buy=typeof buyPrice==='fun
 // миссии (категории без лицензии, бизнесы) кончились или набрано 3 владения; сумма — сама лицензия.
 function saveGoal(P){const L=(SFB().licenses||[]).filter(l=>!SFB().hasLic(l.id));if(!L.length)return 0;
   if(MISSION_CELLS[winId()]&&winId()!=='empire'){const want=wantCats(),free=want.filter(c=>catOpen(c));
-    if(free.length&&holdings()<3)return 0;const need=L.filter(l=>winId()==='chain'||l.cats.some(c=>want.includes(c)));
+    if(free.length&&holdings()<3)return 0;const need=L.filter(l=>(winId()==='chain'&&l.cats.some(c=>c==='tape'||c==='vcr'))||l.cats.some(c=>want.includes(c)));
     const g=need.length?need.sort((a,b)=>a.price-b.price)[0].price:0;
     if(g&&reachable(g))return g;}   // не успеть к лицензии до конца партии — играет как в «Богатейшем» (Андрей 04.10)
   if(holdings()<3)return 0;if(S.botSaver==null)S.botSaver=rnd(P.lic||0);if(!S.botSaver)return 0;
@@ -331,7 +331,7 @@ function reachable(amount){const v=H.view;if(!v||!v.turn)return true;const need=
   const h=S.botW||[];if(h.length<3)return false;const a=h[0],b=h[h.length-1],rate=(b[1]-a[1])/Math.max(1,b[0]-a[0]);
   return rate>0&&need/rate<=roundsLeft(v)*.6;}   // запас 40% — после лицензии ещё строить или перестраивать
 // Миссия «живая»: копить и торговаться только ради неё бот будет, если лицензии уже есть или до них реально дойти.
-const missionLive=P=>missionOn()&&(winId()==='empire'||!(SFB().licenses||[]).some(l=>!SFB().hasLic(l.id)&&(winId()==='chain'||l.cats.some(c=>wantCats().includes(c))))||!!saveGoal(P));
+const missionLive=P=>missionOn()&&(winId()==='empire'||!(SFB().licenses||[]).some(l=>!SFB().hasLic(l.id)&&((winId()==='chain'&&l.cats.some(c=>c==='tape'||c==='vcr'))||l.cats.some(c=>wantCats().includes(c))))||!!saveGoal(P));
 // Сколько шагов миссии даёт смена хозяев (для отбора сделок: с миссией бот торгуется только ради шага к цели).
 function stepGain(change,who=ME){const o=snapNow().o,a=j=>o[(j+40)%40],b=j=>{j=(j+40)%40;return j in change?change[j]:o[j];};return missionSteps(b,who)-missionSteps(a,who);}
 const missionOn=()=>!!MISSION_CELLS[winId()];

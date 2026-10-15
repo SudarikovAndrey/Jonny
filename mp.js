@@ -172,6 +172,13 @@ const invested=t=>baseInv(t)+(t.mpPrem||0);
 const sellOf=id=>(window.SFBuilder&&SFBuilder.sell&&+SFBuilder.sell[id])||good(id).sell;
 const marginOf=id=>Math.max(1,sellOf(id)-good(id).buy);
 function coveredIn(tiles,pid){return new Set(tiles.filter(t=>t.type==='kiosk'&&t.owner===pid&&t.base&&!t.lot).map(t=>t.base)).size;}
+// Лицензии по товару (решение продюсера 14.10, вариант Б прогона): своя лицензия на каждый товар, цена у товара.
+// Без лицензии — сладости и напитки. Раньше: «Одежда и обувь» $600 и «Техника» $1 500 — за 20 минут их не брал никто.
+// Только мультиплеер: список SF.lic (SFBuilder.licenses) подменяем на месте — меню пустыря, карточка точки и боты читают его.
+const MP_LICENSES=[{id:'tape',name:'Кассеты',cats:['tape'],price:400},{id:'jeans',name:'Джинсы',cats:['jeans'],price:600},
+  {id:'sneak',name:'Кроссовки',cats:['sneak'],price:900},{id:'vcr',name:'Видики',cats:['vcr'],price:1300}];
+(function mpLicenses(){const L=window.SFBuilder&&SFBuilder.licenses;if(!L){setTimeout(mpLicenses,50);return;}
+  if(L.length===MP_LICENSES.length&&L[0].id===MP_LICENSES[0].id)return;L.splice(0,L.length,...MP_LICENSES.map(x=>Object.assign({},x)));})();
 function makeValuer(tiles){
   const cov={};
   const v=(t,pid)=>{
@@ -2889,7 +2896,7 @@ function winGoalLabel(T,id){let w;try{w=C.winOf(Object.assign({},T,{settings:Obj
   if(id==='cash')return g?`капитал ${m(g)}`:'';
   if(id==='rent')return g?`${m(g)} ренты с соперников`:'';
   if(id==='empire')return g?`${g} владений`:'';
-  if(id==='chain')return '2 лицензии и 3 точки техники';
+  if(id==='chain')return 'лицензии кассет и видиков, 3 точки техники';
   if(id==='city')return '6 категорий и 2 бизнеса';
   return '';}
 function renderLobby(force){
@@ -2953,7 +2960,7 @@ function hideOver(){over.hidden=true;showSeq++;}
 // бизнесы, лицензии, товар, нал, минус кредиты, — в конце выскакивает победитель. Тап — пропустить.
 function winGoalDone(w,wv){const g=wv&&(wv.goal||wv.value),m=v=>'$'+Math.round(v).toLocaleString('en-US');
   if(w.id==='empire')return `${g||''} владений`;if(w.id==='cash')return `капитал ${g?m(g):''}`;if(w.id==='rent')return `${g?m(g):''} ренты с соперников`;
-  if(w.id==='chain')return '2 лицензии и 3 точки техники';if(w.id==='city')return 'все 6 категорий и 2 бизнеса';return w.name||'';}
+  if(w.id==='chain')return 'лицензии кассет и видиков, 3 точки техники';if(w.id==='city')return 'все 6 категорий и 2 бизнеса';return w.name||'';}
 function showOver(v){
   const ps=v.players.filter(p=>p.cap).map(p=>Object.assign({},p,p.cap));
   const rank=ps.slice().sort((a,b)=>b.total-a.total||b.cash-a.cash||a.seat-b.seat);

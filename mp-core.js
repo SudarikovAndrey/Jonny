@@ -21,7 +21,7 @@ const MINUTE_OPTIONS=[15,20,25,30];
 const WIN_OPTIONS=[
   {id:'capital',name:'Богатейший',text:'Когда время выйдет, побеждает самый большой капитал: нал, вложения и товар минус долги.'},
   {id:'cash',name:'Первый миллионер',text:'Первый, чей капитал дошёл до $2 500, побеждает сразу.',goal:2500},
-  {id:'chain',name:'Король техники',text:'Первый, кто купил обе лицензии и построил 3 точки техники, побеждает сразу.',goal:3},
+  {id:'chain',name:'Король техники',text:'Первый, кто купил лицензии на кассеты и видики и построил 3 точки техники, побеждает сразу.',goal:3},
   {id:'city',name:'Весь город',long:true,text:'Первый, кто обеспечил город всеми 6 категориями товара и держит 2 бизнеса, побеждает сразу. Долгая миссия — для партий от часа.',goal:6},   // 04.10: порог не меняем, подпись честная
   {id:'empire',name:'Империя',text:'Первый, у кого 9 владений (точки и бизнесы вместе), побеждает сразу.',goal:9},   // 9 из 25 (19 пустырей + 6 бизнесов): с клетками «Шанса» пустырей стало меньше — было 10 из 28
   {id:'rent',name:'Рантье',text:'Первый, кто собрал $3 000 рентой с соперников, побеждает сразу.',goal:3000},
@@ -394,20 +394,21 @@ function ranking(T,valuer){
   return T.players.map(p=>Object.assign({pid:p.pid,name:p.name,seat:p.seat,color:p.color},capital(T,p.pid,valuer)))
     .sort((a,b)=>b.total-a.total||b.cash-a.cash||a.seat-b.seat);
 }
-// Досрочная победа: цепочка Сан-Франциско — обе лицензии и 3 точки техники.
+// Досрочная победа «Король техники» (решение продюсера 14.10, лицензии по товару): лицензии на кассеты и видики и 3 точки техники.
+// Старые сохранения с одной лицензией «Техника» (lic.tech) засчитываются как обе.
 const TECH=['tape','vcr'];
 function sfChain(T,pid,techPoints=3){
   const p=T.players.find(x=>x.pid===pid);const lic=(p&&p.s&&p.s.sf&&p.s.sf.lic)||{};
   const tech=(T.tiles||[]).filter(t=>t.owner===pid&&t.type==='kiosk'&&TECH.includes(t.base)).length;
-  return {clothes:!!lic.clothes,tech:!!lic.tech,techPoints:Math.min(tech,techPoints),goal:techPoints,
-          done:!!lic.clothes&&!!lic.tech&&tech>=techPoints};
+  const tape=!!(lic.tape||lic.tech),vcr=!!(lic.vcr||lic.tech);
+  return {tape,vcr,lics:(tape?1:0)+(vcr?1:0),techPoints:Math.min(tech,techPoints),goal:techPoints,done:tape&&vcr&&tech>=techPoints};
 }
 // Прогресс игрока по выбранному условию: {value, goal, done, text}. valuer нужен для «Богатейшего» (капитал).
 function winProgress(T,pid,valuer){
   const w=winOf(T),p=T.players.find(x=>x.pid===pid),own=(T.tiles||[]).filter(t=>t.owner===pid&&(t.type==='kiosk'||t.type==='biz'));
   switch(w.id){
     case 'cash':{const v=Math.round(T.tiles&&valuer?capital(T,pid,valuer).total:(p&&p.s?(p.s.cash||0):0));return {value:v,goal:w.goal,done:v>=w.goal,text:`капитал $${v} из $${w.goal}`};}
-    case 'chain':{const c=sfChain(T,pid,w.goal);const v=(c.clothes?1:0)+(c.tech?1:0)+c.techPoints;return {value:v,goal:2+w.goal,done:c.done,text:`лицензий ${(c.clothes?1:0)+(c.tech?1:0)}/2 · техники ${c.techPoints}/${w.goal}`};}
+    case 'chain':{const c=sfChain(T,pid,w.goal);const v=c.lics+c.techPoints;return {value:v,goal:2+w.goal,done:c.done,text:`лицензии ${c.lics}/2 (кассеты, видики) · техники ${c.techPoints}/${w.goal}`};}
     case 'city':{const cats=new Set(own.filter(t=>t.type==='kiosk'&&t.base&&!t.lot).map(t=>t.base)).size,biz=own.filter(t=>t.type==='biz').length;
       return {value:cats+Math.min(2,biz),goal:w.goal+2,done:cats>=w.goal&&biz>=2,text:`категорий ${cats}/${w.goal} · бизнесов ${Math.min(2,biz)}/2`};}
     case 'empire':{const v=own.length;return {value:v,goal:w.goal,done:v>=w.goal,text:`владений ${v}/${w.goal}`};}
