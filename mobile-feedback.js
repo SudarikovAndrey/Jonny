@@ -1,9 +1,15 @@
 /* Lightweight original Web Audio foley; no remote audio or autoplay. */
 window.GameFeedback=(()=>{
  let ctx,master,noise,muted=true,last={},played=0;
- let music=null,musicIndex=0,musicStarted=false,musicMuted=true;
+ let music=null,musicIndex=0,musicStarted=false,musicMuted=true,volume=.6,ducked=false;
  const musicTracks=['assets/audio/bouncy-arcade-fun.mp3','assets/audio/arcade-bounce.mp3'];
  try{muted=localStorage.getItem('americanboy_sound_muted')!=='0';musicMuted=localStorage.getItem('americanboy_music_muted')!=='0'}catch{muted=musicMuted=true}
+ // Громкость (m8-sound, плейтест 14.10: «бандит еле слышно, нужен регулятор»): 0…1, по умолчанию 0,6 — прежний уровень.
+ try{const v=parseFloat(localStorage.getItem('americanboy_volume'));if(v>=0&&v<=1)volume=v;}catch{}
+ const scale=()=>volume/.6;
+ // Музыка под мини-игрой тише — звуки автомата и кубиков не тонут в ней.
+ const musicLevel=()=>Math.min(1,.18*scale()*(ducked?.4:1));
+ const foleyLevel=()=>muted?0:.20*scale();
  // Тишина без спроса: игру открыл робот (Playwright, браузер агента — navigator.webdriver)
  // или адрес с ?mute / ?silent. Тогда ни музыки, ни звуков за всю сессию, а переключатели
  // в меню не трогают настройки игрока в localStorage.
@@ -14,7 +20,7 @@ window.GameFeedback=(()=>{
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  function makeMusic(){
   if(music)return music;
-  music=new Audio();music.preload='auto';music.volume=.18;music.loop=false;
+  music=new Audio();music.preload='auto';music.volume=musicLevel();music.loop=false;
   music.addEventListener('ended',()=>{if(musicMuted)return;musicIndex=(musicIndex+1)%musicTracks.length;music.src=musicTracks[musicIndex];music.play().catch(()=>{});});
   music.src=musicTracks[musicIndex];
   return music;
@@ -22,15 +28,19 @@ window.GameFeedback=(()=>{
  function startMusic(){
   if(musicMuted||quiet())return;
   const player=makeMusic();
-  if(!musicStarted){musicStarted=true;player.play().catch(()=>{musicStarted=false;});}
+  // Музыка встала (экран погас, вкладку свернули, выключили и включили) — запускаем заново, а не только в первый раз:
+  // раньше musicStarted оставался true, и после паузы музыка не возвращалась (плейтест 14.10, у Bob).
+  if(!musicStarted||player.paused){musicStarted=true;player.play().catch(()=>{musicStarted=false;});}
  }
  function unlock(e){
   // Звук будит только живое касание в видимой вкладке с фокусом.
   if(forcedSilent||away()||(e&&!e.isTrusted))return;
-  if(!ctx){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;ctx=new Audio();master=ctx.createGain();master.gain.value=muted?0:.20;master.connect(ctx.destination);noise=ctx.createBuffer(1,ctx.sampleRate*.18,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);}
+  if(!ctx){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;ctx=new Audio();master=ctx.createGain();master.gain.value=foleyLevel();master.connect(ctx.destination);noise=ctx.createBuffer(1,ctx.sampleRate*.18,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);}
   if(ctx.state==='suspended')ctx.resume().catch(()=>{});
   startMusic();
  }
+ addEventListener('minigame:open',()=>{ducked=true;if(music)music.volume=musicLevel();});
+ addEventListener('minigame:close',()=>{ducked=false;if(music)music.volume=musicLevel();});
  document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('keydown',unlock,{passive:true});
  // Ушли со вкладки — музыка на паузу, звуки усыпляем; вернулись — музыка продолжается.
  document.addEventListener('visibilitychange',()=>{
@@ -75,5 +85,12 @@ window.GameFeedback=(()=>{
   if(kind==='joy')for(const [dx,dy] of [[-32,-10],[32,-6],[0,-38]])sprite('star',x+dx,y+dy,23,dx*.3,-20);
  }
  document.addEventListener('click',e=>{if(e.target.closest('button:not(:disabled)')&&!e.target.closest('#bRoll'))sound('ui')});
- return {play,sound,unlock,get muted(){return muted},get musicMuted(){return musicMuted},toggle(){muted=!muted;if(!forcedSilent)try{localStorage.setItem('americanboy_sound_muted',muted?'1':'0')}catch{}if(master)master.gain.setTargetAtTime(muted?0:.20,ctx.currentTime,.03);return muted},toggleMusic(){musicMuted=!musicMuted;if(!forcedSilent)try{localStorage.setItem('americanboy_music_muted',musicMuted?'1':'0')}catch{}if(musicMuted){if(music)music.pause();}else{startMusic();}return musicMuted},status(){return{muted,musicMuted,forcedSilent,state:ctx?.state||'locked',played}}};
+ return {play,sound,unlock,get muted(){return muted},get musicMuted(){return musicMuted},toggle(){muted=!muted;if(!forcedSilent)try{localStorage.setItem('americanboy_sound_muted',muted?'1':'0')}catch{}if(master)master.gain.setTargetAtTime(foleyLevel(),ctx.currentTime,.03);return muted},
+  get volume(){return scale()},get level(){return volume},
+  // Ползунок громкости для окон настроек: звуки, музыка и автомат вместе; отпустил — короткий щелчок на новой громкости.
+  slider(){const l=document.createElement('label');l.className='volume-row';l.innerHTML='<span>Громкость</span><input type="range" min="0" max="100" step="5" aria-label="Громкость">';
+   const i=l.querySelector('input');i.value=Math.round(volume*100);i.style.setProperty('--v',i.value+'%');
+   i.oninput=()=>{this.setVolume(i.value/100);i.style.setProperty('--v',i.value+'%');};i.onchange=()=>sound('ui');return l;},
+  setVolume(v){volume=Math.max(0,Math.min(1,+v||0));if(!forcedSilent)try{localStorage.setItem('americanboy_volume',String(volume))}catch{}
+   if(master)master.gain.setTargetAtTime(foleyLevel(),ctx.currentTime,.03);if(music)music.volume=musicLevel();},toggleMusic(){musicMuted=!musicMuted;if(!forcedSilent)try{localStorage.setItem('americanboy_music_muted',musicMuted?'1':'0')}catch{}if(musicMuted){if(music)music.pause();}else{startMusic();}return musicMuted},status(){return{muted,musicMuted,forcedSilent,state:ctx?.state||'locked',played}}};
 })();

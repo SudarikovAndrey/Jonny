@@ -1060,15 +1060,20 @@ const CLIPS={button:'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYy
 function createAudio(enabled,Context=root.AudioContext||root.webkitAudioContext,clips=CLIPS){
  let ctx,master,loading,watchdog=null,spinVoice=null;
  const buffers={},voices=new Set(),revision={effect:0,spin:0,reward:0};
+ // Плейтест 14.10 (m8-sound): автомат почти не слышно под музыкой — гул барабанов записан на −34 дБ.
+ // Подняли: барабаны ×3, остановки ×2, кнопки ×1,4.
+ const hostVolume=()=>{try{const v=root.BanditHost&&root.BanditHost.volume&&root.BanditHost.volume();return Number.isFinite(v)?Math.max(0,v):1;}catch(e){return 1;}};
  function ready(){
   if(!enabled()||!Context)return false;
   try{
-   if(!ctx){ctx=new Context();master=ctx.createGain();master.gain.value=.85;master.connect(ctx.destination);
+   if(!ctx){ctx=new Context();master=ctx.createGain();master.connect(ctx.destination);
     loading=Promise.all(Object.entries(clips).map(async([key,uri])=>{
      const raw=root.atob(uri.split(',')[1]),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
      buffers[key]=await ctx.decodeAudioData(bytes.buffer);
     })).catch(error=>console.warn('Не удалось подготовить звук автомата:',error));
    }
+   // Громкость из настроек игры (ползунок); в партии и соло — одна.
+   master.gain.value=hostVolume();
    if(ctx.state==='suspended')ctx.resume().catch(()=>{});
    return true;
   }catch(e){return false;}
@@ -1090,17 +1095,17 @@ function createAudio(enabled,Context=root.AudioContext||root.webkitAudioContext,
  }
  function stopSpin(){if(watchdog!==null)clearTimeout(watchdog);watchdog=null;spinVoice=null;cancel('spin');}
  function stop(){stopSpin();cancel();}
- function startSpin(){stopSpin();cancel('reward');play('spin','spin',.65,true,1.02);watchdog=setTimeout(stopSpin,4500);}
+ function startSpin(){stopSpin();cancel('reward');play('spin','spin',1.95,true,1.02);watchdog=setTimeout(stopSpin,4500);}
  function reelStop(index){
-  if(spinVoice&&ctx){spinVoice.source.playbackRate.setTargetAtTime(1-.18*(index+1),ctx.currentTime,.1);spinVoice.gain.gain.setTargetAtTime(.50-.12*index,ctx.currentTime,.1);}
-  play('stop','effect',.55, false,1+index*.055);
+  if(spinVoice&&ctx){spinVoice.source.playbackRate.setTargetAtTime(1-.18*(index+1),ctx.currentTime,.1);spinVoice.gain.gain.setTargetAtTime(1.5-.36*index,ctx.currentTime,.1);}
+  play('stop','effect',1.1, false,1+index*.055);
  }
  function fadeReward(){
   revision.reward++;if(!ctx)return;
   for(const v of voices)if(v.group==='reward'){v.gain.gain.setTargetAtTime(0,ctx.currentTime,.035);try{v.source.stop(ctx.currentTime+.16);}catch(e){}}
  }
  function reward(kind){stopSpin();cancel('reward');play(['small','triple','jackpot'].includes(kind)?kind:'small','reward');}
- return{button:()=>play('button'),lever:()=>play('lever'),startSpin,reelStop,reward,fadeReward,stopSpin,stop};
+ return{button:()=>play('button','effect',1.4),lever:()=>play('lever','effect',1.4),startSpin,reelStop,reward,fadeReward,stopSpin,stop};
 }
 root.SlotAudio={createAudio};if(typeof module==='object')module.exports=root.SlotAudio;
 })(typeof window==='object'?window:globalThis);

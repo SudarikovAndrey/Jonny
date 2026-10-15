@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="bundle.css?v=caaa6329"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="bundle.css?v=7f9f65bd"><meta name="theme-color" content="#302d27"></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -369,7 +369,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 <div id="fx"></div>
 <div id="modal" hidden><div class="card" id="card"></div></div>
 
-<script src="tm-rescue.js?v=d1b37741"></script><script src="mobile-feedback.js?v=e4f943d2"></script><script src="mobile-host.js?v=06d474b8"></script>
+<script src="tm-rescue.js?v=d1b37741"></script><script src="mobile-feedback.js?v=5da16a98"></script><script src="mobile-host.js?v=06d474b8"></script>
 <script>
 
 // ======================= БАЛАНС — крутить здесь =======================
@@ -2243,6 +2243,7 @@ settings=function(){
     audioRow.append(fs);
   }
   $('card').append(audioRow);
+  if(GameFeedback.slider)$('card').append(GameFeedback.slider());
   const row=document.createElement('div');row.className='mbtns';
   const debug=document.createElement('button');debug.className='sec';debug.textContent=mobileDebug?'Скрыть коллайдеры':'Показать коллайдеры';
   debug.onclick=()=>{mobileDebug=!mobileDebug;MobileGame.debugColliders(mobileDebug);closeModal();};
@@ -3861,7 +3862,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='e1ada0bde0';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='f8e931eb39';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -5670,7 +5671,7 @@ function open(opts={}){
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','Однорукий бандит');
  const loading=document.createElement('div');loading.className='sl-loading';loading.textContent='Открываем автомат…';
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');cancel.setAttribute('aria-label','Вернуться на игровое поле');
- const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=cf95a85e9a96#'+encodeURIComponent(token);
+ const frame=document.createElement('iframe');frame.id='bandit-frame';frame.title='Однорукий бандит';frame.setAttribute('allow','autoplay');frame.setAttribute('allowtransparency','true');frame.src='bandit/index.html?embedded=1&v=17aa974c679f#'+encodeURIComponent(token);
  layer.append(frame,loading,cancel);
  current={promise,session,frame,token,layer,closing:false,resolve,events:window.MinigameEvents?.begin('slot',{landing:opts.free!==false&&opts.landing===true})};
  const finish=()=>{
@@ -5692,6 +5693,7 @@ function connect(child,token){
   snapshot:()=>session.snapshot(),get busy(){return session.busy;},
   begin:()=>session.begin(),buyPack:()=>session.buyPack(),settle:()=>session.settle(),close:()=>session.close(),save:()=>session.save(),
   soundEnabled:()=>!GameFeedback.muted,
+  volume:()=>GameFeedback.volume??1,
   paintClose(button){paintedClose(button);button.querySelector('image').setAttribute('href',new URL('assets/modal-atlas.webp',location.href).href);},
   ready(){entry.unfit.ready();},
   exit:()=>entry.finish(),
@@ -6321,5 +6323,5 @@ if(UI_REVIEW||!load())newGame();else if(S.finished)newGame();else if(!S.player)s
 S.sessions=(S.sessions||0)+1;track('session_start',{sessions:S.sessions,v:VERSION,cfg:cfgHash(),startV:S.startVersion||null});
 fit();{const[g1,g2]=gridOf(S.pos);const[x,y]=iso(g1,g2);cam={x,y:y-TH*0.4};}render();
 </script>
-<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=428d4433";</script><script src="shipment-event.js?v=5529f201"></script><script src="parcel-fill.js?v=0d8f0894"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=f4923580"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=7de4130d"></script><script>(function(){var done=0;function go(){if(done)return;done=1;var e=document.createElement("script");e.type="module";e.src="roll-button.js?v=6a7f9cf0";document.body.appendChild(e)}function w(){document.body.classList.contains("engine-ready")?go():setTimeout(w,300)}w();setTimeout(go,20000)})()</script><script src="money-journal.js?v=c13f52b4"></script></body>
+<script>window.SHIPMENT_STAGE_URL="./shipment-stage.js?v=428d4433";</script><script src="shipment-event.js?v=5529f201"></script><script src="parcel-fill.js?v=0d8f0894"></script><script src="property-motion.js?v=20ec4fbc"></script><script src="property-layout.js?v=8c93b518"></script><script src="spot-varnish.js?v=8e8c6d94"></script><script src="property-upgrade-fx.js?v=9d6e4442"></script><script src="number-drum.js?v=3d9383db"></script><script src="interface-details.js?v=710c976d"></script><script src="advice-target.js?v=61a09bdc"></script><script src="map-progress.js?v=669e000f"></script><script src="top-hud.js?v=4c21b0b1"></script><script src="authority-windows.js?v=0a00d418"></script><script src="notice-windows.js?v=644789a9"></script><script src="interface-review.js?v=7de4130d"></script><script>(function(){var done=0;function go(){if(done)return;done=1;var e=document.createElement("script");e.type="module";e.src="roll-button.js?v=6a7f9cf0";document.body.appendChild(e)}function w(){document.body.classList.contains("engine-ready")?go():setTimeout(w,300)}w();setTimeout(go,20000)})()</script><script src="money-journal.js?v=c13f52b4"></script></body>
 </html>

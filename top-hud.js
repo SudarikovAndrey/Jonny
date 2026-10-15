@@ -90,6 +90,7 @@
       [['hudSound','Звук',GameFeedback.muted],['hudMusic','Музыка',GameFeedback.musicMuted]].forEach(([id,label,off])=>{$(id).textContent=label+': '+(off?'выкл.':'вкл.');$(id).setAttribute('aria-pressed',String(!off));});
     }
     $('hudClose').onclick=()=>closeModal();
+    if(GameFeedback.slider)card.querySelector('.hud-account-toggles').after(GameFeedback.slider());
     audioLabel();$('hudSound').onclick=()=>{GameFeedback.toggle();audioLabel();};$('hudMusic').onclick=()=>{GameFeedback.toggleMusic();audioLabel();};
     $('hudCharacter').onclick=()=>{closeModal();johnny();};
     if($('hudTesting'))$('hudTesting').onclick=()=>{card.className='card';settings();};

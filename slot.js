@@ -69,6 +69,7 @@ function connect(child,token){
   snapshot:()=>session.snapshot(),get busy(){return session.busy;},
   begin:()=>session.begin(),buyPack:()=>session.buyPack(),settle:()=>session.settle(),close:()=>session.close(),save:()=>session.save(),
   soundEnabled:()=>!GameFeedback.muted,
+  volume:()=>GameFeedback.volume??1,
   paintClose(button){paintedClose(button);button.querySelector('image').setAttribute('href',new URL('assets/modal-atlas.webp',location.href).href);},
   ready(){entry.unfit.ready();},
   exit:()=>entry.finish(),

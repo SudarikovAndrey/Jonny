@@ -3024,6 +3024,11 @@ body.advice-targeting #tip{z-index:40}
 /* On narrow banners the decorative engraving yields to the map name and score. */
 @container(max-width:210px){#top .hud-map-heading{grid-template-columns:minmax(0,1fr) max-content}#top .hud-map-city{display:none}}
 #card .hud-map select{width:100%;box-sizing:border-box;padding:12px;font:600 20px Bitter,Georgia,serif;color:#30281e;background:#f4e6c4;border:2px solid #655137;border-radius:7px}
+/* Громкость (m8-sound): печатная шкала — бумажный жёлоб с чернильной обводкой, заполнение красным до бегунка. */
+#card .volume-row{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;font-size:18px;font-weight:800;color:#30281e;margin:4px 0}
+#card .volume-row input{-webkit-appearance:none;appearance:none;width:100%;height:14px;margin:0;border:2px solid #2a2118;border-radius:8px;background:linear-gradient(90deg,#b12f26 var(--v,60%),#f2e4c2 var(--v,60%));cursor:pointer}
+#card .volume-row input::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#f4e6c4;border:3px solid #2a2118;box-shadow:0 2px 0 #2a2118}
+#card .volume-row input::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#f4e6c4;border:3px solid #2a2118;box-shadow:0 2px 0 #2a2118}
 
 /* ---- onboarding-print.css ---- */
 /* Five printed visual lessons. Real game art and UI, no placeholder START label. */

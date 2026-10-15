@@ -181,6 +181,7 @@ settings=function(){
     audioRow.append(fs);
   }
   $('card').append(audioRow);
+  if(GameFeedback.slider)$('card').append(GameFeedback.slider());
   const row=document.createElement('div');row.className='mbtns';
   const debug=document.createElement('button');debug.className='sec';debug.textContent=mobileDebug?'Скрыть коллайдеры':'Показать коллайдеры';
   debug.onclick=()=>{mobileDebug=!mobileDebug;MobileGame.debugColliders(mobileDebug);closeModal();};

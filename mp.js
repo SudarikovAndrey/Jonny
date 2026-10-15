@@ -1077,15 +1077,43 @@ function isUnderdog(){if(!view||!view.players||view.players.length<2)return fals
   return v[0].pid===PID&&v[1].c>v[0].c&&v[0].c<=avg*MP_UNDERDOG.gap;}
 const underdogBonus=()=>MP_UNDERDOG.fixed;
 window.MP_IS_UNDERDOG=()=>isUnderdog();window.MP_UNDERDOG_BONUS=underdogBonus;window.MP_UNDERDOG=MP_UNDERDOG;
-function lapExtras(earned0){
-  if(S.mpLapCut!=null){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),loss=Math.round(inc*(1-S.mpLapCut));
-    if(loss>0){S.cash-=loss;S.stat.earned-=loss;plate(S.mpLapCut===0?'✊ Забастовка':'📉 Демпинг конкурента',-loss,S.mpLapCut===0?'продаж на этом проходе нет':'продажи на этом проходе вдвое меньше');log(`📉 Карта соперника: продажи на старте −${money(loss)}.`);}
+function lapExtras(earned0,sold0){
+  const sales=Math.max(0,Math.round((S.stat.earned||0)-earned0)),units=Math.max(0,(S.stat.sold||0)-(sold0||0)),rows=[];
+  if(S.mpLapCut!=null){const loss=Math.round(sales*(1-S.mpLapCut));
+    if(loss>0){S.cash-=loss;S.stat.earned-=loss;rows.push({t:S.mpLapCut===0?'✊ Забастовка':'📉 Демпинг конкурента',v:-loss});log(`📉 Карта соперника: продажи на старте −${money(loss)}.`);}
     delete S.mpLapCut;}
-  if(S.mpLapBoost){const inc=Math.max(0,Math.round((S.stat.earned||0)-earned0)),add=Math.round(inc*(S.mpLapBoost-1));if(add>0){S.cash+=add;S.stat.earned+=add;plate('🏷 Акция',add,'продажи ×1,5');}delete S.mpLapBoost;}
+  if(S.mpLapBoost){const add=Math.round(sales*(S.mpLapBoost-1));if(add>0){S.cash+=add;S.stat.earned+=add;rows.push({t:'🏷 Акция ×1,5',v:add});}delete S.mpLapBoost;}
   // Подмога района (продюсер 02.10): последний по капиталу получает на старте +$50.
   const extra=isUnderdog()?underdogBonus():0;if(extra)emit({kind:'underdog',text:`подмога района ${money(extra)}`,amount:extra,tile:0});
   const sb=startBonus();S.cash+=sb+extra;S.stat.earned=(S.stat.earned||0)+sb+extra;
-  plate('🏁 Старт',sb+extra,extra?`+${money(extra)} — подмога района`:'каждый проход старта');log(`🏁 Проход старта: +${money(sb)}${extra?` и подмога района +${money(extra)}`:''}.`);
+  passBanner({sales,units,sb,extra,rows});log(`🏁 Проход старта: +${money(sb)}${extra?` и подмога района +${money(extra)}`:''}.`);
+}
+// Проход старта крупно (m8-passsales, запись 124: «крупно, по центру — на какую сумму продал»; раньше было видно
+// только бонус старта): итог круга одной цифрой, под ней — из чего сложился, монеты летят в кошелёк.
+function passBanner(o){
+  const total=o.sales+o.sb+o.extra+o.rows.reduce((a,r)=>a+r.v,0),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sign=v=>(v<0?'−':'+')+money(Math.abs(v)),line=(t,v,cls)=>`<li class="${cls||''}"><span>${esc(t)}</span><b>${sign(v)}</b></li>`;
+  document.querySelectorAll('.mp-lap').forEach(x=>x.remove());
+  const b=el('div','mp-lap'+(total<0?' minus':''));
+  b.innerHTML=`<em>🏁 Проход старта</em><strong>${sign(0)}</strong><ul>`
+    +(o.sales?line(`Продажи · ${o.units} шт`,o.sales,'sales'):'<li class="empty"><span>Точки пустые — продавать нечего</span></li>')
+    +o.rows.map(r=>line(r.t,r.v,r.v<0?'neg':'')).join('')+line('Бонус старта',o.sb)+(o.extra?line('🤝 Подмога района',o.extra):'')+'</ul>';
+  document.body.append(b);
+  const num=b.querySelector('strong'),t0=performance.now(),roll=reduced?0:700;
+  (function count(now){const k=roll?Math.min(1,(now-t0)/roll):1,e=1-Math.pow(1-k,3);num.textContent=sign(Math.round(total*e));if(k<1)requestAnimationFrame(count);})(t0);
+  const close=()=>{if(!b.isConnected)return;b.animate([{opacity:1},{opacity:0,transform:'translate(-50%,-56%) scale(.94)'}],{duration:220,fill:'forwards'}).finished.then(()=>b.remove());};
+  b.onclick=close;setTimeout(close,3400);
+  if(!reduced)b.animate([{transform:'translate(-50%,-50%) scale(.86)',opacity:0},{transform:'translate(-50%,-50%) scale(1.04)',opacity:1,offset:.65},{transform:'translate(-50%,-50%) scale(1)',opacity:1}],{duration:240,easing:'cubic-bezier(.34,1.56,.64,1)'});
+  try{navigator.vibrate&&navigator.vibrate(total<0?[30,40,30]:50);}catch(e){}
+  if(total<=0||reduced)return;
+  // Монеты — по дуге из итога в кошелёк, числом от суммы (4–12), на последней кошелёк «глотает».
+  const from=num.getBoundingClientRect(),to=$('sCash')&&$('sCash').getBoundingClientRect();if(!to||!to.width)return;
+  const n=Math.max(4,Math.min(12,Math.round(total/60))),x0=from.left+from.width/2,y0=from.top+from.height/2,x1=to.left+to.width/2,y1=to.top+to.height/2;
+  for(let k=0;k<n;k++){const c=el('img','mp-lap-coin');c.src='assets/icons/coins.webp';c.alt='';document.body.append(c);
+    const jx=(Math.random()-.5)*90,jy=(Math.random()-.5)*30,mx=(x0+x1)/2+jx,my=Math.min(y0,y1)-60-Math.random()*50;
+    c.animate([{transform:`translate(${x0+jx*.4-13}px,${y0+jy-13}px) scale(.5)`,opacity:0},{transform:`translate(${x0+jx-13}px,${y0+jy-30}px) scale(1.1)`,opacity:1,offset:.18},
+      {transform:`translate(${mx-13}px,${my-13}px) scale(1)`,opacity:1,offset:.6},{transform:`translate(${x1-13}px,${y1-13}px) scale(.55)`,opacity:.3}],
+      {duration:900,delay:500+k*70,easing:'cubic-bezier(.45,0,.55,1)',fill:'backwards'}).finished.then(()=>{c.remove();if(k===n-1&&typeof pulse==='function')pulse('sCash');});}
 }
 // ---- такси до склада за 💎 (плейтест 5): в свой ход до броска, едет на ближайший склад впереди — это и есть ход ----
 async function mpTaxi(){
@@ -1107,8 +1135,8 @@ window.MPTaxi={go:mpTaxi,can:()=>!!(view&&view.phase==='play'&&myTurn()&&!rolled
 function potDelta(fn){return function(){const before=S.pot||0;const r=fn.apply(this,arguments);const d=Math.round((S.pot||0)-before);
   if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;pushSoon();}return r;};}   // S.pot — как будет у стола, чтобы табличка на клетке не отставала
 pay=potDelta(pay);payFine=potDelta(payFine);
-(function(){const base=lapDone;lapDone=async function(){const before=S.pot||0,slot0=slotPotNow(),earned0=S.stat?S.stat.earned||0:0;const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
-  if(myTurn())lapExtras(earned0);
+(function(){const base=lapDone;lapDone=async function(){const before=S.pot||0,slot0=slotPotNow(),earned0=S.stat?S.stat.earned||0:0,sold0=S.stat?S.stat.sold||0:0;const r=await base.apply(this,arguments);const d=Math.round((S.pot||0)-before);
+  if(myTurn())lapExtras(earned0,sold0);
   if(d>0&&myTurn()){credit(null,0,null,0,{pot:d});S.pot=Math.round((view&&view.pot)||0)+d;}
   slotPotFlush(slot0);
   // Круги в минусе (плейтест 02.10): первый — предупреждение, второй — клетки на торги. Вышел в плюс — счёт сброшен.
@@ -2018,7 +2046,7 @@ function swapPickEnd(toSwap){const P=swapPicking;if(!P)return;swapPicking=null;c
   if(!toSwap)try{MobileHost.send({action:'home'});mobileLastLayout='';mobileLayout();}catch(e){}
   if(cv){cv.removeEventListener('pointerdown',P.pd,true);cv.removeEventListener('pointerup',P.pu,true);}
   for(const [,o] of P.rings)o.el.remove();P.ui.remove();document.body.classList.remove('mp-swap-picking');updateUi();}
-const taxiBtn=el('button','mp-taxi');taxiBtn.type='button';taxiBtn.hidden=true;taxiBtn.innerHTML='🚕<small><span class="full">на склад · </span>💎1</small>';
+const taxiBtn=el('button','mp-taxi');taxiBtn.type='button';taxiBtn.hidden=true;taxiBtn.innerHTML='<img class="mp-taxi-ic" src="assets/icons/taxi-cab.webp" alt="" draggable="false"><small><span class="full">на склад · </span>💎1</small>';
 taxiBtn.onclick=()=>{if(window.MPTaxi)MPTaxi.go();};
 function offerBadgeSync(){
   // входящая продажа (m5-sellto) — первой: «🏷 Вася продаёт «X» за $N», висит до ответа

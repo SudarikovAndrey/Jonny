@@ -356,6 +356,9 @@ body #onboard.mp-rules .mpr-badge img{width:42px;height:42px}
 .mp-taxi{position:fixed;z-index:28;translate:-100% -50%;display:flex;flex-direction:column;align-items:center;padding:5px 8px 4px;font-size:24px;line-height:1;cursor:pointer;
   background:#f2e3bd url(assets/paper-grain.svg);border:2.5px solid #25221c;border-radius:9px 12px 8px 11px;box-shadow:2px 3px 0 #25221c}
 .mp-taxi[hidden]{display:none}
+/* Значок такси (design/codex-задания/taxi): наклейка с кремовой вырубкой, на месте прежнего эмодзи. */
+.mp-taxi-ic{display:block;width:40px;height:40px;margin:-6px 0 -3px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 0 #25221c33)}
+.mp-taxi.compact .mp-taxi-ic{width:34px;height:34px}
 .mp-taxi small{font:800 9px var(--mp-num);color:#25221c;white-space:nowrap}
 .mp-taxi:active{translate:calc(-100% + 1px) calc(-50% + 2px);box-shadow:1px 1px 0 #25221c}
 @media (prefers-reduced-motion:reduce){.mp-mine:not(.mp-rolled) .mp-hand-card,.mp-bar .mp-chip.mp-target{animation:none}}
@@ -680,3 +683,17 @@ body.mp-mode #card .uup .uup-stats{display:none}
 body.mp-mode #card .uup{display:none}
 body.mp-mode #card.print-property .property-picture{height:clamp(130px,21dvh,190px)!important}
 body.mp-mode #card.print-property .property-body{overflow-y:auto;min-height:0}
+/* Проход старта (m8-passsales): итог круга крупно по центру — печатный ярлык с цифрой и разбивкой, монеты летят в кошелёк. */
+.mp-lap{position:fixed;left:50%;top:42%;z-index:63;transform:translate(-50%,-50%);min-width:236px;max-width:min(320px,calc(100vw - 32px));box-sizing:border-box;
+  padding:12px 18px 12px;background:var(--mp-paper) url(assets/paper-grain.svg);color:var(--mp-ink);border:3px solid var(--mp-ink);
+  border-radius:14px 18px 13px 17px;box-shadow:6px 7px 0 rgba(37,34,28,.85);display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.mp-lap em{font:800 15px var(--mp-num);font-style:normal;letter-spacing:.02em}
+.mp-lap strong{font:800 56px/1 var(--mp-num);color:var(--mp-green);font-variant-numeric:tabular-nums;margin:4px 0 8px;text-shadow:2px 2px 0 rgba(37,34,28,.18)}
+.mp-lap.minus strong{color:var(--mp-red)}
+.mp-lap ul{list-style:none;margin:0;padding:8px 0 0;width:100%;border-top:2px dashed rgba(37,34,28,.35);display:grid;gap:3px}
+.mp-lap li{display:flex;justify-content:space-between;gap:12px;font:600 14px var(--mp-txt)}
+.mp-lap li b{font:800 15px var(--mp-num);font-variant-numeric:tabular-nums;color:var(--mp-green)}
+.mp-lap li.sales{font-weight:800;font-size:15px}.mp-lap li.sales b{font-size:17px}
+.mp-lap li.neg b{color:var(--mp-red)}
+.mp-lap li.empty{justify-content:center;color:#6b5f52}
+.mp-lap-coin{position:fixed;left:0;top:0;width:26px;height:26px;z-index:64;pointer-events:none;will-change:transform}
