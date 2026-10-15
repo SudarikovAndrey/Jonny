@@ -312,7 +312,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 @media(max-width:360px){.training-pack{grid-template-columns:minmax(0,1fr) 22px 80px;gap:6px}.training-crate{width:80px;height:80px}.training-good{grid-template-columns:48px minmax(0,1fr)}.training-good .good-icon{width:48px;height:48px}}
 </style>
 
-<link rel="icon" href="icon.png"><link rel="stylesheet" href="bundle.css?v=7f9f65bd"><meta name="theme-color" content="#302d27"></head>
+<link rel="icon" href="icon.png"><link rel="stylesheet" href="bundle.css?v=bd2d80b7"><meta name="theme-color" content="#302d27"></head>
 <body><section id="boot" aria-labelledby="bootTitle">
   <picture class="start-city" aria-hidden="true"><source media="(orientation:landscape)" srcset="assets/start/city-landscape.webp"><img src="assets/start/city-portrait.webp" alt="" fetchpriority="high"></picture>
   <div class="start-print-edge" aria-hidden="true"></div>
@@ -2028,7 +2028,7 @@ function render(){
    if(hot&&!trainingPending()&&!S.tips.shipHot&&!S.tips.guideActive){hint('shipHot','Товара хватит на полную фуру — пора отправлять!');}}
   const ks=myKiosks();
   {const tot=ks.reduce((a,t)=>a+t.goods,0),totc=ks.reduce((a,t)=>a+cap(t),0);$('inv').hidden=!ks.length;$('invList').hidden=!invOpen;
-   $('invBtn').innerHTML=`<em>📦</em><i><b style="width:${totc?Math.round(tot/totc*100):0}%"></b></i><small>${invOpen?'▾':tot+'/'+totc}</small>`;
+   $('invBtn').innerHTML=`<em>📦</em><i><b style="width:${totc?Math.round(tot/totc*100):0}%"></b></i><small>${tot+'/'+totc}${invOpen?' ▾':''}</small>`;
    $('invList').innerHTML=CFG.GOODS.filter(g=>ks.some(t=>t.good===g.id)).map(g=>{const c=ks.filter(t=>t.good===g.id).reduce((s,t)=>s+cap(t),0);return`<span class="${S.trend===g.id?'trend':''}">${g.icon} ${stock(g.id)}/${c}</span>`;}).join('');}
   $('bRoll').disabled=moving||S.finished||trainingPending()||!!tutorialNeedsAction();$('bRoll').className='dice'+(S.jail>0?' jail':'');
   $('bRoll').querySelector('.die').textContent=S.rolls>0?'🎲':'⏳';renderRolls();renderGuide();
@@ -3443,7 +3443,7 @@ eventInfo=async function(){
 // Costco presentation reuses the prototype's purchase, hold, allocation and tutorial handlers.
 function costcoArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'costco-atlas.webp',1222,1287);}
 const COSTCO_ICONS={gum:[715,1132,83,88],cola:[808,1127,58,92],bud:[880,1130,66,90],tape:[949,1137,77,82],marl:[1032,1125,87,95]};
-let warehouseScroll=0,warehouseStocks={};
+let warehouseScroll=0,warehouseStocks={},warehouseLeft='';
 function decorateWarehouse(card){
  if(!card.querySelector('#wNo')||card.querySelector('.warehouse-shell'))return;
  card.className='card warehouse-card';
@@ -3461,6 +3461,9 @@ function decorateWarehouse(card){
   const meta=row.querySelector('.wn small');meta.textContent=`Продажа: ${goodSales(id)} шт./круг · $${sellPrice(id)} за шт.`;meta.style.whiteSpace='nowrap';
   meta.title=[...new Set(goodKiosks(id).map(pointName))].join(', ');
   meta.classList.add('warehouse-meta');row.append(meta);
+  // Проверка на точке (m8-warehouse, запись 124): товар туда ляжет, но продаж нет, пока не заплачен штраф — говорим прямо в строке.
+  const insp=goodKiosks(id).filter(t=>t.insp);
+  if(insp.length){const w=document.createElement('small');w.className='warehouse-insp';w.textContent=`📋 Проверка: ${insp.map(t=>'«'+pointName(t)+'»').join(', ')} — не продаёт, пока не заплатишь штраф`;row.append(w);}
   if(stockNow<capacity)button.innerHTML=`<span>Купить 1</span><span class="warehouse-unit-price">$${buyPrice(id)}</span>`;
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
@@ -3484,6 +3487,13 @@ function decorateWarehouse(card){
   all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
   const buys=document.createElement('div');buys.className='warehouse-buys';
   buys.append(all);footer.append(buys);enamelButton(all);
+  // После «Пополнить всё» — чего не хватило и почему (запись 124: «купилось всё, кроме джинсов» — без объяснения).
+  // Закупка идёт по выгоде на доллар: кончились деньги — дорогой товар остаётся последним.
+  all.addEventListener('click',()=>setTimeout(()=>{
+   const left=CFG.GOODS.filter(g=>goodKiosks(g.id).length).map(g=>({g,n:goodCap(g.id)-stock(g.id)})).filter(x=>x.n>0);
+   warehouseLeft=left.length?`Не хватило денег: ${left.map(x=>`${x.g.name} — ещё ${x.n} шт. по $${buyPrice(x.g.id)}`).join(' · ')}. Сначала берём самое выгодное.`:'';
+   const n=document.querySelector('#card .warehouse-buy-note');if(n&&warehouseLeft){n.textContent=warehouseLeft;n.classList.add('warn');}
+  },0));
   // Вторая закупка — на половину суммы «на всё» (а не половину кармана, иначе
   // «половина» выходила дороже «всего»). Берём самые выгодные товары по кругу.
   const allPrice=+(all.querySelector('b')?.textContent||'').replace(/\D/g,'')||0;
@@ -3504,7 +3514,7 @@ function decorateWarehouse(card){
     buys.append(half); enamelButton(half);
   }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
-  const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
+  const note=document.createElement('small');note.className='warehouse-buy-note'+(warehouseLeft?' warn':'');note.textContent=warehouseLeft?warehouseLeft:canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
  }else{
   const done=document.createElement('button');done.className='sec';done.textContent='На карту';done.onclick=()=>closeModal();footer.append(done);enamelButton(done);
  }
@@ -3515,7 +3525,7 @@ function decorateWarehouse(card){
  rows.forEach(r=>enamelButton(r.querySelector('button')));
  list.scrollTop=warehouseScroll;list.addEventListener('scroll',()=>warehouseScroll=list.scrollTop,{passive:true});
 }
-new MutationObserver(()=>{if($('modal').hidden){warehouseScroll=0;warehouseStocks={};}}).observe($('modal'),{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{if($('modal').hidden){warehouseScroll=0;warehouseStocks={};warehouseLeft='';}}).observe($('modal'),{attributes:true,attributeFilter:['hidden']});
 
 /* Fast physical paper motion. Game promises never wait for decorative motion. */
 const PaperMotion=(()=>{
@@ -3862,7 +3872,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='75eefe2a44';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='511d7418f1';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -5919,6 +5929,10 @@ function sfSell(cat){return SF.sell[cat]||good(cat).sell;}
 function sfMargin(cat){return Math.max(1,sfSell(cat)-good(cat).buy);}
 // Дефицит земли вместо дефицита денег (модель 01.10): каждая своя точка делает следующую стройку дороже на 20%.
 SF.landGrow=0.20;SF.rebuildShare=0.5;
+// Мультиплеер (решение продюсера 14.10, m8-rebuild) включает: перестройка — только после первой лицензии (в любой товар);
+// rebuildWarn(t,cat) → строка-предупреждение в меню (например, «потеряешь категорию миссии»). В соло оба выключены.
+SF.rebuildNeedsLic=false;SF.rebuildWarn=null;
+const sfRebuildLocked=()=>!!SF.rebuildNeedsLic&&!SF.lic.some(l=>sfHasLic(l.id));
 function sfBasePrice(cat){return SF.build[cat]||Math.max(20,Math.round(sfBase(1)*sfMargin(cat)*SF.payback/5)*5);}
 // buildTiles() зовёт sfPrice до того, как S создано (новая партия без сохранения) — тогда своих точек ноль.
 function sfPrice(cat){const n=(typeof S!=='undefined'&&S&&S.tiles)?myKiosks().filter(t=>!sfIsLot(t)).length:0;return Math.round(sfBasePrice(cat)*(1+SF.landGrow*n)/5)*5;}
@@ -5976,6 +5990,7 @@ evolveState=()=>'max';
 // ---- Меню пустыря v2: шесть категорий, закрытые — с замком и покупкой лицензии на месте ----
 async function sfBuildMenu(t,opts={}){
   const rebuild=!!opts.rebuild,priceOf=rebuild?sfRebuildPrice:sfPrice;
+  if(rebuild&&sfRebuildLocked()){toast('🏗 Перестройка открывается после первой лицензии');return;}
   track('window',{w:rebuild?'rebuild':'lot',tile:t.i,cash:S.cash});
   // Открытые категории — карточки точек. Закрытые категориями не показываем: лицензия — это
   // документ, а не точка (решение продюсера 30.09), и на нём написано, что она открывает.
@@ -5985,7 +6000,7 @@ async function sfBuildMenu(t,opts={}){
     const price=`<small>Построить</small><span><i class="cash-glyph"></i>${p}</span>`;
     return `<div role="button" tabindex="${poor?-1:0}" class="sf-opt ${poor?'poor':''}" data-i="${i}" data-cat="${cat}" ${poor?'aria-disabled="true"':''} aria-label="${SF.formats[0]} ${SF.gen[cat]}, $${p}">
       <span class="sf-art"><img src="${art}" alt="" decoding="async"></span>
-      <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]}</small>
+      <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]}</small>${(()=>{const w=rebuild&&SF.rebuildWarn?SF.rebuildWarn(t,cat):'';return w?`<small class="sf-warn" style="display:block;color:#a92720;font-weight:700">${w}</small>`:'';})()}
         <span class="sf-stats"><span>≈ <i class="cash-glyph"></i>${profit}<em>за круг</em></span><span>запас <i class="cash-glyph"></i>${fill}</span><span>стройка <i class="cash-glyph"></i>${p}</span></span></span>
       <span class="sf-price">${price}</span></div>`;}).join('');
   // Документы-лицензии: одна карточка на лицензию, с перечнем товаров, которые она открывает.
@@ -6056,7 +6071,8 @@ function sfCardNote(){
   const n=document.createElement('p');n.className='sf-note';
   n.innerHTML=`<span class="sf-chip city">Город +${Math.round((sfPriceMult()-1)*100)}% <small>к ценам</small></span><span class="sf-actions"><button type="button" class="sec sf-lic-btn">📜 Лицензии</button><button type="button" class="sec sf-rebuild-btn">🏗 Перестроить</button></span>`;
   n.querySelector('.sf-lic-btn').onclick=()=>{closeModal();setTimeout(sfLicenseMenu,160);};
-  n.querySelector('.sf-rebuild-btn').onclick=()=>{if(S.pos!==t.i)return;closeModal();setTimeout(()=>sfBuildMenu(t,{rebuild:true}),160);};
+  {const rb=n.querySelector('.sf-rebuild-btn');if(sfRebuildLocked()){rb.textContent='🏗 Перестроить — после лицензии';rb.setAttribute('aria-disabled','true');rb.style.opacity='.55';}
+   rb.onclick=()=>{if(S.pos!==t.i)return;if(sfRebuildLocked()){toast('🏗 Перестройка открывается после первой лицензии');return;}closeModal();setTimeout(()=>sfBuildMenu(t,{rebuild:true}),160);};}
   anchor.after(n);
 }
 new MutationObserver(()=>sfCardNote()).observe($('card'),{childList:true,subtree:true});
@@ -6115,7 +6131,9 @@ async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks
     <div class="row"><span class="n">Городу не хватает</span><span class="v">${SF.cats.filter(c=>!have.has(c)).map(c=>SF.cat[c]).join(', ')||'ничего'}</span></div>
     <h2 style="margin-top:10px">Задачи</h2>${ts.map(q=>`<div class="row"><span class="n">${q.ok?'✓ ':''}${q.text(q.goal)}</span><span class="v">${q.v}/${q.goal}</span></div>`).join('')}`,[{t:'📜 Лицензии мэрии',v:2,cls:'ok'},{t:'Ок',v:1,cls:'sec'}]).then(v=>{if(v===2)setTimeout(sfLicenseMenu,160);});}
 $('bHub').onclick=sfHub;
-window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,prosp:SF.prosp,sell:SF.sell,build:SF.build,price:sfPrice,basePrice:sfBasePrice,rebuildPrice:sfRebuildPrice,landGrow:SF.landGrow,licenseMenu:sfLicenseMenu,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense}; // prosp — надбавка к ценам за категорию; её читает мультиплеер (web/mp.js)
+window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,prosp:SF.prosp,sell:SF.sell,build:SF.build,price:sfPrice,basePrice:sfBasePrice,rebuildPrice:sfRebuildPrice,landGrow:SF.landGrow,licenseMenu:sfLicenseMenu,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense,cat:SF.cat,
+  // Мультиплеер (14.10): правила перестройки — {needsLic, warn(t,cat)}; меню пустыря и карточка точки их читают.
+  rebuildRules:o=>{if(o&&'needsLic' in o)SF.rebuildNeedsLic=!!o.needsLic;if(o&&'warn' in o)SF.rebuildWarn=o.warn||null;},rebuildLocked:()=>sfRebuildLocked()}; // prosp — надбавка к ценам за категорию; её читает мультиплеер (web/mp.js)
 // Шапка (web/top-hud.js) берёт прогресс и задачи режима отсюда.
 window.MapMode={
   progress(){const ts=sfTasks();return {name:'Сан-Франциско',value:sfCovered(),goal:6,percent:ts.reduce((a,q)=>a+q.v/q.goal,0)/ts.length*100,unit:'категорий'};},

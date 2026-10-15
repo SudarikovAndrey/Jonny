@@ -451,7 +451,8 @@ function landHidden(t,ctx){
       // когда поле занято, им оставалось только предлагать выкуп). Дубль категории — в недостающую для миссии, без миссии —
       // в новую категорию города, если касса богатая.
       buyLicenses(t,P,bot,emit,true);
-      if(t.base){const cnt={};for(const x of S.tiles)if(x.owner&&x.type==='kiosk'&&x.base&&!x.lot)cnt[x.base]=(cnt[x.base]||0)+1;
+      // 14.10: перестройка — только после первой лицензии, как у людей.
+      if(t.base&&(SFB().licenses||[]).some(l=>SFB().hasLic(l.id))){const cnt={};for(const x of S.tiles)if(x.owner&&x.type==='kiosk'&&x.base&&!x.lot)cnt[x.base]=(cnt[x.base]||0)+1;
         const want=wantCats(),rb=c=>SFB().rebuildPrice?SFB().rebuildPrice(c):Math.round(SFB().price(c)/2);
         const opts=(want.length?want:Object.keys(SFB().build||{}).filter(c=>roiOf(c)>roiOf(t.base)*1.2)).filter(c=>c!==t.base&&catOpen(c)&&S.cash-rb(c)>=S.cash*P.keep);
         const go=opts.length&&(want.length?cnt[t.base]>1:(cnt[t.base]>1||roiOf(t.base)<.5)&&rnd(.4));

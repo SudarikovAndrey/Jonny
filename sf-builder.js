@@ -56,6 +56,10 @@ function sfSell(cat){return SF.sell[cat]||good(cat).sell;}
 function sfMargin(cat){return Math.max(1,sfSell(cat)-good(cat).buy);}
 // Дефицит земли вместо дефицита денег (модель 01.10): каждая своя точка делает следующую стройку дороже на 20%.
 SF.landGrow=0.20;SF.rebuildShare=0.5;
+// Мультиплеер (решение продюсера 14.10, m8-rebuild) включает: перестройка — только после первой лицензии (в любой товар);
+// rebuildWarn(t,cat) → строка-предупреждение в меню (например, «потеряешь категорию миссии»). В соло оба выключены.
+SF.rebuildNeedsLic=false;SF.rebuildWarn=null;
+const sfRebuildLocked=()=>!!SF.rebuildNeedsLic&&!SF.lic.some(l=>sfHasLic(l.id));
 function sfBasePrice(cat){return SF.build[cat]||Math.max(20,Math.round(sfBase(1)*sfMargin(cat)*SF.payback/5)*5);}
 // buildTiles() зовёт sfPrice до того, как S создано (новая партия без сохранения) — тогда своих точек ноль.
 function sfPrice(cat){const n=(typeof S!=='undefined'&&S&&S.tiles)?myKiosks().filter(t=>!sfIsLot(t)).length:0;return Math.round(sfBasePrice(cat)*(1+SF.landGrow*n)/5)*5;}
@@ -113,6 +117,7 @@ evolveState=()=>'max';
 // ---- Меню пустыря v2: шесть категорий, закрытые — с замком и покупкой лицензии на месте ----
 async function sfBuildMenu(t,opts={}){
   const rebuild=!!opts.rebuild,priceOf=rebuild?sfRebuildPrice:sfPrice;
+  if(rebuild&&sfRebuildLocked()){toast('🏗 Перестройка открывается после первой лицензии');return;}
   track('window',{w:rebuild?'rebuild':'lot',tile:t.i,cash:S.cash});
   // Открытые категории — карточки точек. Закрытые категориями не показываем: лицензия — это
   // документ, а не точка (решение продюсера 30.09), и на нём написано, что она открывает.
@@ -122,7 +127,7 @@ async function sfBuildMenu(t,opts={}){
     const price=`<small>Построить</small><span><i class="cash-glyph"></i>${p}</span>`;
     return `<div role="button" tabindex="${poor?-1:0}" class="sf-opt ${poor?'poor':''}" data-i="${i}" data-cat="${cat}" ${poor?'aria-disabled="true"':''} aria-label="${SF.formats[0]} ${SF.gen[cat]}, $${p}">
       <span class="sf-art"><img src="${art}" alt="" decoding="async"></span>
-      <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]}</small>
+      <span class="sf-info"><b>${SF.formats[0]} ${SF.gen[cat]||g.name}</b><small class="sf-cat">${SF.cat[cat]}</small>${(()=>{const w=rebuild&&SF.rebuildWarn?SF.rebuildWarn(t,cat):'';return w?`<small class="sf-warn" style="display:block;color:#a92720;font-weight:700">${w}</small>`:'';})()}
         <span class="sf-stats"><span>≈ <i class="cash-glyph"></i>${profit}<em>за круг</em></span><span>запас <i class="cash-glyph"></i>${fill}</span><span>стройка <i class="cash-glyph"></i>${p}</span></span></span>
       <span class="sf-price">${price}</span></div>`;}).join('');
   // Документы-лицензии: одна карточка на лицензию, с перечнем товаров, которые она открывает.
@@ -193,7 +198,8 @@ function sfCardNote(){
   const n=document.createElement('p');n.className='sf-note';
   n.innerHTML=`<span class="sf-chip city">Город +${Math.round((sfPriceMult()-1)*100)}% <small>к ценам</small></span><span class="sf-actions"><button type="button" class="sec sf-lic-btn">📜 Лицензии</button><button type="button" class="sec sf-rebuild-btn">🏗 Перестроить</button></span>`;
   n.querySelector('.sf-lic-btn').onclick=()=>{closeModal();setTimeout(sfLicenseMenu,160);};
-  n.querySelector('.sf-rebuild-btn').onclick=()=>{if(S.pos!==t.i)return;closeModal();setTimeout(()=>sfBuildMenu(t,{rebuild:true}),160);};
+  {const rb=n.querySelector('.sf-rebuild-btn');if(sfRebuildLocked()){rb.textContent='🏗 Перестроить — после лицензии';rb.setAttribute('aria-disabled','true');rb.style.opacity='.55';}
+   rb.onclick=()=>{if(S.pos!==t.i)return;if(sfRebuildLocked()){toast('🏗 Перестройка открывается после первой лицензии');return;}closeModal();setTimeout(()=>sfBuildMenu(t,{rebuild:true}),160);};}
   anchor.after(n);
 }
 new MutationObserver(()=>sfCardNote()).observe($('card'),{childList:true,subtree:true});
@@ -252,7 +258,9 @@ async function sfHub(){if(moving)return;const ts=sfTasks(),have=new Set(myKiosks
     <div class="row"><span class="n">Городу не хватает</span><span class="v">${SF.cats.filter(c=>!have.has(c)).map(c=>SF.cat[c]).join(', ')||'ничего'}</span></div>
     <h2 style="margin-top:10px">Задачи</h2>${ts.map(q=>`<div class="row"><span class="n">${q.ok?'✓ ':''}${q.text(q.goal)}</span><span class="v">${q.v}/${q.goal}</span></div>`).join('')}`,[{t:'📜 Лицензии мэрии',v:2,cls:'ok'},{t:'Ок',v:1,cls:'sec'}]).then(v=>{if(v===2)setTimeout(sfLicenseMenu,160);});}
 $('bHub').onclick=sfHub;
-window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,prosp:SF.prosp,sell:SF.sell,build:SF.build,price:sfPrice,basePrice:sfBasePrice,rebuildPrice:sfRebuildPrice,landGrow:SF.landGrow,licenseMenu:sfLicenseMenu,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense}; // prosp — надбавка к ценам за категорию; её читает мультиплеер (web/mp.js)
+window.SFBuilder={covered:sfCovered,priceMult:sfPriceMult,prosp:SF.prosp,sell:SF.sell,build:SF.build,price:sfPrice,basePrice:sfBasePrice,rebuildPrice:sfRebuildPrice,landGrow:SF.landGrow,licenseMenu:sfLicenseMenu,tasks:sfTasks,licenses:SF.lic,hasLic:sfHasLic,buyLicense:sfBuyLicense,cat:SF.cat,
+  // Мультиплеер (14.10): правила перестройки — {needsLic, warn(t,cat)}; меню пустыря и карточка точки их читают.
+  rebuildRules:o=>{if(o&&'needsLic' in o)SF.rebuildNeedsLic=!!o.needsLic;if(o&&'warn' in o)SF.rebuildWarn=o.warn||null;},rebuildLocked:()=>sfRebuildLocked()}; // prosp — надбавка к ценам за категорию; её читает мультиплеер (web/mp.js)
 // Шапка (web/top-hud.js) берёт прогресс и задачи режима отсюда.
 window.MapMode={
   progress(){const ts=sfTasks();return {name:'Сан-Франциско',value:sfCovered(),goal:6,percent:ts.reduce((a,q)=>a+q.v/q.goal,0)/ts.length*100,unit:'категорий'};},

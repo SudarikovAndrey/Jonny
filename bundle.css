@@ -1396,6 +1396,9 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 @media(max-width:360px){.wh-verb{display:none}#card .warehouse-buys button.warehouse-bulk>span:not(.enamel-skin){font-size:13px}}
 .wh-short{display:none;font-style:normal}
 @media(max-width:360px){.wh-short{display:inline}}
+/* m8-warehouse: проверка на точке — в строке товара; чего не хватило после «Пополнить всё» — под кнопками. */
+#card .warehouse-insp{grid-column:1/-1;display:block;margin-top:2px;font:700 12px/1.25 Bitter,Georgia,serif;color:#8a2a1f}
+#modal #card .warehouse-footer .warehouse-buy-note.warn{color:#8a2a1f;font-weight:700}
 
 /* ---- card-motion.css ---- */
 /* A single motion owner; no inherited slide, scale or fade fighting the paper. */

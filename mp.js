@@ -179,6 +179,13 @@ const MP_LICENSES=[{id:'tape',name:'Кассеты',cats:['tape'],price:400},{id
   {id:'sneak',name:'Кроссовки',cats:['sneak'],price:900},{id:'vcr',name:'Видики',cats:['vcr'],price:1300}];
 (function mpLicenses(){const L=window.SFBuilder&&SFBuilder.licenses;if(!L){setTimeout(mpLicenses,50);return;}
   if(L.length===MP_LICENSES.length&&L[0].id===MP_LICENSES[0].id)return;L.splice(0,L.length,...MP_LICENSES.map(x=>Object.assign({},x)));})();
+// Перестройка в партии (решение продюсера 14.10, m8-rebuild): только после первой лицензии, зато в любой товар;
+// если она забирает последнюю точку категории при миссии «Весь город» — предупреждение в меню.
+(function mpRebuildRules(){if(!window.SFBuilder||!SFBuilder.rebuildRules){setTimeout(mpRebuildRules,50);return;}const CAT=SFBuilder.cat||{};
+  SFBuilder.rebuildRules({needsLic:true,warn:(t,cat)=>{if(!view||!view.win||view.win.id!=='city'||!t||!t.base||cat===t.base)return '';
+    const mine=S.tiles.filter(x=>x.owner&&x.type==='kiosk'&&x.base&&!x.lot);if(mine.filter(x=>x.base===t.base).length>1)return '';
+    const before=new Set(mine.map(x=>x.base)).size,after=new Set(mine.filter(x=>x!==t).map(x=>x.base).concat(cat)).size;
+    return `⚠️ Потеряешь «${CAT[t.base]||t.base}» для «Весь город»: категорий станет ${after} из 6${after<before?'':' (эта добавит новую)'}`;}});})();
 function makeValuer(tiles){
   const cov={};
   const v=(t,pid)=>{
@@ -781,6 +788,12 @@ function inspMercyHook(){if(typeof hazard!=='function'||hazard.mpMercy)return;co
 // с первого же прохода; на каждом проходе событие interest для плашки «Интерфейса». Потолок первого кредита растёт с кругами:
 // $1 000 + $250 за каждый пройденный круг (жалоба с записи: после погашения снова давали ровно $1 000).
 // balance.js и движок грузятся после mp.js — правки ставим при первом виде стола.
+// Инкассатор (решение 14.10): пачка — 8–17% среднего дохода стола за круг, как суммы карт «Шанса»; было $5–20 весь матч.
+function mpScatterScale(){if(typeof CFG==='undefined'||!CFG.SCATTER)return;let U=50;try{U=chanceU();}catch(e){}
+  CFG.SCATTER.min=Math.max(5,Math.round(U*0.08));CFG.SCATTER.max=Math.max(CFG.SCATTER.min+1,Math.round(U*0.17));}
+// Для окна банка «Интерфейса»: «даём N кругов твоей прибыли — $M» (i — номер кредита, 0 — первый).
+window.MPBankInfo=(i=0)=>{try{const L=CFG.LOANS[i];return {laps:L.laps,lapProfit:Math.round(lapPotential()),amount:loanAmount(i),rate:L.rate,
+  cap:i===0?MP_LOAN1_CAP+MP_LOAN1_CAP_PER_LAP*((S&&S.laps)||0):null};}catch(e){return null;}};
 const MP_LOAN1_RATE=0.03,MP_LOAN1_CAP=1000,MP_LOAN1_CAP_PER_LAP=250;
 function mpBankHook(){if(typeof CFG==='undefined'||!CFG.LOANS||!CFG.LOANS[0])return;CFG.LOANS[0].rate=MP_LOAN1_RATE;
   if(typeof loanAmount==='function'&&!loanAmount.mp){const base=loanAmount;
@@ -797,7 +810,7 @@ function adopt(v){
   S.pot=Math.round(v.pot||0);   // копилка общая на стол: своя цифра в срезе — только для отрисовки
   syncSlotPot();
   const lead=mpLeader();CFG.INSP.limit=lead?4:3;CFG.INSP.fineShare=lead?.75:.5;
-  inspMercyHook();mpBankHook();
+  inspMercyHook();mpBankHook();mpScatterScale();
   if(lead!==wasLead){wasLead=lead;if(lead)toast('📋 Ты в отрыве — инспекторов больше и штрафы выше',3000);}
   try{render();}catch(e){console.error(e);}
 }
@@ -1455,14 +1468,19 @@ function emit(e){if(myTurn()&&net)net.send({t:'evt',e});}
 let mg=null;
 const MG_NAMES={bandit:'однорукого бандита',slot:'однорукого бандита',dice21:'21 в кости'};
 function mgOpen(id){if(mg){if(id&&mg.id==='minigame')mg.id=id;return;}mg={cash:S.cash,id:id||'minigame'};if(myTurn()){net.send({t:'pause',on:true});updateUi();}}
-function mgClose(cash){if(!mg)return;const m=mg;mg=null;if(!myTurn())return;
+function mgClose(cash,det){if(!mg)return;const m=mg;mg=null;if(!myTurn())return;
   net.send({t:'pause',on:false});
-  const d=Math.round(cash!=null&&isFinite(+cash)?+cash:S.cash-m.cash);
-  if(d)emit({kind:'minigame',text:`${d>0?'выиграл':'проиграл'} в ${MG_NAMES[m.id]||'мини-игре'}`,amount:d,tile:S.pos});
+  const d=Math.round(cash!=null&&isFinite(+cash)?+cash:S.cash-m.cash),wins=banditWins(m.id,det);
+  if(wins){log(`🎰 Автомат: ${wins.text}${wins.sum!==d?`, итог ${d>=0?'+':'−'}${money(Math.abs(d))}`:''}.`);}
+  if(d)emit({kind:'minigame',text:`${d>0?'выиграл':'проиграл'} в ${MG_NAMES[m.id]||'мини-игре'}${wins?`: ${wins.text}`:''}`,amount:d,tile:S.pos});
   push();updateUi();}
 function mgReset(){mg=null;}
 addEventListener('minigame:open',e=>mgOpen(e.detail&&e.detail.id));
-addEventListener('minigame:close',e=>mgClose(e.detail&&e.detail.cash));
+addEventListener('minigame:close',e=>mgClose(e.detail&&e.detail.cash,e.detail));
+// Журнал автомата (решение 14.10: Боб видел «+$100» и не понял откуда): «5 выигрышей по $20 = $100» из сводки прокруток.
+function banditWins(id,det){if(id!=='bandit'||!det||!Array.isArray(det.summary))return null;const w=det.summary.filter(x=>x&&x.cash>0).map(x=>Math.round(x.cash));if(!w.length)return null;
+  const sum=w.reduce((a,b)=>a+b,0),n=w.length,word=plural(n,'выигрыш','выигрыша','выигрышей');
+  return {sum,text:w.every(x=>x===w[0])?`${n} ${word} по ${money(w[0])} = ${money(sum)}`:`${n} ${word} на ${money(sum)}`};}
 setInterval(()=>{const on=!!document.querySelector('.minigame-layer');if(on&&!mg)mgOpen('minigame');else if(!on&&mg&&mg.id==='minigame')mgClose();},300);
 
 // ---- чужая клетка: рента при остановке, перекуп в окне ----
@@ -1628,13 +1646,18 @@ function marketStage(){const ps=(view&&view.players)||[];if(!ps.length)return 1;
 function lapIncomeShared(sh,t,own){if(!t||!own)return 0;
   if(t.type==='biz'){noBizSet++;let f;try{f=fee(t);}finally{noBizSet--;}return f*bizSetMult(sh.filter(x=>x.type==='biz'&&x.owner===own).length);}
   if(!t.base||t.lot)return 0;return sales(t)*marginOf(t.good)*(1+prosp()*coveredIn(sh,own));}
-function marketValue(t,buyer){
-  if(!t||!tradeable(t))return 0;const inv=invested(t),sh=sharedWith(),own=ownerOf(t.i);
-  // Ценность = max(вложенное, 6 кругов дохода) × группа (соседи и сеть бизнесов) × стадия партии.
-  const val=(s2,x,who)=>Math.max(inv,MARKET_LAPS*lapIncomeShared(s2,x,who))*groupMult(s2,x,who);
-  const vOwn=own?val(sh,t,own):inv;
-  let vBuy=0;if(buyer&&buyer!==own){const sb=sharedWith({[t.i]:buyer});vBuy=val(sb,sb[t.i],buyer);}
-  return Math.max(Math.round(inv),Math.round(Math.max(vOwn,vBuy)*marketStage()/10)*10);}
+function marketValue(t,buyer){const m=marketParts(t,buyer);return m?m.value:0;}
+// Разбор рыночной цены для окна чужой клетки (решение 14.10: «за что такая цена»): доход за круг × 6 кругов × группа × стадия,
+// не меньше вложенного. by — чья оценка взята: 'owner' (группа и сеть хозяина) или 'buyer' (клетка достроит группу покупателя).
+// base — 'income' (6 кругов дохода больше вложенного) или 'invested' (вложенное больше — от него и считаем).
+function marketParts(t,buyer){
+  if(!t||!tradeable(t))return null;const inv=invested(t),sh=sharedWith(),own=ownerOf(t.i),stage=marketStage();
+  const one=(s2,x,who)=>{const lap=lapIncomeShared(s2,x,who),g=groupMult(s2,x,who),base=Math.max(inv,MARKET_LAPS*lap);return {lapIncome:Math.round(lap),group:+g.toFixed(2),base:Math.round(base),from:MARKET_LAPS*lap>=inv?'income':'invested',v:base*g};};
+  const o=own?one(sh,t,own):{lapIncome:0,group:1,base:Math.round(inv),from:'invested',v:inv};
+  let b=null;if(buyer&&buyer!==own){const sb=sharedWith({[t.i]:buyer});b=one(sb,sb[t.i],buyer);}
+  const pick=b&&b.v>o.v?Object.assign(b,{by:'buyer'}):Object.assign(o,{by:'owner'});
+  const value=Math.max(Math.round(inv),Math.round(pick.v*stage/10)*10);
+  return {value,invested:Math.round(inv),lapIncome:pick.lapIncome,laps:MARKET_LAPS,group:pick.group,stage:+stage.toFixed(2),base:pick.base,from:pick.from,by:pick.by};}
 function sharedWith(over){const sh=toShared(S.tiles);if(over)for(const k in over){const t=sh[+k];if(t)t.owner=over[k];}return sh;}
 function rentTotals(over){const sh=sharedWith(over),out={};for(const p of (view&&view.players)||[])out[p.pid]=0;
   for(const t of sh)if(t.owner&&out[t.owner]!=null)out[t.owner]+=rentShared(sh,t);return out;}
@@ -3142,7 +3165,7 @@ async function enter(){
 }
 async function shareLink(){const url=link();try{if(navigator.share){await navigator.share({title:'Америкэн бой — Сан-Франциско',text:`Садись за стол ${ROOM}`,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}copy(url);}
 window.MP_MARKET=(i,buyer)=>marketValue(S.tiles[i],buyer);
-window.MP={marketValue:(i,buyer)=>marketValue(S.tiles[i],buyer),forcePrice:i=>forcePrice(S.tiles[i]),get view(){return view;},get pid(){return PID;},verCheck,get verStale(){return verStale;},finishTurn,rentOf:t=>rentOf(t),invested,owners,share:shareLink,extend:()=>net&&net.host&&net.send({t:'extend'})};
+window.MP={marketValue:(i,buyer)=>marketValue(S.tiles[i],buyer),marketParts:(i,buyer)=>marketParts(S.tiles[i],buyer),forcePrice:i=>forcePrice(S.tiles[i]),get view(){return view;},get pid(){return PID;},verCheck,get verStale(){return verStale;},finishTurn,rentOf:t=>rentOf(t),invested,owners,share:shareLink,extend:()=>net&&net.host&&net.send({t:'extend'})};
 // ---- внутренности для ботов (на любом столе) и панели механик (только ?test=1) — web/mp-test.js ----
 {
   window.__MP={test:TEST,

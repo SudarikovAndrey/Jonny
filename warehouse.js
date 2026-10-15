@@ -1,7 +1,7 @@
 // Costco presentation reuses the prototype's purchase, hold, allocation and tutorial handlers.
 function costcoArt(x,y,w,h,cls=''){return atlasArt(x,y,w,h,cls,'costco-atlas.webp',1222,1287);}
 const COSTCO_ICONS={gum:[715,1132,83,88],cola:[808,1127,58,92],bud:[880,1130,66,90],tape:[949,1137,77,82],marl:[1032,1125,87,95]};
-let warehouseScroll=0,warehouseStocks={};
+let warehouseScroll=0,warehouseStocks={},warehouseLeft='';
 function decorateWarehouse(card){
  if(!card.querySelector('#wNo')||card.querySelector('.warehouse-shell'))return;
  card.className='card warehouse-card';
@@ -19,6 +19,9 @@ function decorateWarehouse(card){
   const meta=row.querySelector('.wn small');meta.textContent=`Продажа: ${goodSales(id)} шт./круг · $${sellPrice(id)} за шт.`;meta.style.whiteSpace='nowrap';
   meta.title=[...new Set(goodKiosks(id).map(pointName))].join(', ');
   meta.classList.add('warehouse-meta');row.append(meta);
+  // Проверка на точке (m8-warehouse, запись 124): товар туда ляжет, но продаж нет, пока не заплачен штраф — говорим прямо в строке.
+  const insp=goodKiosks(id).filter(t=>t.insp);
+  if(insp.length){const w=document.createElement('small');w.className='warehouse-insp';w.textContent=`📋 Проверка: ${insp.map(t=>'«'+pointName(t)+'»').join(', ')} — не продаёт, пока не заплатишь штраф`;row.append(w);}
   if(stockNow<capacity)button.innerHTML=`<span>Купить 1</span><span class="warehouse-unit-price">$${buyPrice(id)}</span>`;
   button.setAttribute('aria-label',stockNow>=capacity?`${g.name}: всё заполнено`:`Купить ${g.name}, 1 шт. за $${buyPrice(id)}`);
   if(button.disabled&&stockNow<capacity)button.title=`Нужно $${buyPrice(id)}. В кармане $${S.cash}.`;
@@ -42,6 +45,13 @@ function decorateWarehouse(card){
   all.classList.remove('bad');all.classList.add('ok','warehouse-bulk');
   const buys=document.createElement('div');buys.className='warehouse-buys';
   buys.append(all);footer.append(buys);enamelButton(all);
+  // После «Пополнить всё» — чего не хватило и почему (запись 124: «купилось всё, кроме джинсов» — без объяснения).
+  // Закупка идёт по выгоде на доллар: кончились деньги — дорогой товар остаётся последним.
+  all.addEventListener('click',()=>setTimeout(()=>{
+   const left=CFG.GOODS.filter(g=>goodKiosks(g.id).length).map(g=>({g,n:goodCap(g.id)-stock(g.id)})).filter(x=>x.n>0);
+   warehouseLeft=left.length?`Не хватило денег: ${left.map(x=>`${x.g.name} — ещё ${x.n} шт. по $${buyPrice(x.g.id)}`).join(' · ')}. Сначала берём самое выгодное.`:'';
+   const n=document.querySelector('#card .warehouse-buy-note');if(n&&warehouseLeft){n.textContent=warehouseLeft;n.classList.add('warn');}
+  },0));
   // Вторая закупка — на половину суммы «на всё» (а не половину кармана, иначе
   // «половина» выходила дороже «всего»). Берём самые выгодные товары по кругу.
   const allPrice=+(all.querySelector('b')?.textContent||'').replace(/\D/g,'')||0;
@@ -62,7 +72,7 @@ function decorateWarehouse(card){
     buys.append(half); enamelButton(half);
   }
   const canBuy=rows.some(r=>!r.querySelector('button').disabled);
-  const note=document.createElement('small');note.className='warehouse-buy-note';note.textContent=canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
+  const note=document.createElement('small');note.className='warehouse-buy-note'+(warehouseLeft?' warn':'');note.textContent=warehouseLeft?warehouseLeft:canBuy?'Товар распределяется по точкам автоматически.':rows.every(r=>+r.querySelector('.ring').getAttribute('aria-valuenow')>=+r.querySelector('.ring').getAttribute('aria-valuemax'))?'Все точки заполнены. Товар готов к продаже или поставке.':'Не хватает денег на закупку.';footer.append(note);
  }else{
   const done=document.createElement('button');done.className='sec';done.textContent='На карту';done.onclick=()=>closeModal();footer.append(done);enamelButton(done);
  }
@@ -73,4 +83,4 @@ function decorateWarehouse(card){
  rows.forEach(r=>enamelButton(r.querySelector('button')));
  list.scrollTop=warehouseScroll;list.addEventListener('scroll',()=>warehouseScroll=list.scrollTop,{passive:true});
 }
-new MutationObserver(()=>{if($('modal').hidden){warehouseScroll=0;warehouseStocks={};}}).observe($('modal'),{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{if($('modal').hidden){warehouseScroll=0;warehouseStocks={};warehouseLeft='';}}).observe($('modal'),{attributes:true,attributeFilter:['hidden']});
