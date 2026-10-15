@@ -104,7 +104,7 @@ function canStart(T){return T.phase==='lobby'&&T.players.length>=MIN_PLAYERS;}
 function start(T,tiles,slice,now,rnd=Math.random){
   if(!canStart(T))return false;
   for(let i=T.players.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[T.players[i],T.players[j]]=[T.players[j],T.players[i]];}
-  T.phase='play';T.match++;T.startedAt=now;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
+  T.phase='play';T.match++;T.startedAt=now;T.vote=null;T.finalRound=null;T.finalBy=null;T.tiles=clone(tiles);T.applied={};T.result=null;T.log=[];
   T.pot=0;T.slotPot=0;T.rent={};T.lots=[];T.events=[];T.evSeq=0;T.deadline=modeOf(T)==='time'?now+(T.settings.minutes||DEFAULTS.minutes)*60000:null;T.extended=0;   // часы партии — у хозяина стола
   T.players.forEach(p=>{p.s=slice(p);p.skip=0;});
   T.paused=null;
@@ -440,13 +440,50 @@ function extend(T,now){
   advance(T,now);return T.phase==='play';
 }
 function backToLobby(T){
-  T.phase='lobby';T.paused=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.slotPot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];T.extended=0;
+  T.phase='lobby';T.paused=null;T.vote=null;T.tiles=null;T.turn=null;T.result=null;T.applied={};T.pot=0;T.slotPot=0;T.rent={};T.deadline=null;T.lots=[];T.events=[];T.extended=0;
   T.players=T.players.filter(p=>p.online);T.players.forEach(p=>{p.s=null;});autoRounds(T);
 }
+// ---- Голосование стола (m8-endtime, решение Андрея 14.10) ----
+// Продлить партию на «🏁 последнем круге» (+5 мин / +3 круга, не больше EXTEND_MAX раз) и реванш тем же столом с итога.
+// Голосуют живые люди за столом; боты и выбывшие соглашаются сами. Молчание за VOTE_MS (и офлайн) — «нет».
+// Реванш — только если согласились все; хоть одно «нет» — все остаются на итоге. Продление на итоге — у хозяина (extend).
+const VOTE_MS=15000,EXTEND_MAX=2;
+const voters=T=>T.players.filter(p=>!/^bot\d/.test(p.pid)&&!p.out);
+function voteOpen(T,kind){
+  if(kind==='extend')return T.phase==='play'&&!!T.finalRound&&modeOf(T)!=='none'&&(T.extended||0)<EXTEND_MAX;
+  if(kind==='rematch')return T.phase==='over';
+  return false;}
+function startVote(T,pid,kind,now){
+  const p=T.players.find(x=>x.pid===pid);if(!p||p.out||/^bot\d/.test(pid)||T.vote||!voteOpen(T,kind))return null;
+  T.vote={id:`v:${T.match}:${kind}:${now}`,kind,by:pid,yes:{[pid]:true},until:now+VOTE_MS};
+  event(T,{from:pid,kind:'vote',text:kind==='extend'?'предлагает продлить партию':'зовёт на реванш тем же столом',amount:null,tile:null,to:null,vote:kind});
+  return voteCheck(T,now);}
+function answerVote(T,pid,id,yes,now){const v=T.vote;
+  if(!v||v.id!==id||!voters(T).some(p=>p.pid===pid)||v.yes[pid])return null;
+  if(!yes)return closeVote(T,'no',now,pid);
+  v.yes[pid]=true;return voteCheck(T,now);}
+// Зовёт хозяин стола каждые 250 мс и после каждого ответа: все «да» — принято, время вышло — нет, круг доигран — снято.
+function voteCheck(T,now){const v=T.vote;if(!v)return null;
+  if(!voteOpen(T,v.kind))return closeVote(T,'expired',now);
+  if(voters(T).every(p=>v.yes[p.pid]))return closeVote(T,'yes',now);
+  if(now>=v.until)return closeVote(T,'timeout',now);
+  return null;}
+function closeVote(T,how,now,by){const v=T.vote;T.vote=null;const ok=how==='yes';
+  if(ok&&v.kind==='extend'){
+    if(modeOf(T)==='time')T.deadline=Math.max(T.deadline||0,now)+EXTEND_MINUTES*60000;else T.settings.rounds+=EXTEND_LAPS;
+    T.finalRound=null;T.finalBy=null;T.extended=(T.extended||0)+1;}
+  const extra=modeOf(T)==='laps'?`+${EXTEND_LAPS} круга`:`+${EXTEND_MINUTES} мин`;
+  const nm=id=>(T.players.find(p=>p.pid===id)||{}).name||'кто-то';
+  event(T,{from:by||v.by,kind:'voteend',vote:v.kind,ok,how,amount:null,tile:null,to:null,
+    text:ok?(v.kind==='extend'?`все за — партия продлена: ${extra}`:'все за — реванш тем же столом')
+      :how==='no'?`${nm(by)} против — ${v.kind==='extend'?'доигрываем круг':'реванша не будет'}`
+      :how==='timeout'?`не все ответили — ${v.kind==='extend'?'доигрываем круг':'реванша не будет'}`:'голосование снято'});
+  return {kind:v.kind,ok,how,by:by||null};}
 // Что уходит конкретному игроку: общее поле, публичные сводки всех и полный срез его самого.
 function viewFor(T,pid,valuer){
   const me=T.players.find(p=>p.pid===pid);
-  return {room:T.room,host:T.hostPid||null,paused:T.paused||null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
+  return {room:T.room,host:T.hostPid||null,paused:T.paused||null,extended:T.extended||0,
+    vote:T.vote?Object.assign({},T.vote,{voters:voters(T).map(p=>p.pid)}):null,finalRound:T.finalRound||null,finalBy:T.finalBy||null,phase:T.phase,settings:T.settings,match:T.match,startedAt:T.startedAt||null,turn:T.turn,result:T.result,
     tiles:T.tiles,log:T.log.slice(-6),pot:Math.round(T.pot||0),slotPot:Math.round(T.slotPot||0),deadline:T.deadline||null,win:winOf(T),lots:T.lots||[],events:(T.events||[]).slice(-12),
     players:T.players.map(p=>({pid:p.pid,name:p.name,seat:p.seat,color:p.color,online:p.online,
       pos:p.s?p.s.pos:0,laps:p.s?p.s.laps||0:0,effects:effectsOf(T,p),out:!!p.out,debtLaps:p.s?p.s.mpDebtLaps||0:0,hand:p.s&&Array.isArray(p.s.mpHand)?p.s.mpHand.length:0,   // число карт в руке видно всем, какие — нет
@@ -458,7 +495,7 @@ function viewFor(T,pid,valuer){
 // Преемники стола (передача стола, если хозяин пропал): живые люди онлайн, кроме хозяина; сначала те, кто ещё в партии,
 // по месту, выбывшие банкроты — в конце (backlog 14.10: выбывший мог стать первым преемником и закрыть вкладку).
 function heirs(T,hostPid){return (T.players||[]).filter(p=>p.pid!==hostPid&&p.online&&!/^bot\d/.test(p.pid)).sort((a,b)=>(!!a.out-!!b.out)||a.seat-b.seat);}
-const api={heirs,effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
+const api={heirs,VOTE_MS,EXTEND_MAX,startVote,answerVote,voteCheck,effectsOf,WIN_SCALE,MIN_PER_LAP_PER_PLAYER,lengthMinutes,BOARD_OPTIONS,setBoardMap,COLORS,COLOR_NAMES,MAX_PLAYERS,MIN_PLAYERS,DEFAULTS,ROUND_OPTIONS,TURN_OPTIONS,MINUTE_OPTIONS,MODE_OPTIONS,WIN_OPTIONS,TIMEOUT_GRACE_MS,TABLE_PAUSE_MAX_MS,EXTEND_MINUTES,EXTEND_LAPS,setMode,modeOf,timed,extend,
   PAUSE_MAX_MS,RESUME_MIN_MS,autoRounds,setRounds,setMinutes,setWin,winOf,winProgress,mergeTiles,makeCode,normCode,newTable,join,leave,canStart,start,active,applyState,pause,tablePause,advance,endTurn,tick,
   capital,ranking,sfChain,checkEarly,finish,backToLobby,viewFor,lotApi,listLot,bid,resolveLots,applyHit,event};
 root.MPCore=api;

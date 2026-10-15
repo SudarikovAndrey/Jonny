@@ -378,3 +378,23 @@ body.mp-play.mp-modal .mp-plate,body.mp-play.mp-modal .mp-bang{visibility:hidden
   padding:8px 14px;background:#f2e3bd;color:#25221c;border:2.5px solid #25221c;border-radius:10px 13px 9px 12px;box-shadow:3px 4px 0 #25221c;
   font:800 14px/1.25 var(--mp-num,inherit);text-align:center;pointer-events:none}
 .mp-handoff[hidden]{display:none}
+/* Голосование стола (m8-endtime): «⏱ Ещё время?» на последнем круге и «Да / Нет» продления или реванша — поверх итога. */
+.mp-vote{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 56px);transform:translateX(-50%) rotate(-.4deg);z-index:120;
+  width:min(360px,calc(100% - 32px));padding:10px 12px;background:#f2e3bd;color:#25221c;border:2.5px solid #25221c;
+  border-radius:10px 13px 9px 12px;box-shadow:3px 4px 0 #25221c;text-align:center;font-family:var(--mp-txt,inherit)}
+.mp-vote[hidden]{display:none}
+.mp-vote b{display:block;font:800 16px/1.2 var(--mp-num,inherit)}
+.mp-vote small{display:block;margin-top:3px;font-size:12px;opacity:.85}
+.mp-vote-btns{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.mp-vote-btns button{min-width:96px}
+.mp-vote.ask{width:auto;padding:0;background:none;border:0;box-shadow:none}
+.mp-vote-ask{padding:8px 14px;font:800 14px var(--mp-num,inherit);color:#25221c;background:#f2e3bd;border:2.5px solid #25221c;
+  border-radius:9px 12px 8px 11px;box-shadow:2px 3px 0 #25221c;cursor:pointer}
+.mp-vote-ask:disabled{opacity:.6}
+/* «Да» — зелёная, «Нет» — тёмно-серая, как кнопки покупки (buy-buttons.css; там правила только для #card и .pass-offer). */
+.mp-vote button.buy-btn{padding:9px 18px;font:800 16px var(--mp-num,inherit);border:2.5px solid #25221c;border-radius:12px 9px 11px 8px;cursor:pointer}
+.mp-vote button.buy-btn.buy-ok{background:var(--buy-ok,#4f7c4a) url(assets/print/ink-wear.svg) center/cover;color:#fff6de;text-shadow:1px 1px 0 #1f3a1c;
+  box-shadow:0 3px 0 #25221c,inset 0 0 0 2px var(--buy-ok,#4f7c4a),inset 0 0 0 3.5px #f2e3bd99}
+.mp-vote button.buy-btn.buy-no{background:var(--buy-no,#8c8873) url(assets/print/ink-wear.svg) center/cover;color:var(--buy-no-text,#f6eed8);
+  box-shadow:0 3px 0 var(--buy-no-shadow,#655d46),0 3px 0 1px #25221c}
+.mp-vote button.buy-btn:disabled{opacity:.55}

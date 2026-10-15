@@ -1,16 +1,19 @@
 // Presentation only: use the table's published victory progress, never calculate money.
 (()=>{
  const previous=new Map();
+ // m8-playerslist (запись 124, 14.10): «непонятно, порядок это или места» — фишки стоят по очереди хода (место за столом),
+ // а место по прогрессу победы — римской цифрой на значке.
+ const ROMAN=['I','II','III','IV','V','VI'];
  function sync(){
   const bar=document.getElementById('mpBar'),players=window.MP?.view?.players;
   if(!bar||!players)return;
-  const ranked=players.slice().sort((a,b)=>(b.win?.value??0)-(a.win?.value??0)||a.seat-b.seat);
   bar.querySelectorAll('.mp-chip').forEach(chip=>{
    const pid=chip.dataset.pid,p=players.find(p=>p.pid===pid);if(!p)return;
-   const place=ranked.findIndex(p=>p.pid===pid)+1;
-   chip.style.order=String(place);chip.dataset.place=String(place);
+   // Равные делят место: в начале партии все «I», а не порядок рассадки.
+   const v=p.win?.value??0,place=1+players.filter(q=>(q.win?.value??0)>v).length;
+   chip.style.order=String(p.seat??0);chip.dataset.place=ROMAN[place-1]||String(place);
    chip.setAttribute('role','button');chip.tabIndex=0;
-   chip.setAttribute('aria-label',`${place} место: ${p.name}. ${p.win?.text||''}. Показать подробности игроков`);
+   chip.setAttribute('aria-label',`${place} место: ${p.name}${p.pid===window.MP?.view?.turn?.pid?' — сейчас ходит':''}${p.hand?`, карт в руке: ${p.hand}`:''}. ${p.win?.text||''}. Показать подробности игроков`);
    chip.title=chip.getAttribute('aria-label');
    const old=previous.get(pid),r=chip.getBoundingClientRect();
    if(old&&old.place!==place&&matchMedia('(max-width:600px)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches){

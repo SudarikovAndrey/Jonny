@@ -697,3 +697,28 @@ body.mp-mode #card.print-property .property-body{overflow-y:auto;min-height:0}
 .mp-lap li.neg b{color:var(--mp-red)}
 .mp-lap li.empty{justify-content:center;color:#6b5f52}
 .mp-lap-coin{position:fixed;left:0;top:0;width:26px;height:26px;z-index:64;pointer-events:none;will-change:transform}
+/* Список игроков (m8-playerslist, запись 124): фишки по очереди хода, место — римской цифрой, у того, кто ходит, — золотая рамка;
+   «А С Б» в доке у кубика дублировал список — убран (окно игроков открывается тапом по фишке). */
+body.mp-mode #dock #bJohnny.mp-players{visibility:hidden;pointer-events:none}   /* место в доке держим: кубик и кнопки у него не съезжают */
+body.mp-play .mp-bar .mp-chip.on{z-index:1}
+@media(max-width:600px){
+ body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{padding-right:6px;box-sizing:border-box}
+ body.mp-play .mp-bar .mp-chip,body.mp-play .mp-bar.tight .mp-chip{grid-template-columns:1fr;flex:none}
+ body.mp-play .mp-bar .mp-chip>i{grid-area:1/1;margin:0;padding:0;text-align:center}
+ body.mp-play .mp-bar .mp-chip::after{width:auto;min-width:16px;padding:0 3px;box-sizing:border-box;border-radius:8px;font-size:9.5px;letter-spacing:-.02em}
+ body.mp-play .mp-bar .mp-chip.on{transform:scale(1.12);box-shadow:0 0 0 2px #25221c,0 0 0 5px #e0b14a,0 0 0 6.5px #25221c,0 3px 0 6px rgba(37,34,28,.55)}
+ body.mp-play .mp-bar .mp-chip-hand{right:-6px;top:-7px;padding:0 3px;font-size:9.5px;line-height:14px}
+}
+@media(min-width:601px){
+ body.mp-play .mp-bar .mp-chip{position:relative;overflow:visible}
+ body.mp-play .mp-bar .mp-chip::after{content:attr(data-place);position:absolute;left:-10px;top:50%;translate:0 -50%;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border:1.5px solid #25221c;border-radius:9px;background:#f2e3bd;color:#25221c;font:800 10.5px/15px Bitter,Georgia,serif;text-align:center}
+ body.mp-play .mp-bar .mp-chip.on{box-shadow:0 0 0 2px #25221c,0 0 0 5px #e0b14a,0 0 0 6.5px #25221c}
+}
+/* Карта «Шанса» закрывается сама (m8-chancecard): на кнопке тает полоска — сколько осталось. */
+#card .mbtns button.mp-auto{position:relative;overflow:hidden}
+#card .mbtns button.mp-auto::after{content:"";position:absolute;left:0;bottom:0;height:5px;width:100%;background:#e0b14a;transform-origin:left;animation:mp-auto-left var(--auto,5000ms) linear forwards}
+@keyframes mp-auto-left{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){#card .mbtns button.mp-auto::after{animation-duration:var(--auto,5000ms)}}
+/* Свои отложенные карты в руке («Акция», «Крыша») — с ярлыком «действует», играть их не нужно. */
+.mp-hand-card.own{position:relative}
+.mp-hand-card.own .mp-own-tag{position:absolute;left:50%;bottom:-7px;translate:-50% 0;padding:0 5px;border-radius:6px;background:#3f7a4a;color:#fbf0d4;border:1.5px solid #25221c;font:800 9px/14px var(--mp-num);font-style:normal;white-space:nowrap;pointer-events:none}

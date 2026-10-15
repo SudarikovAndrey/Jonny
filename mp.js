@@ -406,21 +406,29 @@ function Hub(room,restored,ho){
         if('win' in msg)C.setWin(T,String(msg.win));
         if('boardMap' in msg)C.setBoardMap(T,String(msg.boardMap));
         if('turnSec' in msg&&C.TURN_OPTIONS.includes(+msg.turnSec))T.settings.turnSec=+msg.turnSec;soon();return;
-      case 'start':if(pid!==PID)return;
-        {// поле стола — с чистого листа: цена стройки не должна зависеть от точек хозяина в прошлой партии
-         const keep=S;S=Object.assign({},keep||{},{tiles:[]});let tiles;try{tiles=buildTiles().map(t=>Object.assign(t,{owner:null}));}finally{S=keep;}
-         tiles=mpBoard(tiles);
-         if(C.start(T,tiles,pl=>makeSlice(pl.name),Date.now())){T.pauseUse={};soon();}}return;
+      case 'start':if(pid!==PID)return;startMatch();return;
+      // Голосование стола (m8-endtime): продлить на «последнем круге», реванш с итога — любой живой игрок.
+      case 'vote':voteDone(C.startVote(T,pid,String(msg.kind||''),Date.now()));soon();return;
+      case 'voteAnswer':voteDone(C.answerVote(T,pid,String(msg.id||''),!!msg.yes,Date.now()));soon();return;
       case 'again':if(pid!==PID||T.phase!=='over')return;C.backToLobby(T);soon();return;
       case 'kick':if(pid!==PID||T.phase!=='lobby'||msg.pid===PID)return;{const s=links.get(msg.pid);s&&s({t:'deny',error:'kicked'});}links.delete(msg.pid);C.leave(T,msg.pid);soon();return;
     }
   }
+  // Новая партия: поле стола — с чистого листа (цена стройки не должна зависеть от точек хозяина в прошлой партии).
+  function startMatch(){
+    const keep=S;S=Object.assign({},keep||{},{tiles:[]});let tiles;try{tiles=buildTiles().map(t=>Object.assign(t,{owner:null}));}finally{S=keep;}
+    tiles=mpBoard(tiles);
+    if(C.start(T,tiles,pl=>makeSlice(pl.name),Date.now())){T.pauseUse={};soon();return true;}return false;}
+  // Итог голосования: в журнал стола; реванш — те же игроки, боты и настройки, новая партия сразу, без лобби и новой ссылки.
+  function voteDone(r){if(!r)return;try{tev('vote',{kind:r.kind,ok:r.ok,how:r.how,by:r.by,byName:r.by?pname(r.by):null,extended:T.extended||0});}catch(e){}
+    if(r.ok&&r.kind==='rematch'){C.backToLobby(T);startMatch();}}
   function drop(pid,send){if(links.get(pid)!==send)return;links.delete(pid);C.leave(T,pid);soon();}
   timers.push(setInterval(()=>{
     const now=Date.now();
     // Молчит дольше 9 с — считаем отвалившимся (закрытие соединения приходит не всегда).
     for(const p of T.players)if(p.pid!==PID&&p.online&&p.seenAt&&now-p.seenAt>9000){C.leave(T,p.pid);links.delete(p.pid);p.offAt=now;dirty=false;soon();}
     if(T.phase==='lobby')for(const p of T.players.slice())if(p.pid!==PID&&!p.online&&now-(p.offAt||0)>15000){T.players=T.players.filter(x=>x!==p);soon();}
+    if(T.vote){const vr=C.voteCheck(T,now);if(vr){voteDone(vr);soon();}}
     const r=C.tick(T,now);
     if(r==='timeout'){const send=links.get(T.turn.pid);send&&send({t:'timeout',n:T.turn.n});try{tev('timeout',{pid:T.turn.pid,name:pname(T.turn.pid)});}catch(e){}}
     if(r){C.checkEarly(T);soon();}
@@ -611,6 +619,7 @@ function takeTable(){
   T.startedAt=sh(T.startedAt);if(T.deadline)T.deadline=sh(T.deadline)+gap;
   if(T.turn&&T.turn.endsAt!=null)T.turn.endsAt=Math.max(sh(T.turn.endsAt)+gap,now+20000);
   if(T.paused&&T.paused.at)T.paused.at=sh(T.paused.at)+gap;
+  if(T.vote&&T.vote.until)T.vote.until=sh(T.vote.until)+gap;   // голосование переезжает вместе со столом
   for(const p of T.players){if(p.offAt)p.offAt=sh(p.offAt);if(p.seenAt)p.seenAt=now;}
   if(T.pauseUse)for(const u of Object.values(T.pauseUse))if(u&&u.at)u.at=sh(u.at);
   const from=T.hostPid;
@@ -1304,13 +1313,15 @@ async function mpChance(forceId){
   // Пакость — в руку, если есть место; рука полна — срабатывает сразу по автоматической цели, как раньше.
   if(HAND[c.id]&&(S.mpHand||[]).length<MP_HAND_MAX){S.mpHand=(S.mpHand||[]).concat(c.id);
     track('mp_hand_draw',{card:c.id});log(`🃏 В руку: ${HAND[c.id].name}.`);emit({kind:'hand',text:'взял карту в руку',amount:null,tile:S.pos});save();render();push();
-    await mpCardShow(mpCardHTML({id:c.id,cap:HAND[c.id].text,stamp:'В руку'}),`<p class="t mp-cu-note">Карта легла в руку. Сыграй её в свой ход ${HAND[c.id].leader?'против лидера':'против любого соперника'}. Соперники видят, что карта есть, но не какая.</p>`,[{t:'Понял',v:1}]);return;}
+    selfFeed('hand',`в руку: ${HAND[c.id].name}`,null);
+    await mpCardShow(mpCardHTML({id:c.id,cap:HAND[c.id].text,stamp:'В руку'}),`<p class="t mp-cu-note">Карта легла в руку. Сыграй её в свой ход ${HAND[c.id].leader?'против лидера':'против любого соперника'}. Соперники видят, что карта есть, но не какая.</p>`,[{t:'Понял',v:1}],MP_CARD_AUTO);return;}
   const r=c.f();if(r.amount>0)S.stat.earned=(S.stat.earned||0)+r.amount;
   track('mp_chance',{card:c.id,amount:r.amount||0});log(`🎴 ${r.text}`);
   emit({kind:'chance',id:c.id,text:r.text,amount:r.amount,tile:r.tile!=null?r.tile:S.pos,hits:r.hits});   // hits — кто сколько потерял/получил (плейтест 04.10: жертве «ты заплатил $30»)
   if(r.amount)plate('🎴 Шанс',r.amount,r.text.replace(/^\S+\s/,''));
+  selfFeed('chance',r.text,r.amount||null,r.tile!=null?r.tile:S.pos);
   save();render();push();
-  await mpCardShow(mpCardHTML({id:c.id,cap:mpcCap(c.id,r.text),stamp:'Шанс',tone:r.amount<0?'grey':undefined}),r.amount?`<p class="t mp-cu-sum ${r.amount>0?'plus':'minus'}">${r.amount>0?'+':'−'}${money(Math.abs(r.amount))}</p>`:'',[{t:'Ок',v:1}]);
+  await mpCardShow(mpCardHTML({id:c.id,cap:mpcCap(c.id,r.text),stamp:'Шанс',tone:r.amount<0?'grey':undefined}),r.amount?`<p class="t mp-cu-sum ${r.amount>0?'plus':'minus'}">${r.amount>0?'+':'−'}${money(Math.abs(r.amount))}</p>`:'',[{t:'Ок',v:1}],MP_CARD_AUTO);
 }
 if(typeof chancePlay==='function'){const base=chancePlay;chancePlay=function(){if(view&&view.phase==='play'&&myTurn())return mpChance();return base.apply(this,arguments);};}
 
@@ -1976,20 +1987,36 @@ function mpCardHTML(o){
 // Подпись карты из текста события: «🚚 Оптовый завоз: склад отдал…» → «склад отдал…».
 const mpcCap=(id,text)=>{const t=String(text||'').replace(/^\S+\s+/,''),T=MPC_TITLE[id];return T&&t.startsWith(T)?t.slice(T.length).replace(/^[\s:—.-]+/,''):t;};
 // Карта крупно в окне: выезжает рубашкой и переворачивается лицом (на «двойках» не надо — это камера карты, плавно).
-function mpCardShow(html,head,btns){
+function mpCardShow(html,head,btns,auto){
   return modal(`<div class="mp-cu-stage">${html}</div>${head||''}`,btns||[{t:'Ок',v:1}],null,()=>setTimeout(()=>{
+    if(auto)cardAuto(auto);
     const c=$('card')&&$('card').querySelector('.mp-cu-stage .cu-spin');if(!c)return;
     if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     c.animate([{transform:'rotateY(180deg) scale(.82)'},{transform:'rotateY(-12deg) scale(1.04)',offset:.7},{transform:'rotateY(4deg) scale(.99)',offset:.86},{transform:'rotateY(0) scale(1)'}],{duration:620,easing:'cubic-bezier(.2,.8,.2,1)'});},0));
 }
+// Карта «Шанса» закрывается сама (m8-chancecard, запись 124: «окно тормозит партию, показать ~5 с — прочитать можно сбоку»):
+// полоска на кнопке тает, текст остаётся в ленте. Тронул карту — окно ждёт тебя.
+const MP_CARD_AUTO=5000;
+function cardAuto(ms){const seq=typeof modalSeq!=='undefined'?modalSeq:0,card=$('card'),b=card&&card.querySelector('.mbtns button:last-child');if(!b)return;
+  b.classList.add('mp-auto');b.style.setProperty('--auto',ms+'ms');
+  const t=setTimeout(()=>{if((typeof modalSeq==='undefined'||modalSeq===seq)&&!$('modal').hidden&&b.isConnected)b.click();},ms);
+  const stage=card.querySelector('.mp-cu-stage');if(stage)stage.addEventListener('pointerdown',()=>{clearTimeout(t);b.classList.remove('mp-auto');},{once:true});}
+// Свои отложенные карты («Акция», «Крыша») лежат в руке рядом с пакостями, пока не сработают (запись 124: «Акция исчезла»).
+const OWN_CARD={promo:{cap:()=>`продажи ×${String(S.mpLapBoost).replace('.',',')} на ближайшем проходе старта`,when:'Сработает сама на ближайшем проходе старта.'},
+  roof:{cap:()=>'встанешь на чужую точку — ренты нет',when:'Действует до конца твоего следующего хода.'}};
+const ownCards=()=>{if(!S||!view||!view.turn)return [];const o=[];if(S.mpLapBoost>1)o.push('promo');if(S.mpShieldN&&view.turn.n<=S.mpShieldN)o.push('roof');return o;};
 const handEl=el('div','mp-hand');handEl.id='mpHand';handEl.hidden=true;
 let handPick=null;
 function handSync(){
-  const list=window.MPHand?MPHand.list():[];const on=!!(view&&view.phase==='play'&&list.length);handEl.hidden=!on;if(!on)return;
+  const list=window.MPHand?MPHand.list():[],own=view&&view.phase==='play'?ownCards():[];const on=!!(view&&view.phase==='play'&&(list.length||own.length));handEl.hidden=!on;if(!on)return;
   const used=S&&view.turn&&S.mpHandN===view.turn.n;
-  const html=list.map((c,i)=>`<button type="button" class="mp-hand-card${c.leader?' lead':''}" data-i="${i}" title="${esc(c.name)}">${mpCardHTML({id:c.id,cap:'',stamp:'',cls:'cu-mini mp-cu-hand'})}</button>`).join('')+(used?'<i class="mp-hand-used">сыграна в этот ход</i>':'');
-  if(handEl._h!==html){handEl._h=html;handEl.innerHTML=html;handEl.querySelectorAll('.mp-hand-card').forEach(b=>b.onclick=()=>handCard(+b.dataset.i));}
+  const html=list.map((c,i)=>`<button type="button" class="mp-hand-card${c.leader?' lead':''}" data-i="${i}" title="${esc(c.name)}">${mpCardHTML({id:c.id,cap:'',stamp:'',cls:'cu-mini mp-cu-hand'})}</button>`).join('')
+    +own.map(id=>`<button type="button" class="mp-hand-card own" data-own="${id}" title="${esc(MPC_TITLE[id])} — действует">${mpCardHTML({id,cap:'',stamp:'',cls:'cu-mini mp-cu-hand'})}<i class="mp-own-tag">действует</i></button>`).join('')
+    +(used?'<i class="mp-hand-used">сыграна в этот ход</i>':'');
+  if(handEl._h!==html){handEl._h=html;handEl.innerHTML=html;handEl.querySelectorAll('.mp-hand-card').forEach(b=>b.onclick=()=>b.dataset.own?ownCard(b.dataset.own):handCard(+b.dataset.i));}
 }
+function ownCard(id){if(!$('modal').hidden||moving||!OWN_CARD[id])return;
+  mpCardShow(mpCardHTML({id,cap:OWN_CARD[id].cap(),stamp:'Действует'}),`<p class="t mp-cu-note">${OWN_CARD[id].when}</p>`,[{t:'Понятно',v:0,cls:'sec'}]);}
 async function handCard(i){
   if(!$('modal').hidden||moving)return;const c=MPHand.list()[i];if(!c)return;
   const can=myTurn()&&!ending&&!(S.mpHandN===view.turn.n)&&c.targets.length;
@@ -2130,7 +2157,7 @@ function updateUi(){
   // Ручная пауза: плашка поверх поля у всех, «Продолжить» может нажать любой.
   const pz=play&&view.paused;pauseEl.hidden=!pz;document.body.classList.toggle('mp-paused',!!pz);
   if(pz)pauseEl.querySelector('small').textContent=`поставил${view.paused.by===PID?' ты':' '+(view.paused.name||nameOf(view.paused.by))}`;
-  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();handSync();swapSync();hammerSync();
+  offerBadgeSync();lotBadgeSync();playersDock();pauseSync();winHub();debtSync();handSync();swapSync();hammerSync();voteSync();
   if(!play){tag.hidden=true;endBtn.hidden=true;return;}
   const val=view.turn;
   // Часы партии (15–30 мин, решение продюсера 01.10) — остаток до конца; время вышло — «🏁 последний круг».
@@ -2152,7 +2179,7 @@ function updateUi(){
   bar.classList.toggle('tight',view.players.length>2);   // трое-четверо: компактные фишки, круг и пауза — второй строкой
   chipsEl.innerHTML=view.players.map(p=>`<span data-pid="${esc(p.pid)}" class="mp-chip${p.pid===val.pid?' on':''}${p.online?'':' off'}${p.out?' out':''}${p.pid===PID?' me':''}" style="--c:${p.out?'#8a8478':p.color}">
       <i>${esc(p.name.slice(0,1).toUpperCase())}</i><span class="mp-nm">${esc(p.pid===PID?'Ты':p.name)}</span>
-      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} вл.</span></span>${p.pid!==PID&&p.hand?`<span class="mp-chip-hand" title="карт в руке: ${p.hand}">🃏${p.hand}</span>`:''}${(p.effects||[]).length?`<span class="mp-chip-fx">${p.effects.slice(0,3).map(f=>`<b data-fx="${esc(f.text)}" data-tiles="${(f.tiles||[]).join(',')}">${f.icon}</b>`).join('')}</span>`:''}
+      <span class="mp-cap"><i class="cash-glyph"></i>${Math.round(p.cash).toLocaleString('en-US')}<span class="mp-pts">· ${own(p)} вл.</span></span>${p.hand?`<span class="mp-chip-hand" title="карт в руке: ${p.hand}">🃏${p.hand}</span>`:''}${(p.effects||[]).length?`<span class="mp-chip-fx">${p.effects.slice(0,3).map(f=>`<b data-fx="${esc(f.text)}" data-tiles="${(f.tiles||[]).join(',')}">${f.icon}</b>`).join('')}</span>`:''}
       ${p.out?'<em class="mp-out">выбыл</em>':p.debtLaps>=1?'<em class="mp-debtmark">в минусе</em>':p.online?'':'<em>офлайн</em>'}<u></u></span>`).join('');
   tick();
 }
@@ -2165,7 +2192,7 @@ function fxTap(b){toast(b.dataset.fx,3200);const ts=(b.dataset.tiles||'').split(
 fxEl.addEventListener('click',e=>{const b=e.target.closest('[data-fx]');if(b)fxTap(b);});
 chipsEl.addEventListener('click',e=>{const b=e.target.closest('[data-fx]');if(!b||handPick)return;e.stopPropagation();fxTap(b);},true);
 function fxWhen(f){if(f.lap)return 'до старта';if(f.untilN!=null&&view&&view.turn){const d=f.untilN-view.turn.n;return d<=0?'этот ход':'следующий ход';}return '';}
-function fxSync(r){const me=playerOf(PID),fx=(view&&view.phase==='play'&&me&&me.effects)||[];fxEl.hidden=!fx.length||document.body.classList.contains('mp-swapping');if(fxEl.hidden)return;
+function fxSync(r){const me=playerOf(PID),fx=((view&&view.phase==='play'&&me&&me.effects)||[]).filter(f=>f.k!=='promo'&&f.k!=='roof');   // «Акция» и «Крыша» — картами в рукеfxEl.hidden=!fx.length||document.body.classList.contains('mp-swapping');if(fxEl.hidden)return;
   const where=f=>(f.tiles||[]).map(i=>`${cellNo(i)} «${titleOf(S.tiles[i])}»`).join(', ');
   const html=fx.map(f=>{const nm=f.k==='insp'?'Проверка':f.text.split(':')[0],w=f.tiles&&f.tiles.length?(f.tiles.length>1?`${f.tiles.length} точки`:cellNo(f.tiles[0])):fxWhen(f);
     const tip=f.k==='insp'?`На твоей точке проверка: ${where(f)} — рента не берётся, пока не заплатишь штраф`:f.tiles&&f.tiles.length?`${f.text}: ${where(f)}`:f.text;
@@ -2766,6 +2793,8 @@ const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'�
 const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
+// Своя карта «Шанса» — тоже в ленту: окно карты закрывается само, прочитать можно сбоку (m8-chancecard).
+function selfFeed(kind,text,amount,tile){try{const me=playerOf(PID);if(me)feedAdd(me,kind,text,amount,true,tile!=null?tile:null);}catch(e){}}
 function feedAdd(p,kind,text,amount,mine,tile,x){
   text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');
   // Одна карта против тебя приходит двумя событиями (chance и hit) — в ленту одно.
@@ -2989,6 +3018,30 @@ function hideOver(){over.hidden=true;showSeq++;}
 function winGoalDone(w,wv){const g=wv&&(wv.goal||wv.value),m=v=>'$'+Math.round(v).toLocaleString('en-US');
   if(w.id==='empire')return `${g||''} владений`;if(w.id==='cash')return `капитал ${g?m(g):''}`;if(w.id==='rent')return `${g?m(g):''} ренты с соперников`;
   if(w.id==='chain')return 'лицензии кассет и видиков, 3 точки техники';if(w.id==='city')return 'все 6 категорий и 2 бизнеса';return w.name||'';}
+// ---- Голосование стола (m8-endtime): «⏱ Ещё время?» на последнем круге, реванш с итога ----
+// Карточка перерисовывается только при смене состояния (иначе пропадают нажатия), секунды — отдельно.
+let voteEl=null,voteKey='',voteSeen=null;
+const voteExtra=()=>view&&view.settings&&view.settings.mode==='laps'?`${C.EXTEND_LAPS} ${plural(C.EXTEND_LAPS,'круг','круга','кругов')}`:`${C.EXTEND_MINUTES} мин`;
+function voteSync(){
+  if(!voteEl){voteEl=el('div','mp-vote');voteEl.hidden=true;}
+  const v=view&&view.vote,me=view&&playerOf(PID),meOut=!!(me&&me.out);
+  // голосование закрылось — его итог тостом (событие voteend)
+  if(voteSeen&&(!v||v.id!==voteSeen)){const e=((view&&view.events)||[]).filter(x=>x.kind==='voteend').pop();if(e)toast((e.ok?'✅ ':'✋ ')+e.text,2800);voteSeen=null;}
+  let key='none',html='';
+  if(v){voteSeen=v.id;const isVoter=(v.voters||[]).includes(PID)&&!meOut,answered=!!(v.yes&&v.yes[PID]),wait=(v.voters||[]).filter(p=>!(v.yes&&v.yes[p]));
+    const what=v.kind==='extend'?`Продлить партию на ${voteExtra()}?`:'Реванш тем же столом?',ic=v.kind==='extend'?'⏱':'🔁';
+    key=`${v.id}|${answered}|${wait.join()}`;
+    html=isVoter&&!answered
+      ?`<b>${ic} ${what}</b><small>предлагает ${esc(nameOf(v.by))} · <span class="mp-vote-s"></span> · молчание — «нет»</small><div class="mp-vote-btns"><button type="button" class="buy-btn buy-ok" data-y="1">Да</button><button type="button" class="buy-btn buy-no" data-y="0">Нет</button></div>`
+      :`<b>${ic} ${what}</b><small>${wait.length?'ждём ответа: '+esc(wait.map(nameOf).join(', ')):'все за'} · <span class="mp-vote-s"></span></small>`;}
+  else if(view&&view.phase==='play'&&view.finalRound&&me&&!meOut&&(view.win&&view.win.id)==='capital'&&(view.extended||0)<C.EXTEND_MAX){
+    key='ask';html=`<button type="button" class="mp-vote-ask">⏱ Ещё время? · +${voteExtra()}</button>`;}
+  if(key!==voteKey){voteKey=key;voteEl.innerHTML=html;voteEl.hidden=!html;voteEl.classList.toggle('ask',key==='ask');
+    voteEl.querySelectorAll('button[data-y]').forEach(b=>b.onclick=()=>{voteEl.querySelectorAll('button').forEach(x=>x.disabled=true);net.send({t:'voteAnswer',id:v.id,yes:b.dataset.y==='1'});});
+    const a=voteEl.querySelector('.mp-vote-ask');if(a)a.onclick=()=>{a.disabled=true;net.send({t:'vote',kind:'extend'});};}
+  const sEl=voteEl.querySelector('.mp-vote-s');if(sEl&&v)sEl.textContent=Math.max(0,Math.ceil((v.until-hostNow())/1000))+' с';
+}
+setInterval(()=>{try{voteSync();}catch(e){}},500);
 function showOver(v){
   const ps=v.players.filter(p=>p.cap).map(p=>Object.assign({},p,p.cap));
   const rank=ps.slice().sort((a,b)=>b.total-a.total||b.cash-a.cash||a.seat-b.seat);
@@ -3013,11 +3066,12 @@ function showOver(v){
       <div class="mp-card-h"><i>${esc(p.name.slice(0,1).toUpperCase())}</i><b>${esc(p.name)}${p.pid===PID?' · ты':''}</b><strong class="mp-sum">$0</strong></div>
       <div class="mp-lines">${lines(p).map(l=>`<div class="mp-line${l.v<0?' neg':''}" data-v="${l.v}"><span>${l.t}${l.s?` <small>${l.s}</small>`:''}</span><b>${l.v<0?'−':''}$0</b></div>`).join('')}</div>
       <div class="mp-crown">👑 Хозяин Сан-Франциско</div></div>`).join('')}</div>
-    <div class="mp-after" hidden>${net&&net.host?`${canExtend?`<button class="mp-big sec" id="mpExtend">⏱ Ещё время · +${r.mode==='laps'?C.EXTEND_LAPS+' '+plural(C.EXTEND_LAPS,'круг','круга','кругов'):C.EXTEND_MINUTES+' мин'}</button>`:''}<button class="mp-big" id="mpAgain">Ещё партию</button>`:'<p class="mp-lead mp-waithost">Хозяин стола может продлить партию или начать новую.</p>'}
+    <div class="mp-after" hidden>${(()=>{const me=v.players.find(p=>p.pid===PID);return me&&!me.out?`<button class="mp-big" id="mpRematch">🔁 Реванш · тем же столом</button>`:'';})()}${net&&net.host?`${canExtend?`<button class="mp-big sec" id="mpExtend">⏱ Ещё время · +${r.mode==='laps'?C.EXTEND_LAPS+' '+plural(C.EXTEND_LAPS,'круг','круга','кругов'):C.EXTEND_MINUTES+' мин'}</button>`:''}<button class="mp-big" id="mpAgain">Ещё партию</button>`:'<p class="mp-lead mp-waithost">Хозяин стола может продлить партию или начать новую.</p>'}
     <a class="mp-solo" href="index.html?map=sf${Q.has('mute')?'&mute':''}">Играть одному</a></div>
     <button class="mp-skip" id="mpSkip">Пропустить ▸</button></div>`;
   over.hidden=false;
   const a=$('mpAgain');if(a)a.onclick=()=>net.send({t:'again'});
+  {const rm=$('mpRematch');if(rm)rm.onclick=()=>{rm.disabled=true;net.send({t:'vote',kind:'rematch'});setTimeout(()=>{rm.disabled=false;},C.VOTE_MS+1000);};}
   {const x=$('mpExtend');if(x)x.onclick=()=>{x.disabled=true;net.send({t:'extend'});};}
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let skip=reduced;const seq=++showSeq,cancelledNow=()=>seq!==showSeq||over.hidden;
