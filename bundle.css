@@ -1705,6 +1705,13 @@ button:focus-visible{outline:3px solid #78d0ff;outline-offset:3px}
 /* «Лицензии» и «Перестроить»: печатная бумага, а не синяя эмаль общих кнопок */
 #card .sf-note .sf-actions button.enamel-button,#card .sf-note .sf-actions button{--button-ink:#f2e3bd;background:#f2e3bd url(assets/paper-grain.svg)!important;color:#25221c!important;text-shadow:none!important;
   border:2px solid #25221c!important;box-shadow:0 2px 0 #25221c!important}
+/* Пустырь: лицензии — одной строкой со ссылкой в окно мэрии (плейтест 04.10: «стройка и лицензии в одном окне путают»). */
+#card .sf-lics-link{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:12px;padding:9px 10px;border:2px dashed #3d3020;border-radius:10px;background:#f6ecd2;cursor:pointer}
+#card .sf-lics-link .sf-lics-ic{font-size:30px;line-height:1;font-style:normal}
+#card .sf-lics-link b{display:block;font:800 15px/1.15 Bitter,Georgia,serif;color:#2b2218}
+#card .sf-lics-link small{display:block;font:600 12px/1.3 Bitter,Georgia,serif;color:#6b5a40}
+#card .sf-lics-link em{font:800 13px/1 Bitter,Georgia,serif;font-style:normal;color:#fbf0d4;background:#3f6a8a;border:2px solid #25221c;border-radius:8px;padding:7px 10px;box-shadow:0 2px 0 #25221c}
+#card .sf-lics-link:focus-visible{outline:3px solid #c99a32;outline-offset:2px}
 
 /* ---- inspector.css ---- */
 /* Инспектор — плашка в карточке точки (Style Bible: бумага, тушь, приглушённый красный).

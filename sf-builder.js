@@ -136,18 +136,20 @@ async function sfBuildMenu(t,opts={}){
       <span class="sf-doc-head"><img class="sf-doc-art" src="assets/ui/license_${l.id}.webp" alt="" decoding="async" onerror="this.remove()"><i class="sf-doc-seal" aria-hidden="true"></i><b>Лицензия «${l.name}»</b></span>
       <span class="sf-doc-body">Открывает: ${l.cats.map(c=>`<span class="sf-doc-good"><img class="sf-gi" src="assets/goods/${c}.webp" alt="">${SF.cat[c]}</span>`).join(' ')}</span>
       <span class="sf-doc-buy"><span class="sf-lic-name">Купить лицензию</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span></span></div>`;}).join('');
-  const licBlock=docs?`<div class="sf-lics"><p class="sf-lics-title">Лицензии мэрии</p>${docs}</div>`:'';
+  // Плейтест 04.10 (m7-ui): «стройка и лицензии в одном окне путают» — четыре документа растягивали окно.
+  // Здесь — одна строка «Лицензии мэрии» с ценами; документы — в окне мэрии, после него возвращаемся на пустырь.
+  const need=SF.lic.filter(l=>!sfHasLic(l.id));
+  const licBlock=need.length?`<div class="sf-lics-link" role="button" tabindex="0"><i class="sf-lics-ic" aria-hidden="true">📜</i><span><b>Лицензии мэрии</b><small>${need.map(l=>`${l.name} $${l.price.toLocaleString('ru-RU')}`).join(' · ')}</small></span><em>Открыть</em></div>`:'';
   $('card').classList.add('sf-build');
   const btns=SF.cats.map((cat,i)=>({t:`${good(cat).icon} $${priceOf(cat)}`,v:i,cls:'ok',dis:!sfCatOpen(cat)||S.cash<priceOf(cat)||(rebuild&&cat===t.base)})).concat([{t:'Позже',v:-1,cls:'sec'}]);
-  const head=rebuild?`<h2>🏗 Перестроить <small>${pointName(t)} · клетка ${t.i}</small></h2><p class="t sf-lead">Снести и построить другое за полцены. Товар вернётся по закупочной, уровень начнётся заново.</p>`:`<h2>🏗 Пустырь <small>клетка ${t.i}</small></h2><p class="t sf-lead">Что построить?${docs?' Дорогие товары открывает лицензия — её продаёт мэрия прямо здесь.':''}</p>`;
+  const head=rebuild?`<h2>🏗 Перестроить <small>${pointName(t)} · клетка ${t.i}</small></h2><p class="t sf-lead">Снести и построить другое за полцены. Товар вернётся по закупочной, уровень начнётся заново.</p>`:`<h2>🏗 Пустырь <small>клетка ${t.i}</small></h2><p class="t sf-lead">Что построить?${docs?' Дорогие товары открывает лицензия мэрии — строка внизу.':''}</p>`;
   const pending=modal(`${head}<div class="sf-opts">${rows}</div>${licBlock}`,btns);
   $('card').querySelectorAll('.sf-opt').forEach(o=>{
     const pick=()=>{const b=$('card').querySelector(`.mbtns button[data-i="${o.dataset.i}"]`);if(b&&!b.disabled)b.click();};
     o.onclick=pick;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};});
-  $('card').querySelectorAll('.sf-lic-doc').forEach(o=>{
-    const pick=()=>{const l=SF.lic.find(x=>x.id===o.dataset.lic);if(!l||S.cash<l.price){toast(`Лицензия «${l?l.name:''}» стоит $${l?l.price:0} — не хватает`);return;}
-      closeModal(-2);setTimeout(()=>{if(sfBuyLicense(l))sfBuildMenu(t,opts);},200);};
-    o.onclick=pick;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};});
+  $('card').querySelectorAll('.sf-lics-link').forEach(o=>{
+    const go=()=>{closeModal(-2);setTimeout(()=>sfLicenseMenu(()=>sfBuildMenu(t,opts)),200);};
+    o.onclick=go;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   const v=await pending;
   if(v===undefined||v<0)return;
   const cat=SF.cats[v],p=priceOf(cat);if(!sfCatOpen(cat)||S.cash<p)return;
@@ -176,16 +178,16 @@ new MutationObserver(()=>{const card=$('card');if(!card||card.hidden)return;cons
 }).observe($('card'),{childList:true,subtree:true});
 
 // ---- Окно лицензий мэрии: из карточки своей точки и из шапки (земля застроена — лицензия всё равно доступна) ----
-async function sfLicenseMenu(){
+async function sfLicenseMenu(back){   // back — куда вернуться после окна (пустырь)
   const docs=SF.lic.map(l=>{const has=sfHasLic(l.id),poor=!has&&S.cash<l.price;
     return `<div role="button" tabindex="${has||poor?-1:0}" class="sf-lic-doc ${poor?'poor':''} ${has?'owned':''}" data-lic="${has?'':l.id}" aria-label="Лицензия «${l.name}», $${l.price}">
       <span class="sf-doc-head"><img class="sf-doc-art" src="assets/ui/license_${l.id}.webp" alt="" decoding="async" onerror="this.remove()"><i class="sf-doc-seal" aria-hidden="true"></i><b>Лицензия «${l.name}»</b></span>
       <span class="sf-doc-body">Открывает: ${l.cats.map(c=>`<span class="sf-doc-good"><img class="sf-gi" src="assets/goods/${c}.webp" alt="">${SF.cat[c]}</span>`).join(' ')}</span>
       <span class="sf-doc-buy">${has?'<span class="sf-lic-name">Куплена</span>':`<span class="sf-lic-name">Купить лицензию</span><span class="sf-lic-cost"><i class="cash-glyph"></i>${l.price}</span>`}</span></div>`;}).join('');
-  const pending=modal(`<h2>📜 Мэрия <small>лицензии</small></h2><p class="t sf-lead">Лицензия открывает категорию товара на любом пустыре и при перестройке своей точки.</p><div class="sf-lics">${docs}</div>`,[{t:'Закрыть',v:-1,cls:'sec'}]);
+  const pending=modal(`<h2>📜 Мэрия <small>лицензии</small></h2><p class="t sf-lead">Лицензия открывает категорию товара на любом пустыре и при перестройке своей точки.</p><div class="sf-lics">${docs}</div>`,[{t:back?'← К пустырю':'Закрыть',v:-1,cls:'sec'}]);
   $('card').querySelectorAll('.sf-lic-doc[data-lic]').forEach(o=>{if(!o.dataset.lic)return;const pick=()=>{const l=SF.lic.find(x=>x.id===o.dataset.lic);if(!l||S.cash<l.price){toast(`Лицензия «${l?l.name:''}» стоит $${l?l.price:0} — не хватает`);return;}
-      closeModal(-2);setTimeout(()=>{if(sfBuyLicense(l))sfLicenseMenu();},200);};o.onclick=pick;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};});
-  await pending;
+      closeModal(-2);setTimeout(()=>{if(sfBuyLicense(l))sfLicenseMenu(back);},200);};o.onclick=pick;o.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};});
+  const v=await pending;if(v!==-2&&back)setTimeout(back,200);   // -2 — купил лицензию: окно мэрии откроется снова
 }
 
 // ---- Карточка построенной точки: строка соседства и городской надбавки ----
