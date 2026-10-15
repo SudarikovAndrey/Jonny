@@ -369,7 +369,7 @@ body:has(#modal:not([hidden])) #guide{display:none}
 <div id="fx"></div>
 <div id="modal" hidden><div class="card" id="card"></div></div>
 
-<script src="tm-rescue.js?v=d1b37741"></script><script src="mobile-feedback.js?v=5da16a98"></script><script src="mobile-host.js?v=45a86ad3"></script>
+<script src="tm-rescue.js?v=d1b37741"></script><script src="mobile-feedback.js?v=3777f208"></script><script src="mobile-host.js?v=45a86ad3"></script>
 <script>
 
 // ======================= БАЛАНС — крутить здесь =======================
@@ -3044,12 +3044,20 @@ function shopFrame(t,inner){
   const format=PropertyArt.sf()?PropertyArt.sfFormat(t):(MAP1||CFG.L5_LADDER)?Math.min(4,Math.floor(((t.salesLvl||1)-1)/4)+1):1;
   const stage=PropertyArt.sf()?PropertyArt.sfStage(t):CFG.L5_LADDER?Math.min(3,Math.floor(((t.level||1)-1)/3)+1):Math.min(3,t.tier||1);
   const path=isPoint?PropertyArt.point(t.good||t.base,format):PropertyArt.business(t.i,stage,MAP1?'mainstreet':'brooklyn');
-  const illustration=`<img class="property-illustration" src="${path}" alt="${title}" decoding="async">`;
   const c=$('card');
+  // m8-emptyimg (14.10): прокачка 3→4 впервые меняет картинку на файл, которого нет в кеше, а вторая прокачка через секунду
+  // перерисовывала карточку — 5/5 с пустой картинкой. Та же карточка: старая картинка стоит, пока новая не загрузится
+  // и не раскодируется; ошибка загрузки — остаётся старая.
+  const prevImg=!$('modal').hidden&&c.dataset.propertyId===String(t.i)?c.querySelector('.property-illustration'):null;
+  const prevSrc=prevImg&&prevImg.complete&&prevImg.naturalWidth>0?prevImg.getAttribute('src'):prevImg&&prevImg.dataset.shown||'';
+  const swap=prevSrc&&prevSrc!==path;
+  const illustration=`<img class="property-illustration" src="${swap?prevSrc:path}" alt="${title}" decoding="async"${swap?` data-shown="${prevSrc}"`:''}>`;
   const previousLevel=!$('modal').hidden&&c.dataset.propertyId===String(t.i)?window.NumberDrum?.read(c.querySelector('.lvl')):'';
   $('modal').classList.add('mid');c.className='card bare illustrated-property print-property'+(!isPoint?' business-property':'');
   c.dataset.propertyId=String(t.i);c.dataset.propertyOwned=t.owner?'true':'false';
   c.innerHTML=`<div class="shop"><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;
+  if(swap){const img=c.querySelector('.property-illustration'),next=new Image();next.decoding='async';next.src=path;
+    (next.decode?next.decode():new Promise((ok,no)=>{next.onload=ok;next.onerror=no;})).then(()=>{if(img.isConnected&&c.dataset.propertyId===String(t.i)){img.src=path;delete img.dataset.shown;}}).catch(()=>{});}
   if(!isPoint){const level=c.querySelector('.lvl');if(level){level.textContent=MAP1?'1/1':`${t.level}/${CFG.BIZ.maxLevel}`;level.setAttribute('aria-label',MAP1?'Уровень 1 из 1':`Уровень ${t.level} из ${CFG.BIZ.maxLevel}`);}}
   const levelBadge=c.querySelector('.lvl');
   // The unified-upgrade observer writes the final display level before paint.
@@ -3872,7 +3880,7 @@ function dismissPaperOffer(layer,after){
 (function(){
   if(typeof track!=='function'||typeof pending==='undefined')return;
   const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwWyE62gs3S_sF3NuT4iAktoNcXkq1uzjJIgO_pCfJjjjnvgN-2W3FOBHsZ2yqSzhCi/exec';
-  const BUILD='3bd9358344';              // хэш сборки, подставляет tools/build_mobile.py
+  const BUILD='cd25cccd24';              // хэш сборки, подставляет tools/build_mobile.py
   const OUTK=LS+'_outbox', DROPK=LS+'_outbox_dropped';
   const MAX_OUT=2.5e6;                     // ~2,5 МБ очереди; старшие порции вытесняются, счёт — в сводке
   const CHUNK=38000;                       // ячейка таблицы держит 50 000 символов — событий в порции меньше
@@ -6318,7 +6326,7 @@ function open({landing=false}={}){
  const app=$('app'),prior=document.activeElement,wasInert=app.inert,token=crypto.randomUUID();
  const layer=document.createElement('div');layer.className='sl-layer sl-integrated';layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','21 в кости');
 
- const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=eacf05d211ed#'+token;
+ const frame=document.createElement('iframe');frame.id='dice21-frame';frame.title='21 в кости';frame.allow='autoplay';frame.src='dice21/index.html?embedded=1&v=f06ec9d0d8f2#'+token;
 
  const cancel=document.createElement('button');paintedClose(cancel);cancel.classList.add('sl-loading-close');Object.assign(cancel.style,{position:'absolute',right:'20px',top:'20px',width:'44px',height:'44px'});cancel.setAttribute('aria-label','Закрыть загрузку игры');
  layer.append(frame,cancel);const dispose=MinigameShell.attach(layer,frame);app.inert=true;document.body.append(layer);

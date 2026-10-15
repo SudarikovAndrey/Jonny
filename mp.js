@@ -789,9 +789,13 @@ function inspMercyHook(){if(typeof hazard!=='function'||hazard.mpMercy)return;co
 // $1 000 + $250 за каждый пройденный круг (жалоба с записи: после погашения снова давали ровно $1 000).
 // balance.js и движок грузятся после mp.js — правки ставим при первом виде стола.
 // Инкассатор (решение 14.10): пачка — max(прежние $5–20, 8–17% среднего дохода стола за круг), как суммы карт «Шанса».
-function mpScatterScale(){if(typeof CFG==='undefined'||!CFG.SCATTER)return;let U=50;try{U=chanceU();}catch(e){}
-  // 14.10 вечер (Андрей: «к концу заметные суммы, а не меньше в начале»): не меньше прежнего правила $5–20.
-  CFG.SCATTER.min=Math.max(5,Math.round(U*0.08));CFG.SCATTER.max=Math.max(20,CFG.SCATTER.min+1,Math.round(U*0.17));}
+function mpScatterScale(){}   // суммы считаются на лету — геттеры ниже (раньше пересчёт в adopt, боты его не видели)
+// Пачка = max(прежние $5–20, 8–17% среднего дохода стола за круг) — «к концу партии заметные суммы» (решение 14.10).
+// Прогон 10 кругов: мешок ~$74 в начале, ~$150 к 6–10-му кругу. Множитель стадии давал ~$370 к концу — перебор, не взят.
+// Геттеры: движок и ход бота читают CFG.SCATTER.min/max в момент мешка.
+(function(){if(typeof CFG==='undefined'||!CFG.SCATTER)return;const U=()=>{try{return chanceU();}catch(e){return 50;}}
+  const lo=()=>Math.max(5,Math.round(U()*0.08)),hi=()=>Math.max(20,lo()+1,Math.round(U()*0.17));
+  Object.defineProperty(CFG.SCATTER,'min',{get:lo,configurable:true});Object.defineProperty(CFG.SCATTER,'max',{get:hi,configurable:true});})();
 // Для окна банка «Интерфейса»: «даём N кругов твоей прибыли — $M» (i — номер кредита, 0 — первый).
 window.MPBankInfo=(i=0)=>{try{const L=CFG.LOANS[i];return {laps:L.laps,lapProfit:Math.round(lapPotential()),amount:loanAmount(i),rate:L.rate,
   cap:i===0?MP_LOAN1_CAP+MP_LOAN1_CAP_PER_LAP*((S&&S.laps)||0):null};}catch(e){return null;}};
@@ -1551,6 +1555,7 @@ async function rivalWindow(t){
     biz?null:['Товар в точке',`${t.goods||0} шт`],
     ['Вложено хозяином',money(inv)],
     ['Рыночная цена для тебя',money(mv),mvPartsHtml(marketParts(t,PID))],
+    ['Выкуп без согласия',money(forcePrice(t)),esc(`×${FORCE_MARKET} к рыночной · только стоя на клетке`)],   // решение Андрея 14.10: «и сколько выкуп»
   ].filter(Boolean);
   const opts=OFFER_MULTS.map(m=>{const a=Math.round(mv*m),ok=canOffer&&S.cash>=a;
     return `<button type="button" class="mp-mult buy-btn ${ok?'buy-ok':'buy-no'}" data-m="${m}" ${ok?'':'disabled'}><b>×${String(m).replace('.',',')}</b><span>${money(a)}</span></button>`;}).join('');

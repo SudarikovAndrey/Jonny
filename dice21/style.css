@@ -69,3 +69,6 @@ html.embedded{background:linear-gradient(to bottom,#070605b3,transparent 22%,tra
 html.embedded body{background:transparent}
 
 #croupier-canvas{mask-image:linear-gradient(to bottom,transparent,#000 80px);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 80px)}
+
+/* Фишки заведения — подписью над столбиком (14.10). */
+.house-tag{position:absolute;z-index:9;transform:translate(-10%,-100%) rotate(-3deg);padding:6px 14px;border:3px solid #2a1d10;border-radius:10px;background:#f4e6c4;color:#7b1d16;font:800 26px/1 Bitter,Georgia,serif;white-space:nowrap;box-shadow:0 4px 0 #2a1d10;pointer-events:none}

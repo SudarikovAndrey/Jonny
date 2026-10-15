@@ -31,6 +31,9 @@ function stacks(){const area=$('stakes');area.innerHTML='';if(state.phase==='res
   b.style.left=(390+col*118)+'px';b.style.top=(1185-level*10)+'px';b.style.zIndex=level+1;b.style.setProperty('--angle',((i*7)%5-2)+'deg');
   b.setAttribute('aria-label',`Убрать фишку ${v}, столбик ${col+1}, ${level+1}-я снизу`);b.disabled=busy||state.phase!=='betting'||i<(state.houseChips||0);if(i<(state.houseChips||0))b.classList.add('house');b.onclick=()=>act({type:'remove',index:i});area.append(b);
  });
+ // Минимальная ставка от заведения подписана (решение Андрея 14.10): видно, что эти фишки — не твои деньги.
+ const hc=Math.min(state.houseChips||0,state.chips.length);
+ if(hc>0){const tag=document.createElement('span');tag.className='house-tag';tag.textContent='подарок от казино';tag.style.left='390px';tag.style.top=(1185-(Math.min(hc,6)-1)*10-34)+'px';area.append(tag);}
 }
 function controls(){const betting=state.phase==='betting',playing=state.phase==='player',result=state.phase==='result',bet=E.total(state.chips),house=betting&&state.freeBet>0,own=bet-(betting?state.freeBet:0),lastVisitGame=result&&state.visitLimit>0&&(state.visitGames||0)+1>=state.visitLimit;
  FX.count($('bet'),bet,{format:money,quiet:true});

@@ -33,12 +33,20 @@ function shopFrame(t,inner){
   const format=PropertyArt.sf()?PropertyArt.sfFormat(t):(MAP1||CFG.L5_LADDER)?Math.min(4,Math.floor(((t.salesLvl||1)-1)/4)+1):1;
   const stage=PropertyArt.sf()?PropertyArt.sfStage(t):CFG.L5_LADDER?Math.min(3,Math.floor(((t.level||1)-1)/3)+1):Math.min(3,t.tier||1);
   const path=isPoint?PropertyArt.point(t.good||t.base,format):PropertyArt.business(t.i,stage,MAP1?'mainstreet':'brooklyn');
-  const illustration=`<img class="property-illustration" src="${path}" alt="${title}" decoding="async">`;
   const c=$('card');
+  // m8-emptyimg (14.10): прокачка 3→4 впервые меняет картинку на файл, которого нет в кеше, а вторая прокачка через секунду
+  // перерисовывала карточку — 5/5 с пустой картинкой. Та же карточка: старая картинка стоит, пока новая не загрузится
+  // и не раскодируется; ошибка загрузки — остаётся старая.
+  const prevImg=!$('modal').hidden&&c.dataset.propertyId===String(t.i)?c.querySelector('.property-illustration'):null;
+  const prevSrc=prevImg&&prevImg.complete&&prevImg.naturalWidth>0?prevImg.getAttribute('src'):prevImg&&prevImg.dataset.shown||'';
+  const swap=prevSrc&&prevSrc!==path;
+  const illustration=`<img class="property-illustration" src="${swap?prevSrc:path}" alt="${title}" decoding="async"${swap?` data-shown="${prevSrc}"`:''}>`;
   const previousLevel=!$('modal').hidden&&c.dataset.propertyId===String(t.i)?window.NumberDrum?.read(c.querySelector('.lvl')):'';
   $('modal').classList.add('mid');c.className='card bare illustrated-property print-property'+(!isPoint?' business-property':'');
   c.dataset.propertyId=String(t.i);c.dataset.propertyOwned=t.owner?'true':'false';
   c.innerHTML=`<div class="shop"><div class="property-picture">${illustration}</div>${inner}</div><button class="xclose" id="xNo" aria-label="Закрыть"></button>`;
+  if(swap){const img=c.querySelector('.property-illustration'),next=new Image();next.decoding='async';next.src=path;
+    (next.decode?next.decode():new Promise((ok,no)=>{next.onload=ok;next.onerror=no;})).then(()=>{if(img.isConnected&&c.dataset.propertyId===String(t.i)){img.src=path;delete img.dataset.shown;}}).catch(()=>{});}
   if(!isPoint){const level=c.querySelector('.lvl');if(level){level.textContent=MAP1?'1/1':`${t.level}/${CFG.BIZ.maxLevel}`;level.setAttribute('aria-label',MAP1?'Уровень 1 из 1':`Уровень ${t.level} из ${CFG.BIZ.maxLevel}`);}}
   const levelBadge=c.querySelector('.lvl');
   // The unified-upgrade observer writes the final display level before paint.

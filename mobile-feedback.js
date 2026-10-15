@@ -3,7 +3,8 @@ window.GameFeedback=(()=>{
  let ctx,master,noise,muted=true,last={},played=0;
  let music=null,musicIndex=0,musicStarted=false,musicMuted=true,volume=.6,ducked=false;
  const musicTracks=['assets/audio/bouncy-arcade-fun.mp3','assets/audio/arcade-bounce.mp3'];
- try{muted=localStorage.getItem('americanboy_sound_muted')!=='0';musicMuted=localStorage.getItem('americanboy_music_muted')!=='0'}catch{muted=musicMuted=true}
+ // Новый игрок — со звуком и музыкой (решение Андрея 14.10, m8-sound); выключил сам — помним «1». Играть начнёт после первого касания.
+ try{muted=localStorage.getItem('americanboy_sound_muted')==='1';musicMuted=localStorage.getItem('americanboy_music_muted')==='1'}catch{muted=musicMuted=false}
  // Громкость (m8-sound, плейтест 14.10: «бандит еле слышно, нужен регулятор»): 0…1, по умолчанию 0,6 — прежний уровень.
  try{const v=parseFloat(localStorage.getItem('americanboy_volume'));if(v>=0&&v<=1)volume=v;}catch{}
  const scale=()=>volume/.6;
