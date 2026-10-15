@@ -788,9 +788,10 @@ function inspMercyHook(){if(typeof hazard!=='function'||hazard.mpMercy)return;co
 // с первого же прохода; на каждом проходе событие interest для плашки «Интерфейса». Потолок первого кредита растёт с кругами:
 // $1 000 + $250 за каждый пройденный круг (жалоба с записи: после погашения снова давали ровно $1 000).
 // balance.js и движок грузятся после mp.js — правки ставим при первом виде стола.
-// Инкассатор (решение 14.10): пачка — 8–17% среднего дохода стола за круг, как суммы карт «Шанса»; было $5–20 весь матч.
+// Инкассатор (решение 14.10): пачка — max(прежние $5–20, 8–17% среднего дохода стола за круг), как суммы карт «Шанса».
 function mpScatterScale(){if(typeof CFG==='undefined'||!CFG.SCATTER)return;let U=50;try{U=chanceU();}catch(e){}
-  CFG.SCATTER.min=Math.max(5,Math.round(U*0.08));CFG.SCATTER.max=Math.max(CFG.SCATTER.min+1,Math.round(U*0.17));}
+  // 14.10 вечер (Андрей: «к концу заметные суммы, а не меньше в начале»): не меньше прежнего правила $5–20.
+  CFG.SCATTER.min=Math.max(5,Math.round(U*0.08));CFG.SCATTER.max=Math.max(20,CFG.SCATTER.min+1,Math.round(U*0.17));}
 // Для окна банка «Интерфейса»: «даём N кругов твоей прибыли — $M» (i — номер кредита, 0 — первый).
 window.MPBankInfo=(i=0)=>{try{const L=CFG.LOANS[i];return {laps:L.laps,lapProfit:Math.round(lapPotential()),amount:loanAmount(i),rate:L.rate,
   cap:i===0?MP_LOAN1_CAP+MP_LOAN1_CAP_PER_LAP*((S&&S.laps)||0):null};}catch(e){return null;}};
@@ -1529,6 +1530,13 @@ const titleOf=t=>t.type==='biz'?bizName(t):pointName(t);
 // ---- предложение о покупке: покупатель ----
 // Встал на чужую клетку (рента уплачена) — можно предложить хозяину рыночную цену × 1…3 или свою сумму. Деньги уходят в резерв,
 // чтобы их не потратить; одно предложение на клетку. Ответ хозяина — в начале его хода; молчание до конца хода — отказ.
+// Из чего рыночная цена (решение Андрея 14.10, данные — MP.marketParts «Геймплея»): «$30 за круг × 6 кругов · группа ×1,25 → $230».
+// Множители 1,0 не пишем; посчитано от вложенного — так и говорим; оценка по покупателю — почему цена выше.
+function mvPartsHtml(m){if(!m)return '';const x=v=>'×'+String(v).replace('.',',');
+  const head=m.from==='income'?`${money(m.lapIncome)} за круг × ${m.laps} кругов = ${money(m.lapIncome*m.laps)}`:`вложено ${money(m.invested)} — больше, чем ${m.laps} кругов дохода`;
+  const mult=[m.group!==1?`группа ${x(m.group)}`:'',m.stage!==1?`ход партии ${x(m.stage)}`:''].filter(Boolean).join(' · ');
+  const floor=m.value===m.invested&&m.from==='income'&&Math.round(m.base*m.group*m.stage)<m.invested?' · не ниже вложенного':'';
+  return esc(head+(mult?' · '+mult:'')+floor+(m.by==='buyer'?' · считаем по тебе: точка достроит твою группу':''));}
 async function rivalWindow(t){
   const biz=t.type==='biz',owner=t.rival,who=nameOf(owner),col=colorOf(owner),inv=invested(t),mv=marketValue(t,PID),title=titleOf(t);
   const g=biz?null:good(t.good),here=S.pos===t.i,offer=t.mpOffer;
@@ -1542,7 +1550,7 @@ async function rivalWindow(t){
     ['Рента с тебя',money(rentOf(t))],
     biz?null:['Товар в точке',`${t.goods||0} шт`],
     ['Вложено хозяином',money(inv)],
-    ['Рыночная цена для тебя',money(mv)],
+    ['Рыночная цена для тебя',money(mv),mvPartsHtml(marketParts(t,PID))],
   ].filter(Boolean);
   const opts=OFFER_MULTS.map(m=>{const a=Math.round(mv*m),ok=canOffer&&S.cash>=a;
     return `<button type="button" class="mp-mult buy-btn ${ok?'buy-ok':'buy-no'}" data-m="${m}" ${ok?'':'disabled'}><b>×${String(m).replace('.',',')}</b><span>${money(a)}</span></button>`;}).join('');
@@ -1551,11 +1559,11 @@ async function rivalWindow(t){
   if(t.frozen&&view.turn&&t.frozen>view.turn.n)rows.push(['Заморожена','ренты нет до следующего хода хозяина']);
   const pending=modal(`<h2>${biz?bizIcon(t):g.icon} ${esc(title)}</h2>
     <p class="t mp-owner"><i style="background:${col}">${esc(who.slice(0,1).toUpperCase())}</i> Хозяин — <b style="color:${col}">${esc(who)}</b></p>
-    ${rows.map(r=>`<div class="row"><span class="n">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')}
+    ${rows.map(r=>`<div class="row${r[2]?' mp-mv-row':''}"><span class="n">${r[0]}${r[2]?`<small class="mp-mv-parts">${r[2]}</small>`:''}</span><span class="v">${r[1]}</span></div>`).join('')}
     ${mine?`<div class="mp-choice"><b>Твоё предложение — ${money(offer.amount)}</b><p>${esc(who)} ответит в начале своего хода. Деньги в резерве; откажет — вернутся.</p></div>`
      :busy?`<div class="mp-choice"><b>${esc(nameOf(offer.from))} уже предложил цену</b><p>Одно предложение на клетку — жди ответа ${esc(who)}.</p></div>`
      :`<div class="mp-choice"><b>${!myTurn()?'Предложить цену можно в свой ход.':proposedThisTurn()?'В этот ход ты уже сделал предложение — следующее в следующий ход.':'Предложи хозяину цену:'}</b>
-       <p>Сумма — от рыночной цены: доход клетки с группой, растёт к концу партии. ${esc(who)} решит в начале своего хода: согласится — ${biz?'бизнес':'точка'} твоя${biz?'':' вместе с товаром'}, откажет — деньги вернутся.</p>
+       <p>Сумма — от рыночной цены. ${esc(who)} решит в начале своего хода: согласится — ${biz?'бизнес':'точка'} твоя${biz?'':' вместе с товаром'}, откажет — деньги вернутся.</p>
        <div class="mp-mults">${opts}</div>
        ${canOffer?`<div class="mp-offer-own"><span>Своя сумма, от ${money(mv)} до ${money(forcePrice(t))}:</span><input type="number" class="mp-offer-amount" min="${Math.ceil(mv/10)*10}" max="${forcePrice(t)}" step="10" value="${Math.ceil(mv*1.2/10)*10}"><button type="button" class="mp-offer-go buy-btn buy-ok">Предложить</button></div>`:''}</div>`}
     ${lot?lotHtml(lot):''}
@@ -1966,6 +1974,22 @@ new MutationObserver(()=>{
   m.innerHTML=`<div><span>Дают</span><b>+${money(amt)}</b></div><div><span>Каждый круг</span><b>−${money(fee)}</b></div><div class="warn"><span>Не вернёшь</span><b>проценты, пока не погасишь в банке</b></div>`;
   row.classList.add('mp-micro-row');
   row.after(m);
+}).observe($('card'),{childList:true,subtree:true});
+// Окно банка: откуда сумма кредита (решение Андрея 14.10, данные — MPBankInfo «Геймплея»): «даём 4 круга твоей прибыли».
+const lapsWord=k=>k%10===1&&k%100!==11?'круг':k%10>=2&&k%10<=4&&(k%100<10||k%100>=20)?'круга':'кругов';
+new MutationObserver(()=>{
+  const c=$('card');if(!c||$('modal').hidden||!view||view.phase!=='play'||!window.MPBankInfo)return;
+  // «Срок: нет — точки не отнимут» — правило соло SF. В партии с 14.10 банкротство: второй проход старта в минусе — выбыл.
+  c.querySelectorAll('.bank-term').forEach(r=>{const b=r.querySelector('b');if(b&&b.textContent==='Срок'&&!r.dataset.mp){r.dataset.mp='1';b.textContent='Опасно';
+    r.querySelector('span').textContent='пройти старт в минусе: первый раз — предупреждение, второй — выбываешь, точки уйдут с молотка';}});
+  const tk=c.querySelector('#lTake');if(!tk||c.querySelector('.mp-loan-why'))return;
+  const row=tk.closest('.row'),n=row&&row.querySelector('.n');if(!n)return;
+  const I=MPBankInfo((S.loans||[]).length);if(!I||!I.amount)return;
+  const full=I.lapProfit*I.laps;
+  const text=I.cap!=null&&full>I.cap&&I.amount>=I.cap?`${I.laps} ${lapsWord(I.laps)} твоей прибыли — ${money(full)}, но сейчас больше ${money(I.cap)} не дают: потолок растёт на каждом круге`
+    :I.amount>full?`Прибыль за круг пока маленькая — дают минимум ${money(I.amount)}`
+    :`Дают ${I.laps} ${lapsWord(I.laps)} твоей прибыли: ${money(I.lapProfit)} × ${I.laps} = ${money(I.amount)}`;
+  const w=document.createElement('small');w.className='mp-loan-why';w.textContent=text;n.append(w);
 }).observe($('card'),{childList:true,subtree:true});
 // «Перебить» вместо «Ставка», когда ставка уже есть: так понятно, что торги идут и кто-то лидирует.
 new MutationObserver(()=>{
@@ -2583,7 +2607,7 @@ new MutationObserver(()=>{
   const c=$('card');if(!c||$('modal').hidden||!lastRival)return;
   const row=[...c.querySelectorAll('.row')].find(r=>/Вложено хозяином/.test(r.textContent));
   if(row&&!c.querySelector('.mp-inv-parts')){let parts=[];try{parts=investedParts(lastRival);}catch(e){}
-    if(parts.length){const d=document.createElement('p');d.className='mp-inv-parts';d.textContent='= '+parts.map(([n,v])=>`${n} ${money(v)}`).join(' + ')+'. Цены сделок — от рыночной: доход клетки за '+MARKET_LAPS+' кругов с группой, не меньше вложенного.';row.after(d);}}
+    if(parts.length){const d=document.createElement('p');d.className='mp-inv-parts';d.textContent='= '+parts.map(([n,v])=>`${n} ${money(v)}`).join(' + ');row.after(d);/* из чего рыночная цена — строкой под ней (mvPartsHtml) */}}
   const own=c.querySelector('.mp-offer-own');
   if(own&&!own.dataset.ui){own.dataset.ui='1';const inp=own.querySelector('.mp-offer-amount');if(inp){
     const mk=(txt,dv)=>{const b=document.createElement('button');b.type='button';b.className='mp-offer-step';b.textContent=txt;b.onclick=()=>{const min=+inp.min||0;inp.value=Math.min(+inp.max||Infinity,Math.max(min,Math.round((+inp.value||0)+dv)));inp.dispatchEvent(new Event('input'));};return b;};
