@@ -383,7 +383,7 @@ function Hub(room,restored,ho){
         soon();return;
       case 'pause':if(C.pause(T,pid,!!msg.on,Date.now()))soon();return;
       case 'hit':if(C.applyHit(T,pid,msg.h))soon();return;                        // карта «Шанса» против соперника
-      case 'lot':if(C.listLot(T,pid,+msg.tile,msg.min,msg.kind))soon();return;     // выставить клетку на торги
+      case 'lot':if(C.listLot(T,pid,+msg.tile,msg.min,msg.kind,msg.bank))soon();return;     // выставить клетку на торги
       case 'bid':if(C.bid(T,pid,String(msg.id||''),msg.amount))soon();return;
       case 'tpause':{if(!p)return;const now=Date.now();   // ручная пауза — любой игрок, но не чаще PAUSE_FREE/PAUSE_CD_MS
         if(msg.on){const use=T.pauseUse=T.pauseUse||{},u=use[pid];const w=pauseWait(u,now);if(w>0){send&&send({t:'pausedeny',wait:w});return;}
@@ -1309,7 +1309,8 @@ async function finishTurn(){
   if(bankruptNeed()>0&&mpBankList().length){mpBankWindow();return;}   // второй круг в минусе — ход не передать, пока клетки не на торгах
   // Окно долга само — только когда прошёл старт в минусе (новый круг в минусе) — плейтест 5: «каждый ход подбешивает».
   // В остальное время в минусе играешь молча; окно открывается по тапу (MPDebt.open) из метки «минус» в полосе.
-  if(!S.mpOut&&S.cash<0&&(S.mpDebtLaps||0)>(S.mpDebtSeen||0)&&S.mpDebtAskN!==view.turn.n&&(mpBankList().length||stockValue()>0||canMicro())){S.mpDebtAskN=view.turn.n;S.mpDebtSeen=S.mpDebtLaps||0;debtWindow(true);return;}
+  // 14.10: окно долга само больше не открывается — красное окно «Интерфейса» по debtwarn, «Что сделать» ведёт в MPDebt.open().
+  // if(!S.mpOut&&S.cash<0&&(S.mpDebtLaps||0)>(S.mpDebtSeen||0)&&S.mpDebtAskN!==view.turn.n&&(mpBankList().length||stockValue()>0||canMicro())){S.mpDebtAskN=view.turn.n;S.mpDebtSeen=S.mpDebtLaps||0;debtWindow(true);return;}
   // Не ответил на предложение до конца хода — отказ, деньги покупателю возвращаются.
   for(const t of S.tiles)if(t.owner&&t.mpOffer)declineOffer(t,true);
   for(const o of swapIncoming())swapDecline(o.id,true);   // не ответил на обмен до конца хода — отказ
