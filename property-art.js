@@ -29,3 +29,22 @@ window.PropertyArt={
   return map==='mainstreet'?`assets/points/biz_mainstreet_${tile}.webp`:`assets/points/biz_brooklyn_${tile}_${Math.max(1,Math.min(3,Number(stage)||1))}.webp`;
  }
 };
+// Сан-Франциско и мультиплеер: открыта карточка своей точки или бизнеса — заранее грузим картинки
+// следующих форматов. Плейтест 14.10 (m8-emptyimg): две прокачки за секунду, карточка перерисована
+// дважды, а впервые нужный pt_gum_4 ещё не пришёл — «прокачал, а картинка не прогрузилась».
+(()=>{
+ const warm=new Map();
+ const load=src=>{if(!src||warm.has(src))return;const im=new Image();im.decoding='async';im.src=src;warm.set(src,im);im.decode?.().catch(()=>{});};
+ function ahead(t){
+  const P=window.PropertyArt;if(!t||!t.owner||!P.sf())return;
+  if(t.type==='biz'){for(let s=P.sfStage(t)+1;s<=3;s++)load(P.business(t.i,s,'sanfrancisco'));return;}
+  const g=t.good||t.base;if(t.type!=='kiosk'||!g||g==='lot')return;
+  for(let f=P.sfFormat(t)+1;f<=4;f++)load(P.point(g,f));
+ }
+ function watch(){
+  const card=document.getElementById('card');if(!card)return;
+  const check=()=>{const id=card.dataset.propertyId;if(id==null||typeof S==='undefined'||!S.tiles)return;ahead(S.tiles.find(t=>String(t.i)===id));};
+  new MutationObserver(check).observe(card,{attributes:true,attributeFilter:['data-property-id','data-property-owned']});
+ }
+ document.readyState==='loading'?document.addEventListener('DOMContentLoaded',watch):watch();
+})();
