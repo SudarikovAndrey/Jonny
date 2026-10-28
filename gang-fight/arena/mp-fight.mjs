@@ -58,7 +58,7 @@ const cards=new Map();   // id МП → {el, hp, ghost, shown, ghostAt}
 for(const [team,list] of lineup.entries())for(const f of list){
  const el=document.createElement('div');el.className='fc '+(team?'gold':'blue');el.dataset.id=f.id;
  el.setAttribute('aria-label',`${f.name||NAMES[f.kind|0]}, ${f.lvl||1}-й уровень`);
- el.innerHTML=`<div class="fc-in"><div class="fc-face"><img src="../../assets/gang/portrait-${PORTRAIT[f.kind|0]}.webp" alt="" draggable="false"><b class="fc-lv">${f.lvl||1}</b><span class="fc-hp"><i></i><b></b></span></div><div class="fc-back"><span>нокаут</span></div></div>`;
+ el.innerHTML=`<div class="fc-in"><div class="fc-face"><img src="../../assets/gang/portrait-${PORTRAIT[f.kind|0]}.webp" alt="" draggable="false"><span class="fc-hp"><i></i><b></b></span></div><b class="fc-lv">${f.lvl||1}</b><div class="fc-back"><span>нокаут</span></div></div>`;
  (team?$('#cardsGold'):$('#cardsBlue')).append(el);
  cards.set(String(f.id),{el,hpEl:el.querySelector('.fc-hp b'),ghostEl:el.querySelector('.fc-hp i'),shown:1,ghost:1,ghostHold:0,out:false});
 }
@@ -103,10 +103,19 @@ new T.TextureLoader().load(profile.visual.backdrop==='original'?'./assets/courty
  const plate=new T.Mesh(new T.PlaneGeometry(PLATE_SIZE,PLATE_SIZE),new T.MeshBasicMaterial({map:tex,depthWrite:false,depthTest:false}));plate.renderOrder=-1000;plate.frustumCulled=false;
  plate.quaternion.copy(camera.quaternion);plate.position.copy(cameraHome).addScaledVector(camera.getWorldDirection(new T.Vector3()),35).add(new T.Vector3(0,-PLATE_OFFSET*PLATE_SIZE,0).applyQuaternion(camera.quaternion));scene.add(plate);resize();});
 // Как resize() арены: апертура от согласованного zoom профиля и текущего зума кадрирования.
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const a=w/h,zoom=Math.min(profile.visual.zoom,framingZoom||profile.visual.zoom),span=11.4/zoom,vh=span/Math.max(1,a);
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const a=w/h,zoom=Math.max(1.0005,Math.min(profile.visual.zoom,framingZoom||profile.visual.zoom)),span=11.4/zoom,vh=span/Math.max(1,a);
  camera.left=-vh*a/2;camera.right=vh*a/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();camera.updateMatrixWorld();W=w;H=h;}
 new ResizeObserver(resize).observe(stage);
 
+// ---- двор на весь экран (Андрей 28.10: «бой должен быть на весь экран») ----
+// Кадрирование арены (BattleFraming) на узком экране отъезжает так, что кадр выходит за квадрат задника двора
+// (PLATE_SIZE × PLATE_SIZE вокруг (0, −PLATE_OFFSET·PLATE_SIZE) в виде камеры) — сверху и снизу пустой беж. Страница
+// поверх её решения не даёт кадру выйти за двор: приближение не меньше «двор целиком по меньшей стороне» и сдвиг внутрь.
+// Файлы и правила камеры арены не меняются; на широком экране кадр арены и так внутри двора — там это ничего не меняет.
+function cover(fr){const a=W/Math.max(1,H),half=PLATE_SIZE/2,cy=-PLATE_OFFSET*PLATE_SIZE;
+ const zoom=Math.max(fr.zoom,1.0005),span=PLATE_SIZE/zoom,vh=span/Math.max(1,a),hw=vh*a/2,hh=vh/2;   // та же апертура, что в resize()
+ const clamp=(v,r)=>Math.max(-r,Math.min(r,v));
+ return {x:clamp(fr.x,Math.max(0,half-hw)),y:cy+clamp(fr.y-cy,Math.max(0,half-hh)),zoom};}
 // ---- режиссёр исхода ----
 const byFighter=new Map();   // fighter.id арены → {id МП, team}
 function direct(){
@@ -144,7 +153,7 @@ try{
 function render(){if(!combat)return;
  for(const f of combat.fighters)updateChinatownRig(f,combat.time);
  const samples=combat.fighters.filter(f=>f.root.visible).map(f=>{const b=f.root.position.clone().applyMatrix4(framingView),t=f.root.position.clone().add(new T.Vector3(0,f.kind===6?2.7:2.15,0)).applyMatrix4(framingView);return {id:f.id,x:b.x,bottom:b.y,top:t.y,down:f.down,standing:isStandingForCamera(f)};});
- const fr=framing.update(samples,{dt:document.hidden?0:renderDt,width:W,height:H,maxZoom:profile.visual.zoom,mode:profile.visual.cameraMode,reduced:reduced.matches,key:String(combat.round)});
+ const fr=cover(framing.update(samples,{dt:document.hidden?0:renderDt,width:W,height:H,maxZoom:profile.visual.zoom,mode:profile.visual.cameraMode,reduced:reduced.matches,key:String(combat.round)}));
  camera.position.copy(cameraHome).addScaledVector(screenRight,fr.x).addScaledVector(screenUp,fr.y);camera.updateMatrixWorld(true);
  if(framingZoom!==fr.zoom){framingZoom=fr.zoom;resize();}
  const stable=camera.position.clone(),jolt=cameraImpulse.sample(performance.now()/1000,document.hidden||reduced.matches||!effects.enabled);
