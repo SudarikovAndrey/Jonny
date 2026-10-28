@@ -16,10 +16,12 @@ const KINDS=[
   {kind:6,id:'gigant',name:'Гигант',hp:140,atk:20},
 ];
 const MAX_GANG=5,MAX_LVL=5;
-// Опыт всего для уровня 1…5 (Андрей 27.10: «хотя бы 20, 50, 100 — чтобы проще масштабировать»).
-const XP_LEVELS=[0,100,250,500,1000];
+// Опыт всего для уровня 1…5 (Андрей 27.10: «хотя бы 20, 50, 100 — чтобы проще масштабировать»). Прогон mp-sim 28.10
+// (102 партии × вариант, tools/mp-sim/gang-report.cjs): при 100/250/500/1000 за 20 минут 87% игроков кончали с одним
+// стартовым бойцом; при 30/80/160/300 — в среднем 2 бойца, лучший 3-го уровня, охранник у каждого.
+const XP_LEVELS=[0,30,80,160,300];
 const LVL_STEP=.2;            // +20% здоровья и удара за уровень: 5-й уровень — ×1,8 к каждому (≈×3,2 силы)
-const XP_WIN=50,XP_LOSE=20,XP_RING_WIN=60,XP_RING_LOSE=20;
+const XP_WIN=50,XP_LOSE=25,XP_RING_WIN=60,XP_RING_LOSE=20;
 const LOOT_PER_LVL=.10;       // унесёт товара: 1-й уровень — 10% запаса точки … 5-й — 50%; вместе не больше 100%
 const GUARD_PER_LVL=.10;      // боец на точке: +10% продаж за уровень [?] ориентир, решение за Андреем
 const DEFENSE_OVER=1.1;       // автозащита: наименьший состав, который сильнее нападения хотя бы на 10%
@@ -146,10 +148,11 @@ function raidResolve(T,ids,seed){
   if(!def.length)res={winner:0,survivors:att.map(f=>f.id),ko:[],left:{}};
   else res=battle(att,def,(seed>>>0)||1);
   const win=res.winner===0;
-  for(const f of att){f.used=true;giveXp(T,R.from,f,xpFor(win,att,def.length?def:att),out,seed);}
-  for(const f of def)giveXp(T,R.to,f,xpFor(!win,def,att),out,seed+1);
+  // Доля — по уровням на момент набега (как обещало окно «унесут до N%»), опыт за драку — после.
   const surv=win?att.filter(f=>res.survivors.includes(f.id)):[];
   const share=win?lootShare(surv):0;
+  for(const f of att){f.used=true;giveXp(T,R.from,f,xpFor(win,att,def.length?def:att),out,seed);}
+  for(const f of def)giveXp(T,R.to,f,xpFor(!win,def,att),out,seed+1);
   return {id:R.id,from:R.from,to:R.to,tile:R.tile,win,conceded:ids!=null&&!def.length,auto:ids==null,
     attackers:att.map(f=>f.id),defenders:def.map(f=>f.id),survivors:res.survivors,ko:res.ko,left:res.left,share,events:out};}
 
@@ -192,7 +195,7 @@ function publicView(T){if(!on(T))return null;
 const ringFightCore=ringFight0;
 const api={KINDS,MAX_GANG,MAX_LVL,XP_LEVELS,XP_WIN,XP_LOSE,LOOT_PER_LVL,GUARD_PER_LVL,DEFENSE_OVER,RING_TILES,
   rng,kindOf,levelOf,xpToNext,newFighter,power,sidePower,hpOf,atkOf,battle,xpFor,addXp,levelUp,lootShare,guardBonus,autoDefense,defenseSec,ringChampion,
-  ringFight:ringFight0,
+  ringFight:ringFight0,ringFight0,   // ringFight клиент mp.js перекрывает действием «послать на ринг»; модель — ringFight0
   table:{on,gangOf,freeOf,defendersOf,init,boardRing,lap,guardOn,raidStart,raidResolve,ringFight,post,card,topCount,publicView,addFighter}};
 root.MPGang=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;

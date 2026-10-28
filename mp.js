@@ -1624,6 +1624,7 @@ const gangRow=(f,on,def)=>`<label class="mp-gang-f" style="display:block;margin:
 let gangDefOpen=null;   // id набега, на который открыто запасное окно защиты
 // Встал на чужую точку: рента или набег. Ждём итог (защитник выбирает до defenseSec), потом добыча или рента ×1,5.
 async function gangRaidFlow(t){
+  if(window.MPBots&&MPBots.acting&&MPBots.acting()){payRent(t);return;}   // «Авто-ход за меня»: окна банды — для человека (data-human), не ждём их
   const r=rentOf(t),who=nameOf(t.rival),free=gangFree(),g=gangGuard(t.i);
   let pick;
   if(window.MPGangUI&&MPGangUI.raidChoice)pick=await MPGangUI.raidChoice({tile:t.i,rent:r,owner:t.rival,ownerName:who,free:free.map(gangCard),guard:g?gangCard(g):null});
@@ -1649,6 +1650,7 @@ function gangLoot(t,res){let n=res.goods|0;const g=res.good;let cash=0,put=0;
   emit({kind:'gang',text:`унёс ${res.goods|0} шт товара`,amount:cash||null,tile:t.i,to:t.rival});push();}
 // Ринг: один свободный боец против чемпиона стола.
 async function gangRingFlow(t){
+  if(window.MPBots&&MPBots.acting&&MPBots.acting())return;
   const R=view.gang.ring,free=gangFree();if(!R)return;const c=R.champ;
   if(!free.length){toast('🥊 Ринг: свободных бойцов нет — все дрались в этом круге',2600);return;}
   let id;
