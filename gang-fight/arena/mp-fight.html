@@ -1,0 +1,78 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Драка за точку</title>
+<!-- Окно драки банды (МП «С бойцами»): общая арена (снимок выпуска — tools/build_gang_fight.py), исход задаёт стол
+     (web/mp-gang.js battle). Шапка — по содержимому (Андрей 28.10: «на компе не растягивай плашки никогда»),
+     внизу маленькие карточки бойцов с полоской здоровья; выбывший переворачивается рубашкой. -->
+<style>
+:root{--ink:#25221c;--paper:#f2e3bd;--blue:#326e8c;--gold:#c69937;--red:#a7332a;--card-w:44px;--card-h:58px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#d4be91;color:var(--ink);font:14px Bitter,Georgia,serif}
+/* Сцена на весь экран; карточки лежат поверх низа кадра (на телефоне там пустой край двора). */
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%}
+#badges{position:absolute;inset:0;pointer-events:none;z-index:2}
+#badges .badge{position:absolute;visibility:hidden}   /* полоски над головами не нужны — здоровье на карточках */
+#badges .combat-notice{position:absolute;transform:translate(-50%,-100%);font:700 11px/1 Georgia,serif;white-space:nowrap;pointer-events:none;color:var(--paper);text-shadow:0 1px 1px var(--ink),1px 0 1px var(--ink),-1px 0 1px var(--ink);z-index:3}
+#badges .combat-notice.crit{color:#efc875}
+#badges .damage-number{position:absolute;transform:translate(-50%,-100%);font:800 12px/1 Georgia,serif;color:var(--paper);text-shadow:0 1px 1px var(--ink),1px 0 1px var(--ink),-1px 0 1px var(--ink);pointer-events:none}
+#badges .damage-number.critical{color:#efc875;font-size:14px}
+#loading{position:fixed;inset:0;display:grid;place-items:center;font:700 16px Bitter,Georgia,serif;background:#d4be91;z-index:5}
+#loading.hidden{display:none}
+/* Шапка: две бумажные плашки по содержимому, с пределом ширины; на ПК не растягиваются. */
+.mpf-top{position:fixed;left:50%;transform:translateX(-50%);top:calc(8px + env(safe-area-inset-top));display:flex;align-items:center;gap:8px;z-index:4;pointer-events:none;max-width:calc(100% - 16px)}
+.mpf-side{flex:0 1 auto;min-width:0;max-width:220px;padding:3px 10px 4px;background:var(--paper);border:2px solid var(--ink);border-radius:9px;box-shadow:0 2px 0 var(--ink);font:800 13px/1.15 Bitter,Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mpf-side small{display:block;font:700 9px/1.2 Bitter,Georgia,serif;letter-spacing:.6px;text-transform:uppercase;opacity:.7}
+.mpf-side.gold{text-align:right}
+.mpf-side.blue{border-left:6px solid var(--blue)}.mpf-side.gold{border-right:6px solid var(--gold)}
+.mpf-vs{flex:none;font:900 15px Bitter,Georgia,serif;color:var(--paper);text-shadow:0 2px 0 var(--ink),0 0 3px var(--ink)}
+/* Ряд карточек: команды слева и справа от «VS», карточки как в колоде бойцов (Интерфейс, mp-ui.css .gc). */
+.mpf-cards{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:12px;z-index:4;max-width:calc(100% - 16px)}
+.mpf-team{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.mpf-team.gold{justify-content:flex-start}
+.mpf-cards .mpf-vs{align-self:center;font-size:13px}
+.fc{position:relative;width:var(--card-w);height:var(--card-h);perspective:240px;flex:none}
+.fc-in{position:absolute;inset:0;transform-style:preserve-3d;transition:none}
+.fc-face,.fc-back{position:absolute;inset:0;border:2px solid var(--ink);border-radius:8px;box-shadow:0 2px 0 var(--ink);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.fc-face{background:var(--paper) url(../../assets/paper-grain.svg)}
+.fc-face img{position:absolute;inset:2px 2px 9px;width:calc(100% - 4px);height:calc(100% - 11px);object-fit:cover;border-radius:5px}
+.fc.blue .fc-face{border-color:var(--blue)}.fc.gold .fc-face{border-color:#8a6a1f}
+.fc-lv{position:absolute;left:-7px;top:-7px;z-index:3;min-width:20px;height:20px;padding:0 3px;border:2px solid var(--ink);border-radius:10px;background:#e0b14a;font:900 12px/16px Bitter,Georgia,serif;text-align:center}
+.fc-hp{position:absolute;left:3px;right:3px;bottom:2px;height:5px;border-radius:3px;background:rgba(37,34,28,.3);overflow:hidden}
+.fc-hp i,.fc-hp b{position:absolute;left:0;top:0;bottom:0;transform-origin:left;width:100%}
+.fc-hp i{background:#e9c58a}                /* «след» удара догоняет полоску */
+.fc-hp b{background:#3f7a4a}
+.fc.low .fc-hp b{background:var(--red)}
+.fc-back{transform:rotateY(180deg);background:#3a3226;display:grid;place-items:center}
+/* Рубашка выбывшего: красный чернильный крест и мелкая подпись. */
+.fc-back::before,.fc-back::after{content:'';position:absolute;left:50%;top:42%;width:26px;height:4px;margin:-2px 0 0 -13px;border-radius:2px;background:#c24a3a;transform:rotate(45deg)}
+.fc-back::after{transform:rotate(-45deg)}
+.fc-back span{position:absolute;left:0;right:0;bottom:5px;text-align:center;font:800 7.5px/1 Bitter,Georgia,serif;color:#f2c6b8}
+.fc.out .fc-lv{visibility:hidden}
+.fc.hit .fc-in{animation:fc-hit .17s steps(2) 1}
+@keyframes fc-hit{0%{translate:-2px 0}50%{translate:2px 1px}100%{translate:0 0}}
+/* Выбыл: упреждение — присел, затем переворот с перелётом и мягкой посадкой рубашкой вверх. */
+.fc.out .fc-in{transform:rotateY(180deg)}
+.fc.flip .fc-in{animation:fc-flip .62s 1 both}
+@keyframes fc-flip{
+ 0%{transform:rotateY(0) translateY(0) scale(1);animation-timing-function:cubic-bezier(.3,0,.6,1)}
+ 14%{transform:rotateY(-8deg) translateY(2px) scale(.94,.9);animation-timing-function:cubic-bezier(.2,.8,.3,1)}
+ 62%{transform:rotateY(196deg) translateY(-8px) scale(1.06);animation-timing-function:cubic-bezier(.4,0,.6,1)}
+ 84%{transform:rotateY(176deg) translateY(1px) scale(.97,1.03)}
+ 100%{transform:rotateY(180deg) translateY(0) scale(1)}}
+#skip{position:fixed;right:10px;top:calc(8px + env(safe-area-inset-top));z-index:5;font:800 12px Bitter,Georgia,serif;padding:6px 10px;border-radius:8px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);box-shadow:0 2px 0 var(--ink);cursor:pointer}
+#verdict{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:4;padding:6px 16px;background:var(--paper);border:2px solid var(--ink);border-radius:10px;box-shadow:0 3px 0 var(--ink);font:900 22px Bitter,Georgia,serif;white-space:nowrap}
+#verdict[hidden]{display:none}
+@media (max-width:520px){.mpf-top{left:8px;right:8px;transform:none;justify-content:space-between}.mpf-side{flex:1 1 0;max-width:none}
+ #skip{top:auto;bottom:calc(14px + env(safe-area-inset-bottom))}.mpf-cards{left:12px;transform:none;max-width:calc(100% - 130px)}
+ :root{--card-w:40px;--card-h:52px}.mpf-cards{gap:8px}.mpf-team{gap:7px}}
+@media (prefers-reduced-motion:reduce){.fc.flip .fc-in,.fc.hit .fc-in{animation:none}}
+</style>
+<script type="importmap">{"imports":{"three":"../viewer/vendor/three.module.js","cannon-es":"../viewer/vendor/cannon-es.js"}}</script>
+</head><body>
+<section id="stage"><canvas></canvas><div id="badges" aria-hidden="true"></div></section>
+<div id="loading">Бойцы подтягиваются во двор…</div>
+<div class="mpf-top"><div class="mpf-side blue" id="sideBlue"></div><div class="mpf-vs">VS</div><div class="mpf-side gold" id="sideGold"></div></div>
+<div class="mpf-cards" aria-label="Бойцы"><div class="mpf-team blue" id="cardsBlue"></div><div class="mpf-vs">VS</div><div class="mpf-team gold" id="cardsGold"></div></div>
+<div id="verdict" hidden></div>
+<button id="skip" type="button">Пропустить</button>
+<script type="module" src="./mp-fight.mjs?v=20261029c"></script>
+</body></html>

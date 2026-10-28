@@ -1,0 +1,26 @@
+{
+  "combat.js": {
+    "source": "/Users/andreysudarikov/Documents/ChatGPT/Рынок пацана/combat-webgl/src/combat.js",
+    "sha256": "c223ab554d6280a2e7cce017afc049fae2fab48dd09b32e178726f0240078149"
+  },
+  "rig.js": {
+    "source": "/Users/andreysudarikov/Documents/ChatGPT/Рынок пацана/combat-webgl/src/rig.js",
+    "sha256": "6acd550c96752dc745bfd2e1a2356aa5511098c06a6c2819e758e69ddb1f8125"
+  },
+  "ragdoll.js": {
+    "source": "/Users/andreysudarikov/Documents/ChatGPT/Рынок пацана/combat-webgl/src/ragdoll.js",
+    "sha256": "2d86769d9bf6bba9c454455234f34fc083ed9f85e1babaf256b11b71b85c7446"
+  },
+  "footwork.js": {
+    "source": "/Users/andreysudarikov/Documents/ChatGPT/Рынок пацана/combat-webgl/src/footwork.js",
+    "sha256": "a0ff323b9f6d08d53243cb9647421c05be472451c538e30e6070a962fd735046"
+  },
+  "contact.js": {
+    "source": "/Users/andreysudarikov/Documents/ChatGPT/Рынок пацана/combat-webgl/src/contact.js",
+    "sha256": "b44250c641001901317a08d73cada39407f323a6e5ce19554ae30f8035f840ac"
+  },
+  "impact.js": {
+    "source": "/Users/andreysudarikov/Documents/ChatGPT/Рынок пацана/combat-webgl/src/impact.js",
+    "sha256": "c357dcde36882a07302bce803d3337918b2da8e0bae43551e7b34a8e5fcae991"
+  }
+}

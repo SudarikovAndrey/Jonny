@@ -1,0 +1,7 @@
+{
+ "id":"andrey-2026-10-28-saved",
+ "version":1,
+ "changePolicy":"Change only on explicit user request. Preserve during merges. Source: qa/settings-profile/user-snapshot.json",
+ "visual":{"textures":"1024","backdrop":"calm","width":0.35,"contrast":0.45,"rim":0,"shadowMode":"silhouette","shadowOpacity":0.19,"zoom":2.6,"cameraMode":"follow","quality":"auto","cameraShake":true,"effects":true},
+ "battle":{"intensity":99,"flightCollisions":false,"roster":"chinatown","blue":4,"gold":4,"speed":1}
+}

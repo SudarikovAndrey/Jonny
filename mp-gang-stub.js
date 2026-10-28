@@ -13,7 +13,7 @@
 //   MPGang.img(kind)   → путь к портрету вида
 //   MPGang.on(type, cb) / MPGang.off(type, cb) — события стола:
 //     'raid'          {id, from, to, tile, attackers:[ids], deadline}          — на кого-то наехали (to — жертва)
-//     'raid-result'   {id, from, to, tile, win, survivors:[ids], ko:[ids], loot:{share, goods, cash}, rent, xp:{id:n}}
+//     'raid-result'   {id, from, to, tile, win, survivors:[ids], ko:[ids], share, rent, cash, xp:{id:n}}  — cash: касса, которую забрали (рента × share)
 //     'ring-result'   {pid, fighter, win, dealt, xp, champion:{stage, hp, hpMax}}
 //     'fighter-new'   {pid, fighter, source:'ring'|'slot'|'chance'|'level3'}
 //     'fighter-level' {pid, fighter, from, to}
@@ -46,7 +46,7 @@ Object.assign(G,{
   _demo:{
     raid(){const att=gangs[rival].map(view);raid={id:'raid1',from:rival,fromName:'Саня',tile:12,attackers:att,defenseSec:10,deadline:Date.now()+10000,free:gangs[me].filter(f=>f.post==null).map(view)};
       fire('raid',{id:raid.id,from:rival,to:me,tile:12,attackers:att.map(f=>f.id),deadline:raid.deadline});},
-    raidResult(win=true){fire('raid-result',{id:'raid1',from:me,to:rival,tile:7,win,survivors:win?['m1']:[],ko:win?['r1']:['m1'],loot:win?{share:.2,goods:6,cash:0}:null,rent:win?0:90,xp:{m1:50}});},
+    raidResult(win=true){fire('raid-result',{id:'raid1',from:me,to:rival,tile:7,win,survivors:win?['m1']:[],ko:win?['r1']:['m1'],share:win?.3:0,rent:90,cash:win?27:0,xp:{m1:50}});},
     ring(win=false){fire('ring-result',{pid:me,fighter:view(gangs[me][0]),win,dealt:40,xp:win?60:20,champion:{stage:champ.stage+(win?1:0),hp:win?champ.hpMax:champ.hp-40,hpMax:champ.hpMax}});},
     levelUp(){const f=gangs[me][0];const from=f.lvl;G.levelUp(f);fire('fighter-level',{pid:me,fighter:view(f),from,to:f.lvl});},
     newFighter(){const f=mk('m'+(gangs[me].length+1),6,1);gangs[me].push(f);fire('fighter-new',{pid:me,fighter:view(f),source:'ring'});},

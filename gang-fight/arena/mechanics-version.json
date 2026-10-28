@@ -1,0 +1,24 @@
+{
+  "id": "fbb537a4bba570e9",
+  "files": {
+    "arena/assets/character-specials-manifest.json": "0f21193994be103a4bfdca375e3af4846b27cfd896c20ae1a30c3fc226ebe6ec",
+    "arena/assets/character-specials.json": "da337a58a50a50da01b6786c6a2afd0fd3558534dafda49e1e7a1900fd3357a3",
+    "arena/assets/motions.json": "8a644cb04d021b5244db48b2a409137dc49c39860b6fc44c50f09f65042cbba7",
+    "arena/breakable-props.mjs": "15ea2058ad4beee75ed1fdef328c87c01572080b7af1f6bb67bf263e4203510c",
+    "arena/courtyard-prop.mjs": "cf0054088ddecb051384c44c4db3aeb6e0c3420b4eb71073ebb3da4d43368531",
+    "arena/engine/authored-specials.js": "452840c613704f5b5e6788dad6570571601b159ef6b88f94ef4c136e21d9b53f",
+    "arena/engine/battle-decisions.js": "3cea4c56988654418d46575556b955988a0137972402ef6e6676e687fe8266ec",
+    "arena/engine/boxing-ready.js": "31ff22ffa2b8c67870ad04d0ccddc05bfb56333e07418c9f8b56d195bfd96377",
+    "arena/engine/combat.js": "38347255e45526823b645482abef75d5f564fd7e735ad1d1c45eff7ca40ffe60",
+    "arena/engine/courtyard.js": "5936aa1f666c9c9460e106978ccc7ad33e7350de0a3ea49c1b534bc673e1b336",
+    "arena/engine/fighting-styles.js": "d8a240c0adac07a81f077e3382f0e3af7663bf4535dd51ac0aae9a786da3c15f",
+    "arena/engine/ground-rest.js": "4ed1118d2ca939d63023a24762dacb4d77d1ca29f94d4e8e1569c4965fc75953",
+    "arena/engine/intensity.js": "aec986b0552187a3071ab4cfe8176cc54def417d8e2c8952fe157500d38805ed",
+    "arena/engine/multi-contact.js": "6de9bf08e7667923ca4886ae58e006867945d7b10fc21503e6bf7b55698ab098",
+    "arena/engine/navigation.js": "5d89f0fce952b5855ec28b21502eb4546185c6a08b928a0ae9567ba49a6f6824",
+    "arena/engine/special-meter.js": "599298ac6a2e66469b583ae5f78f7dffce82b43f9eef1f6c1d47ab08d7cd0a9e",
+    "arena/engine/techniques.js": "68feb0649651b1247b7cedd66ccf668115c954825ae8a1230d254134ab3cf08c",
+    "arena/plank-physics.mjs": "b37de8afc6a0a7aeae8499e5106b7f74526ff02e5d47131b2b26628039e0c708",
+    "arena/retarget.mjs": "ad3f0f23b9ae3b8117a3f8afdfa37c19d85fdc5147e93199ad7d77b2f1be52bb"
+  }
+}

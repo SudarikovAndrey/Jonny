@@ -1,0 +1,585 @@
+{
+  "idle": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_Battle_Idle_01.fbx",
+    "sha256": "52d29e37a36076f1adcbdb085404ae2a28f4ed35caf6a180154fc3182105d947",
+    "fps": 30,
+    "frames": 51,
+    "leadIn": 5
+  },
+  "walk05": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Male/Movement/AS_Character_Heavy_Walk_Forward_05m_01.fbx",
+    "sha256": "11959ff7728371a37b7e67f4a3049e913256b696ff9052773317a3a78ce319ea",
+    "fps": 30,
+    "frames": 121,
+    "leadIn": 0
+  },
+  "jab": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Punch_Front_L_01.fbx",
+    "sha256": "9c0e950ad7152fe9c826df6f414c981b17ed2500b3cef3123f5d53d9863996f8",
+    "fps": 30,
+    "frames": 31,
+    "leadIn": 5
+  },
+  "headPunch": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Punch_Front_R_01.fbx",
+    "sha256": "15ab02df04ee349a37f24ebc9c3e6b02a5308e4ac98f9b9faf60ab007f47c0a8",
+    "fps": 30,
+    "frames": 31,
+    "leadIn": 5
+  },
+  "body": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Light_01_Punch_Body_R_01.fbx",
+    "sha256": "5b5a4ea338341423f0c79ce68de8de40b798b46bf295cf882e45e3045d1d5997",
+    "fps": 30,
+    "frames": 24,
+    "leadIn": 5
+  },
+  "kick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Kick_Side_R_01.fbx",
+    "sha256": "b3c46089bb641604e8d9fa2adaeb65587105d789a357f5ffadbcaf1d405141f0",
+    "fps": 30,
+    "frames": 48,
+    "leadIn": 5
+  },
+  "lowKick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Kick_Low_R_01.fbx",
+    "sha256": "ab1b90156c3e07e6cd7bb31d9b376a838134ebbe2bf897221b319b6622fc7653",
+    "fps": 30,
+    "frames": 44,
+    "leadIn": 5
+  },
+  "highKick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Kick_High_L_01.fbx",
+    "sha256": "810906c11b9307671cce340595d20187328e0db94cdb6e124899cf7715fe9571",
+    "fps": 30,
+    "frames": 48,
+    "leadIn": 5
+  },
+  "axeKick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Light_01_Kick_Axe_L_01.fbx",
+    "sha256": "5e21b1d68c2f0b813e3245807862c5bb5646d9fc376c258f8a72bfe203c3b46e",
+    "fps": 30,
+    "frames": 31,
+    "leadIn": 5
+  },
+  "specialKick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Light_01_Kick_Attack_Special_01.fbx",
+    "sha256": "f1034bd44491126700e95bbbb41ba9736c918967d0b2c61c9cdc1588d0b1b768",
+    "fps": 30,
+    "frames": 32,
+    "leadIn": 5
+  },
+  "hook": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Punch_Side_R_01.fbx",
+    "sha256": "8d88dcb3e69362d1f8b6c32cf831d53e47019ac0930195b7dab63c67cee3b7cd",
+    "fps": 30,
+    "frames": 31,
+    "leadIn": 5
+  },
+  "uppercut": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Punch_Uppercute_R_01.fbx",
+    "sha256": "0fee68dfff1102874af82f8d0a34e5aa156233e4f0bc235d19d787b1a8b2700a",
+    "fps": 30,
+    "frames": 31,
+    "leadIn": 5
+  },
+  "hookLeft": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Punch_Side_L_01.fbx",
+    "sha256": "8bd9788a5d17611606f888aa8d620c347aa2c1ecf4542b8fd1f1e9f3783e038e",
+    "fps": 30,
+    "frames": 31,
+    "leadIn": 5
+  },
+  "hitHead": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_ADD_Middle_01_Hit_Head_01.fbx",
+    "sha256": "5ad73ff5c033bb5799f0233fab46798320890dc022255f7af6fec65d8fd54dbd",
+    "fps": 30,
+    "frames": 21,
+    "leadIn": 5
+  },
+  "hitBody": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_ADD_Middle_01_Hit_Body_01.fbx",
+    "sha256": "f735f7c3d841925baa29d74a7ee21a1dfffcb939b6f9425e1cd69acf27718801",
+    "fps": 30,
+    "frames": 18,
+    "leadIn": 5
+  },
+  "dodge": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_ADD_Middle_01_Dodge_R_01.fbx",
+    "sha256": "64fce9220541246e2e22f9b9523bdf4a2470b31faeea758f8f93651b30f757ac",
+    "fps": 30,
+    "frames": 20,
+    "leadIn": 5
+  },
+  "fallBack": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_KO_01.fbx",
+    "sha256": "e074639409404401f2150fe9cc3278e4f567f94ecb82a4b001768ffbf7239993",
+    "fps": 30,
+    "frames": 51,
+    "leadIn": 5
+  },
+  "fallSide": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_KO_02.fbx",
+    "sha256": "937fac09210c6f127eafcb7cd1032e24fdd0af623f72bc2487d13ff558631988",
+    "fps": 30,
+    "frames": 32,
+    "leadIn": 5
+  },
+  "idleBounce": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Idle/Bouncing Fight Idle.fbx",
+    "sha256": "3dcdcf84a14549386de6e2e7524449c5a067cf1a8afb85f55e25a1fc2fbe3296",
+    "fps": 30,
+    "bind": "armature-rest",
+    "frames": 90
+  },
+  "idleWeight": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Idle/Weight Shift.fbx",
+    "sha256": "83655855442ca0869e5d0625f0b546a02a03e33201b34b1cf4d4a372c78814ec",
+    "fps": 30,
+    "bind": "armature-rest",
+    "frames": 284
+  },
+  "idleShoulder": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Idle/Shoulder Rubbing.fbx",
+    "sha256": "35549f66e11dbac860e1ce3c395441c84655ae4d652de4c119c27100df463b6c",
+    "fps": 30,
+    "bind": "armature-rest",
+    "frames": 176
+  },
+  "idleNeck": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Idle/Neck Stretching.fbx",
+    "sha256": "c92d3e69d3d1fcf08a8a893870d956394b850c6a52b2f2a4e1ca6a367b34ad29",
+    "fps": 30,
+    "bind": "armature-rest",
+    "frames": 97
+  },
+  "idleRelax": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Idle/Unarmed Idle_01.fbx",
+    "sha256": "18da173eccc95672a4e1eb470406ca4fff575873b4fdcafa38a123e63ecbeb9c",
+    "fps": 30,
+    "bind": "armature-rest",
+    "frames": 349
+  },
+  "idleStretch": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Idle/Arm Stretching.fbx",
+    "sha256": "78da50405852a835a25b4019c5a6b203fa8fe93a4ddcc8256a2744c285a65679",
+    "fps": 30,
+    "bind": "armature-rest",
+    "frames": 267
+  },
+  "walk1": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Male/Movement/AS_Character_Heavy_Walk_Forward_1m_01.fbx",
+    "sha256": "ac5ca8effb2458a64c12def1ee777c047d624a140bf5542f73d8e23538ce05f0",
+    "frames": 121,
+    "fps": 30,
+    "nativeSpeed": 0.8820941811427474,
+    "retarget": "source thigh/shin directions, calibrated per target bind geometry"
+  },
+  "walkRun": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Male/Movement/AS_Character_Heavy_Run_Forward_4m_01.fbx",
+    "sha256": "cad746a2785e6f2105ce410a42d7768824255d917a6504278ef6109036d96197",
+    "fps": 30,
+    "leadIn": 0,
+    "bind": "armature-rest",
+    "nativeSpeed": 3.3754676207900047,
+    "frames": 121
+  },
+  "walkFight": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Fight_Walk_F_01.fbx",
+    "sha256": "311716dadbebf85486224615bc6e5d47d34e488eb04677d7fb017fa101835566",
+    "fps": 30,
+    "leadIn": 6,
+    "bind": "calibration-frame",
+    "nativeSpeed": 2.115376889705658,
+    "frames": 25
+  },
+  "getUp": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Male/Other/AS_Male_Capture_Stand_Up_01.fbx",
+    "sha256": "39dd7bd284d52271a5902d7383d3cb03790aa7d246e542bb9fedd1c86c2152ba",
+    "fps": 30,
+    "bind": "FBX-rest",
+    "leadIn": 0,
+    "frames": 34
+  },
+  "sweepKick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Medium/AS_Middle_01_Kick_Low_L_01.fbx",
+    "sha256": "c3d1346101a42cde920da9f6d836ef597d2402b6f5652c8e84c9d6f26bcc1b55",
+    "fps": 30,
+    "frames": 47,
+    "leadIn": 5
+  },
+  "roundKick": {
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Light/AS_Light_01_Kick_Head_R_01.fbx",
+    "sha256": "14e737e0365d9bb102af672b0f45539c967ce59a7b86b8ce734035b407a65c72",
+    "fps": 30,
+    "frames": 30,
+    "leadIn": 5
+  },
+  "martialBow": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Quick_Informal_Bow.fbx",
+    "sha256": "1bfe7a6fff3b26c1583bb1f36a8873f7aeec2472b14b2415c05de94092688a1a",
+    "frames": 61,
+    "sourceRange": [
+      0,
+      60
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror"
+  },
+  "martialKipUp": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Kip_Up.fbx",
+    "sha256": "a2a5298128dbe847cbbde76c27ad93f79809e8731bf55eb0e10f1fd566483f5f",
+    "frames": 62,
+    "sourceRange": [
+      0,
+      61
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror"
+  },
+  "martialRoll": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Prone_Roll.fbx",
+    "sha256": "d213724e4ee341e75df2274bd83792bd72c220405d5357171a603ed0f38d4224",
+    "frames": 44,
+    "sourceRange": [
+      0,
+      43
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror"
+  },
+  "martialJab": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Uppercut_Jab.fbx",
+    "sha256": "031ddc58de14428d848672f4f125227f4beb759acd3f4b524f4359988b8b4869",
+    "frames": 13,
+    "sourceRange": [
+      47,
+      59
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror"
+  },
+  "martialCross": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Uppercut_Jab.fbx",
+    "sha256": "031ddc58de14428d848672f4f125227f4beb759acd3f4b524f4359988b8b4869",
+    "frames": 15,
+    "sourceRange": [
+      35,
+      49
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror"
+  },
+  "martialPalm": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Uppercut_Jab.fbx",
+    "sha256": "031ddc58de14428d848672f4f125227f4beb759acd3f4b524f4359988b8b4869",
+    "frames": 29,
+    "sourceRange": [
+      68,
+      96
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror"
+  },
+  "martialSideKick": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Side_Kick.fbx",
+    "sha256": "21cb8d4ff05388cb92649111bea9f6695206e0decfcdb803a537dda6edc8ee42",
+    "frames": 53,
+    "sourceRange": [
+      0,
+      52
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror",
+    "retiming": {
+      "baseCommit": "37a0a93",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          15,
+          22
+        ],
+        [
+          19,
+          27
+        ],
+        [
+          38,
+          52
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "martialRoundKick": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Roundhouse_Kick.fbx",
+    "sha256": "3a917451cb0816ac2da318306f26bfc8c53025f7de5e61bc3f6a78e8fb33a554",
+    "frames": 43,
+    "sourceRange": [
+      9,
+      51
+    ],
+    "fps": 30,
+    "bind": "armature-rest",
+    "provider": "Mixamo; public Linzhan mirror",
+    "retiming": {
+      "baseCommit": "37a0a93",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          9,
+          13
+        ],
+        [
+          15,
+          22
+        ],
+        [
+          18,
+          26
+        ],
+        [
+          32,
+          42
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "martialDriveLeft": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Jab_To_Elbow_Punch.fbx",
+    "sha256": "d43e748dabe34d4b946378d4fa8cb86d1d35e8962a40a88241899579d23f8806",
+    "sourceRange": [
+      5,
+      43
+    ],
+    "fps": 30,
+    "adaptation": "full anticipation, contact and recoil; linear net root travel removed",
+    "retiming": {
+      "baseCommit": "37a0a93",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          12,
+          23
+        ],
+        [
+          15,
+          27
+        ],
+        [
+          26,
+          38
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "martialDriveRight": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Cross_Punch.fbx",
+    "sha256": "5f05e408bfd697afc1164a038734025950c39ec24b2511b1abc588553b807f3d",
+    "sourceRange": [
+      6,
+      52
+    ],
+    "fps": 30,
+    "adaptation": "full anticipation, contact and recoil; linear net root travel removed",
+    "retiming": {
+      "baseCommit": "37a0a93",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          9,
+          16
+        ],
+        [
+          14,
+          26
+        ],
+        [
+          17,
+          30
+        ],
+        [
+          30,
+          46
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "martialSweepLow": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Leg_Sweep_3.fbx",
+    "sha256": "b08ae987f3b2c99cb51735c7083b6abb8f6aaa1b5e13927ddf1622883d8188fd",
+    "sourceRange": [
+      8,
+      70
+    ],
+    "fps": 30,
+    "adaptation": "baked low pelvis, support-knee flexion, low foot path and lifted torso; recorded 360 rotation retained"
+  },
+  "martialSweptFall": {
+    "source": "https://huggingface.co/datasets/Linzhan/Mixamo-Animations-Characters/blob/main/animation/Sweep_Fall.fbx",
+    "sourceRange": [
+      18,
+      75
+    ],
+    "sha256": "6a70496558b7a4cca13180b0d2f19b326d2d87e7dc4dd1d7c51b7a384c866bff",
+    "adaptation": "remove initial anticipation and net root travel; retain feet knocked out and backward fall"
+  },
+  "giantJabLeft": {
+    "retiming": {
+      "baseCommit": "8e50074",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          12,
+          18
+        ],
+        [
+          16,
+          22
+        ],
+        [
+          28,
+          37
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "giantJabRight": {
+    "retiming": {
+      "baseCommit": "8e50074",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          12,
+          18
+        ],
+        [
+          16,
+          22
+        ],
+        [
+          28,
+          37
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "giantHookLeft": {
+    "retiming": {
+      "baseCommit": "8e50074",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          11,
+          16
+        ],
+        [
+          16,
+          23
+        ],
+        [
+          29,
+          37
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  },
+  "giantHookRight": {
+    "retiming": {
+      "baseCommit": "8e50074",
+      "knots": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          11,
+          16
+        ],
+        [
+          16,
+          23
+        ],
+        [
+          29,
+          37
+        ]
+      ],
+      "interpolation": "monotone cubic Hermite"
+    }
+  }
+}

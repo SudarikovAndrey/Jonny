@@ -361,34 +361,32 @@ function gangPostHidden(T,pid){
     .map(t=>({t,v:sales(t)*sellPrice(t.good)})).sort((a,b)=>b.v-a.v);
   for(const x of spots){if(room<=0||!free.length)break;hubSend(pid,{t:'gang',op:'post',id:free.shift().id,tile:x.t.i});room--;}
 }
-// Набег вместо ренты: перебор составов из свободных бойцов; выгода против «заплатить» = p·(добыча + рента) − (1−p)·0,5·ренты
+// Набег вместо ренты: перебор составов из свободных бойцов; выгода против «заплатить» = p·(касса + рента) − (1−p)·0,5·ренты
 // − цена бойца (круг без ринга). Охранник ещё не прогонял в этом круге — не едем: прогонит, рента всё равно.
 function gangRaidPick(T,pid,t){
   const G=window.MPGang;if(T.raid)return null;const tt=T.tiles[t.i];if(!tt||tt.type!=='kiosk'||!tt.owner||tt.owner===pid)return null;
   const owner=tt.owner,round=T.turn?T.turn.round:0;
   if((T.gang[owner]||[]).some(f=>f.post===t.i)&&(T.guardHit||{})[t.i]!==round)return null;
   const mine=gangFree(T,pid).slice(0,5);if(!mine.length)return null;
-  const def=G.table.defendersOf(T,owner,t.i),rent=H.rentOf(t),price=tt.good?buyPrice(tt.good):0,goods=tt.goods||0,aggr=GANG_AGGR[profKey(pid)]||1;
+  const def=G.table.defendersOf(T,owner,t.i),rent=H.rentOf(t),aggr=GANG_AGGR[profKey(pid)]||1;
   let best=null;
   for(let m=1;m<(1<<mine.length);m++){const att=mine.filter((_,k)=>m>>k&1),d=G.autoDefense(att,def);let wins=0,loot=0;
     for(let s=1;s<=GANG_SIMS;s++){const r=d.length?G.battle(att,d,s*7919+m):{winner:0,survivors:att.map(f=>f.id)};
-      if(r.winner===0){wins++;loot+=Math.floor(goods*G.lootShare(att.filter(f=>r.survivors.includes(f.id))))*price;}}
+      if(r.winner===0){wins++;loot+=G.lootCash(rent,att.filter(f=>r.survivors.includes(f.id)));}}
     const p=wins/GANG_SIMS,ev=aggr*loot/GANG_SIMS+p*rent-(1-p)*.5*rent-att.length*Math.max(8,rent*.08);
     if(!best||ev>best.ev)best={ev,p,ids:att.map(f=>f.id)};}
   return best&&best.ev>0?best:null;
 }
-// Набег бота: стол решает сразу (бот, офлайн) или к сроку защиты живого хозяина. Победа — товар на свои точки той же
-// категории до 200% склада, остаток налом по закупочной; поражение — рента ×1,5; прогнал охранник — обычная рента.
+// Набег бота: стол решает сразу (бот, офлайн) или к сроку защиты живого хозяина. Победа — касса точки (cash от стола,
+// платит хозяин точки); поражение — рента ×1,5; прогнал охранник — обычная рента.
 async function gangRaidHidden(T,pid,t,pick,ctx){
-  const id0=T.evSeq||0;hubSend(pid,{t:'gang',op:'raid',tile:t.i,ids:pick.ids});
+  const id0=T.evSeq||0;hubSend(pid,{t:'gang',op:'raid',tile:t.i,ids:pick.ids,rent:H.rentOf(t)});
   if(T.raid&&T.raid.from===pid)await ctx.asHost(async()=>{for(let k=0;k<400&&T.raid&&T.raid.from===pid;k++)await realWait(250);});
   const e=(T.events||[]).filter(x=>x.id>id0&&x.kind==='gang'&&x.gang&&x.gang.from===pid&&x.gang.tile===t.i&&/^raid-(result|repelled)$/.test(x.gang.type)).pop(),g=e&&e.gang;
   if(!g||g.type==='raid-repelled'){rentHidden(t,ctx);return;}
   if(!g.win){rentHidden(t,ctx,1.5);return;}
-  let n=g.goods|0,put=0,cash=0;
-  for(const x of S.tiles.filter(x=>x.owner&&x.type==='kiosk'&&x.good===g.good)){if(n<=0)break;const k=Math.min(n,Math.max(0,cap(x)*2-(x.goods||0)));x.goods=(x.goods||0)+k;n-=k;put+=k;}
-  if(n>0&&g.good){cash=n*buyPrice(g.good);S.cash+=cash;}
-  ctx.emit({kind:'gang',text:`унёс ${g.goods|0} шт товара`,amount:cash||null,tile:t.i,to:t.rival});
+  const cash=Math.max(0,g.cash|0);if(cash){S.cash+=cash;ctx.credit(t.rival,-cash);}
+  ctx.emit({kind:'gang',text:`отжал кассу «${titleOf(t)}»`,amount:cash||null,tile:t.i,to:t.rival});
 }
 // Ринг: боец с лучшим шансом, если шанс ≥ 25%; иначе в половине случаев — самый слабый за опытом (урон чемпиону остаётся).
 function gangRingHidden(T,pid){

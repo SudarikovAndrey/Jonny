@@ -39,7 +39,9 @@ const CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ';                   // без I и O �
 function makeCode(rnd=Math.random){let s='';for(let i=0;i<4;i++)s+=CODE_ABC[Math.floor(rnd()*CODE_ABC.length)];return s;}
 function normCode(s){return String(s||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);}
 function clone(o){return o==null?o:JSON.parse(JSON.stringify(o));}
-const limitless=T=>!(T.settings.turnSec>0);
+// Без лимита на ход: так выбрано в лобби или за столом один живой игрок с ботами (Андрей 28.10: «когда играешь один против
+// ботов — не нужен обратный отсчёт времени вообще»; ждать некому).
+const limitless=T=>!(T.settings.turnSec>0)||soloWithBots(T);
 const deadline=(T,now,ms)=>limitless(T)?null:now+ms;
 
 // Длина по умолчанию — 25 проходов старта (≈150 бросков на игрока; прогон «Геймплея»: 100 раундов ≈ 17 кругов

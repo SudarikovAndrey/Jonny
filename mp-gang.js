@@ -22,9 +22,13 @@ const MAX_GANG=5,MAX_LVL=5;
 const XP_LEVELS=[0,30,80,160,300];
 const LVL_STEP=.2;            // +20% здоровья и удара за уровень: 5-й уровень — ×1,8 к каждому (≈×3,2 силы)
 const XP_WIN=50,XP_LOSE=25,XP_RING_WIN=60,XP_RING_LOSE=20;
-const LOOT_PER_LVL=.10;       // унесёт товара: 1-й уровень — 10% запаса точки … 5-й — 50%; вместе не больше 100%
+// Добыча — касса точки деньгами (Андрей 28.10, вариант «б»): выжившие забирают у хозяина долю ренты этой точки —
+// 30% за уровень каждого, вместе не больше 150%. Товар не трогается.
+const LOOT_PER_LVL=.30,LOOT_MAX=1.5;
 const GUARD_PER_LVL=.10;      // боец на точке: +10% продаж за уровень [?] ориентир, решение за Андреем
-const DEFENSE_OVER=1.1;       // автозащита: наименьший состав, который сильнее нападения хотя бы на 10%
+// Автозащита — все свободные бойцы (Андрей 28.10 «усилить автозащиту»; было — наименьший состав сильнее нападения на 10%).
+// DEF_HOME — «дома и стены помогают»: здоровье и удар защитников ×DEF_HOME (1 — выключено; прогон 28.10 — варианты).
+const DEF_HOME=1;
 
 // Детерминированный генератор (mulberry32): один seed — одна драка у всех.
 function rng(seed){let a=(seed>>>0)||0x9e3779b9;return ()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
@@ -43,7 +47,8 @@ const sidePower=list=>list.reduce((s,f)=>s+power(f),0);
 // (чаще — самого побитого), урон atk×0,7…1,3. Итог: winner 0|1, выжившие победителей, порядок нокаутов, остаток здоровья.
 function battle(A,D,seed){
   const r=rng(seed);
-  const units=[...A.map(f=>({f,side:0})),...D.map(f=>({f,side:1}))].map(u=>Object.assign(u,{hp:hpOf(u.f),max:hpOf(u.f),atk:atkOf(u.f)}));
+  const k=u=>u.side?DEF_HOME:1;
+  const units=[...A.map(f=>({f,side:0})),...D.map(f=>({f,side:1}))].map(u=>Object.assign(u,{hp:hpOf(u.f)*k(u),max:hpOf(u.f)*k(u),atk:atkOf(u.f)*k(u)}));
   const ko=[];let ticks=0;
   const alive=s=>units.filter(u=>u.side===s&&u.hp>0);
   while(alive(0).length&&alive(1).length&&ticks++<400){
@@ -63,21 +68,20 @@ function addXp(f,x){const from=f.lvl||1;f.xp=(f.xp||0)+Math.max(0,x|0);f.lvl=lev
   if(f.lvl>=3&&!f.l3){f.l3=true;recruit=true;}return {from,to:f.lvl,recruit};}
 // Карта «Подкачался»: +1 уровень, опыт — до порога нового уровня.
 function levelUp(f){if((f.lvl||1)>=MAX_LVL)return {from:f.lvl,to:f.lvl,recruit:false};const need=XP_LEVELS[f.lvl||1]-(f.xp||0);return addXp(f,need);}
-// Доля товара, которую унесут выжившие нападающие: 10% за уровень каждого, вместе не больше 100%.
-const lootShare=survivors=>Math.min(1,survivors.reduce((s,f)=>s+LOOT_PER_LVL*((f&&f.lvl)||1),0));
+// Доля ренты точки, которую заберут выжившие нападающие: 30% за уровень каждого, вместе не больше 150%.
+const lootShare=survivors=>Math.min(LOOT_MAX,Math.round(survivors.reduce((s,f)=>s+LOOT_PER_LVL*((f&&f.lvl)||1),0)*100)/100);
+// Сколько это денег: рента точки × доля, целыми.
+const lootCash=(rent,survivors)=>Math.max(0,Math.round((+rent||0)*lootShare(survivors)));
 const guardBonus=lvl=>Math.round(GUARD_PER_LVL*(lvl||1)*100)/100;   // доля: 0.3 = «+30%»
-// Автозащита (защитник не выбрал за отведённое время): из свободных — состав с наименьшей силой, которая всё же
-// ≥ нападение ×1,1; таких нет — все свободные.
-function autoDefense(attackers,free){
-  const need=sidePower(attackers)*DEFENSE_OVER;let best=null,bestP=Infinity;const n=Math.min(free.length,MAX_GANG);
-  for(let m=1;m<(1<<n);m++){const set=free.filter((_,i)=>m&(1<<i)),p=sidePower(set);if(p>=need&&(p<bestP||(p===bestP&&set.length<best.length))){best=set;bestP=p;}}
-  return best||free.slice(0,MAX_GANG);}
+// Автозащита (защитник не выбрал за отведённое время): все свободные бойцы точки — сильнейшие вперёд, не больше 5.
+// Защита круга не тратит, так что бережливый состав ничего не экономил (Андрей 28.10: «усилить автозащиту»).
+function autoDefense(attackers,free){return free.slice().sort((a,b)=>power(b)-power(a)).slice(0,MAX_GANG);}
 // Время на выбор защиты — от времени хода стола: не меньше 5 с (30 с → 5, 60 → 10, 90 → 15), без лимита — 20 с.
 const defenseSec=turnSec=>(+turnSec>0)?Math.max(5,Math.round(+turnSec/6)):20;
 
 // ---- Ринг: один чемпион на стол, между заходами не лечится ----
-// stage 0,1,2… — номер чемпиона; каждый следующий сильнее (уровень растёт раз в два чемпиона, здоровье ×1,25).
-function ringChampion(stage){const s=stage|0,f={id:'ring'+s,kind:(s*3)%KINDS.length,lvl:Math.min(MAX_LVL,1+Math.floor(s/2))};
+// stage 0,1,2… — номер чемпиона; каждый следующий на уровень сильнее (Андрей 28.10; было — раз в два), здоровье ×1,25.
+function ringChampion(stage){const s=stage|0,f={id:'ring'+s,kind:(s*3)%KINDS.length,lvl:Math.min(MAX_LVL,1+s)};
   const max=Math.round(hpOf(f)*1.25);return {stage:s,kind:f.kind,lvl:f.lvl,hpMax:max,hp:max};}
 // Один боец против чемпиона. Урон чемпиону остаётся; победа — следующий чемпион и награда; опыт и за поражение (меньше).
 function ringFight0(fighter,champ,seed){
@@ -104,11 +108,12 @@ const freeOf=(T,pid)=>gangOf(T,pid).filter(f=>!f.used&&!f.sick&&f.post==null);
 // Кто может защищать точку: свободные бойцы и охранник этой точки — он дерётся сколько угодно, без кулдауна (Андрей 28.10);
 // «Диарея» выводит и его.
 const defendersOf=(T,pid,tile)=>freeOf(T,pid).concat(gangOf(T,pid).filter(f=>f.post===tile&&!f.sick));
-function addFighter(T,pid,kind,source,out){const g=T.gang[pid]=T.gang[pid]||[];if(g.length>=MAX_GANG)return null;
-  T.gangSeq=(T.gangSeq||0)+1;const f=newFighter(kind,`${pid}-${T.gangSeq}`);g.push(f);if(out)out.push({type:'fighter-new',pid,id:f.id,kind:f.kind,source});return f;}
+// by — чей успех привёл бойца (дошёл до 3-го уровня, победил на ринге): окно «новый боец» объясняет, откуда он.
+function addFighter(T,pid,kind,source,out,by){const g=T.gang[pid]=T.gang[pid]||[];if(g.length>=MAX_GANG)return null;
+  T.gangSeq=(T.gangSeq||0)+1;const f=newFighter(kind,`${pid}-${T.gangSeq}`);g.push(f);if(out)out.push({type:'fighter-new',pid,id:f.id,kind:f.kind,source,by:by||null});return f;}
 // Опыт с последствиями: новый уровень — событие; первый 3-й уровень — новый боец в банду.
 function giveXp(T,pid,f,x,out,seed){const r=addXp(f,x);if(r.to>r.from&&out)out.push({type:'fighter-level',pid,id:f.id,from:r.from,to:r.to});
-  if(r.recruit)addFighter(T,pid,Math.floor(rng(seed^0x51ed)()*KINDS.length),'level3',out);return r;}
+  if(r.recruit)addFighter(T,pid,Math.floor(rng(seed^0x51ed)()*KINDS.length),'level3',out,f.id);return r;}
 // Старт партии: каждому игроку — один боец (его персонаж), ринг с первым чемпионом.
 function init(T,tiles,seed){
   T.gang={};T.gangSeq=0;T.raid=null;T.guardHit={};const r=rng(seed||1);
@@ -124,6 +129,7 @@ const guardOn=(T,tile)=>{for(const pid in (T.gang||{}))for(const f of T.gang[pid
 // ---- набег ----
 // Нападающий стоит на чужой точке (не бизнес) и посылает 1–5 свободных бойцов вместо ренты. Охранник на точке прогоняет
 // первый набег за круг стола без драки (бойцы не тратятся, платится обычная рента); второй — обычная драка.
+// o.rent — рента точки (её считает клиент нападающего): от неё добыча деньгами.
 // Вернёт {error} | {repelled:true} | {raid} (ждём защиту) | {result} (решено сразу: бот, нет свободных, защитник не в сети).
 function raidStart(T,pid,tileIdx,ids,now,o){
   o=o||{};if(!on(T))return {error:'off'};if(T.raid)return {error:'busy'};
@@ -134,12 +140,13 @@ function raidStart(T,pid,tileIdx,ids,now,o){
   if(guardOn(T,tileIdx)&&(T.guardHit=T.guardHit||{})[tileIdx]!==round){T.guardHit[tileIdx]=round;return {repelled:true,to,tile:tileIdx};}
   const sec=defenseSec(T.settings&&T.settings.turnSec);
   T.raidSeq=(T.raidSeq||0)+1;
-  T.raid={id:`raid:${T.match||0}:${T.raidSeq}`,from:pid,to,tile:tileIdx,attackers:att.map(f=>f.id),sec,deadline:now+sec*1000};
+  T.raid={id:`raid:${T.match||0}:${T.raidSeq}`,from:pid,to,tile:tileIdx,attackers:att.map(f=>f.id),sec,deadline:now+sec*1000,rent:Math.max(0,Math.round(+o.rent||0))};
   const owner=T.players.find(p=>p.pid===to);
   if(isBot(to)||!owner||!owner.online||!defendersOf(T,to,tileIdx).length)return {result:raidResolve(T,null,o.seed)};
   return {raid:T.raid};}
 // Защита: ids — выбранные защитники (свободные бойцы жертвы), [] — «Слить», null — не выбрал (автозащита).
-// Защита кулдауна не тратит. Победа нападающих: выжившие уносят долю товара; поражение — рента ×1,5 (платит клиент).
+// Защита кулдауна не тратит. Победа нападающих: выжившие забирают долю ренты деньгами (share, платит хозяин точки через
+// проводку клиента нападающего); поражение — рента ×1,5 (платит клиент).
 function raidResolve(T,ids,seed){
   const R=T.raid;if(!R)return null;T.raid=null;
   const att=R.attackers.map(id=>find(T,R.from,id)).filter(Boolean),freeD=defendersOf(T,R.to,R.tile);
@@ -148,13 +155,15 @@ function raidResolve(T,ids,seed){
   if(!def.length)res={winner:0,survivors:att.map(f=>f.id),ko:[],left:{}};
   else res=battle(att,def,(seed>>>0)||1);
   const win=res.winner===0;
-  // Доля — по уровням на момент набега (как обещало окно «унесут до N%»), опыт за драку — после.
+  // Доля — по уровням на момент набега (как обещало окно наезда), опыт за драку — после.
   const surv=win?att.filter(f=>res.survivors.includes(f.id)):[];
-  const share=win?lootShare(surv):0;
-  for(const f of att){f.used=true;giveXp(T,R.from,f,xpFor(win,att,def.length?def:att),out,seed);}
-  for(const f of def)giveXp(T,R.to,f,xpFor(!win,def,att),out,seed+1);
+  const share=win?lootShare(surv):0,cash=Math.round((R.rent||0)*share);
+  // Окно итогов: кто дрался (вид и уровень до драки), сила сторон, сколько опыта получил каждый.
+  const who={},xp={},pw=[Math.round(sidePower(att)),Math.round(sidePower(def))];for(const f of att.concat(def))who[f.id]={kind:f.kind,lvl:f.lvl};
+  for(const f of att){f.used=true;const x=xpFor(win,att,def.length?def:att);xp[f.id]=x;giveXp(T,R.from,f,x,out,seed);}
+  for(const f of def){const x=xpFor(!win,def,att);xp[f.id]=x;giveXp(T,R.to,f,x,out,seed+1);}
   return {id:R.id,from:R.from,to:R.to,tile:R.tile,win,conceded:ids!=null&&!def.length,auto:ids==null,
-    attackers:att.map(f=>f.id),defenders:def.map(f=>f.id),survivors:res.survivors,ko:res.ko,left:res.left,share,events:out};}
+    attackers:att.map(f=>f.id),defenders:def.map(f=>f.id),survivors:res.survivors,ko:res.ko,left:res.left,share,rent:R.rent||0,cash,who,xp,power:pw,events:out};}
 
 // ---- ринг ----
 // Один свободный боец против чемпиона стола. Победа: следующий чемпион и награда — новый боец 1-го уровня, а при полной
@@ -164,7 +173,7 @@ function ringFight(T,pid,id,seed){
   const before=T.ring.champ,r=ringFightCore(f,before,seed),out=[];
   f.used=true;giveXp(T,pid,f,r.xp,out,seed);T.ring.champ=r.champ;
   let reward=null;
-  if(r.win){if(gangOf(T,pid).length<MAX_GANG){addFighter(T,pid,before.kind,'ring',out);reward='fighter';}
+  if(r.win){if(gangOf(T,pid).length<MAX_GANG){addFighter(T,pid,before.kind,'ring',out,f.id);reward='fighter';}
     else{const tgt=f.lvl<MAX_LVL?f:gangOf(T,pid).slice().sort((a,b)=>a.lvl-b.lvl)[0];const lv=levelUp(tgt);if(lv.to>lv.from)out.push({type:'fighter-level',pid,id:tgt.id,from:lv.from,to:lv.to});reward='level';}}
   return {pid,id,win:r.win,dealt:r.dealt,xp:r.xp,champ:T.ring.champ,beat:r.win?before.stage:null,reward,events:out};}
 
@@ -181,22 +190,27 @@ function post(T,pid,id,tile){if(!on(T))return false;const f=find(T,pid,id);if(!f
 function card(T,pid,kind,arg,seed){if(!on(T))return null;const out=[];
   if(kind==='diarrhea'){const g=gangOf(T,arg);if(!g.length||arg===pid)return null;for(const f of g)f.sick=true;return {kind,target:arg,events:out};}
   if(kind==='pumped'){const f=find(T,pid,arg)||gangOf(T,pid).filter(x=>x.lvl<MAX_LVL).sort((a,b)=>a.lvl-b.lvl)[0];if(!f)return null;
-    const lv=levelUp(f);if(lv.to>lv.from)out.push({type:'fighter-level',pid,id:f.id,from:lv.from,to:lv.to});if(lv.recruit)addFighter(T,pid,Math.floor(rng(seed)()*KINDS.length),'level3',out);return {kind,id:f.id,events:out};}
+    const lv=levelUp(f);if(lv.to>lv.from)out.push({type:'fighter-level',pid,id:f.id,from:lv.from,to:lv.to});if(lv.recruit)addFighter(T,pid,Math.floor(rng(seed)()*KINDS.length),'level3',out,f.id);return {kind,id:f.id,events:out};}
   if(kind==='recover'){const f=find(T,pid,arg)||gangOf(T,pid).find(x=>x.used&&x.post==null);if(!f||!f.used)return null;f.used=false;return {kind,id:f.id,events:out};}
   if(kind==='countryman'){const f=addFighter(T,pid,Math.floor(rng(seed)()*KINDS.length),'chance',out);return f?{kind,id:f.id,events:out}:null;}
   return null;}
 
-// Миссии банды: «Самая крутая банда» — бойцов 5-го уровня; «Хозяин района» — выигранных набегов (T.gangWins).
-const topCount=(T,pid,lvl)=>gangOf(T,pid).filter(f=>f.lvl>=(lvl||MAX_LVL)).length;
+// Миссии банды: «Самая крутая банда» (topGoal/topDone); «Хозяин района» — выигранных набегов (T.gangWins).
+// «Самая крутая банда» (Андрей 28.10): короткая партия — до 20 минут или до 10 кругов — банда из 3 бойцов, один из них
+// 4-го уровня; длиннее — 3 бойца 5-го уровня [?] прогон 28.10: в партии на 20 кругов не выполнил никто (0 из 180).
+const shortGame=st=>{st=st||{};return st.mode==='laps'?(+st.rounds||10)<=10:(+st.minutes||20)<=20;};
+const topGoal=st=>shortGame(st)?{size:3,lvl:4,count:1}:{size:3,lvl:MAX_LVL,count:3};
+const topCount=(T,pid,lvl)=>gangOf(T,pid).filter(f=>f.lvl>=(lvl||topGoal(T&&T.settings).lvl)).length;
+const topDone=(T,pid)=>{const g=topGoal(T&&T.settings);return gangOf(T,pid).length>=g.size&&topCount(T,pid,g.lvl)>=g.count;};
 // Публичная часть для вида стола: банды всех (карточки соперников видны — защитник видит, кем наехали), ринг, набег.
 function publicView(T){if(!on(T))return null;
-  return {gang:T.gang||{},ring:T.ring||null,raid:T.raid?Object.assign({},T.raid):null,wins:T.gangWins||{}};}
+  return {gang:T.gang||{},ring:T.ring||null,raid:T.raid?Object.assign({},T.raid):null,wins:T.gangWins||{},guardHit:T.guardHit||{}};}
 
 const ringFightCore=ringFight0;
-const api={KINDS,MAX_GANG,MAX_LVL,XP_LEVELS,XP_WIN,XP_LOSE,LOOT_PER_LVL,GUARD_PER_LVL,DEFENSE_OVER,RING_TILES,
-  rng,kindOf,levelOf,xpToNext,newFighter,power,sidePower,hpOf,atkOf,battle,xpFor,addXp,levelUp,lootShare,guardBonus,autoDefense,defenseSec,ringChampion,
+const api={KINDS,MAX_GANG,MAX_LVL,XP_LEVELS,XP_WIN,XP_LOSE,LOOT_PER_LVL,LOOT_MAX,GUARD_PER_LVL,DEF_HOME,RING_TILES,
+  rng,kindOf,levelOf,xpToNext,newFighter,power,sidePower,hpOf,atkOf,battle,xpFor,addXp,levelUp,lootShare,lootCash,topGoal,guardBonus,autoDefense,defenseSec,ringChampion,
   ringFight:ringFight0,ringFight0,   // ringFight клиент mp.js перекрывает действием «послать на ринг»; модель — ringFight0
-  table:{on,gangOf,freeOf,defendersOf,init,boardRing,lap,guardOn,raidStart,raidResolve,ringFight,post,card,topCount,publicView,addFighter}};
+  table:{on,gangOf,freeOf,defendersOf,init,boardRing,lap,guardOn,raidStart,raidResolve,ringFight,post,card,topCount,topDone,publicView,addFighter}};
 root.MPGang=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

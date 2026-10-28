@@ -1,0 +1,49 @@
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}body{background:#d4be91;color:#251e16;font:14px Georgia,serif;display:grid;grid-template-rows:66px minmax(0,1fr)}header{display:flex;align-items:center;gap:12px;padding:8px 18px;background:#ead8af;border-bottom:3px solid #2d251c}header>div:first-child{flex:1}h1{font-size:26px;margin:0;line-height:1}.eyebrow{font-size:11px}#score{display:flex;gap:9px;font-size:28px;font-weight:bold}#score b:first-child{color:#315d72}#score b:last-child{color:#9e7627}button,select{font:inherit;color:inherit;background:#e9d7b0;border:1px solid #695333;border-radius:2px;padding:8px 10px;cursor:pointer;min-height:35px}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #2d6d8a;outline-offset:2px}button.active{background:#315465;color:#fff1cc}header button{font-size:22px;width:40px;padding:0}main{display:grid;grid-template-columns:minmax(0,1fr) 270px;min-height:0}#stage{position:relative;min-height:0;overflow:hidden;background:#b4a17c}canvas{width:100%;height:100%;display:block;touch-action:none}aside{background:#ead9b5;padding:12px;border-left:2px solid #51422e;min-width:0;overflow:hidden}nav{display:flex;border-bottom:1px solid #9a8260;margin-bottom:14px;gap:4px}nav button{flex:1;padding:8px 3px;font-size:13px}.panel{display:none}.panel.active{display:block}.row{display:flex;gap:12px;align-items:end}.row>*{flex:1;min-width:0}label{display:block;font-size:13px;margin:8px 0}select{display:block;width:100%;margin-top:5px;padding:7px 3px;font-size:12px}input[type=range]{display:block;width:100%;accent-color:#963d2d;margin:8px 0}output{float:right}.primary{width:100%;background:#a73929;color:#fff2d2;font-size:19px;font-weight:bold;box-shadow:2px 2px #3b2b20;margin-top:12px}p{font-size:12px;line-height:1.4;margin:12px 0 0}#loading{position:absolute;inset:0;display:grid;place-items:center;background:#d4be91e8;z-index:4;font-size:17px}#loading.hidden{display:none}#event{position:absolute;bottom:10px;left:8px;right:8px;text-align:center;font-size:12px;pointer-events:none;background:#f0dfb4dc;border:1px solid #6f5c3a;padding:6px}#badges{position:absolute;inset:0;pointer-events:none}.badge{position:absolute;width:56px;margin-left:-28px;text-align:center;font-size:10px;text-shadow:0 1px #eeddb8}.badge .bar{height:6px;border:1px solid #282218;background:#282218;margin-top:3px}.badge .fill{height:100%;background:#41738b;transform-origin:left}.badge.enemy .fill{background:#c09535}#result{position:absolute;left:15%;right:15%;top:35%;padding:20px;background:#efdfb9;border:3px solid;text-align:center;font-size:28px;font-weight:bold}#result[hidden]{display:none}
+@media(max-width:760px){body{grid-template-rows:58px minmax(0,1fr)}header{padding:7px 10px;gap:8px}h1{font-size:21px}.eyebrow{font-size:10px}#score{font-size:23px}header button{width:33px;min-height:33px}main{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 212px}aside{border-left:0;border-top:2px solid #51422e;padding:8px 14px}nav{margin-bottom:5px}nav button{min-height:32px;padding:5px}label{margin:4px 0}p{margin-top:7px}.primary{margin-top:7px;min-height:35px;padding:6px}#look>label{margin-top:0}#look button{min-height:29px;padding:4px 8px}input[type=range]{margin:6px 0}}
+@media(max-height:600px) and (max-width:760px){body{grid-template-rows:48px minmax(0,1fr)}main{grid-template-rows:minmax(0,1fr) 175px}aside{padding:4px 10px}nav{margin-bottom:2px}nav button{min-height:27px}.primary{margin-top:3px}p{font-size:10px;margin-top:3px}h1{font-size:18px}}
+
+/* HUD occupies its own row: never project labels onto the fighting silhouettes. */
+body{grid-template-rows:66px 52px minmax(0,1fr)}
+#badges{position:static;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:7px 18px;background:#ead9b5;border-bottom:2px solid #51422e;pointer-events:auto}
+.badge{position:static;width:auto;margin:0;text-align:left;font-size:12px;text-shadow:none;min-width:0}.badge .bar{height:8px}.badge span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#event{position:static;margin-top:14px;padding:7px;font-size:12px;min-height:30px}#result{position:static;margin-top:8px;padding:10px;font-size:20px}
+@media(max-width:760px){body{grid-template-rows:58px 48px minmax(0,1fr)}#badges{gap:8px;padding:6px 10px}.badge{font-size:11px}#event{margin-top:5px;padding:3px;font-size:10px;min-height:20px}#result{margin-top:3px;padding:3px;font-size:14px}}
+@media(max-height:600px) and (max-width:760px){body{grid-template-rows:48px 42px minmax(0,1fr)}#event{display:none}}
+
+/* Actor health follows the projected head, above the silhouette. */
+body{grid-template-rows:66px minmax(0,1fr)}
+#stage #badges{position:absolute;inset:0;display:block;padding:0;border:0;background:none;pointer-events:none;z-index:2}
+#stage .badge{position:absolute;width:46.667px;transform:translate(-50%,-100%);font-size:10px;text-align:center;color:#f2e3bd;text-shadow:0 1px 2px #181713,1px 0 #181713;}
+#stage .badge[hidden]{display:none}#stage .badge .bar{height:4.667px;margin-top:0;border:1px solid #211b15;background:#35291f;box-shadow:0 1px 1px #0006}
+@media(max-width:760px){body{grid-template-rows:58px minmax(0,1fr)}}
+
+#stage .badge span{display:none}
+
+/* Settings scroll independently of the arena at every viewport size. */
+aside{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8b7350 #ead9b5;scrollbar-gutter:stable}
+aside>nav{position:sticky;top:0;z-index:3;background:#ead9b5;box-shadow:0 -14px 0 14px #ead9b5}
+
+.row.nav-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;align-items:stretch}
+
+#stage .combat-notice{position:absolute;transform:translate(-50%,-100%);font:700 10px/1 Georgia,serif;white-space:nowrap;pointer-events:none;letter-spacing:.15px;color:#f2e3bd;text-shadow:0 1px 1px #251e16,1px 0 1px #251e16,-1px 0 1px #251e16;z-index:3}#stage .combat-notice.crit{color:#efc875}#stage .combat-notice.dodge{color:#d9e5df}
+
+
+/* Small, fixed-height health indicators; overlap is intentional. */
+#stage .badge{width:32px;margin:0;z-index:2}
+#stage .badge .bar{height:3px;margin:0;border:0;box-shadow:none;background:#29231e}
+#stage .badge .fill{background:#39bfff}
+#stage .badge.enemy .fill{background:#ffd34a}
+#stage .badge.knocked .bar{border:0}
+#stage .combat-notice{font-size:13px;line-height:15px;letter-spacing:.1px;color:#ead9b4;text-shadow:0 1px 0 #25221c;-webkit-text-stroke:1.2px #25221c;paint-order:stroke fill;z-index:4}
+#stage .combat-notice.crit{color:#d9b66b;font-size:13px}
+#stage .combat-notice.dodge{color:#cad3c6}
+#stage .damage-number{position:absolute;transform:translate(-50%,-100%);font:700 11px/1 Georgia,serif;color:#f2e3bd;-webkit-text-stroke:2px #25221c;paint-order:stroke fill;white-space:nowrap;pointer-events:none;z-index:3}
+#stage .damage-number.critical{font-size:12px;color:#f1c455}
+
+/* Two quiet, compact strips: no leader lines or collision-driven vertical offsets. */
+#stage .badge .charge-bar{height:2px;margin-top:2px;background:#29231e;border:0}
+#stage .badge .charge-fill{height:100%;background:#b95b36;transform-origin:left}
+#stage .badge.charged .charge-fill{background:#f0db9e}
+#stage .badge.spent .charge-bar{opacity:.3}
+
+.loot-number.coin{color:#ffe08b}.loot-number.health{color:#b3e6a6}.loot-number{font-size:15px}

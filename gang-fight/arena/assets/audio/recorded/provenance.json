@@ -1,0 +1,37 @@
+[
+  {
+    "name": "voice0",
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Audio/Voice/Body Punch With Groans 2.wav",
+    "sourceSHA256": "d802eee75def810e90fec1b7bda2b30225371e5efceedadd0a4e48742ddca9ae",
+    "duration": 0.9219047619047619,
+    "gain": 0.8277973592984785
+  },
+  {
+    "name": "voice1",
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Audio/Voice/Body Punch With Groans 3.wav",
+    "sourceSHA256": "721ae8bf39326c4b70698bd022be205ebd9459fda994ab8bc2b30694834c4aed",
+    "duration": 0.8342857142857143,
+    "gain": 0.8930841899816746
+  },
+  {
+    "name": "voice2",
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Audio/Voice/Body Punch With Groans 4.wav",
+    "sourceSHA256": "c68a8c12c54582b83e2d6243f8c58043371acd31dc726e276459af9c0e58a9aa",
+    "duration": 1.2281632653061225,
+    "gain": 0.6978804550555058
+  },
+  {
+    "name": "voice3",
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Audio/Voice/Body Punch With Groans 5.wav",
+    "sourceSHA256": "a2d4f0afd997f04ad1d5ab875a9b9ce55833ed77a8737880622d8f7d568790ea",
+    "duration": 1.0322222222222222,
+    "gain": 0.7836732174406779
+  },
+  {
+    "name": "impact",
+    "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Audio/Clips/Game/punch_0.wav",
+    "sourceSHA256": "8744c35f1f4c0b8af1ba595f909ddfaf7c9176647262107a19ea70d03fb1802e",
+    "duration": 0.35,
+    "gain": 0.790453829082371
+  }
+]

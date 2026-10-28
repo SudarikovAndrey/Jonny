@@ -1,0 +1,352 @@
+{
+  "version": 1,
+  "fps": 30,
+  "coordinates": "Right-handed Y-up; local +Z forward; rootMotion in hip-height units, apply yaw and model hipHeight once.",
+  "contactPolicy": "Swept physical limb capsule against every enemy body capsule within a window. One hit per victim per swing. At most 3 distinct victims per activation. No radius-only hits; exclude backswing/recovery. Integrator owns damage/charge.",
+  "rootPolicy": "rootMotion is already embedded in frames.hip. Do not apply it twice. splitSpecialRootMotion returns an in-place clip and root track for collision-aware actor movement.",
+  "characters": [
+    {
+      "kind": 0,
+      "clip": "superVestElbow",
+      "title": "Локоть докера",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 2.0,
+      "suggestedPlayback": 1,
+      "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Boss_01/AS_Boss_01_Attack_Elbow_L_01.fbx",
+      "sourceSha256": "f7df6412b07e7c0085bfa024e6092715acc331d02af693d592aaf10f5b36c034",
+      "rights": {
+        "basis": "Existing user Unity project asset; publisher/license documentation not found; not claimed CC/public domain.",
+        "status": "existing-project-provenance",
+        "url": null
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "elbow",
+          "side": "Left",
+          "bone": "Left_ForeArm",
+          "frames": [
+            22,
+            30
+          ],
+          "seconds": [
+            0.733333,
+            1.0
+          ],
+          "radiusMeters": 0.11
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    },
+    {
+      "kind": 1,
+      "clip": "superHatCombo",
+      "title": "Ботинок и кулак",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 1.3333333333333333,
+      "suggestedPlayback": 1,
+      "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Male/Fight/Combo/AS_Character_Male_Combo_03.fbx",
+      "sourceSha256": "32311697592b0de946e9a20b6d47ddae45abc22309b26843bea5fced966b1d79",
+      "rights": {
+        "basis": "Existing user Unity project asset; publisher/license documentation not found; not claimed CC/public domain.",
+        "status": "existing-project-provenance",
+        "url": null
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "foot",
+          "side": "Right",
+          "bone": "Right_Foot",
+          "frames": [
+            7,
+            14
+          ],
+          "seconds": [
+            0.233333,
+            0.466667
+          ],
+          "radiusMeters": 0.13
+        },
+        {
+          "swing": 1,
+          "limb": "hand",
+          "side": "Right",
+          "bone": "Right_Hand",
+          "frames": [
+            20,
+            29
+          ],
+          "seconds": [
+            0.666667,
+            0.966667
+          ],
+          "radiusMeters": 0.11
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    },
+    {
+      "kind": 2,
+      "clip": "superHeavyDouble",
+      "title": "Двойной молот",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 1.7,
+      "suggestedPlayback": 1,
+      "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Boss_01/AS_Boss_01_Punch_BothHands_01.fbx",
+      "sourceSha256": "a0e99af73e1ccfe8c4bdd90f15fb4adf87e140fdf6efdbdf4de2817d5bb7c173",
+      "rights": {
+        "basis": "Existing user Unity project asset; publisher/license documentation not found; not claimed CC/public domain.",
+        "status": "existing-project-provenance",
+        "url": null
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "hand",
+          "side": "Left",
+          "bone": "Left_Hand",
+          "frames": [
+            22,
+            30
+          ],
+          "seconds": [
+            0.733333,
+            1.0
+          ],
+          "radiusMeters": 0.11
+        },
+        {
+          "swing": 0,
+          "limb": "hand",
+          "side": "Right",
+          "bone": "Right_Hand",
+          "frames": [
+            22,
+            31
+          ],
+          "seconds": [
+            0.733333,
+            1.033333
+          ],
+          "radiusMeters": 0.11
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    },
+    {
+      "kind": 3,
+      "clip": "superButcherCombo",
+      "title": "Размашистая двойка",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 1.9,
+      "suggestedPlayback": 1,
+      "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Female/Fight/AS_Character_Female_Combo_Attack_04.fbx",
+      "sourceSha256": "8930eef0fde06e3f4e7f85749deca15338ce86d82609d27c0438f95185788e7b",
+      "rights": {
+        "basis": "Existing user Unity project asset; publisher/license documentation not found; not claimed CC/public domain.",
+        "status": "existing-project-provenance",
+        "url": null
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "hand",
+          "side": "Left",
+          "bone": "Left_Hand",
+          "frames": [
+            6,
+            14
+          ],
+          "seconds": [
+            0.2,
+            0.466667
+          ],
+          "radiusMeters": 0.11
+        },
+        {
+          "swing": 1,
+          "limb": "hand",
+          "side": "Right",
+          "bone": "Right_Hand",
+          "frames": [
+            20,
+            31
+          ],
+          "seconds": [
+            0.666667,
+            1.033333
+          ],
+          "radiusMeters": 0.11
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    },
+    {
+      "kind": 4,
+      "clip": "superMasterElbows",
+      "title": "Прорыв мастера",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 5.0,
+      "suggestedPlayback": 1.15,
+      "source": "Mixamo/Punch_To_Elbow_Combo.fbx",
+      "sourceSha256": "a28bc0a416571995b8d307d332effa4d7408e8183e08f4dccb74838f100d53ed",
+      "rights": {
+        "basis": "Mixamo asset; Adobe FAQ permits royalty-free use in games. Original asset resale not authorized.",
+        "status": "adobe-mixamo-terms",
+        "url": "https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html"
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "hand",
+          "side": "Right",
+          "bone": "Right_Hand",
+          "frames": [
+            17,
+            26
+          ],
+          "seconds": [
+            0.566667,
+            0.866667
+          ],
+          "radiusMeters": 0.11
+        },
+        {
+          "swing": 1,
+          "limb": "elbow",
+          "side": "Right",
+          "bone": "Right_ForeArm",
+          "frames": [
+            29,
+            40
+          ],
+          "seconds": [
+            0.966667,
+            1.333333
+          ],
+          "radiusMeters": 0.11
+        },
+        {
+          "swing": 2,
+          "limb": "hand",
+          "side": "Right",
+          "bone": "Right_Hand",
+          "frames": [
+            80,
+            97
+          ],
+          "seconds": [
+            2.666667,
+            3.233333
+          ],
+          "radiusMeters": 0.11
+        },
+        {
+          "swing": 3,
+          "limb": "elbow",
+          "side": "Left",
+          "bone": "Left_ForeArm",
+          "frames": [
+            100,
+            114
+          ],
+          "seconds": [
+            3.333333,
+            3.8
+          ],
+          "radiusMeters": 0.11
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    },
+    {
+      "kind": 5,
+      "clip": "superGrandsonRoundhouse",
+      "title": "Дуга дракона",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 2.5,
+      "suggestedPlayback": 1,
+      "source": "Mixamo/Roundhouse_Kick_2.fbx",
+      "sourceSha256": "f5695dc914a6d79601170bc861646fa88c076975c6a5c9809223550c54252a8f",
+      "rights": {
+        "basis": "Mixamo asset; Adobe FAQ permits royalty-free use in games. Original asset resale not authorized.",
+        "status": "adobe-mixamo-terms",
+        "url": "https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html"
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "foot",
+          "side": "Right",
+          "bone": "Right_Foot",
+          "frames": [
+            19,
+            35
+          ],
+          "seconds": [
+            0.633333,
+            1.166667
+          ],
+          "radiusMeters": 0.13
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    },
+    {
+      "kind": 6,
+      "clip": "superGiantHooks",
+      "title": "Медвежья двойка",
+      "maxDistinctVictims": 3,
+      "durationSeconds": 1.7666666666666666,
+      "suggestedPlayback": 0.85,
+      "source": "/Users/andreysudarikov/Work/patsan-rep/unity/patsan/Assets/Art/Animations/3D/Characters/Fight/Boss_01/AS_Boss_01_Punch_Combo_Hook_01.fbx",
+      "sourceSha256": "7b9cba80c2f90b31ba30889deb86e3637131223986940627553d5b57ab20c179",
+      "rights": {
+        "basis": "Existing user Unity project asset; publisher/license documentation not found; not claimed CC/public domain.",
+        "status": "existing-project-provenance",
+        "url": null
+      },
+      "contacts": [
+        {
+          "swing": 0,
+          "limb": "hand",
+          "side": "Left",
+          "bone": "Left_Hand",
+          "frames": [
+            7,
+            16
+          ],
+          "seconds": [
+            0.233333,
+            0.533333
+          ],
+          "radiusMeters": 0.15
+        },
+        {
+          "swing": 1,
+          "limb": "hand",
+          "side": "Right",
+          "bone": "Right_Hand",
+          "frames": [
+            23,
+            33
+          ],
+          "seconds": [
+            0.766667,
+            1.1
+          ],
+          "radiusMeters": 0.15
+        }
+      ],
+      "artAccepted": false,
+      "battleIntegrated": false
+    }
+  ]
+}
