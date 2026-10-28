@@ -243,6 +243,7 @@ function driveModals(){
   if(layer){clickBusy=true;setTimeout(()=>{try{playMinigame(layer);}catch(e){H.closeMinigame();}setTimeout(()=>{clickBusy=false;},300);},dly(900));return;}
   const m=$('modal');if(!m||m.hidden)return;
   const card=$('card');if(!card)return;
+  if(card.querySelector('[data-human]'))return;   // окно для человека за этим экраном (защита от набега в ход бота) — не бота
   const head=card.querySelector('h2,h1,h3,.property-title,.card-title,[class*=title]');const title=((head||{}).innerText||card.innerText.split('\n')[0]||'').trim();
   if(title===lastTitle)sameCount++;else{lastTitle=title;sameCount=0;}
   const isHelp=b=>/^\?$|^\s*\?\s*$/.test(b.textContent.trim())||/help|hint|подсказ/i.test(b.className+' '+(b.getAttribute('aria-label')||''));

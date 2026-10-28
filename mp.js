@@ -9,6 +9,8 @@ const TEST=Q.get('test')==='1';   // тестовый стол (решение �
 if(!Q.has('mp'))return;
 if(Q.get('map')!=='sf'){Q.set('map','sf');location.replace(location.pathname+'?'+Q.toString());return;}
 const C=window.MPCore;if(!C){console.error('MPCore не загружен');return;}
+// Банда бойцов (mp-gang, Андрей 27.10): правила — web/mp-gang.js; включается настройкой стола «С бойцами».
+const GANG=window.MPGang,GT=GANG&&GANG.table;
 
 // ---- параметры режима ----
 const prosp=()=>(window.SFBuilder&&+SFBuilder.prosp)||.06;   // надбавка города за категорию — SF.prosp; .06 — запас, пока SFBuilder.prosp не выставлен
@@ -301,7 +303,8 @@ function Hub(room,restored,ho){
   function broadcast(){
     if(stopped)return;
     const now=Date.now(),val=T.tiles?makeValuer(T.tiles):null;
-    for(const p of T.players){const send=links.get(p.pid);if(send)send({t:'view',v:C.viewFor(T,p.pid,val),now,ep:T.epoch});}
+    const gv=GT?GT.publicView(T):null;   // банда — публичная: защитник видит, кем наехали
+    for(const p of T.players){const send=links.get(p.pid);if(!send)continue;const v=C.viewFor(T,p.pid,val);if(gv)v.gang=gv;send({t:'view',v,now,ep:T.epoch});}
     persist();dirty=false;snapOut(now);
   }
   // Полный срез стола — трём первым преемникам (живые люди по месту): им продолжать, если хозяин пропадёт.
@@ -387,7 +390,10 @@ function Hub(room,restored,ho){
         if(!p){send&&send({t:'rehello'});return;}            // хозяин нас не знает (перезагрузился, выкинул) — представиться заново
         if(!links.has(pid)||!p.online){p.online=true;links.set(pid,send);soon();}
         send&&send({t:'pong'});return;
-      case 'state':if(C.applyState(T,pid,msg.pack,Date.now())){C.checkEarly(T);soon();}return;
+      case 'state':{const lp=T.players.find(x=>x.pid===pid),l0=lp&&lp.s?lp.s.laps||0:0;
+        if(C.applyState(T,pid,msg.pack,Date.now())){if(GT&&GT.on(T)&&lp&&lp.s&&(lp.s.laps||0)>l0)GT.lap(T,pid);   // прошёл старт — бойцы снова в строю
+          C.checkEarly(T);soon();}return;}
+      case 'gang':gangMsg(pid,msg);return;
       case 'end':if(C.endTurn(T,pid,msg.n,Date.now(),msg.pack||null)){C.checkEarly(T);soon();}return;
       case 'extend':if(pid!==PID)return;if(C.extend(T,Date.now()))soon();return;   // «Ещё время» на итоге — хозяин стола
       case 'map':if(pid!==PID)return;if(C.setBoardMap(T,String(msg.id||'')))soon();return;   // вид локации — только хозяин, в лобби и в партии
@@ -412,7 +418,9 @@ function Hub(room,restored,ho){
         if('mode' in msg)C.setMode(T,String(msg.mode));
         if('win' in msg)C.setWin(T,String(msg.win));
         if('boardMap' in msg)C.setBoardMap(T,String(msg.boardMap));
-        if('turnSec' in msg&&C.TURN_OPTIONS.includes(+msg.turnSec))T.settings.turnSec=+msg.turnSec;soon();return;
+        if('turnSec' in msg&&C.TURN_OPTIONS.includes(+msg.turnSec))T.settings.turnSec=+msg.turnSec;
+        if('gang' in msg&&GT)T.settings.gang=!!+msg.gang;   // «С бойцами / Без бойцов» (mp-gang)
+        soon();return;
       case 'start':if(pid!==PID)return;startMatch();return;
       // Голосование стола (m8-endtime): продлить на «последнем круге», реванш с итога — любой живой игрок.
       case 'vote':voteDone(C.startVote(T,pid,String(msg.kind||''),Date.now()));soon();return;
@@ -421,11 +429,44 @@ function Hub(room,restored,ho){
       case 'kick':if(pid!==PID||T.phase!=='lobby'||msg.pid===PID)return;{const s=links.get(msg.pid);s&&s({t:'deny',error:'kicked'});}links.delete(msg.pid);C.leave(T,msg.pid);soon();return;
     }
   }
+  // ---- Банда (mp-gang): набег, защита, ринг, охранник, карты. Состояние — T.gang / T.ring / T.raid. ----
+  const gangSeed=()=>((Date.now()^((T.evSeq||0)*2654435761)^((T.turn&&T.turn.n)||0)*40503)>>>0)||1;
+  const GANG_TEXT={'fighter-new':e=>'в банде новый боец','fighter-level':e=>`боец дорос до ${e.to}-го уровня`};
+  function gangEvent(e,text){if(text==null&&GANG_TEXT[e.type])text=GANG_TEXT[e.type](e);
+    C.event(T,{kind:'gang',from:e.from||e.pid||null,to:e.to||null,tile:e.tile!=null?e.tile:null,amount:null,text:text||'',gang:e});}
+  function gangMsg(pid,msg){
+    if(!GT||!GT.on(T)||T.phase!=='play'||!msg)return;
+    const now=Date.now(),act=!!(T.turn&&T.turn.pid===pid);
+    switch(msg.op){
+      case 'raid':{if(!act)return;const r=GT.raidStart(T,pid,+msg.tile,msg.ids,now,{seed:gangSeed()});if(r.error)return;
+        if(r.repelled)gangEvent({type:'raid-repelled',from:pid,to:r.to,tile:r.tile},'охранник прогнал набег');
+        else if(r.raid){T.raidHold=C.pause(T,pid,true,now);gangEvent(Object.assign({type:'raid'},r.raid),'наехал на точку');try{tev('gang_raid',{from:pid,to:r.raid.to,tile:r.raid.tile,n:r.raid.attackers.length});}catch(e){}}
+        else if(r.result)raidDone(r.result);
+        soon();return;}
+      case 'defend':case 'concede':{const R=T.raid;if(!R||R.id!==msg.id||R.to!==pid)return;
+        raidDone(GT.raidResolve(T,msg.op==='concede'?[]:(Array.isArray(msg.ids)?msg.ids.map(String):[]),gangSeed()));soon();return;}
+      case 'ring':{if(!act)return;const r=GT.ringFight(T,pid,String(msg.id),gangSeed());if(r.error)return;
+        gangEvent(Object.assign({type:'ring-result'},r,{events:undefined}),r.win?'победил на ринге':'проиграл на ринге');for(const e of r.events)gangEvent(e);
+        try{tev('gang_ring',{pid,win:r.win,stage:r.champ.stage,reward:r.reward});}catch(e){}soon();return;}
+      case 'post':{if(!act)return;if(GT.post(T,pid,String(msg.id),msg.tile==null?null:+msg.tile))soon();return;}
+      case 'card':{if(!act)return;const r=GT.card(T,pid,String(msg.kind),msg.arg==null?null:String(msg.arg),gangSeed());if(!r)return;
+        gangEvent(Object.assign({type:'card',pid},r,{events:undefined}),'');for(const e of r.events)gangEvent(e);soon();return;}
+    }
+  }
+  // Итог набега: товар с точки жертвы уносят выжившие (хозяин стола списывает у жертвы, нападающий раскладывает у себя
+  // сам — его срез ведёт его клиент); поражение — рента ×1,5 платит нападающий. Часы хода снова идут.
+  function raidDone(res){if(!res)return;const t=T.tiles[res.tile];let goods=0,good=t&&t.good;
+    if(res.win&&t){goods=Math.floor((t.goods||0)*res.share);t.goods=Math.max(0,(t.goods||0)-goods);(T.gangWins=T.gangWins||{})[res.from]=((T.gangWins||{})[res.from]||0)+1;}
+    if(T.raidHold)C.pause(T,res.from,false,Date.now());T.raidHold=false;   // снимаем только свою паузу, не мини-игру
+    gangEvent(Object.assign({type:'raid-result'},res,{events:undefined,goods,good}),res.win?(res.conceded?'забрал товар без драки':'отбил товар'):'проиграл набег');
+    for(const e of res.events)gangEvent(e);
+    try{tev('gang_raid_result',{from:res.from,to:res.to,tile:res.tile,win:res.win,auto:res.auto,conceded:res.conceded,goods,share:res.share});}catch(e){}}
   // Новая партия: поле стола — с чистого листа (цена стройки не должна зависеть от точек хозяина в прошлой партии).
   function startMatch(){
     const keep=S;S=Object.assign({},keep||{},{tiles:[]});let tiles;try{tiles=buildTiles().map(t=>Object.assign(t,{owner:null}));}finally{S=keep;}
     tiles=mpBoard(tiles);
-    if(C.start(T,tiles,pl=>makeSlice(pl.name),Date.now())){T.pauseUse={};soon();return true;}return false;}
+    if(GT&&T.settings.gang)GT.boardRing(tiles);   // клетка ринга — только на столе с бойцами
+    if(C.start(T,tiles,pl=>makeSlice(pl.name),Date.now())){T.pauseUse={};if(GT&&T.settings.gang)GT.init(T,T.tiles,(Date.now()^(T.match*2654435761))>>>0);soon();return true;}return false;}
   // Итог голосования: в журнал стола; реванш — те же игроки, боты и настройки, новая партия сразу, без лобби и новой ссылки.
   function voteDone(r){if(!r)return;try{tev('vote',{kind:r.kind,ok:r.ok,how:r.how,by:r.by,byName:r.by?pname(r.by):null,extended:T.extended||0});}catch(e){}
     if(r.ok&&r.kind==='rematch'){C.backToLobby(T);startMatch();}}
@@ -436,6 +477,7 @@ function Hub(room,restored,ho){
     for(const p of T.players)if(p.pid!==PID&&p.online&&p.seenAt&&now-p.seenAt>9000){C.leave(T,p.pid);links.delete(p.pid);p.offAt=now;dirty=false;soon();}
     if(T.phase==='lobby')for(const p of T.players.slice())if(p.pid!==PID&&!p.online&&now-(p.offAt||0)>15000){T.players=T.players.filter(x=>x!==p);soon();}
     if(T.vote){const vr=C.voteCheck(T,now);if(vr){voteDone(vr);soon();}}
+    if(T.raid&&now>=T.raid.deadline){raidDone(GT.raidResolve(T,null,(now^0x5bd1e995)>>>0));soon();}   // защитник не выбрал — автозащита
     const r=C.tick(T,now);
     if(r==='timeout'){const send=links.get(T.turn.pid);send&&send({t:'timeout',n:T.turn.n});try{tev('timeout',{pid:T.turn.pid,name:pname(T.turn.pid)});}catch(e){}}
     if(r){C.checkEarly(T);soon();}
@@ -626,7 +668,8 @@ function takeTable(){
   T.startedAt=sh(T.startedAt);if(T.deadline)T.deadline=sh(T.deadline)+gap;
   if(T.turn&&T.turn.endsAt!=null)T.turn.endsAt=Math.max(sh(T.turn.endsAt)+gap,now+20000);
   if(T.paused&&T.paused.at)T.paused.at=sh(T.paused.at)+gap;
-  if(T.vote&&T.vote.until)T.vote.until=sh(T.vote.until)+gap;   // голосование переезжает вместе со столом
+  if(T.vote&&T.vote.until)T.vote.until=sh(T.vote.until)+gap;
+  if(T.raid&&T.raid.deadline)T.raid.deadline=sh(T.raid.deadline)+gap;   // набег ждёт защиту и у нового ведущего   // голосование переезжает вместе со столом
   for(const p of T.players){if(p.offAt)p.offAt=sh(p.offAt);if(p.seenAt)p.seenAt=now;}
   if(T.pauseUse)for(const u of Object.values(T.pauseUse))if(u&&u.at)u.at=sh(u.at);
   const from=T.hostPid;
@@ -709,7 +752,8 @@ function onMessage(m){
       // следующее сообщение снова давало бы moved (мультиплеер режим, 04.10).
       const prev=hostSeen,moved=prev&&m.v&&m.v.host&&m.v.host!==prev;if(m.v&&m.v.host)hostSeen=m.v.host;if(moved)handoffBanner(m.v,prev===PID);
       if(backFromAway&&m.v&&m.v.host){if(m.v.host!==PID)handoffBanner(m.v,true,6500);backFromAway=false;}
-      onView(m.v,m.now,moved);if(moved)resyncTurn();return;}   // стол сменил хозяина — вид сразу, без ожидания фишки: resyncTurn смотрит на свежий ход
+      onView(m.v,m.now,moved);if(moved)resyncTurn();
+      try{gangSalesHook();gangEvents(m.v);}catch(e){console.error('gang',e);}return;}   // стол сменил хозяина — вид сразу, без ожидания фишки: resyncTurn смотрит на свежий ход
     case 'evt':if(walkGate.list.length){walkGate.list.push({from:m.from,e:m.e});walkGate.arm();}else onEvt(m.from,m.e);return;
   }
 }
@@ -1499,6 +1543,7 @@ const landedHere=()=>!!(view&&view.turn&&S&&S.mpLanded&&S.mpLanded.n===view.turn
 (function(){const base=land;land=async function(t){
   if(t&&view&&view.turn)S.mpLanded={n:view.turn.n,i:t.i};
   if(!isRival(t)){
+    if(t&&t.type==='ring'){if(gangOn()&&myTurn())await gangRingFlow(t);return;}   // ринг банды (mp-gang)
     if(t&&t.type==='wh'&&myTurn()&&view&&view.phase==='play'&&!S.tiles.some(x=>x.owner&&x.type==='kiosk')){S.cash+=MP_WH_CONSOLATION;plate('🏬 Склад',MP_WH_CONSOLATION,'точек нет — утешительный приз');log(`🏬 Своих точек нет: утешительный приз ${money(MP_WH_CONSOLATION)}.`);}
     // Копилка-джекпот («вдвоём угарно») — у неё нет окна мини-игры, выигрыш показываем соперникам сами.
     const before=S.cash,r=await base.apply(this,arguments),d=Math.round(S.cash-before);
@@ -1514,14 +1559,14 @@ const landedHere=()=>!!(view&&view.turn&&S&&S.mpLanded&&S.mpLanded.n===view.turn
   else if(t.insp){toast(`📋 ${titleOf(t)} под проверкой — ренты нет`,2200);log(`📋 ${titleOf(t)}, хозяин ${nameOf(t.rival)}: под проверкой, рента не берётся.`);}
   else if(S.mpShieldN&&view.turn.n<=S.mpShieldN){toast('🛡 Крыша прикрыла — ренты нет',2200);log(`🛡 ${titleOf(t)}: крыша, рента не берётся.`);}
   else if(t.frozen&&t.frozen>view.turn.n){toast(`❄️ ${titleOf(t)} заморожена — ренты нет`,2200);log(`❄️ ${titleOf(t)}: заморожена картой «Шанса», рента не берётся.`);}
-  else{S.mpRent={n:view.turn.n,i:t.i};payRent(t);}
+  else{S.mpRent={n:view.turn.n,i:t.i};if(gangCanRaid(t))await gangRaidFlow(t);else payRent(t);}
   render();
   const tb=$('tilebar');if(tb&&!tb.hidden){tb.classList.add('pulse');setTimeout(()=>tb.classList.remove('pulse'),2400);}
 };})();
 // id уникален и после перезагрузки посреди хода: хозяин стола отбрасывает повторы по id.
 const creditTag=Date.now().toString(36);
-function payRent(t){
-  const r=rentOf(t),who=nameOf(t.rival),what=t.type==='biz'?bizName(t):pointName(t);
+function payRent(t,mult){
+  const r=Math.round(rentOf(t)*(mult||1)),who=nameOf(t.rival),what=t.type==='biz'?bizName(t):pointName(t);
   S.cash-=r;credit(t.rival,r,`${esc(S.player)} → ${esc(who)}: рента ${money(r)}`,0,{rent:true});
   track('mp_rent',{tile:t.i,to:t.rival,amt:r});
   log(`🏠 ${what}, хозяин ${who}. Заплатил ренту ${money(r)}.`);
@@ -1545,6 +1590,98 @@ function mvPartsHtml(m){if(!m)return '';const x=v=>'×'+String(v).replace('.',',
   const mult=[m.group!==1?`группа ${x(m.group)}`:'',m.stage!==1?`ход партии ${x(m.stage)}`:''].filter(Boolean).join(' · ');
   const floor=m.value===m.invested&&m.from==='income'&&Math.round(m.base*m.group*m.stage)<m.invested?' · не ниже вложенного':'';
   return esc(head+(mult?' · '+mult:'')+floor+(m.by==='buyer'?' · считаем по тебе: точка достроит твою группу':''));}
+// =====================================================================
+// Банда (mp-gang): клиент. Состояние — в виде стола (view.gang: {gang:{pid:[бойцы]}, ring, raid, wins}); всё меняет
+// хозяин стола. Контракт для экранов «Интерфейса» — window.MPGang.list/guards/ring/raidFor/on/off + действия.
+// Окна ниже — простые запасные, пока «Интерфейс» не сверстал свои (MPGangUI.defense / raidChoice / ring).
+// =====================================================================
+const gangOn=()=>!!(GANG&&view&&view.gang);
+const gangOf=pid=>(gangOn()&&view.gang.gang[pid||PID])||[];
+const gangFree=pid=>gangOf(pid).filter(f=>!f.used&&!f.sick&&f.post==null);
+const gangImg=k=>`assets/gang/portrait-${(GANG.KINDS[k]||GANG.KINDS[0]).id}.webp`;
+const gangName=f=>(GANG.KINDS[f.kind]||GANG.KINDS[0]).name;
+function gangGuard(i){if(!gangOn())return null;for(const pid in view.gang.gang)for(const f of view.gang.gang[pid])if(f.post===i)return Object.assign({pid},f);return null;}
+const gangCard=f=>({id:f.id,kind:f.kind,name:gangName(f),img:gangImg(f.kind),lvl:f.lvl,xp:f.xp,xpNext:GANG.xpToNext(f),used:!!f.used,post:f.post,sick:!!f.sick});
+const gangSubs={};let gangSeen={match:null,id:0},gangWait=null;
+function gangFire(type,d){(gangSubs[type]||[]).forEach(cb=>{try{cb(d);}catch(e){console.error(e);}});}
+// События банды из ленты стола (kind 'gang') — каждому один раз; свой набег и ринг ждут итога здесь же.
+function gangEvents(v){if(!v||!v.gang||!v.events)return;if(gangSeen.match!==v.match)gangSeen={match:v.match,id:0};
+  for(const e of v.events){if(e.kind!=='gang'||!e.gang||e.id<=gangSeen.id)continue;gangSeen.id=e.id;const g=e.gang;
+    gangFire(g.type,g);
+    if(gangWait&&gangWait.kind==='raid'&&g.from===PID&&(g.type==='raid-result'||g.type==='raid-repelled')&&g.tile===gangWait.tile){const w=gangWait;gangWait=null;w.done(g);}
+    if(gangWait&&gangWait.kind==='ring'&&g.type==='ring-result'&&g.pid===PID){const w=gangWait;gangWait=null;w.done(g);}
+    if(g.type==='raid'&&g.to===PID)gangDefense();
+    if(g.type==='raid-result'&&g.to===PID){if(gangDefOpen===g.id&&!$('modal').hidden){gangDefOpen=null;closeModal(null);}
+      plate(g.win?`👊 ${nameOf(g.from)} унёс товар`:'🛡 Набег отбит',0,g.win?`${g.goods|0} шт с «${titleOf(S.tiles[g.tile])}»${g.auto?' · защита выставилась сама':''}`:`${nameOf(g.from)} платит ренту ×1,5`);}
+    if(g.type==='fighter-new'&&g.pid===PID)toast(`👊 В банде новый боец: ${gangName(g)}`,2600);
+    if(g.type==='fighter-level'&&g.pid===PID){const f=gangOf().find(x=>x.id===g.id);toast(`⭐ ${f?gangName(f):'Боец'} — ${g.to}-й уровень`,2400);}}}
+const gangAwait=(kind,tile,ms)=>new Promise(res=>{const w={kind,tile,done:res};gangWait=w;setTimeout(()=>{if(gangWait===w){gangWait=null;res(null);}},ms);});
+// Надбавка охранника: продажи точки за круг (и рента с неё) ×(1 + 10% за уровень). Ставим поверх sales один раз.
+function gangSalesHook(){if(!GANG||typeof sales!=='function'||sales.__gang)return;const base=sales;
+  sales=function(t){const r=base.apply(this,arguments);const g=t&&gangGuard(t.i);return g?Math.round(r*(1+GANG.guardBonus(g.lvl))):r;};sales.__gang=true;}
+const gangCanRaid=t=>gangOn()&&myTurn()&&t&&t.type==='kiosk'&&!view.gang.raid&&gangFree().length>0;
+const gangRow=(f,on,def)=>`<label class="mp-gang-f" style="display:block;margin:4px 0"><input type="checkbox" data-id="${esc(f.id)}" ${on?'checked':''}> <b>${esc(gangName(f))}</b> <small>${f.lvl}-й ур.${def?'':` · унесёт ${Math.round(GANG.LOOT_PER_LVL*f.lvl*100)}%`}</small></label>`;
+let gangDefOpen=null;   // id набега, на который открыто запасное окно защиты
+// Встал на чужую точку: рента или набег. Ждём итог (защитник выбирает до defenseSec), потом добыча или рента ×1,5.
+async function gangRaidFlow(t){
+  const r=rentOf(t),who=nameOf(t.rival),free=gangFree(),g=gangGuard(t.i);
+  let pick;
+  if(window.MPGangUI&&MPGangUI.raidChoice)pick=await MPGangUI.raidChoice({tile:t.i,rent:r,owner:t.rival,ownerName:who,free:free.map(gangCard),guard:g?gangCard(g):null});
+  else{const v=await modal(`<h2>👊 ${esc(titleOf(t))}</h2><p class="t">Хозяин — <b>${esc(who)}</b>. Заплатить ренту или наехать: победишь — бойцы унесут товар, проиграешь — рента ×1,5.</p>
+      ${g?`<p class="t">🛡 Охраняет ${esc(gangName(g))} (${g.lvl}-й ур.) — первый набег за круг прогонит без драки.</p>`:''}
+      <div class="mp-gang-pick">${free.map((f,k)=>gangRow(f,k===0)).join('')}</div>`,
+      [{t:'👊 Наехать',v:'raid',cls:'buy-btn buy-ok'},{t:`🏠 Рента · ${money(r)}`,v:'rent',cls:'buy-btn buy-no'}],{sticky:true});
+    pick=v==='raid'?[...$('card').querySelectorAll('.mp-gang-pick input:checked')].map(x=>x.dataset.id):null;}
+  if(!pick||!pick.length){payRent(t);return;}
+  const sec=GANG.defenseSec(view.settings&&view.settings.turnSec);
+  const wait=gangAwait('raid',t.i,(sec+20)*1000);
+  net.send({t:'gang',op:'raid',tile:t.i,ids:pick});toast(`👊 Наехали на ${who} — ждём, чем ответит…`,Math.min(4000,sec*1000));
+  const res=await wait;
+  if(!res){payRent(t);return;}
+  if(res.type==='raid-repelled'){toast('🛡 Охранник прогнал — платишь ренту',2400);payRent(t);return;}
+  if(res.win)gangLoot(t,res);else{toast('🤕 Набег отбили — рента ×1,5',2400);payRent(t,1.5);}}
+// Добыча: товар — на свои точки той же категории (до 200% склада), остаток — налом по закупочной цене.
+function gangLoot(t,res){let n=res.goods|0;const g=res.good;let cash=0,put=0;
+  for(const x of S.tiles.filter(x=>x.owner&&x.type==='kiosk'&&x.good===g&&!x.lot)){if(n<=0)break;let room=0;try{room=Math.max(0,cap(x)*2-(x.goods||0));}catch(e){}const k=Math.min(room,n);x.goods=(x.goods||0)+k;n-=k;put+=k;}
+  if(n>0){try{cash=n*buyPrice(g);}catch(e){cash=0;}S.cash+=cash;}
+  plate('👊 Набег удался',cash,put?`на свои точки: ${put} шт${cash?' · остальное налом':''}`:'товар — налом по закупочной');
+  log(`👊 Набег на ${titleOf(t)}: унесли ${res.goods|0} шт (${Math.round(res.share*100)}%)${put?`, на свои точки ${put} шт`:''}${cash?`, налом ${money(cash)}`:''}.`);
+  emit({kind:'gang',text:`унёс ${res.goods|0} шт товара`,amount:cash||null,tile:t.i,to:t.rival});push();}
+// Ринг: один свободный боец против чемпиона стола.
+async function gangRingFlow(t){
+  const R=view.gang.ring,free=gangFree();if(!R)return;const c=R.champ;
+  if(!free.length){toast('🥊 Ринг: свободных бойцов нет — все дрались в этом круге',2600);return;}
+  let id;
+  if(window.MPGangUI&&MPGangUI.ring)id=await MPGangUI.ring({tile:t.i,champion:{stage:c.stage,lvl:c.lvl,hp:c.hp,hpMax:c.hpMax,name:(GANG.KINDS[c.kind]||{}).name,img:gangImg(c.kind)},free:free.map(gangCard)});
+  else id=await modal(`<h2>🥊 Ринг</h2><p class="t">Чемпион №${c.stage+1}: ${esc((GANG.KINDS[c.kind]||{}).name)}, ${c.lvl}-й ур., здоровье ${c.hp} из ${c.hpMax}. Побьёшь — новый боец в банду (при полной — прокачка); проиграешь — опыт всё равно будет, а урон останется.</p>`,
+      free.map(f=>({t:`${gangName(f)} · ${f.lvl}-й ур.`,v:f.id,cls:'buy-btn buy-ok'})).concat([{t:'Не сейчас',v:null,cls:'buy-btn buy-no'}]),{sticky:true});
+  if(!id)return;const wait=gangAwait('ring',t.i,10000);net.send({t:'gang',op:'ring',id});
+  const res=await wait;if(!res)return;
+  plate(res.win?'🥊 Победа на ринге':'🥊 Ринг: не вышло',0,res.win?(res.reward==='fighter'?'новый боец в банде':'боец прокачан'):`урон ${res.dealt} остался — чемпион не лечится`);}
+// Набег на меня: защита. Окно «Интерфейса» — MPGangUI.defense; запасное — простое окно, если другого окна нет.
+function gangDefense(n){const R=GANG.raidFor&&GANG.raidFor();if(!R){if((n|0)<6)setTimeout(()=>gangDefense((n|0)+1),500);return;}   // вид мог ждать фишку (walkGate)
+  if(window.MPGangUI&&MPGangUI.defense){MPGangUI.defense(R);return;}
+  if(!$('modal').hidden){toast(`⚠ ${R.fromName} наехал на твою точку — защита выставится сама`,3200);return;}
+  gangDefOpen=R.id;modal(`<h2 data-human>⚠ Наезд!</h2><p class="t"><b>${esc(R.fromName)}</b> наехал на «${esc(titleOf(S.tiles[R.tile]))}»: ${R.attackers.map(f=>`${esc(f.name)} (${f.lvl}-й ур.)`).join(', ')}. Выбери защиту — не успеешь за ${R.defenseSec} с, выставится сама.</p>
+    <div class="mp-gang-pick">${R.free.map(f=>gangRow(f,true,true)).join('')}</div>`,[{t:'🛡 Защищаться',v:'def',cls:'buy-btn buy-ok'},{t:'Слить',v:'give',cls:'buy-btn buy-no'}]).then(v=>{gangDefOpen=null;if(v==null)return;
+      const ids=[...$('card').querySelectorAll('.mp-gang-pick input:checked')].map(x=>x.dataset.id);
+      if(v==='def'&&ids.length)GANG.defend(R.id,ids);else if(v==='give')GANG.concede(R.id);});}
+if(GANG)Object.assign(GANG,{
+  img:gangImg,
+  list:pid=>gangOf(pid).map(gangCard),
+  guards:()=>{const out=[];if(!gangOn())return out;for(const pid in view.gang.gang)for(const f of view.gang.gang[pid])if(f.post!=null)out.push({tile:f.post,pid,id:f.id,img:gangImg(f.kind),lvl:f.lvl,bonus:GANG.guardBonus(f.lvl)});return out;},
+  ring:()=>{if(!gangOn()||!view.gang.ring)return null;const R=view.gang.ring,c=R.champ;return {tile:R.tile,stage:c.stage,champion:{img:gangImg(c.kind),name:(GANG.KINDS[c.kind]||{}).name,lvl:c.lvl,hp:c.hp,hpMax:c.hpMax}};},
+  raidFor:()=>{const R=gangOn()&&view.gang.raid;if(!R||R.to!==PID)return null;const att=gangOf(R.from);
+    return {id:R.id,from:R.from,fromName:nameOf(R.from),tile:R.tile,attackers:R.attackers.map(id=>att.find(f=>f.id===id)).filter(Boolean).map(gangCard),deadline:R.deadline,defenseSec:R.sec,
+      free:gangFree().concat(gangOf().filter(f=>f.post===R.tile&&!f.sick)).map(gangCard)};},   // охранник точки защищает без кулдауна
+  on:(type,cb)=>{(gangSubs[type]=gangSubs[type]||[]).push(cb);},off:(type,cb)=>{gangSubs[type]=(gangSubs[type]||[]).filter(x=>x!==cb);},
+  raid:(tile,ids)=>net.send({t:'gang',op:'raid',tile,ids}),
+  defend:(id,ids)=>net.send({t:'gang',op:'defend',id,ids}),
+  concede:id=>net.send({t:'gang',op:'concede',id}),
+  ringFight:id=>net.send({t:'gang',op:'ring',id}),
+  post:(id,tile)=>net.send({t:'gang',op:'post',id,tile:tile==null?null:tile}),
+  card:(kind,arg)=>net.send({t:'gang',op:'card',kind,arg}),
+});
 async function rivalWindow(t){
   const biz=t.type==='biz',owner=t.rival,who=nameOf(owner),col=colorOf(owner),inv=invested(t),mv=marketValue(t,PID),title=titleOf(t);
   const g=biz?null:good(t.good),here=S.pos===t.i,offer=t.mpOffer;
@@ -2102,7 +2239,8 @@ chipsEl.addEventListener('click',e=>{if(!handPick)return;const ch=e.target.close
 // «🔁 Обмен» у кубика (решение Андрея 14.10, f-swapplayers: «кнопку обмена надо вынести отдельно»).
 // Нажал — на поле мерцают клетки, которые можно обменять (свои и соперников); тап по чужой — режим обмена с этим соперником,
 // по своей — она ляжет в «Отдаёшь», дальше тап по клетке соперника.
-const swapBtn=el('button','mp-taxi mp-swapbtn');swapBtn.type='button';swapBtn.hidden=true;swapBtn.innerHTML='🔁<small>обмен</small>';
+let colRight=0,guDeckW=0,guOpen=false;   // guDeckW — ширина колоды бойцов справа от кубика (банда), рука — за ней
+const swapBtn=el('button','mp-taxi mp-swapbtn');swapBtn.type='button';swapBtn.hidden=true;swapBtn.innerHTML='<img class="mp-taxi-ic" src="assets/icons/swap.webp" alt="" draggable="false"><small>обмен</small>';   // наклейка «Графики» (2c41e05), пара к такси
 const swapCan=()=>!!(SW()&&view&&view.phase==='play'&&myTurn()&&!ending&&!proposedThisTurn()&&!moving&&$('modal').hidden&&!swapUI&&!pick&&!handPick);
 let swapPicking=null;
 swapBtn.onclick=()=>{if(swapPicking){swapPickEnd();return;}if(swapCan())swapPickStart();};
@@ -2297,19 +2435,28 @@ function tick(){
   const r=$('bRoll')&&$('bRoll').getBoundingClientRect();
   fxSync(r);
   if(r&&r.width){
-    const hx=Math.round(r.right+10)+'px',hy=Math.round(r.top+r.height/2)+'px';if(handEl.style.left!==hx||handEl.style.top!==hy){handEl.style.left=hx;handEl.style.top=hy;}
+    // Справа от кубика — колода бойцов (банда), за ней карты в руке.
+    const hx=Math.round(r.right+10+guDeckW)+'px',hy=Math.round(r.top+r.height/2)+'px';if(handEl.style.left!==hx||handEl.style.top!==hy){handEl.style.left=hx;handEl.style.top=hy;}
+    // Рука не уходит за край экрана: карт больше, чем места, — сдвигаем их внахлёст плотнее.
+    if(!handEl.hidden){const cs=[...handEl.querySelectorAll('.mp-hand-card')],w=cs[0]&&cs[0].offsetWidth||0,room=innerWidth-r.right-10-guDeckW-8;
+      const ov=cs.length>1&&w?Math.max(12,Math.ceil((cs.length*w-room)/(cs.length-1))):12,ml=-ov+'px';cs.slice(1).forEach(c=>{if(c.style.marginLeft!==ml)c.style.marginLeft=ml;});}
     const tOn=!!(window.MPTaxi&&MPTaxi.can()&&!moving&&$('modal').hidden);taxiBtn.hidden=!tOn;
     // Слева от кубика: «Обмен» у кубика, такси (до броска) — над ним.
     if(swapPicking&&!(myTurn()&&!ending&&$('modal').hidden))swapPickEnd();   // ход ушёл или открылось окно — выбор снимается
     const sOn=swapCan()||!!swapPicking;swapBtn.hidden=!sOn;swapBtn.classList.toggle('on',!!swapPicking);
     // Обе кнопки — узкой колонкой чуть левее кубика: не задевают плашку «Твой ход» над кубиком и склад слева.
-    const lx=Math.round(r.left-(sOn&&tOn?22:10))+'px';if(sOn&&(swapBtn.style.left!==lx||swapBtn.style.top!==hy)){swapBtn.style.left=lx;swapBtn.style.top=hy;}
+    // 14.10 (Андрей): такси и обмен — одинаковые кнопки колонкой вплотную слева от кубика: такси сверху, обмен снизу.
+    const lx=Math.round(r.left-6)+'px',half=Math.round((swapBtn.offsetHeight||taxiBtn.offsetHeight||60)/2+3),cy0=r.top+r.height/2;
+    const sy=Math.round(tOn?cy0+half:cy0)+'px';if(sOn&&(swapBtn.style.left!==lx||swapBtn.style.top!==sy)){swapBtn.style.left=lx;swapBtn.style.top=sy;}
     taxiBtn.classList.toggle('compact',sOn&&tOn);
-    if(tOn){const ty=sOn?Math.round(r.top+r.height/2-(swapBtn.offsetHeight||52)-6)+'px':hy;if(taxiBtn.style.left!==lx||taxiBtn.style.top!==ty){taxiBtn.style.left=lx;taxiBtn.style.top=ty;}}
+    if(tOn){const ty=Math.round(sOn?cy0-half:cy0)+'px';if(taxiBtn.style.left!==lx||taxiBtn.style.top!==ty){taxiBtn.style.left=lx;taxiBtn.style.top=ty;}}
+    colRight=sOn||tOn?r.left-6:0;
   }
   if(r&&r.width){const x=r.left+r.width/2,cy=r.top+r.height/2,above=r.top-8;
-    const key=x+':'+cy;if(tag._k!==key){tag._k=key;
-      tag.style.left=endBtn.style.left=x+'px';endBtn.style.top=cy+'px';endBtn.style.minWidth=Math.max(r.width,96)+'px';}
+    // Колонка такси/обмена поднимается выше кубика — плашка «Твой ход» сдвигается вправо, чтобы не наезжать на неё.
+    const tx=colRight?Math.max(x,colRight+6+(tag.offsetWidth||110)/2):x;
+    const key=tx+':'+cy;if(tag._k!==key){tag._k=key;
+      tag.style.left=tx+'px';endBtn.style.left=x+'px';endBtn.style.top=cy+'px';endBtn.style.minWidth=Math.max(r.width,96)+'px';}
     // Свой ход до броска: плашка над кубиком, а если горит строка клетки — над ней, чтобы не закрывать «открыть».
     const tb=$('tilebar'),tr=tb&&!tb.hidden&&tb.getBoundingClientRect(),over=tr&&tr.height?Math.min(above,tr.top-8):above;
     const ty=(tag.classList.contains('center')?cy:over)+'px';if(tag.style.top!==ty)tag.style.top=ty;}
@@ -2326,10 +2473,21 @@ function tick(){
   if(!lotBadge.hidden)under=Math.round(lotBadge.getBoundingClientRect().bottom+6);
   setVar('--mp-under',under+'px');
   // события — под журналом (они слева в одной колонке)
-  {const j=$('moneyJournal'),jr=j&&j.offsetParent&&j.getBoundingClientRect();const tt=(jr&&jr.height?Math.max(under,Math.round(jr.bottom+6)):under)+'px';if(ticker.style.top!==tt)ticker.style.top=tt;
+  // Верх экрана (Андрей 14.10, запись 124, Боб: «позиции с именами налево и этот лог, справа — системный интерфейс»):
+  // фишки игроков — слева под журналом, лента — справа от столбика кружков (телефон) или под списком (ПК);
+  // справа сверху остаются часы, пауза и меню.
+  {const j=$('moneyJournal'),jr=j&&j.offsetParent&&j.getBoundingClientRect(),jb=jr&&jr.height?Math.max(under,Math.round(jr.bottom+8)):under;
+    setVar('--mp-chips-top',jb+'px');
+    const cr=chipsEl.getBoundingClientRect(),br=bar.getBoundingClientRect();let top=jb,left=8;
+    if(cr.width&&cr.height){if(cr.width<70){left=Math.round(cr.right+12);top=Math.max(jb,Math.round(br.bottom+6));}else top=Math.round(cr.bottom+8);}
+    const tt=top+'px',tl=left+'px',tw=`min(320px,calc(100vw - ${left+8}px))`;
+    if(ticker.style.top!==tt)ticker.style.top=tt;if(ticker.style.left!==tl)ticker.style.left=tl;if(ticker.style.width!==tw)ticker.style.width=tw;
     // Лента не заходит под плакат хода: высота — до его верха; старые карточки внизу просто не помещаются.
-    const po=document.querySelector('.mp-poster:not(.out)'),pr=po&&po.getBoundingClientRect();   // плакат fixed — offsetParent у него пустой
-    const mh=pr&&pr.height?Math.max(90,Math.round(pr.top-parseFloat(tt)-6))+'px':'';if(ticker.style.maxHeight!==mh)ticker.style.maxHeight=mh;}
+    // Не обрезаем карточку на середине (разбор 14.10): не помещается до плаката хода — скрываем её целиком.
+    // Плакат мешает, только если стоит под лентой по горизонтали (на ПК лента слева, плакат по центру).
+    const po=document.querySelector('.mp-poster:not(.out)'),pr=po&&po.getBoundingClientRect(),tr=ticker.getBoundingClientRect();   // плакат fixed — offsetParent у него пустой
+    const limit=pr&&pr.height&&pr.left<tr.right&&pr.right>tr.left?pr.top-6:innerHeight*0.55;
+    let yy=top;for(const c of ticker.children){if(!c.classList.contains('mp-tick'))continue;const h=c.offsetHeight||c.dataset.h||32;if(c.offsetHeight)c.dataset.h=c.offsetHeight;const fit=yy+ +h<=limit;c.classList.toggle('nofit',!fit);if(fit)yy+=+h+5;}}
   // Окно открыто — карточка начинается под строкой денег: кошелёк виден (плейтест 01.10, все окна).
   const wr=!$('modal').hidden&&document.querySelector('#top .bar1');
   document.body.classList.toggle('mp-modal',!!wr);
@@ -2585,6 +2743,7 @@ new MutationObserver(()=>{
       const t=best>=0&&S.tiles[best];if(!t)return;
       // Своя клетка (m7-ui, VDXT 04.10: «на твои могу нажать, на свои не могу») — её окно; не в свой ход — только смотреть.
       if(t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t)&&best!==S.pos){e.stopImmediatePropagation();ownTileWindow(t);return;}
+      if(t.type==='ring'&&gangApi()&&gangOn()){e.stopImmediatePropagation();ringWindow();return;}   // банда: клетка ринга — посмотреть чемпиона
       if(!isRival(t))return;
       e.stopImmediatePropagation();window.MPTrade?MPTrade.open(t):rivalWindow(t);},true);}}
 // В минусе — в окне своей клетки «🏦 Продать банку · $N» (MPBank.sell «Геймплея», 14.10: половина вложенного сразу).
@@ -2849,11 +3008,24 @@ const FEED_ICON={rent:'🏠',build:'🏗',upgrade:'⬆️',license:'📜',lot:'�
   offer:'💼',sale:'🤝',saleoffer:'🏷',salebought:'🏷',decline:'✋',chance:'🎴',hand:'🃏',hit:'🎴',skip:'⏳',jail:'🚔',fine:'👮',insp:'📋',
   scatter:'💰',minigame:'🎰',double:'🎲',pass:'🏁',bonus:'💵',underdog:'🤝',taxi:'🚕',swap:'🔁',swapcounter:'🔁',swapped:'🔁',
   swapdecline:'🔁',swapvoid:'🔁',map:'🗺',handoff:'🔁',interest:'🏦',debtwarn:'⚠️',banksale:'🏦'};
-const FEED_MAX=3,FEED_LIFE=7000,FEED_LIFE_MINE=9000;
+// Разбор 14.10 (Андрей): карточки ленты — в одну строку и ненадолго; тап — история списком (кнопку «Журнал» убрали).
+const FEED_MAX=3,FEED_LIFE=5000,FEED_LIFE_MINE=6500;
+const feedLog=[],feedSince=Date.now();
 const ticker=el('div','mp-ticker mp-feed');ticker.id='mpTicker';
 const feed=[];
 // Своя карта «Шанса» — тоже в ленту: окно карты закрывается само, прочитать можно сбоку (m8-chancecard).
 function selfFeed(kind,text,amount,tile){try{const me=playerOf(PID);if(me)feedAdd(me,kind,text,amount,true,tile!=null?tile:null);}catch(e){}}
+// История партии по тапу на ленту: события стола и свои деньги (журнал проводок — GameJournal), новые сверху.
+function historyWindow(tab){
+  if(!$('modal').hidden)return;tab=tab||'ev';
+  const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<1?'сейчас':m+' мин';};
+  const sum=a=>a?`<strong class="${a>0?'plus':'minus'}">${a>0?'+':'−'}${money(Math.abs(a))}</strong>`:'<strong></strong>';
+  const ev=feedLog.map(e=>`<li style="--c:${e.color}"><i>${esc(e.name.slice(0,1).toUpperCase())}</i><span><b>${esc(e.name)}</b> ${e.icon} ${esc(e.text)}</span>${sum(e.amount)}<small>${ago(e.at)}</small></li>`).join('');
+  const my=((window.GameJournal&&GameJournal.entries())||[]).filter(e=>e.ts>=feedSince&&e.amount&&!e.who).map(e=>`<li class="money"><span>${esc(e.label||'')}</span>${sum(e.amount)}<small>${ago(e.ts)}</small></li>`).join('');
+  const body=tab==='ev'?(ev||'<li class="empty"><span>Пока ничего не было</span></li>'):(my||'<li class="empty"><span>Проводок пока нет</span></li>');
+  const pending=modal(`<h2>📜 История партии</h2><div class="mp-hist-tabs"><button type="button" data-tab="ev" class="${tab==='ev'?'on':''}">События</button><button type="button" data-tab="my" class="${tab==='my'?'on':''}">Мои деньги</button></div><ul class="mp-hist">${body}</ul>`,[{t:'Закрыть',v:0,cls:'sec'}]);
+  $('card').querySelectorAll('.mp-hist-tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.tab===tab)return;closeModal(0);setTimeout(()=>historyWindow(b.dataset.tab),230);});
+  return pending;}
 function feedAdd(p,kind,text,amount,mine,tile,x){
   text=String(text||'').replace(/^[^\p{L}\p{N}«"]+/u,'');
   // Одна карта против тебя приходит двумя событиями (chance и hit) — в ленту одно.
@@ -2863,10 +3035,9 @@ function feedAdd(p,kind,text,amount,mine,tile,x){
   n.innerHTML=`<i>${esc(p.name.slice(0,1).toUpperCase())}</i><em>${icon}</em><span class="tx"><b>${esc(p.name)}</b> <span class="t">${esc(text)}</span>${full?'<u> ▾</u>':''}</span>${amount?`<strong class="${amount>0?'plus':'minus'}">${amount>0?'+':'−'}${money(Math.abs(amount))}</strong>`:''}${chain?`<small class="ch">→ ${esc(chain)}</small>`:''}`;
   if(chain)n.classList.add('has-ch');if(/^swap/.test(kind))n.classList.add('long');
   ticker.prepend(n);const it={el:n,age:0,life:mine?FEED_LIFE_MINE:FEED_LIFE};feed.unshift(it);
+  feedLog.unshift({name:p.name,color:p.color,icon,text:full||text,amount,mine,at:Date.now()});if(feedLog.length>80)feedLog.length=80;
   while(feed.length>FEED_MAX){const o=feed.pop();o.el.remove();}
-  // Тап: есть полный текст — раскрыть (и не гасить, пока раскрыто); второй тап — убрать прочитанное.
-  n.onclick=()=>{if(full&&!n.classList.contains('open')){n.classList.add('open');n.querySelector('.t').textContent=full;const u=n.querySelector('u');u&&u.remove();it.age=0;it.hold=Date.now();return;}
-    n.remove();const k=feed.indexOf(it);if(k>=0)feed.splice(k,1);};
+  n.onclick=()=>historyWindow();
   if(mine)try{navigator.vibrate&&navigator.vibrate(50);}catch(x){}
 }
 // Возраст считаем сами: под окном (лента скрыта) карточки не стареют, после закрытия окна их видно.
@@ -2948,8 +3119,150 @@ function frame(now){
     const key=JSON.stringify(list);if(key!==rivalsSent){rivalsSent=key;try{MobileHost.send({action:'rivals',list});}catch(e){}}}
   followRival(now);
   tick();
+  try{guFrame();guTick();}catch(e){console.warn('gang ui',e);}
 }
 requestAnimationFrame(frame);
+
+// =====================================================================
+// Банда (концепция Андрея 27.10, черновики/америкэн-бой-банда.md): экраны. Данные, правила и сеть — «Американ мультиплеер
+// режим» (window.MPGang: list/guards/ring/raidFor/on, действия raid/defend/concede/ringFight/post). Без MPGang — ничего не рисуем.
+// =====================================================================
+const gangApi=()=>window.MPGang&&typeof MPGang.list==='function'?MPGang:null;
+const GU_TINT=['#a8452b','#3d5a80','#6b4f2a','#8a2a4a','#5b6b3a','#2f6f6a','#4a3f6b'];   // фон буквы, пока нет портрета
+const guRow=el('div','mp-gang');guRow.id='mpGang';guRow.hidden=true;
+const guAlarm=el('button','mp-gang-alarm');guAlarm.type='button';guAlarm.hidden=true;
+const guardMarks=new Map();let guOn=false,raidSeen='',raidOpen=null;
+// Портрет: картинка, под ней — буква на цвете вида (портреты рисует Codex, пока их нет — видно букву).
+function guFace(f,cls){const k=(f.kind|0)%GU_TINT.length;
+  return `<span class="gf ${cls||''}" style="--k:${GU_TINT[k]}"><i>${esc((f.name||'?').slice(0,1))}</i><img src="${esc(f.img||'')}" alt="" draggable="false" onerror="this.remove()"></span>`;}
+// Карточка бойца: портрет, крупная цифра уровня, полоска опыта; дрался в этом круге — перевёрнута; «Диарея» — зелёная.
+function guCard(f,o){o=o||{};const xp=f.xpNext&&f.xpNext.need?Math.round(f.xpNext.frac*100):100;
+  // span, а не button: кнопки в окнах автоматически красятся эмалью (mobile-windows.js), а карточке нужен свой вид.
+  return `<span role="button" tabindex="0" class="gc${f.used?' used':''}${f.sick?' sick':''}${f.post!=null?' post':''}${o.sel?' sel':''}${o.cls?' '+o.cls:''}" data-id="${esc(f.id)}" aria-label="${esc(f.name)}, уровень ${f.lvl}${f.used?', дрался в этом круге':''}${f.sick?', Диарея':''}">
+    ${guFace(f)}<b class="gc-lv">${f.lvl}</b><u class="gc-xp"><s style="width:${xp}%"></s></u>${f.post!=null?'<em class="gc-post">🏠</em>':''}${f.sick?'<em class="gc-sick">🤢</em>':''}${f.used?'<span class="gc-back">до старта</span>':''}${o.tag?`<em class="gc-tag">${esc(o.tag)}</em>`:''}</span>`;}
+const guReady=f=>!f.used&&!f.sick;
+const guStatus=f=>f.sick?'«Диарея» — пропускает драку':f.used?'Дрался в этом круге — снова в строю после старта':f.post!=null?`Охраняет ${cellNo(f.post)} «${titleOf(S.tiles[f.post])}»`:'Готов к драке';
+// Ряд карточек над доком: над складом, кнопками у кубика, плашкой «Твой ход» и плашками эффектов.
+// Колода бойцов справа от кубика (Андрей 28.10): свёрнута стопкой, тап — разъезжается в ряд, все карточки целиком;
+// тап по карточке в ряду — окно бойца, тап мимо — снова колода. Сверху стопки — готовый к драке.
+const GU_W=46,GU_GAP=8,GU_STACK=4;
+function guTick(){
+  const G=gangApi(),on=!!(G&&view&&view.phase==='play'&&!document.body.classList.contains('mp-swapping'));
+  if(on!==guOn)guOn=on;
+  const list=on?G.list().slice().sort((a,b)=>(guReady(b)?1:0)-(guReady(a)?1:0)):[],r=$('bRoll')&&$('bRoll').getBoundingClientRect();
+  guRow.hidden=!list.length||!r||!r.width;
+  if(guRow.hidden){guDeckW=0;guOpen=false;}
+  else{const html=list.map(f=>guCard(f)).join('');
+    if(guRow._h!==html){guRow._h=html;guRow.innerHTML=html;guRow.querySelectorAll('.gc').forEach(b=>b.onclick=e=>{e.stopPropagation();if(!guOpen){guOpen=true;return;}fighterWindow(b.dataset.id);});}
+    const n=list.length,closedW=GU_W+GU_STACK*(n-1),openW=n*GU_W+(n-1)*GU_GAP;guDeckW=closedW+10;
+    // Раскрытая колода не уходит за край: если справа тесно — едет влево, поверх кубика, пока открыта.
+    const x0=Math.round(r.right+10),left=guOpen?Math.max(8,Math.min(x0,innerWidth-8-openW)):x0,cy=Math.round(r.top+r.height/2);
+    const L=left+'px',T=cy+'px';if(guRow.style.left!==L)guRow.style.left=L;if(guRow.style.top!==T)guRow.style.top=T;
+    guRow.classList.toggle('open',guOpen);const w=(guOpen?openW:closedW)+'px';if(guRow.style.width!==w)guRow.style.width=w;
+    guRow.querySelectorAll('.gc').forEach((c,k)=>{const x=guOpen?k*(GU_W+GU_GAP):k*GU_STACK,y=guOpen?0:-k*2,z=guOpen?k+1:n-k;
+      const tf=`translate(${x}px,${y}px)${c.classList.contains('used')?' rotateY(180deg)':''}`;if(c.style.transform!==tf)c.style.transform=tf;if(c.style.zIndex!==String(z))c.style.zIndex=z;});
+    const top=guRow.firstElementChild,nn=n>1&&!guOpen?'×'+n:'';if(top&&top.dataset.n!==nn)top.dataset.n=nn;}
+  if(on)raidTick(G);else if(!guAlarm.hidden){guAlarm.hidden=true;document.body.classList.remove('mp-alarm');}
+}
+// Тап мимо раскрытой колоды — свернуть.
+document.addEventListener('pointerdown',e=>{if(guOpen&&!e.target.closest('#mpGang'))guOpen=false;},true);
+// Окно бойца: кто, уровень, опыт, где он; поставить на свою точку охранником или снять.
+async function fighterWindow(id){
+  const G=gangApi();if(!G||!$('modal').hidden||moving)return;const f=G.list().find(x=>x.id===id);if(!f)return;
+  const xp=f.xpNext&&f.xpNext.need?`опыт ${f.xpNext.have} из ${f.xpNext.need} до ${f.lvl+1}-го`:'высший уровень';
+  const bonus=G.guardBonus?Math.round(G.guardBonus(f.lvl)*100):0;
+  const mine=S.tiles.filter(t=>t.owner&&(t.type==='kiosk'||t.type==='biz')&&!sfIsLot(t));
+  const posts=f.post==null&&!f.sick&&myTurn()?mine.map(t=>`<button type="button" class="mp-gang-postto" data-tile="${t.i}">${cellNo(t.i)} «${esc(titleOf(t))}»</button>`).join(''):'';
+  const pending=modal(`<div class="mp-gang-hero">${guFace(f,'big')}<div><h2>${esc(f.name)} <small>уровень ${f.lvl}</small></h2><u class="gc-xp big"><s style="width:${f.xpNext&&f.xpNext.need?Math.round(f.xpNext.frac*100):100}%"></s></u><p class="t">${xp}</p><p class="t mp-gang-st">${esc(guStatus(f))}</p></div></div>
+    ${!myTurn()?'<p class="t mp-raid-note">Ставить на точку и снимать — в свой ход.</p>':f.post!=null?'':posts?`<p class="t mp-gang-lead">Поставить охранять — <b>+${bonus}% к продажам</b> точки, первый наезд за круг прогонит без драки:</p><div class="mp-gang-posts">${posts}</div>`:''}`,
+    f.post!=null&&myTurn()?[{t:'Снять с точки',v:'off',cls:'sec'},{t:'Закрыть',v:0,cls:'sec'}]:[{t:'Закрыть',v:0,cls:'sec'}]);
+  $('card').querySelectorAll('.mp-gang-postto').forEach(b=>b.onclick=()=>closeModal('to:'+b.dataset.tile));
+  const v=await pending;
+  if(v==='off')G.post(f.id,null);else if(typeof v==='string'&&v.startsWith('to:'))G.post(f.id,+v.slice(3));
+}
+// Охранники на клетках — кружок с портретом и уровнем, под ним «+N%»; рамка — цвет хозяина.
+function guFrame(){
+  const G=gangApi();const list=guOn&&G&&G.guards?G.guards():[];const live=new Set();
+  for(const g of list){const k=g.tile+':'+g.id;live.add(k);let m=guardMarks.get(k);
+    if(!m){const n=el('div','mp-guard',layer);const pl=playerOf(g.pid);n.style.setProperty('--c',pl?pl.color:'#25221c');
+      n.innerHTML=`${guFace({kind:0,name:'',img:g.img})}<b>${g.lvl}</b><em>+${Math.round((g.bonus||0)*100)}%</em>`;m={el:n,tile:g.tile};guardMarks.set(k,m);}
+    const q=screenOfTile(g.tile);m.el.style.transform=`translate(${q.x+14}px,${q.y-34}px)`;}
+  for(const [k,m] of guardMarks)if(!live.has(k)){m.el.remove();guardMarks.delete(k);}
+}
+// Тревога: наехали на мою точку. Окно выбора защиты — сразу или, если открыто другое окно, после него;
+// пока ждём — мигает рамка экрана и плашка сверху с отсчётом. Не выбрал — защитятся сами (MPGang.autoDefense у хозяина).
+function raidTick(G){
+  const rd=G.raidFor&&G.raidFor();const now=hostNow();
+  if(!rd||rd.deadline<=now){if(document.body.classList.contains('mp-alarm')){guAlarm.hidden=true;document.body.classList.remove('mp-alarm');if(MobileHost.ready)MobileHost.send({action:'home'});}
+    if(raidOpen&&(!rd||rd.id===raidOpen)&&!$('modal').hidden&&$('card').querySelector('.mp-raid'))closeModal(0);raidOpen=null;return;}
+  document.body.classList.add('mp-alarm');
+  // Окно защиты перебило другое окно — считаем его закрытым: снова видна плашка, окно откроется, когда освободится место.
+  if(raidOpen&&!$('card').querySelector(`.mp-raid[data-raid="${CSS.escape(raidOpen)}"]`))raidOpen=null;
+  const sec=Math.max(0,Math.ceil((rd.deadline-now)/1000)),t=`🚨 Наехали на твою точку · ${sec} с`;
+  if(guAlarm.textContent!==t)guAlarm.textContent=t;guAlarm.hidden=raidOpen===rd.id;
+  // Тап по плашке: закрываем текущее окно и открываем защиту (без «окна поверх окна»).
+  guAlarm.onclick=()=>{if(!$('modal').hidden){closeModal();setTimeout(()=>raidWindow(rd),260);}else raidWindow(rd);};
+  if(raidSeen!==rd.id){raidSeen=rd.id;if(MobileHost.ready){MobileHost.send({action:'frame',tiles:[rd.tile]});}try{navigator.vibrate&&navigator.vibrate([60,60,60]);}catch(e){}}
+  if(raidOpen!==rd.id&&$('modal').hidden&&!moving)raidWindow(rd);
+  const bar=raidOpen===rd.id&&$('card').querySelector('.mp-raid-time');
+  if(bar){bar.querySelector('b').textContent=sec+' с';bar.querySelector('s').style.width=Math.max(0,Math.min(100,(rd.deadline-now)/(rd.defenseSec*1000)*100))+'%';}
+}
+async function raidWindow(rd){
+  const G=gangApi();if(!G||raidOpen===rd.id)return;raidOpen=rd.id;
+  // Охранник этой точки защищает без кулдауна (Андрей 28.10) — в списке, даже если уже дрался; «Диарея» выводит и его.
+  const isGuard=f=>f.post===rd.tile,free=(rd.free||[]).filter(f=>isGuard(f)?!f.sick:guReady(f)),sel=new Set();
+  const pow=list=>G.sidePower?Math.round(G.sidePower(list)):0,atk=pow(rd.attackers||[]);
+  const pending=modal(`<div class="mp-raid" data-human data-raid="${esc(rd.id)}"><h2>🚨 Наезд на «${esc(titleOf(S.tiles[rd.tile]))}»</h2>
+    <div class="mp-raid-time"><u><s style="width:100%"></s></u><b>${rd.defenseSec} с</b></div>
+    <p class="t"><b>${esc(rd.fromName||nameOf(rd.from))}</b> наехал${(rd.attackers||[]).length>1?' бандой':''} · сила ${atk}</p>
+    <div class="mp-raid-row att">${(rd.attackers||[]).map(f=>guCard(f,{cls:'ro'})).join('')}</div>
+    <p class="t">${free.length?'Кто защищает? Тапни бойцов:':'Свободных бойцов нет — защититься нечем.'}</p>
+    <div class="mp-raid-row def">${free.map(f=>guCard(isGuard(f)?Object.assign({},f,{used:false}):f,{tag:isGuard(f)?'охранник':''})).join('')}</div>
+    <p class="t mp-raid-pow">Твоя сила: <b>0</b></p>
+    <p class="t mp-raid-note">Не выберешь — защитятся сами те, кого хватит.</p></div>`,
+    [{t:'Защищаться',v:1,cls:'ok',dis:true},{t:'Слить',v:2,cls:'bad'}],{sticky:true});
+  const c=$('card'),go=c.querySelector('.mbtns button[data-i="0"]'),pw=c.querySelector('.mp-raid-pow b');
+  c.querySelectorAll('.mp-raid-row.def .gc').forEach(b=>b.onclick=()=>{const id=b.dataset.id;sel.has(id)?sel.delete(id):sel.add(id);b.classList.toggle('sel',sel.has(id));
+    const p=pow(free.filter(f=>sel.has(f.id)));pw.textContent=p;pw.classList.toggle('plus',p>atk);pw.classList.toggle('minus',!!sel.size&&p<=atk);
+    go.disabled=!sel.size;});
+  const v=await pending;raidOpen=null;
+  if(v===1&&sel.size)G.defend(rd.id,[...sel]);else if(v===2)G.concede(rd.id);
+}
+// Ринг: чемпион стола и его недобитость. С o.free (встал на клетку в свой ход, зовёт gangRingFlow) — выбор одного бойца,
+// ответ — id или null; без него (тап по клетке) — только посмотреть.
+async function ringWindow(o){
+  const G=gangApi();if(!G||!$('modal').hidden)return null;o=o||{};const r=G.ring&&G.ring();const ch=o.champion||(r&&r.champion);if(!ch)return null;
+  const stage=o.champion?o.champion.stage:(r&&r.stage),fight=Array.isArray(o.free),ready=fight?o.free.filter(guReady):[],sel={id:null};
+  const hp=Math.round(ch.hp/Math.max(1,ch.hpMax)*100);
+  const pending=modal(`<div class="mp-ringwin" data-human><h2>🥊 Ринг <small>чемпион №${(stage|0)+1}</small></h2>
+    <div class="mp-ring-champ">${guFace(ch,'big')}<div><b>${esc(ch.name||'')}</b><small>уровень ${ch.lvl}</small><u class="mp-ring-hp"><s style="width:${hp}%"></s></u><small>${hp<100?`здоровье ${hp}% — его уже били, урон остаётся`:'свежий, ещё никто не бил'}</small></div></div>
+    ${fight?(ready.length?`<p class="t">Выбери одного бойца:</p><div class="mp-raid-row def">${ready.map(f=>guCard(f)).join('')}</div><p class="t mp-raid-note">Победа — новый боец в банду (полная банда — прокачка). Проиграл — опыт всё равно будет, урон чемпиону останется.</p>`:'<p class="t">Все бойцы дрались в этом круге — снова в строю после старта.</p>')
+      :'<p class="t">Встань на клетку ринга в свой ход — и пошли одного бойца против чемпиона.</p>'}</div>`,
+    fight&&ready.length?[{t:'На ринг',v:1,cls:'ok',dis:true},{t:'Не сейчас',v:0,cls:'sec'}]:[{t:'Закрыть',v:0,cls:'sec'}],fight?{sticky:true}:null);
+  const c=$('card'),go=c.querySelector('.mbtns button[data-i="0"]');
+  c.querySelectorAll('.mp-ringwin .mp-raid-row .gc').forEach(b=>b.onclick=()=>{sel.id=b.dataset.id;c.querySelectorAll('.mp-ringwin .mp-raid-row .gc').forEach(x=>x.classList.toggle('sel',x===b));if(go)go.disabled=false;});
+  const v=await pending;return v===1&&sel.id?sel.id:null;
+}
+// Встал на чужую точку с бойцами (зовёт gangRaidFlow): наехать или заплатить ренту. Ответ — id бойцов или null (рента).
+async function raidChoiceWindow(o){
+  const G=gangApi();const t=S.tiles[o.tile],free=(o.free||[]).filter(guReady),sel=new Set(free.length?[free[0].id]:[]);
+  const loot=ids=>Math.min(100,Math.round(free.filter(f=>ids.has(f.id)).reduce((a,f)=>a+(G.LOOT_PER_LVL||.1)*f.lvl,0)*100));
+  const pending=modal(`<div class="mp-raid mp-raidpick" data-human><h2>👊 ${esc(titleOf(t))}</h2>
+    <p class="t">Хозяин — <b>${esc(o.ownerName||nameOf(o.owner))}</b>. Рента — <b>${money(o.rent)}</b>. Заплатить — или наехать.</p>
+    ${o.guard?`<div class="mp-raid-guard">${guCard(o.guard,{cls:'ro'})}<p class="t">🛡 Точку охраняет <b>${esc(o.guard.name)}</b>, ${o.guard.lvl}-й ур. Первый наезд за круг он прогонит без драки — заплатишь ренту.</p></div>`:''}
+    <p class="t">Кто едет? Тапни бойцов:</p>
+    <div class="mp-raid-row def">${free.map(f=>guCard(f,{sel:sel.has(f.id)})).join('')}</div>
+    <p class="t mp-raid-pow">Унесут до <b>${loot(sel)}%</b> товара точки</p>
+    <p class="t mp-raid-note">Победишь — товар твой. Проиграешь — рента ×1,5.</p></div>`,
+    [{t:`👊 Наехать · ${sel.size}`,v:1,cls:'ok',dis:!sel.size},{t:'🏠 Заплатить ренту',v:0,cls:'sec'}],{sticky:true});
+  const c=$('card'),go=c.querySelector('.mbtns button[data-i="0"]'),pw=c.querySelector('.mp-raid-pow b');
+  const label=txt=>{const l=go&&(go.querySelector('.enamel-label')||go);if(l)l.textContent=txt;};
+  c.querySelectorAll('.mp-raidpick .mp-raid-row .gc').forEach(b=>b.onclick=()=>{const id=b.dataset.id;sel.has(id)?sel.delete(id):sel.add(id);b.classList.toggle('sel',sel.has(id));
+    pw.textContent=loot(sel)+'%';if(go)go.disabled=!sel.size;label(`👊 Наехать · ${sel.size}`);});
+  const v=await pending;return v===1&&sel.size?[...sel]:null;
+}
+// Хуки для клиента банды («Американ мультиплеер режим», gangRaidFlow/gangDefense/gangRingFlow). Итоги боёв — их плашки.
+window.MPGangUI={raidChoice:raidChoiceWindow,defense:rd=>{if(rd&&$('modal').hidden&&!moving)raidWindow(rd);},ring:ringWindow,fighter:fighterWindow};
 
 // =====================================================================
 // Лобби и итог
@@ -3039,6 +3352,7 @@ function renderLobby(force){
       ${C.modeOf(T)==='laps'?opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>v+' кр.'):opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>`
     :`<div class="mp-set mp-set-mode"><span>Темп миссии<small>лимита нет — от длины зависит порог: ${esc(C.winOf(T).text)}</small></span>${opt('mode',C.MODE_OPTIONS,T.settings.mode==='laps'?'laps':'time',v=>v==='laps'?'По кругам':'По времени')}
       ${T.settings.mode==='laps'?opt('rounds',C.ROUND_OPTIONS,T.settings.rounds,v=>v+' кр.'):opt('minutes',C.MINUTE_OPTIONS,T.settings.minutes,v=>v+' мин')}</div>`}
+    ${GT?`<div class="mp-set mp-set-gang"><span>Бойцы<small>${T.settings.gang?'набеги, защита, ринг — вторая линия развития, отдельно от экономики':'партия без драк'}</small></span>${opt('gang',[0,1],T.settings.gang?1:0,v=>v?'С бойцами':'Без бойцов')}</div>`:''}
     <div class="mp-set"><span>Время на ход<small>${T.settings.turnSec?'мини-игра часы не тратит':'без лимита — ход передаётся кнопкой'}</small></span>${opt('turnSec',C.TURN_OPTIONS,T.settings.turnSec,v=>v?v+' с':'∞')}</div>
     <p class="mp-est">${n>=2?`${C.modeOf(T)==='time'?T.settings.minutes+' мин':C.modeOf(T)==='laps'?T.settings.rounds+' '+plural(T.settings.rounds,'круг','круга','кругов'):'без лимита'} на ${n} ${plural(n,'игрока','игроков','игроков')} · ${esc(C.winOf(T).name)}: ${esc(C.winOf(T).text)} · очерёдность разыграется случайно`:'Нужно минимум двое'}</p>
     ${window.MPRules?'<button class="sec mp-rules-btn" id="mpRulesBtn" type="button">📖 Как играть</button>':''}

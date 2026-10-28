@@ -17,13 +17,13 @@
   const get=u=>fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u+' '+r.status);sig[u]=sigOf(r);return r.text();});
   try{
     // Боты — на любом столе у хозяина (backlog 02.10: «пропала возможность выбирать ботов»); панель механик в mp-test.js — только при ?test=1.
-    const [html,core,mp,rules,tst]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js'),get('mp-rules.js').catch(()=>''),get('mp-test.js').catch(()=>'')]);
+    const [html,core,mp,rules,tst,gang]=await Promise.all([get('index.html'),get('mp-core.js'),get('mp.js'),get('mp-rules.js').catch(()=>''),get('mp-test.js').catch(()=>''),get('mp-gang.js').catch(()=>'')]);   // mp-gang.js — банда бойцов (mp-gang)
     const anchor='const startAskName=askName',i=html.indexOf(anchor);
     if(i<0)throw new Error('в index.html нет точки запуска партии');
     let h=5381;const src=core+mp;for(let k=0;k<src.length;k++)h=((h<<5)+h+src.charCodeAt(k))|0;   // версия мультиплеера — для логов
-    let v=5381;const all=html+core+mp+rules;for(let k=0;k<all.length;k++)v=((v<<5)+v+all.charCodeAt(k))|0;   // версия всей сборки: страница + модули партии
+    let v=5381;const all=html+gang+core+mp+rules;for(let k=0;k<all.length;k++)v=((v<<5)+v+all.charCodeAt(k))|0;   // версия всей сборки: страница + модули партии
     const ver={id:(v>>>0).toString(36).slice(-6),sig};
-    document.open();document.write(html.slice(0,i)+core+'\n'+mp+'\n'+rules+'\n'+tst+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";window.AB_VER='+JSON.stringify(ver)+';\n'+html.slice(i));document.close();
+    document.open();document.write(html.slice(0,i)+gang+'\n'+core+'\n'+mp+'\n'+rules+'\n'+tst+'\nwindow.AB_MP_BUILD="'+(h>>>0).toString(36)+'";window.AB_VER='+JSON.stringify(ver)+';\n'+html.slice(i));document.close();
   }catch(e){document.getElementById('mpBoot').textContent='Не удалось открыть стол: '+e.message;console.error(e);}
 })();
 </script></body></html>

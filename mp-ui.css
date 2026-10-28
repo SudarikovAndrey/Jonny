@@ -727,3 +727,133 @@ body.mp-play .mp-bar .mp-chip.on{z-index:1}
 /* Окно чужой клетки: из чего рыночная цена (14.10). */
 #card .mp-mv-row .n{display:flex;flex-direction:column;gap:2px}
 #card .mp-mv-parts{display:block;font:600 11.5px/1.3 var(--mp-txt);color:#6b5f52;white-space:normal}
+/* Верх экрана в партии (m8-playerslist, Андрей 14.10): игроки и лента — слева, системное (часы, пауза, меню) — справа.
+   Фишки выносим из полосы фиксированно под журнал; полоса справа остаётся с часами и кнопками. */
+body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{position:fixed;left:10px;top:var(--mp-chips-top,150px);z-index:29;margin:0}
+@media(max-width:600px){
+ body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{width:auto;align-items:flex-start;padding:0 0 0 6px;gap:9px}
+}
+@media(min-width:601px){
+ body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{width:min(220px,calc(100vw - 24px));padding-left:8px;box-sizing:border-box}
+}
+/* Вторая итерация верха (Андрей 14.10, design/верх-экрана-14-10/замечания-андрея):
+   без значков эффектов на плашке, место — крупно, карты в руке — крупнее, плашки уже, «Журнал» убран (история — тапом по ленте). */
+body.mp-play .mp-bar .mp-chip-fx{display:none}
+body.mp-play #moneyJournal{display:none}
+body.mp-play .mp-bar .mp-chip::after{content:attr(data-place);position:absolute;z-index:2;box-sizing:border-box;min-width:24px;height:24px;padding:0 4px;border:2px solid #25221c;border-radius:12px;
+  background:#f2e3bd;color:#25221c;font:900 13px/20px Bitter,Georgia,serif;text-align:center;letter-spacing:-.02em;box-shadow:0 2px 0 #25221c}
+body.mp-play .mp-bar .mp-chip[data-place="I"]::after{background:#e0b14a}
+body.mp-play .mp-bar .mp-chip-hand{z-index:2;padding:0 5px;border-radius:8px;font:800 12px/19px var(--mp-num);border:1.5px solid #f2e3bd;box-shadow:0 2px 0 #25221c}
+@media(max-width:600px){
+ body.mp-play .mp-bar .mp-chip::after{left:-9px;bottom:-6px;top:auto}
+ body.mp-play .mp-bar .mp-chip-hand{right:-10px;top:-8px}
+}
+@media(min-width:601px){
+ body.mp-play .mp-bar .mp-chips,body.mp-play .mp-bar.tight .mp-chips{width:min(178px,calc(100vw - 24px));padding-left:12px}
+ body.mp-play .mp-bar .mp-chip{padding:5px 8px 5px 14px}
+ body.mp-play .mp-bar .mp-chip::after{left:-12px;top:50%;bottom:auto;translate:0 -50%;min-width:26px;height:26px;font-size:14px;line-height:22px;border-radius:13px}
+ body.mp-play .mp-bar .mp-chip>i{width:26px;height:26px;font-size:14px;line-height:23px}
+ body.mp-play .mp-bar .mp-nm{font-size:13px;max-width:110px}
+ body.mp-play .mp-bar .mp-cap,body.mp-play .mp-bar.tight .mp-cap{font-size:16px}
+ body.mp-play .mp-bar .mp-pts{font-size:11px}
+ body.mp-play .mp-bar .mp-chip-hand{right:-8px;top:-9px}
+}
+/* Лента — по одной строке, без обрезки на середине (не влезла до плаката хода — скрыта целиком). */
+.mp-ticker.mp-feed{overflow:visible}
+.mp-feed .mp-tick{padding:4px 9px 4px 8px;gap:6px;font-size:13px}
+.mp-feed .mp-tick.mine{font-size:13.5px}
+.mp-feed .mp-tick i{width:20px;height:20px;font-size:11px;line-height:17px}
+.mp-feed .mp-tick em{font-size:15px}
+.mp-feed .mp-tick .tx,.mp-feed .mp-tick.long .tx{display:block;-webkit-line-clamp:unset;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-feed .mp-tick .tx .t,.mp-feed .mp-tick .tx b{display:inline}
+.mp-feed .mp-tick strong{font-size:14px}
+.mp-feed .mp-tick u,.mp-feed .mp-tick .ch{display:none}
+.mp-feed .mp-tick.nofit{display:none}
+.mp-feed .mp-tick{cursor:pointer}
+/* История партии (тап по ленте). */
+#card .mp-hist-tabs{display:flex;gap:6px;margin:4px 0 8px}
+#card .mp-hist-tabs button{flex:1;padding:7px 0;border:2px solid #25221c;border-radius:9px;background:#f2e3bd;font:800 13px var(--mp-num);color:#25221c;box-shadow:0 2px 0 #25221c}
+#card .mp-hist-tabs button.on{background:#25221c;color:#fbf0d4}
+#card .mp-hist{list-style:none;margin:0;padding:0;max-height:min(56dvh,460px);overflow-y:auto;display:grid;gap:4px}
+#card .mp-hist li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 8px;padding:6px 8px;border-radius:8px;background:rgba(37,34,28,.05);font:600 13px/1.3 var(--mp-txt)}
+#card .mp-hist li.money{grid-template-columns:1fr auto}
+#card .mp-hist li i{width:22px;height:22px;border-radius:50%;background:var(--c);border:1.5px solid #25221c;color:#fbf0d4;font:800 11px/19px var(--mp-num);font-style:normal;text-align:center}
+#card .mp-hist li b{color:color-mix(in srgb,var(--c) 70%,#25221c)}
+#card .mp-hist li strong{font:800 14px var(--mp-num);white-space:nowrap}#card .mp-hist li strong.plus{color:var(--mp-green)}#card .mp-hist li strong.minus{color:var(--mp-red)}
+#card .mp-hist li small{grid-column:-2/-1;justify-self:end;font:600 11px var(--mp-txt);color:#8a7350}
+#card .mp-hist li.money small{grid-column:2}
+#card .mp-hist li.empty{display:block;text-align:center;color:#8a7350}
+/* Такси и обмен у кубика — одинаковые кнопки, крупные наклейки (Андрей 14.10). */
+.mp-taxi,.mp-taxi.compact,.mp-swapbtn{width:56px;height:60px;min-width:0;box-sizing:border-box;padding:4px 3px 3px;justify-content:center;gap:1px}
+.mp-taxi-ic,.mp-taxi.compact .mp-taxi-ic{width:42px;height:42px;margin:0}
+.mp-taxi .full{display:none}
+.mp-taxi small,.mp-swapbtn small{font:800 10.5px/1 var(--mp-num)}
+#card .mp-hist-tabs button:not(.on){opacity:.5;filter:saturate(.6)}
+/* ===== Банда (концепция 27.10): ряд бойцов над доком, охранники на клетках, тревога наезда, ринг ===== */
+.mp-gang{position:fixed;z-index:28;height:60px;translate:0 -50%;pointer-events:auto}
+/* Колода: карточки лежат стопкой, раскрытая — ряд; переезд — с мультяшным перелётом. Раскрытая — поверх кубика и руки. */
+.mp-gang .gc{position:absolute;left:0;top:0;transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.mp-gang.open{z-index:31}
+.mp-gang:not(.open) .gc:not(:first-child) .gc-lv,.mp-gang:not(.open) .gc:not(:first-child) em{visibility:hidden}
+.mp-gang:not(.open) .gc:first-child[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;right:-8px;bottom:-8px;min-width:20px;height:20px;border-radius:10px;background:#25221c;color:#f2e3bd;border:1.5px solid #f2e3bd;font:800 11px/17px var(--mp-num);text-align:center}
+@media (prefers-reduced-motion:reduce){.mp-gang .gc{transition:none}}
+.mp-gang[hidden]{display:none}
+.mp-swapping .mp-gang,.mp-modal .mp-gang{visibility:hidden}
+.gc{position:relative;width:46px;height:60px;padding:0;border:2px solid #25221c;border-radius:8px;background:#f2e3bd url(assets/paper-grain.svg);box-shadow:0 2px 0 #25221c;cursor:pointer;overflow:visible;
+  transition:transform .26s cubic-bezier(.34,1.56,.64,1)}
+.gc .gf{position:absolute;inset:2px 2px 8px;border-radius:5px}
+.gc-lv{position:absolute;left:-7px;top:-7px;z-index:2;min-width:21px;height:21px;padding:0 3px;box-sizing:border-box;border:2px solid #25221c;border-radius:11px;background:#e0b14a;color:#25221c;font:900 13px/17px Bitter,Georgia,serif;text-align:center;box-shadow:0 1px 0 #25221c}
+.gc-xp{position:absolute;left:3px;right:3px;bottom:2px;height:5px;border-radius:3px;background:rgba(37,34,28,.25);overflow:hidden;text-decoration:none}
+.gc-xp s{display:block;height:100%;background:#3f7a4a;text-decoration:none}
+.gc-xp.big{position:static;display:block;height:8px;margin:6px 0 2px;border:1.5px solid #25221c}
+.gc-post,.gc-sick{position:absolute;right:-7px;top:-7px;z-index:2;width:20px;height:20px;border-radius:50%;background:#fbf0d4;border:1.5px solid #25221c;font:normal 11px/17px sans-serif;text-align:center}
+.gc-sick{top:auto;bottom:6px}
+.gc.sick .gf{filter:hue-rotate(60deg) saturate(.8)}
+/* Дрался в этом круге — карточка перевёрнута рубашкой до прохода старта. */
+.gc.used{background:#3a3226;transform:rotateY(180deg)}
+.gc.used>*:not(.gc-back){visibility:hidden}
+.gc-back{position:absolute;inset:0;display:grid;place-items:center;transform:rotateY(180deg);color:#f2e3bd;font:800 10px/1.1 var(--mp-num);text-align:center;padding:0 3px}
+.gc.sel{transform:translateY(-6px);box-shadow:0 0 0 3px #3f7a4a,0 3px 0 #25221c}
+.gc.ro{cursor:default}
+/* Портрет: буква на цвете вида под картинкой — видна, пока Codex не нарисовал портрет. */
+.gf{display:grid;place-items:center;overflow:hidden;background:var(--k,#5b4c35);position:relative}
+.gf i{font:900 22px/1 Bitter,Georgia,serif;font-style:normal;color:#fbf0d4;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.gf img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gf.big{width:76px;height:96px;flex:none;border:2.5px solid #25221c;border-radius:10px;box-shadow:0 3px 0 #25221c}
+.gf.big i{font-size:38px}
+/* Охранник на клетке поля. */
+.mp-guard{position:absolute;left:0;top:0;width:32px;height:32px;margin:-16px 0 0 -16px}
+.mp-guard .gf{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--c);box-shadow:0 0 0 1.5px #25221c,0 2px 0 #25221c;box-sizing:border-box}
+.mp-guard .gf i{font-size:14px}
+.mp-guard b{position:absolute;left:-7px;top:-6px;min-width:16px;height:16px;border-radius:8px;background:#e0b14a;border:1.5px solid #25221c;font:900 10px/13px Bitter,Georgia,serif;text-align:center;color:#25221c}
+.mp-guard em{position:absolute;left:50%;top:30px;translate:-50% 0;padding:0 4px;border-radius:6px;background:#3f7a4a;color:#fbf0d4;border:1.5px solid #25221c;font:800 10px/14px var(--mp-num);font-style:normal;white-space:nowrap}
+/* Тревога наезда: рамка экрана мигает, плашка сверху с отсчётом (если открыто другое окно). */
+body.mp-alarm::after{content:"";position:fixed;inset:0;z-index:90;pointer-events:none;box-shadow:inset 0 0 0 5px #b12f26,inset 0 0 28px rgba(177,47,38,.55);animation:mp-alarm 1s steps(2,jump-none) infinite}
+@keyframes mp-alarm{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){body.mp-alarm::after{animation:none}}
+/* Плашка — под окном, у нижнего края: окно не перекрывает. */
+.mp-gang-alarm{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));translate:-50% 0;z-index:91;max-width:calc(100vw - 32px);white-space:nowrap;padding:10px 16px;border:2.5px solid #25221c;border-radius:12px;background:#b12f26;color:#fbf0d4;
+  font:800 14px var(--mp-num);box-shadow:0 3px 0 #25221c;cursor:pointer;animation:mp-alarm 1s steps(2,jump-none) infinite}
+.mp-gang-alarm[hidden]{display:none}
+/* Окна банды. */
+#card .mp-gang-hero{display:flex;gap:12px;align-items:center}
+#card .mp-gang-hero h2{margin:0 0 2px}
+#card .mp-gang-st{font-weight:800}
+#card .mp-gang-posts{display:grid;gap:6px;margin-top:6px}
+#card .mp-gang-posts button{padding:9px 10px;border:2px solid #25221c;border-radius:9px;background:#f2e3bd;font:700 14px var(--mp-txt);text-align:left;box-shadow:0 2px 0 #25221c;cursor:pointer}
+#card .mp-raid h2{color:#8a2a1f}
+#card .mp-raid-time{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
+#card .mp-raid-time u{flex:1;height:10px;border:2px solid #25221c;border-radius:6px;background:#f2e3bd;overflow:hidden;text-decoration:none}
+#card .mp-raid-time s{display:block;height:100%;background:#b12f26;text-decoration:none;transition:width .25s linear}
+#card .mp-raid-time b{font:900 22px var(--mp-num);color:#8a2a1f;min-width:48px;text-align:right}
+#card .mp-raid-row{display:flex;flex-wrap:wrap;gap:10px;padding:9px 4px 6px 9px;min-height:60px}
+#card .mp-raid-pow b{font:900 17px var(--mp-num)}#card .mp-raid-pow b.plus{color:var(--mp-green)}#card .mp-raid-pow b.minus{color:var(--mp-red)}
+#card .mp-raid-note{color:#6b5f52;font-size:12.5px}
+#card .mp-ring-champ{display:flex;gap:12px;align-items:center;margin:6px 0 10px}
+#card .mp-ring-champ b{display:block;font:900 18px Bitter,Georgia,serif}
+#card .mp-ring-champ small{display:block;color:#6b5f52;font:600 12.5px var(--mp-txt)}
+#card .mp-ring-hp{display:block;height:10px;margin:6px 0 3px;border:2px solid #25221c;border-radius:6px;background:#f2e3bd;overflow:hidden;text-decoration:none}
+#card .mp-ring-hp s{display:block;height:100%;background:#b12f26;text-decoration:none}
+.gc{display:inline-block;flex:none;-webkit-tap-highlight-color:transparent}
+.gc:focus-visible{outline:3px solid #c99a32;outline-offset:2px}
+.gc-tag{position:absolute;left:50%;bottom:-9px;translate:-50% 0;z-index:2;padding:0 5px;border-radius:6px;background:#3f6a8a;color:#fbf0d4;border:1.5px solid #25221c;font:800 9.5px/14px var(--mp-num);font-style:normal;white-space:nowrap}
