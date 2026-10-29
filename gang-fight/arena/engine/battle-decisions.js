@@ -26,6 +26,11 @@ export class BattleDecisions{
  }
  signatureAvailable(f){const c=this.c,t=f.target;
   if(c.forcedAttack||!specialReady(f)||!standing(f)||!standing(t)||f.defense||f.state==='hit')return false;
+  // Long multi-stage specials punish a committed opponent; do not open with
+  // five seconds of choreography against an idle opponent's ready jab.
+  const longSpecial=c.specialProfiles?.[f.kind]?.durationSeconds>3;
+  const opening=t.state==='hit'||c.time<(t.exposedUntil||0)||t.attack&&t.attack.motionAge/t.attack.duration>.6;
+  if(longSpecial&&!opening)return false;
   const profile=fightingStyles[f.kind].super,range=c.attackRange(f,profile.attack),distance=f.root.position.distanceTo(t.root.position);
   if(distance<range.min-.12||distance>range.max+.18)return true;
   return c.positioning.swingClear(f,profile.attack,{kick:/Kick|kick/.test(profile.attack),side:'Right'});

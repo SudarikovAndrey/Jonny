@@ -1,4 +1,4 @@
 Снимок общей арены (владелец — «Американ - боевая система», design/brawl/INTEGRATION.md).
-Выпуск: ef5328c Integrate latest combat branches into multiplayer fight with seven characters and authored specials
+Выпуск: 3f47e4c Synchronize rebuilt multiplayer with unified balance, courtyard and latest interface
 Собрано tools/build_gang_fight.py из git archive опубликованного коммита. Не править руками:
 правки — через владельца арены, потом пересобрать снимок. Свои файлы: arena/mp-fight.html, arena/mp-fight.mjs.

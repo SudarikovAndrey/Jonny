@@ -15,9 +15,9 @@ export class BreakableProps{
  remove(object){object.removeFromParent();object.traverse(o=>{o.geometry?.dispose();if(o.name==='loot_halo')o.material.dispose();});}
  attach(combat){this.combat=combat;combat.environment=this;this.baseObstacles=combat.navigation.obstacles.map(poly=>poly.map(p=>p.clone()));this.reset();}
  reset(){for(const m of this.decorMaterials||[]){m.map?.dispose();m.dispose();}this.decorMaterials=new Set();this.bin?.clear();if(this.combat)this.combat.binActive=true;this.debris.clear();for(const p of this.pickups)p.material.dispose();this.pickups=[];for(const child of [...this.root.children])this.remove(child);this.crates=[];this.particles=[];this.loot=[];this.coins=[0,0];this.fallSamples=new Map();this.bodySamples=new Map();
-  for(const [id,index] of [2,7,12,16].entries()){
-   const wall=walls[index],p=constrainCourtyard(wall.a.clone().lerp(wall.b,.5).addScaledVector(wall.normal,1.0),.72);p.y=0;
-   const group=new T.Group();group.scale.setScalar(CRATE_SCALE);group.position.copy(p);group.rotation.y=Math.round(Math.atan2(wall.normal.x,wall.normal.z)/(Math.PI/2))*(Math.PI/2);this.root.add(group);
+  for(const [id,[u,v]] of [[.12,.49],[.32,.405],[.67,.35],[.90,.47]].entries()){
+   const p=constrainCourtyard(plateToGround(u,v),.46);p.y=0;
+   const group=new T.Group();group.scale.setScalar(CRATE_SCALE);group.position.copy(p);group.rotation.y=id<2?Math.PI/2:0;this.root.add(group);
    for(let face=0;face<4;face++)for(let i=0;i<4;i++){const plank=this.box([.2,.78,.055],V((i-1.5)*.205,.42,.415),this.materials[(i+face)%3]);const turn=new T.Group();turn.rotation.y=face*Math.PI/2;turn.add(plank);group.add(turn);}
    for(let i=0;i<4;i++)group.add(this.box([.2,.055,.85],V((i-1.5)*.205,.83,0),this.materials[i%3]));
    for(const z of [-.45,.45]){const brace=this.box([.09,.9,.065],V(0,.42,z),this.materials[2]);brace.rotation.z=.72;group.add(brace);}
@@ -27,8 +27,9 @@ export class BreakableProps{
    for(const x of [-.405,.405])for(const z of [-.405,.405])group.add(this.box([.085,.78,.085],V(x,.42,z),this.materials[2]));
    this.crates.push({id,p,group,broken:false,kind:id%2?'health':'coin'});
   }
+  // Perimeter prop zones keep the centre and diagonal approaches open.
   this.decor=[];
-  for(const [kind,u,v,yaw] of [['pallets',.25,.57,.12],['table',.62,.64,-.12],['chair',.84,.68,-.5],['chair',.67,.81,2.5]]){
+  for(const [kind,u,v,yaw] of [['pallets',.07,.61,0],['table',.93,.63,0]]){
    const p=constrainCourtyard(plateToGround(u,v),.65),group=createFurnitureArt(kind);group.traverse(o=>{if(o.material)this.decorMaterials.add(o.material);});group.position.copy(p);group.rotation.y=yaw;this.root.add(group);
    const bounds=new T.Box3().setFromObject(group),size=bounds.getSize(V());this.decor.push({id:kind+'_'+this.decor.length,p,group,broken:false,kind:null,half:[size.x/2,size.z/2],height:size.y});
   }for(const prop of [...this.crates,...this.decor])prop.bounds=new T.Box3().setFromObject(prop.group);this.syncNavigation();

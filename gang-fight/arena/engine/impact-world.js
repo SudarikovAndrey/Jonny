@@ -1,6 +1,6 @@
 import {Vector3} from 'three';
 import {walls,plateToGround} from './courtyard.js?v=20261027am';
-export const binPosition=plateToGround(.76,.49),binRadius=.28;
+export const binPosition=plateToGround(.80,.405),binRadius=.28;
 export function constrainBin(point,radius){const offset=point.clone().sub(binPosition).setY(0),clearance=binRadius+radius+.01;if(offset.length()>=clearance)return point;if(offset.lengthSq()<1e-8)offset.set(1,0,0);const q=binPosition.clone().addScaledVector(offset.normalize(),clearance);q.y=point.y;return q;}
 function closest(p,a,b){const d=b.clone().sub(a).setY(0),t=Math.max(0,Math.min(1,p.clone().sub(a).dot(d)/Math.max(1e-9,d.lengthSq())));return a.clone().addScaledVector(d,t);}
 export class ImpactWorld{

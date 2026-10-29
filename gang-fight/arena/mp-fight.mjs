@@ -50,8 +50,7 @@ if(!lineup[0].length)lineup[0]=[{id:'a',kind:0,lvl:1}];if(!lineup[1].length)line
 let finished=false;const finish=skipped=>{if(finished)return;finished=true;post({done:true,skipped:!!skipped});};
 $('#skip').onclick=()=>finish(true);
 const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-$('#sideBlue').innerHTML=`<small>Нападение</small>${esc(spec.blueName||'')}`;
-$('#sideGold').innerHTML=`<small>Защита</small>${esc(spec.goldName||'')}`;
+$('#nameAtt').textContent=spec.blueName||'';$('#nameDef').textContent=spec.goldName||'';
 
 // ---- карточки бойцов внизу: портрет, уровень, здоровье; выбывший переворачивается ----
 const cards=new Map();   // id МП → {el, hp, ghost, shown, ghostAt}
@@ -169,7 +168,7 @@ function render(){if(!combat)return;
  if(pipeFX){if(pipeRound!==combat.round){pipeFX.clear();hatFX?.clear();pipeRound=combat.round;}pipeFX.update(renderDt,camera,W*renderer.getPixelRatio(),H*renderer.getPixelRatio(),effects.enabled);}
  cardTick(renderDt);
  const alive=[0,1].map(t=>combat.fighters.filter(f=>f.team===t&&!f.down).length);
- if(alive.includes(0)&&endAt==null){endAt=combat.time;const v=$('#verdict');v.hidden=false;v.textContent=alive[0]?'Наезд удался!':'Отбились!';}
+ if(alive.includes(0)&&endAt==null){endAt=combat.time;const v=$('#verdict');v.hidden=false;v.textContent=alive[0]?'Наезд удался!':'Отбились!';$(alive[0]?'.mpf-panel.att':'.mpf-panel.def').classList.add('win');}
  if(endAt!=null&&combat.time-endAt>3.2)finish(false);   // победная поза и переворот карточки — и к итогам
  try{renderer.render(scene,camera);}finally{camera.position.copy(stable);camera.updateMatrixWorld(true);}
 }
